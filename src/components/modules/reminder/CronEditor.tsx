@@ -9,7 +9,6 @@ import {
   cronConfigToExpression,
   formatCronDescription,
   validateCronConfig,
-  getNextOccurrences,
 } from "@/lib/cron";
 
 interface CronEditorProps {
@@ -135,7 +134,7 @@ export function CronEditor({ value, onChange }: CronEditorProps) {
                 })}
               >
                 {WEEKDAY_LABELS.map((label, idx) => (
-                  <option key={idx} value={idx}>
+                  <option key={idx} value={idx + 1}>
                     {label}
                   </option>
                 ))}
@@ -333,7 +332,7 @@ export function CronEditor({ value, onChange }: CronEditorProps) {
                     })}
                   >
                     {WEEKDAY_LABELS.map((label, idx) => (
-                      <option key={idx} value={idx}>
+                      <option key={idx} value={idx + 1}>
                         {label}
                       </option>
                     ))}
@@ -373,24 +372,53 @@ export function CronEditor({ value, onChange }: CronEditorProps) {
               <div className="space-y-2">
                 <Label>类型</Label>
                 <Select
-                  value={config.special?.lastDay?.type || "day"}
+                  value={config.special?.lastDay?.type || "last_nth"}
                   onChange={(e) => updateConfig({
                     ...config,
                     special: {
                       ...config.special!,
                       type: "last_day",
                       lastDay: {
-                        type: e.target.value as "day" | "weekday" | "friday",
+                        type: e.target.value as "last_nth" | "last_workday" | "last_friday",
+                        nth: config.special?.lastDay?.nth ?? 1,
                         month: config.special?.lastDay?.month ?? 0,
                       },
                     },
                   })}
                 >
-                  <option value="day">月末最后一天</option>
-                  <option value="weekday">月末最后一个工作日</option>
-                  <option value="friday">月末最后一个周五</option>
+                  <option value="last_nth">月末倒数第 N 天</option>
+                  <option value="last_workday">月末最后一个工作日</option>
+                  <option value="last_friday">月末最后一个周五</option>
                 </Select>
               </div>
+
+              {config.special?.lastDay?.type === "last_nth" && (
+                <div className="space-y-2">
+                  <Label>倒数第几天</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={31}
+                    value={config.special?.lastDay?.nth ?? 1}
+                    onChange={(e) => updateConfig({
+                      ...config,
+                      special: {
+                        ...config.special!,
+                        type: "last_day",
+                        lastDay: {
+                          type: "last_nth",
+                          nth: parseInt(e.target.value) || 1,
+                          month: config.special?.lastDay?.month ?? 0,
+                        },
+                      },
+                    })}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    例如：倒数第3天 = 月底前3天（5月倒数第3天是29日）
+                  </p>
+                </div>
+              )}
+
               <div className="space-y-2">
                 <Label>月份 (可选，不选则每月)</Label>
                 <Select
@@ -401,7 +429,8 @@ export function CronEditor({ value, onChange }: CronEditorProps) {
                       ...config.special!,
                       type: "last_day",
                       lastDay: {
-                        type: config.special?.lastDay?.type || "day",
+                        type: config.special?.lastDay?.type || "last_nth",
+                        nth: config.special?.lastDay?.nth ?? 1,
                         month: e.target.value ? parseInt(e.target.value) : 0,
                       },
                     },
@@ -430,9 +459,25 @@ export function CronEditor({ value, onChange }: CronEditorProps) {
               })}
               placeholder="0 9 * * *"
             />
-            <p className="text-xs text-muted-foreground">
-              格式: 分 时 日 月 周 (例如: 0 9 * * * 表示每天9:00)
-            </p>
+            <div className="text-xs text-muted-foreground space-y-1">
+              <p>格式: 分 时 日 月 周</p>
+              <div className="grid grid-cols-2 gap-1 text-xs">
+                <span className="font-medium">示例:</span>
+                <span></span>
+                <span>0 9 * * *</span>
+                <span>每天 9:00</span>
+                <span>30 9 * * *</span>
+                <span>每天 9:30</span>
+                <span>0 9 * * 1</span>
+                <span>每周一 9:00</span>
+                <span>0 9 1 * *</span>
+                <span>每月1日 9:00</span>
+                <span>0 9,18 * * *</span>
+                <span>每天 9:00 和 18:00</span>
+                <span>*/15 * * * *</span>
+                <span>每 15 分钟</span>
+              </div>
+            </div>
           </div>
         </TabsContent>
       </Tabs>
@@ -498,27 +543,7 @@ export function CronEditor({ value, onChange }: CronEditorProps) {
       )}
 
       <div className="text-sm text-muted-foreground bg-muted p-2 rounded">
-        <div className="mb-1">当前配置: {formatCronDescription(config)}</div>
-        <div className="text-xs">
-          <span className="font-medium">即将执行: </span>
-          {(() => {
-            const next = getNextOccurrences(config, 3);
-            if (next.length > 0) {
-              return next.map((date, idx) => (
-                <span key={idx}>
-                  {idx > 0 && "、"}
-                  {date.toLocaleString("zh-CN", {
-                    month: "short",
-                    day: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </span>
-              ));
-            }
-            return "无法计算";
-          })()}
-        </div>
+        当前配置: {formatCronDescription(config)}
       </div>
     </div>
   );

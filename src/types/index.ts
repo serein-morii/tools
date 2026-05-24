@@ -14,12 +14,13 @@ export interface CronConfig {
     type: "nth_weekday" | "last_day" | "offset" | "interval";
     nthWeekday?: {
       nth: number;
-      weekday: number;
-      month: number;
+      weekday: number;  // 1=周一, 2=周二, ..., 7=周日
+      month: number;    // 0=每月, 1-12=特定月份
     };
     lastDay?: {
-      type: "day" | "weekday" | "friday";
-      month: number;
+      type: "last_nth" | "last_workday" | "last_friday" | "day" | "weekday" | "friday";  // 兼容新旧格式
+      nth?: number;     // 倒数第N天
+      month: number;    // 0=每月, 1-12=特定月份
     };
     offset?: {
       baseDate: "start_of_month" | "end_of_month" | "specific_date";
@@ -117,10 +118,13 @@ export interface ReminderHistory {
 }
 
 export interface Settings {
-  id: string;
   key: string;
   value: string;
-  updatedAt: string;
+}
+
+export interface UpdateSettingRequest {
+  key: string;
+  value: string;
 }
 
 // Channel type matching Rust backend
@@ -171,6 +175,7 @@ export interface WeComConfig {
 export interface DingTalkConfig {
   webhookUrl: string;
   secret?: string;
+  atPhones?: string[];
 }
 
 // Reminder type matching Rust backend
@@ -186,4 +191,96 @@ export interface Reminder {
   user_feedback?: string;
   action_at?: number;
   created_at: number;
+}
+
+export interface ReminderHistoryItem {
+  id: string;
+  task_id: string;
+  task_name: string;
+  reminder_type: string;
+  scheduled_at: number;
+  executed_at?: number;
+  status: string;
+  channel_results: string;
+  error_message?: string;
+  user_action?: string;
+  user_feedback?: string;
+  action_at?: number;
+  created_at: number;
+}
+
+export interface SubmitReminderFeedbackRequest {
+  id: string;
+  feedback: string;
+}
+
+export interface SnoozeReminderRequest {
+  id: string;
+  minutes: number;
+}
+
+export interface BackupCounts {
+  tasks: number;
+  channels: number;
+  templates: number;
+  settings: number;
+}
+
+export interface ExportBackupRequest {
+  path?: string;
+}
+
+export interface ImportBackupRequest {
+  path: string;
+}
+
+export interface BackupExportResult {
+  path: string;
+  counts: BackupCounts;
+}
+
+export interface BackupImportResult {
+  counts: BackupCounts;
+}
+
+export interface Template {
+  id: string;
+  name: string;
+  description?: string;
+  category: string;
+  title_template: string;
+  body_template: string;
+  default_cron?: string;
+  default_channels: string;
+  icon?: string;
+  color?: string;
+  tags: string;
+  created_at: number;
+  updated_at: number;
+}
+
+export interface CreateTemplateRequest {
+  name: string;
+  description?: string;
+  category?: string;
+  title_template: string;
+  body_template: string;
+  default_cron?: string;
+  default_channels?: string[];
+  icon?: string;
+  color?: string;
+  tags?: string[];
+}
+
+export interface UpdateTemplateRequest {
+  name?: string;
+  description?: string;
+  category?: string;
+  title_template?: string;
+  body_template?: string;
+  default_cron?: string;
+  default_channels?: string[];
+  icon?: string;
+  color?: string;
+  tags?: string[];
 }

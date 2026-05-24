@@ -3,9 +3,15 @@ mod database;
 mod error;
 mod services;
 
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use database::{Database, init_schema};
 use services::scheduler::start_scheduler;
+use tauri::Manager;
+use tauri::tray::{TrayIconBuilder, TrayIconEvent};
+use tauri::menu::{MenuBuilder, MenuItem};
+
+// Global app handle for auto-launch
+static APP_HANDLE: once_cell::sync::Lazy<Mutex<Option<tauri::AppHandle>>> = once_cell::sync::Lazy::new(|| Mutex::new(None));
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -31,6 +37,11 @@ pub fn run() {
 
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_autostart::init(
+            tauri_plugin_autostart::MacosLauncher::LaunchAgent,
+            Some(vec!["--silent"]),
+        ))
         .manage(db)
         .invoke_handler(tauri::generate_handler![
             commands::get_tasks,
@@ -47,8 +58,104 @@ pub fn run() {
             commands::test_channel_cmd,
             commands::get_pending_reminders,
             commands::get_task_reminders,
+            commands::get_reminder_history,
+            commands::confirm_reminder,
+            commands::submit_reminder_feedback,
+            commands::snooze_reminder,
+            commands::get_templates,
+            commands::get_template,
+            commands::create_template,
+            commands::update_template,
+            commands::delete_template,
+            commands::get_settings,
+            commands::update_setting,
+            commands::set_auto_launch,
+            commands::get_auto_launch_status,
+            commands::set_window_theme,
+            commands::export_backup,
+            commands::import_backup,
         ])
         .setup(|app| {
+            // Store app handle for auto-launch
+            {
+                let mut handle = APP_HANDLE.lock().unwrap();
+                *handle = Some(app.handle().clone());
+            }
+
+            // Build tray menu
+            let show_item = MenuItem::with_id(app, "show", "显示窗口", true, None::<&str>)?;
+            let quit_item = MenuItem::with_id(app, "quit", "退出", true, None::<&str>)?;
+            let menu = MenuBuilder::new(app)
+                .item(&show_item)
+                .item(&quit_item)
+                .build()?;
+
+            // Build tray icon
+            let tray = TrayIconBuilder::with_id("tools-tray")
+                .tooltip("Tools 提醒工具")
+                .menu(&menu)
+                .show_menu_on_left_click(true)
+                .on_menu_event(|app, event| match event.id.as_ref() {
+                    "show" => {
+                        if let Some(window) = app.get_webview_window("main") {
+                            window.show().unwrap();
+                            window.set_focus().unwrap();
+                        }
+                    }
+                    "quit" => {
+                        app.exit(0);
+                    }
+                    _ => {}
+                })
+                .on_tray_icon_event(|tray, event| {
+                    if let TrayIconEvent::Click { .. } = event {
+                        let app = tray.app_handle();
+                        if let Some(window) = app.get_webview_window("main") {
+                            window.show().unwrap();
+                            window.set_focus().unwrap();
+                        }
+                    }
+                });
+
+            #[cfg(target_os = "macos")]
+            {
+                if let Some(icon) = app.default_window_icon() {
+                    tray.icon(icon.clone()).icon_as_template(true).build(app)?;
+                }
+            }
+
+            #[cfg(not(target_os = "macos"))]
+            {
+                if let Some(icon) = app.default_window_icon() {
+                    tray.icon(icon.clone()).build(app)?;
+                }
+            }
+
+            // Intercept window close
+            if let Some(window) = app.get_webview_window("main") {
+                let app_handle = app.handle().clone();
+                window.on_window_event(move |event| {
+                    if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                        let db = app_handle.state::<Arc<Database>>();
+                        let conn = db.conn().lock().unwrap();
+                        let minimize = crate::database::dao::settings::SettingsDao::get_all(&conn)
+                            .ok()
+                            .and_then(|settings| {
+                                settings.iter().find(|item| item.key == "minimize_to_tray").cloned()
+                            })
+                            .map(|item| item.value == "true")
+                            .unwrap_or(true);
+
+                        if minimize {
+                            api.prevent_close();
+                            if let Some(w) = app_handle.get_webview_window("main") {
+                                w.hide().unwrap();
+                            }
+                        }
+                    }
+                });
+            }
+
             if cfg!(debug_assertions) {
                 app.handle().plugin(
                     tauri_plugin_log::Builder::default()

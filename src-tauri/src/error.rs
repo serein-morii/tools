@@ -17,8 +17,6 @@ pub enum ToolsError {
     #[error("Task not found: {0}")]
     TaskNotFound(String),
 
-    #[error("Template not found: {0}")]
-    TemplateNotFound(String),
 
     #[error("Channel not found: {0}")]
     ChannelNotFound(String),
@@ -28,6 +26,34 @@ pub enum ToolsError {
 
     #[error("Notification failed: {0}")]
     NotificationFailed(String),
+
+    #[error("Backup failed: {0}")]
+    Backup(String),
+
+    #[error("Auto-launch error: {0}")]
+    AutoLaunch(String),
+
+    #[error("Window error: {0}")]
+    Window(String),
+}
+
+impl From<tauri::Error> for ToolsError {
+    fn from(err: tauri::Error) -> Self {
+        ToolsError::Window(err.to_string())
+    }
+}
+
+impl From<tauri_plugin_autostart::Error> for ToolsError {
+    fn from(err: tauri_plugin_autostart::Error) -> Self {
+        ToolsError::AutoLaunch(err.to_string())
+    }
+}
+
+#[cfg(target_os = "windows")]
+impl From<winreg::Error> for ToolsError {
+    fn from(err: winreg::Error) -> Self {
+        ToolsError::AutoLaunch(err.to_string())
+    }
 }
 
 impl From<reqwest::Error> for ToolsError {
