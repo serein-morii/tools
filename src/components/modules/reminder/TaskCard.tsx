@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Pencil, Trash2, Bell, BellOff } from "lucide-react";
+import { toast } from "sonner";
 import { useToggleTask, useDeleteTask } from "@/lib/query/taskQueries";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 
 interface TaskCardProps {
   task: Task;
@@ -23,14 +24,39 @@ export function TaskCard({ task, onEdit }: TaskCardProps) {
   const deleteMutation = useDeleteTask();
   const [isDeleting, setIsDeleting] = useState(false);
 
+  const tags = useMemo(() => {
+    try {
+      return JSON.parse(task.tags || "[]") as string[];
+    } catch {
+      return [];
+    }
+  }, [task.tags]);
+
   const handleToggle = () => {
-    toggleMutation.mutate({ id: task.id, enabled: !task.enabled });
+    toggleMutation.mutate(
+      { id: task.id, enabled: !task.enabled },
+      {
+        onSuccess: () => {
+          toast.success(task.enabled ? "任务已暂停" : "任务已启用");
+        },
+        onError: (error) => {
+          toast.error("操作失败: " + error.message);
+        }
+      }
+    );
   };
 
   const handleDelete = () => {
     if (isDeleting) {
-      deleteMutation.mutate(task.id);
-      setIsDeleting(false);
+      deleteMutation.mutate(task.id, {
+        onSuccess: () => {
+          toast.success("任务已删除");
+          setIsDeleting(false);
+        },
+        onError: (error) => {
+          toast.error("删除失败: " + error.message);
+        }
+      });
     } else {
       setIsDeleting(true);
       setTimeout(() => setIsDeleting(false), 3000);
@@ -68,6 +94,19 @@ export function TaskCard({ task, onEdit }: TaskCardProps) {
             <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
               {task.description}
             </p>
+          )}
+
+          {tags.length > 0 && (
+            <div className="flex flex-wrap gap-1 mb-2">
+              {tags.map((tag, idx) => (
+                <span
+                  key={idx}
+                  className="text-xs px-1.5 py-0.5 bg-muted rounded"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
           )}
 
           <div className="flex items-center gap-4 text-sm text-muted-foreground">

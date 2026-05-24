@@ -57,11 +57,77 @@ export function cronConfigToExpression(config: CronConfig): string {
 
 export function getNextOccurrences(
   config: CronConfig,
-  _count: number = 5
+  count: number = 5
 ): Date[] {
-  const expression = cronConfigToExpression(config);
-  console.log("Cron expression:", expression);
-  return [];
+  try {
+    const expression = cronConfigToExpression(config);
+    const parts = expression.split(" ");
+    if (parts.length !== 5) return [];
+
+    const [minute, hour, dayOfMonth, month, dayOfWeek] = parts;
+
+    const now = new Date();
+    const results: Date[] = [];
+
+    // Simple implementation - iterate through next 365 days and check matches
+    for (let i = 0; i < 365 && results.length < count; i++) {
+      const candidate = new Date(now);
+      candidate.setDate(candidate.getDate() + i);
+
+      // Check if this day matches the cron pattern
+      const candHour = candidate.getHours();
+      const candDayOfMonth = candidate.getDate();
+      const candMonth = candidate.getMonth() + 1;
+      const candDayOfWeek = candidate.getDay();
+
+      // Parse cron field - handle *, specific values, and ranges
+      const matches = (field: string, value: number): boolean => {
+        if (field === "*") return true;
+        if (field.startsWith("*/")) {
+          const step = parseInt(field.slice(2));
+          return value % step === 0;
+        }
+        const values = field.split(",").map(v => parseInt(v));
+        return values.includes(value);
+      };
+
+      if (
+        matches(minute, parseMinuteField(minute)) &&
+        matches(hour, candHour) &&
+        matches(dayOfMonth, candDayOfMonth) &&
+        matches(month, candMonth) &&
+        matches(dayOfWeek, candDayOfWeek)
+      ) {
+        // Set the correct time
+        candidate.setHours(
+          parseHourField(hour),
+          parseMinuteField(minute),
+          0, 0
+        );
+
+        // Skip if time has already passed today
+        if (i === 0 && candidate <= now) continue;
+
+        results.push(new Date(candidate));
+      }
+    }
+
+    return results;
+  } catch {
+    return [];
+  }
+}
+
+function parseMinuteField(field: string): number {
+  if (field === "*") return 0;
+  if (field.startsWith("*/")) return 0;
+  return parseInt(field.split(",")[0]) || 0;
+}
+
+function parseHourField(field: string): number {
+  if (field === "*") return 9;
+  if (field.startsWith("*/")) return 0;
+  return parseInt(field.split(",")[0]) || 9;
 }
 
 export function validateCronConfig(config: CronConfig): {

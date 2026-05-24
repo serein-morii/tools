@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Pencil, Trash2, Zap, CheckCircle, XCircle } from "lucide-react";
+import { toast } from "sonner";
 import { useUpdateChannel, useDeleteChannel, useTestChannel } from "@/lib/query/channelQueries";
 import { useState } from "react";
 
@@ -26,13 +27,30 @@ export function ChannelCard({ channel, onEdit }: ChannelCardProps) {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleToggle = () => {
-    updateMutation.mutate({ id: channel.id, channel: { enabled: !channel.enabled } });
+    updateMutation.mutate(
+      { id: channel.id, channel: { enabled: !channel.enabled } },
+      {
+        onSuccess: () => {
+          toast.success(channel.enabled ? "渠道已禁用" : "渠道已启用");
+        },
+        onError: (error) => {
+          toast.error("操作失败: " + error.message);
+        }
+      }
+    );
   };
 
   const handleDelete = () => {
     if (isDeleting) {
-      deleteMutation.mutate(channel.id);
-      setIsDeleting(false);
+      deleteMutation.mutate(channel.id, {
+        onSuccess: () => {
+          toast.success("渠道已删除");
+          setIsDeleting(false);
+        },
+        onError: (error) => {
+          toast.error("删除失败: " + error.message);
+        }
+      });
     } else {
       setIsDeleting(true);
       setTimeout(() => setIsDeleting(false), 3000);
@@ -40,7 +58,18 @@ export function ChannelCard({ channel, onEdit }: ChannelCardProps) {
   };
 
   const handleTest = () => {
-    testMutation.mutate(channel.id);
+    testMutation.mutate(channel.id, {
+      onSuccess: (result) => {
+        if (result.includes("发送成功")) {
+          toast.success("测试成功");
+        } else {
+          toast.error("测试失败: " + result);
+        }
+      },
+      onError: (error) => {
+        toast.error("测试失败: " + error.message);
+      }
+    });
   };
 
   const formatLastTest = (timestamp?: number) => {

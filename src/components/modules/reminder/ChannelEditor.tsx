@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { X } from "lucide-react";
+import { toast } from "sonner";
 import { useChannel, useCreateChannel, useUpdateChannel } from "@/lib/query/channelQueries";
 import type {
   CreateChannelRequest,
@@ -120,7 +121,15 @@ export function ChannelEditor({ open, onOpenChange, channelId }: ChannelEditorPr
       };
       updateMutation.mutate(
         { id: channelId, channel: updateReq },
-        { onSuccess: () => onOpenChange(false) }
+        {
+          onSuccess: () => {
+            toast.success("渠道已更新");
+            onOpenChange(false);
+          },
+          onError: (error) => {
+            toast.error("更新失败: " + error.message);
+          }
+        }
       );
     } else {
       const createReq: CreateChannelRequest = {
@@ -129,7 +138,15 @@ export function ChannelEditor({ open, onOpenChange, channelId }: ChannelEditorPr
         description: description || undefined,
         config,
       };
-      createMutation.mutate(createReq, { onSuccess: () => onOpenChange(false) });
+      createMutation.mutate(createReq, {
+        onSuccess: () => {
+          toast.success("渠道已创建");
+          onOpenChange(false);
+        },
+        onError: (error) => {
+          toast.error("创建失败: " + error.message);
+        }
+      });
     }
   };
 

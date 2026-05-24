@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select } from "@/components/ui/select";
 import { X } from "lucide-react";
+import { toast } from "sonner";
 import { useTask, useCreateTask, useUpdateTask } from "@/lib/query/taskQueries";
 import { useChannels } from "@/lib/query/channelQueries";
 import { CronEditor } from "./CronEditor";
@@ -63,10 +64,26 @@ export function TaskEditor({ open, onOpenChange, taskId }: TaskEditorProps) {
       };
       updateMutation.mutate(
         { id: taskId, task: updateReq },
-        { onSuccess: () => onOpenChange(false) }
+        {
+          onSuccess: () => {
+            toast.success("任务已更新");
+            onOpenChange(false);
+          },
+          onError: (error) => {
+            toast.error("更新失败: " + error.message);
+          }
+        }
       );
     } else {
-      createMutation.mutate(form, { onSuccess: () => onOpenChange(false) });
+      createMutation.mutate(form, {
+        onSuccess: () => {
+          toast.success("任务已创建");
+          onOpenChange(false);
+        },
+        onError: (error) => {
+          toast.error("创建失败: " + error.message);
+        }
+      });
     }
   };
 
@@ -183,6 +200,53 @@ export function TaskEditor({ open, onOpenChange, taskId }: TaskEditorProps) {
                 <option value="1">重要</option>
                 <option value="2">紧急</option>
               </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>标签</Label>
+              <div className="flex flex-wrap gap-2">
+                {form.tags?.map((tag, idx) => (
+                  <span
+                    key={idx}
+                    className="inline-flex items-center gap-1 px-2 py-1 bg-muted rounded-md text-sm"
+                  >
+                    {tag}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setForm({
+                          ...form,
+                          tags: form.tags?.filter((_, i) => i !== idx),
+                        });
+                      }}
+                      className="text-muted-foreground hover:text-foreground"
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+                <input
+                  type="text"
+                  placeholder="添加标签..."
+                  className="px-2 py-1 border rounded-md text-sm w-24"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      const value = (e.target as HTMLInputElement).value.trim();
+                      if (value && !form.tags?.includes(value)) {
+                        setForm({
+                          ...form,
+                          tags: [...(form.tags || []), value],
+                        });
+                      }
+                      (e.target as HTMLInputElement).value = "";
+                    }
+                  }}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                按 Enter 添加标签
+              </p>
             </div>
 
             <div className="flex justify-end gap-2 pt-4 border-t bg-background p-6 -mx-6 -mb-6">
