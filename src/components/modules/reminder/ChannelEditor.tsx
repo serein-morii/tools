@@ -4,8 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
-import { X, Loader2 } from "lucide-react";
-import { toast } from "sonner";
+import { X } from "lucide-react";
 import { useChannel, useCreateChannel, useUpdateChannel } from "@/lib/query/channelQueries";
 import type {
   CreateChannelRequest,
@@ -15,6 +14,7 @@ import type {
   WeComConfig,
   DingTalkConfig,
 } from "@/types";
+import { useTranslation } from "react-i18next";
 
 interface ChannelEditorProps {
   open: boolean;
@@ -41,12 +41,14 @@ const defaultWeComConfig: WeComConfig = {
 const defaultDingTalkConfig: DingTalkConfig = {
   webhookUrl: "",
   secret: "",
+  atPhones: [],
 };
 
 export function ChannelEditor({ open, onOpenChange, channelId }: ChannelEditorProps) {
   const { data: existingChannel } = useChannel(channelId || "");
   const createMutation = useCreateChannel();
   const updateMutation = useUpdateChannel();
+  const { t } = useTranslation();
 
   const [name, setName] = useState("");
   const [type, setType] = useState("bark");
@@ -121,15 +123,7 @@ export function ChannelEditor({ open, onOpenChange, channelId }: ChannelEditorPr
       };
       updateMutation.mutate(
         { id: channelId, channel: updateReq },
-        {
-          onSuccess: () => {
-            toast.success("渠道已更新");
-            onOpenChange(false);
-          },
-          onError: (error) => {
-            toast.error("更新失败: " + error.message);
-          }
-        }
+        { onSuccess: () => onOpenChange(false) }
       );
     } else {
       const createReq: CreateChannelRequest = {
@@ -138,15 +132,7 @@ export function ChannelEditor({ open, onOpenChange, channelId }: ChannelEditorPr
         description: description || undefined,
         config,
       };
-      createMutation.mutate(createReq, {
-        onSuccess: () => {
-          toast.success("渠道已创建");
-          onOpenChange(false);
-        },
-        onError: (error) => {
-          toast.error("创建失败: " + error.message);
-        }
-      });
+      createMutation.mutate(createReq, { onSuccess: () => onOpenChange(false) });
     }
   };
 
@@ -159,7 +145,7 @@ export function ChannelEditor({ open, onOpenChange, channelId }: ChannelEditorPr
         <Dialog.Content className="fixed left-[50%] top-[50%] z-50 w-full max-w-lg max-h-[85vh] translate-x-[-50%] translate-y-[-50%] bg-background shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 rounded-lg border flex flex-col">
           <div className="flex items-center justify-between p-6 pb-0">
             <Dialog.Title className="text-lg font-semibold">
-              {channelId ? "编辑渠道" : "新建渠道"}
+              {channelId ? t("channel.editChannel") : t("channel.newChannel")}
             </Dialog.Title>
             <Dialog.Close asChild>
               <button
@@ -173,18 +159,18 @@ export function ChannelEditor({ open, onOpenChange, channelId }: ChannelEditorPr
 
           <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 pt-4 space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">渠道名称</Label>
+              <Label htmlFor="name">{t("channel.channelName")}</Label>
               <Input
                 id="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="例如: 我的 iPhone"
+                placeholder={t("channel.channelNamePlaceholder")}
                 required
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="type">渠道类型</Label>
+              <Label htmlFor="type">{t("channel.channelType")}</Label>
               <Select
                 id="type"
                 value={type}
@@ -192,19 +178,19 @@ export function ChannelEditor({ open, onOpenChange, channelId }: ChannelEditorPr
                 disabled={!!channelId}
               >
                 <option value="bark">Bark (iOS)</option>
-                <option value="feishu">飞书</option>
-                <option value="wecom">企业微信</option>
-                <option value="dingtalk">钉钉</option>
+                <option value="feishu">{t("channel.feishu")}</option>
+                <option value="wecom">{t("channel.wecom")}</option>
+                <option value="dingtalk">{t("channel.dingtalk")}</option>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="description">描述 (可选)</Label>
+              <Label htmlFor="description">{t("channel.descriptionOptional")}</Label>
               <Input
                 id="description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="渠道描述"
+                placeholder={t("channel.descriptionPlaceholder")}
               />
             </div>
 
@@ -212,18 +198,18 @@ export function ChannelEditor({ open, onOpenChange, channelId }: ChannelEditorPr
             {type === "bark" && (
               <>
                 <div className="space-y-2">
-                  <Label htmlFor="barkKey">Bark Key *</Label>
+                  <Label htmlFor="barkKey">{t("channel.barkKey")} *</Label>
                   <Input
                     id="barkKey"
                     value={barkConfig.key}
                     onChange={(e) => setBarkConfig({ ...barkConfig, key: e.target.value })}
-                    placeholder="从 Bark App 获取"
+                    placeholder={t("channel.barkKeyPlaceholder")}
                     required
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="serverUrl">服务器地址</Label>
+                  <Label htmlFor="serverUrl">{t("channel.serverUrl")}</Label>
                   <Input
                     id="serverUrl"
                     value={barkConfig.serverUrl}
@@ -231,12 +217,12 @@ export function ChannelEditor({ open, onOpenChange, channelId }: ChannelEditorPr
                     placeholder="https://api.day.app"
                   />
                   <p className="text-xs text-muted-foreground">
-                    默认使用官方服务器，可填入自建服务器地址
+                    {t("channel.serverUrlHint")}
                   </p>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="group">分组名称</Label>
+                  <Label htmlFor="group">{t("channel.groupName")}</Label>
                   <Input
                     id="group"
                     value={barkConfig.group}
@@ -251,7 +237,7 @@ export function ChannelEditor({ open, onOpenChange, channelId }: ChannelEditorPr
             {type === "feishu" && (
               <>
                 <div className="space-y-2">
-                  <Label htmlFor="feishuWebhook">Webhook 地址 *</Label>
+                  <Label htmlFor="feishuWebhook">{t("channel.webhookUrl")} *</Label>
                   <Input
                     id="feishuWebhook"
                     value={feishuConfig.webhookUrl}
@@ -260,21 +246,21 @@ export function ChannelEditor({ open, onOpenChange, channelId }: ChannelEditorPr
                     required
                   />
                   <p className="text-xs text-muted-foreground">
-                    在飞书群组中添加自定义机器人获取
+                    {t("channel.feishuWebhookHint")}
                   </p>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="feishuSecret">签名密钥 (可选)</Label>
+                  <Label htmlFor="feishuSecret">{t("channel.signSecretOptional")}</Label>
                   <Input
                     id="feishuSecret"
                     type="password"
                     value={feishuConfig.secret || ""}
                     onChange={(e) => setFeishuConfig({ ...feishuConfig, secret: e.target.value })}
-                    placeholder="启用签名验证时填写"
+                    placeholder={t("channel.signSecretPlaceholder")}
                   />
                   <p className="text-xs text-muted-foreground">
-                    如果机器人开启了签名验证，需要填写此密钥
+                    {t("channel.signSecretHint")}
                   </p>
                 </div>
               </>
@@ -283,7 +269,7 @@ export function ChannelEditor({ open, onOpenChange, channelId }: ChannelEditorPr
             {/* WeCom Config */}
             {type === "wecom" && (
               <div className="space-y-2">
-                <Label htmlFor="wecomWebhook">Webhook 地址 *</Label>
+                <Label htmlFor="wecomWebhook">{t("channel.webhookUrl")} *</Label>
                 <Input
                   id="wecomWebhook"
                   value={wecomConfig.webhookUrl}
@@ -292,7 +278,7 @@ export function ChannelEditor({ open, onOpenChange, channelId }: ChannelEditorPr
                   required
                 />
                 <p className="text-xs text-muted-foreground">
-                  在企业微信群组中添加自定义机器人获取
+                  {t("channel.wecomWebhookHint")}
                 </p>
               </div>
             )}
@@ -301,7 +287,7 @@ export function ChannelEditor({ open, onOpenChange, channelId }: ChannelEditorPr
             {type === "dingtalk" && (
               <>
                 <div className="space-y-2">
-                  <Label htmlFor="dingtalkWebhook">Webhook 地址 *</Label>
+                  <Label htmlFor="dingtalkWebhook">{t("channel.webhookUrl")} *</Label>
                   <Input
                     id="dingtalkWebhook"
                     value={dingtalkConfig.webhookUrl}
@@ -310,21 +296,37 @@ export function ChannelEditor({ open, onOpenChange, channelId }: ChannelEditorPr
                     required
                   />
                   <p className="text-xs text-muted-foreground">
-                    在钉钉群组中添加自定义机器人获取
+                    {t("channel.dingtalkWebhookHint")}
                   </p>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="dingtalkSecret">签名密钥 (可选)</Label>
+                  <Label htmlFor="dingtalkSecret">{t("channel.signSecretOptional")}</Label>
                   <Input
                     id="dingtalkSecret"
                     type="password"
                     value={dingtalkConfig.secret || ""}
                     onChange={(e) => setDingtalkConfig({ ...dingtalkConfig, secret: e.target.value })}
-                    placeholder="启用签名验证时填写"
+                    placeholder={t("channel.signSecretPlaceholder")}
                   />
                   <p className="text-xs text-muted-foreground">
-                    如果机器人开启了签名验证，需要填写此密钥
+                    {t("channel.signSecretHint")}
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="dingtalkAtPhones">{t("channel.atPhonesOptional")}</Label>
+                  <Input
+                    id="dingtalkAtPhones"
+                    value={(dingtalkConfig.atPhones || []).join(",")}
+                    onChange={(e) => setDingtalkConfig({
+                      ...dingtalkConfig,
+                      atPhones: e.target.value.split(",").map(s => s.trim()).filter(s => s)
+                    })}
+                    placeholder={t("channel.atPhonesPlaceholder")}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {t("channel.atPhonesHint")}
                   </p>
                 </div>
               </>
@@ -336,11 +338,10 @@ export function ChannelEditor({ open, onOpenChange, channelId }: ChannelEditorPr
                 variant="outline"
                 onClick={() => onOpenChange(false)}
               >
-                取消
+                {t("common.cancel")}
               </Button>
               <Button type="submit" disabled={isPending}>
-                {isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                {isPending ? "保存中..." : "保存"}
+                {isPending ? t("task.saving") : t("common.save")}
               </Button>
             </div>
           </form>

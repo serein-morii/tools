@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useCreateTemplate, useTemplate, useUpdateTemplate } from "@/lib/query/templateQueries";
 import { CronEditor } from "./CronEditor";
 import type { CronConfig } from "@/types";
+import { useTranslation } from "react-i18next";
 
 interface TemplateEditorProps {
   open: boolean;
@@ -34,6 +35,7 @@ export function TemplateEditor({ open, onOpenChange, templateId }: TemplateEdito
   const createTemplate = useCreateTemplate();
   const updateTemplate = useUpdateTemplate();
   const [form, setForm] = useState(initialForm);
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (template && templateId) {
@@ -84,7 +86,7 @@ export function TemplateEditor({ open, onOpenChange, templateId }: TemplateEdito
         <Dialog.Content className="fixed left-1/2 top-1/2 z-50 max-h-[85vh] w-full max-w-2xl -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-lg bg-background p-6 shadow-lg">
           <div className="mb-6 flex items-center justify-between">
             <Dialog.Title className="text-lg font-semibold">
-              {templateId ? "编辑模板" : "新建模板"}
+              {templateId ? t("template.editTemplate") : t("template.newTemplate")}
             </Dialog.Title>
             <Dialog.Close asChild>
               <Button variant="ghost" size="icon">
@@ -95,7 +97,7 @@ export function TemplateEditor({ open, onOpenChange, templateId }: TemplateEdito
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid gap-2">
-              <Label htmlFor="template-name">模板名称</Label>
+              <Label htmlFor="template-name">{t("template.templateName")}</Label>
               <Input
                 id="template-name"
                 value={form.name}
@@ -105,7 +107,7 @@ export function TemplateEditor({ open, onOpenChange, templateId }: TemplateEdito
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="template-description">描述</Label>
+              <Label htmlFor="template-description">{t("template.description")}</Label>
               <Input
                 id="template-description"
                 value={form.description}
@@ -114,7 +116,7 @@ export function TemplateEditor({ open, onOpenChange, templateId }: TemplateEdito
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="template-category">分类</Label>
+              <Label htmlFor="template-category">{t("template.category")}</Label>
               <Input
                 id="template-category"
                 value={form.category}
@@ -124,7 +126,7 @@ export function TemplateEditor({ open, onOpenChange, templateId }: TemplateEdito
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="template-title">标题模板</Label>
+              <Label htmlFor="template-title">{t("template.titleTemplate")}</Label>
               <Input
                 id="template-title"
                 value={form.title_template}
@@ -134,7 +136,7 @@ export function TemplateEditor({ open, onOpenChange, templateId }: TemplateEdito
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="template-body">正文模板</Label>
+              <Label htmlFor="template-body">{t("template.bodyTemplate")}</Label>
               <Textarea
                 id="template-body"
                 value={form.body_template}
@@ -143,18 +145,18 @@ export function TemplateEditor({ open, onOpenChange, templateId }: TemplateEdito
                 required
               />
               <div className="text-xs text-muted-foreground space-y-1">
-                <p className="font-medium">可用变量：</p>
+                <p className="font-medium">{t("template.variables")}:</p>
                 <div className="grid grid-cols-2 gap-x-4 gap-y-1 pl-2">
-                  <span><code className="bg-muted px-1 rounded">{`{task_name}`}</code> 任务名称</span>
-                  <span><code className="bg-muted px-1 rounded">{`{date}`}</code> 日期 (如 2026-05-25)</span>
-                  <span><code className="bg-muted px-1 rounded">{`{time}`}</code> 时间 (如 09:00)</span>
-                  <span><code className="bg-muted px-1 rounded">{`{weekday}`}</code> 星期 (如 周一)</span>
+                  <span><code className="bg-muted px-1 rounded">{`{task_name}`}</code> {t("template.varTaskName")}</span>
+                  <span><code className="bg-muted px-1 rounded">{`{date}`}</code> {t("template.varDate")}</span>
+                  <span><code className="bg-muted px-1 rounded">{`{time}`}</code> {t("template.varTime")}</span>
+                  <span><code className="bg-muted px-1 rounded">{`{weekday}`}</code> {t("template.varWeekday")}</span>
                 </div>
               </div>
             </div>
 
             <div className="grid gap-2">
-              <Label>默认时间配置</Label>
+              <Label>{t("template.defaultTime")}</Label>
               <CronEditor
                 value={form.cron_config}
                 onChange={(cronExpr, cronConfig) => setForm({ ...form, default_cron: cronExpr, cron_config: cronConfig })}
@@ -163,10 +165,10 @@ export function TemplateEditor({ open, onOpenChange, templateId }: TemplateEdito
 
             <div className="flex justify-end gap-2 pt-4">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                取消
+                {t("common.cancel")}
               </Button>
               <Button type="submit" disabled={createTemplate.isPending || updateTemplate.isPending}>
-                保存
+                {t("common.save")}
               </Button>
             </div>
           </form>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy } from "react";
 import { useTranslation } from "react-i18next";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -10,9 +10,10 @@ import { open, save } from "@tauri-apps/plugin-dialog";
 import { invoke } from "@tauri-apps/api/core";
 import { Monitor, Moon, Sun, Power, EyeOff, MonitorUp } from "lucide-react";
 import { ToggleRow } from "@/components/ui/toggle-row";
-import { LanguageSettings } from "@/components/settings/LanguageSettings";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/theme-provider";
+
+const LanguageSettings = lazy(() => import("@/components/settings/LanguageSettings").then((m) => ({ default: m.LanguageSettings })));
 
 const DEFAULT_SNOOZE_MINUTES = "5";
 const DEFAULT_HISTORY_RETENTION_DAYS = "30";
@@ -66,7 +67,7 @@ export function SettingsPage() {
     updateSetting.mutate({ key, value });
   };
 
-  const handleLanguageChange = (lang: "zh" | "en") => {
+  const handleLanguageChange = (lang: "zh" | "en" | "ja" | "ko") => {
     i18n.changeLanguage(lang);
     window.localStorage.setItem("language", lang);
   };
@@ -142,7 +143,7 @@ export function SettingsPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <LanguageSettings
-            value={i18n.language as "zh" | "en"}
+            value={i18n.language as "zh" | "en" | "ja" | "ko"}
             onChange={handleLanguageChange}
           />
 

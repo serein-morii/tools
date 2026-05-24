@@ -10,36 +10,12 @@ import {
   formatCronDescription,
   validateCronConfig,
 } from "@/lib/cron";
+import { useTranslation } from "react-i18next";
 
 interface CronEditorProps {
   value: string;
   onChange: (cronExpr: string, cronConfig: string) => void;
 }
-
-const WEEKDAY_LABELS = [
-  "周一",
-  "周二",
-  "周三",
-  "周四",
-  "周五",
-  "周六",
-  "周日",
-];
-
-const MONTH_LABELS = [
-  "一月",
-  "二月",
-  "三月",
-  "四月",
-  "五月",
-  "六月",
-  "七月",
-  "八月",
-  "九月",
-  "十月",
-  "十一月",
-  "十二月",
-];
 
 function parseCronConfig(configStr: string): CronConfig {
   try {
@@ -56,6 +32,36 @@ function parseCronConfig(configStr: string): CronConfig {
 export function CronEditor({ value, onChange }: CronEditorProps) {
   const [config, setConfig] = useState<CronConfig>(parseCronConfig(value));
   const [errors, setErrors] = useState<string[]>([]);
+  const { t } = useTranslation();
+
+  const WEEKDAY_LABELS = [
+    t("cron.weekdayMon"),
+    t("cron.weekdayTue"),
+    t("cron.weekdayWed"),
+    t("cron.weekdayThu"),
+    t("cron.weekdayFri"),
+    t("cron.weekdaySat"),
+    t("cron.weekdaySun"),
+  ];
+
+  const MONTH_LABELS = [
+    t("cron.monthJan"),
+    t("cron.monthFeb"),
+    t("cron.monthMar"),
+    t("cron.monthApr"),
+    t("cron.monthMay"),
+    t("cron.monthJun"),
+    t("cron.monthJul"),
+    t("cron.monthAug"),
+    t("cron.monthSep"),
+    t("cron.monthOct"),
+    t("cron.monthNov"),
+    t("cron.monthDec"),
+  ];
+
+  useEffect(() => {
+    setConfig(parseCronConfig(value));
+  }, [value]);
 
   useEffect(() => {
     setConfig(parseCronConfig(value));
@@ -79,21 +85,21 @@ export function CronEditor({ value, onChange }: CronEditorProps) {
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="standard" className="flex items-center gap-1">
             <Clock className="h-3 w-3" />
-            标准
+            {t("cron.standard")}
           </TabsTrigger>
           <TabsTrigger value="special" className="flex items-center gap-1">
             <Repeat className="h-3 w-3" />
-            特殊
+            {t("cron.special")}
           </TabsTrigger>
           <TabsTrigger value="advanced" className="flex items-center gap-1">
             <Settings2 className="h-3 w-3" />
-            高级
+            {t("cron.advanced")}
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="standard" className="space-y-4 pt-4">
           <div className="space-y-2">
-            <Label>频率</Label>
+            <Label>{t("cron.frequency")}</Label>
             <Select
               value={config.standard?.frequency || "daily"}
               onChange={(e) => {
@@ -104,15 +110,15 @@ export function CronEditor({ value, onChange }: CronEditorProps) {
                 });
               }}
             >
-              <option value="daily">每天</option>
-              <option value="weekly">每周</option>
-              <option value="monthly">每月</option>
-              <option value="yearly">每年</option>
+              <option value="daily">{t("cron.daily")}</option>
+              <option value="weekly">{t("cron.weekly")}</option>
+              <option value="monthly">{t("cron.monthly")}</option>
+              <option value="yearly">{t("cron.yearly")}</option>
             </Select>
           </div>
 
           <div className="space-y-2">
-            <Label>时间</Label>
+            <Label>{t("cron.time")}</Label>
             <Input
               type="time"
               value={config.standard?.time || "09:00"}
@@ -125,7 +131,7 @@ export function CronEditor({ value, onChange }: CronEditorProps) {
 
           {config.standard?.frequency === "weekly" && (
             <div className="space-y-2">
-              <Label>星期</Label>
+              <Label>{t("cron.weekday")}</Label>
               <Select
                 value={config.standard?.dayOfWeek?.toString() || "1"}
                 onChange={(e) => updateConfig({
@@ -144,7 +150,7 @@ export function CronEditor({ value, onChange }: CronEditorProps) {
 
           {config.standard?.frequency === "monthly" && (
             <div className="space-y-2">
-              <Label>日期</Label>
+              <Label>{t("cron.dayOfMonth")}</Label>
               <Select
                 value={config.standard?.dayOfMonth?.toString() || "1"}
                 onChange={(e) => updateConfig({
@@ -154,7 +160,7 @@ export function CronEditor({ value, onChange }: CronEditorProps) {
               >
                 {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
                   <option key={day} value={day}>
-                    {day} 日
+                    {day} {t("cron.day")}
                   </option>
                 ))}
               </Select>
@@ -164,7 +170,7 @@ export function CronEditor({ value, onChange }: CronEditorProps) {
           {config.standard?.frequency === "yearly" && (
             <>
               <div className="space-y-2">
-                <Label>月份</Label>
+                <Label>{t("cron.month")}</Label>
                 <Select
                   value={config.standard?.month?.toString() || "1"}
                   onChange={(e) => updateConfig({
@@ -180,7 +186,7 @@ export function CronEditor({ value, onChange }: CronEditorProps) {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>日期</Label>
+                <Label>{t("cron.dayOfMonth")}</Label>
                 <Select
                   value={config.standard?.dayOfMonth?.toString() || "1"}
                   onChange={(e) => updateConfig({
@@ -190,7 +196,7 @@ export function CronEditor({ value, onChange }: CronEditorProps) {
                 >
                   {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
                     <option key={day} value={day}>
-                      {day} 日
+                      {day} {t("cron.day")}
                     </option>
                   ))}
                 </Select>
@@ -201,7 +207,7 @@ export function CronEditor({ value, onChange }: CronEditorProps) {
 
         <TabsContent value="special" className="space-y-4 pt-4">
           <div className="space-y-2">
-            <Label>类型</Label>
+            <Label>{t("cron.type")}</Label>
             <Select
               value={config.special?.type || "interval"}
               onChange={(e) => {
@@ -212,16 +218,16 @@ export function CronEditor({ value, onChange }: CronEditorProps) {
                 });
               }}
             >
-              <option value="interval">间隔重复</option>
-              <option value="nth_weekday">第 N 个星期几</option>
-              <option value="last_day">月末特定日期</option>
+              <option value="interval">{t("cron.intervalRepeat")}</option>
+              <option value="nth_weekday">{t("cron.nthWeekday")}</option>
+              <option value="last_day">{t("cron.lastDayOfMonth")}</option>
             </Select>
           </div>
 
           {/* 时间设置 - 对 nth_weekday 和 last_day 都需要 */}
           {(config.special?.type === "nth_weekday" || config.special?.type === "last_day") && (
             <div className="space-y-2">
-              <Label>时间</Label>
+              <Label>{t("cron.time")}</Label>
               <Input
                 type="time"
                 value={config.special?.time || "09:00"}
@@ -237,7 +243,7 @@ export function CronEditor({ value, onChange }: CronEditorProps) {
             <>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>间隔值</Label>
+                  <Label>{t("cron.intervalValue")}</Label>
                   <Input
                     type="number"
                     min={1}
@@ -257,7 +263,7 @@ export function CronEditor({ value, onChange }: CronEditorProps) {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>单位</Label>
+                  <Label>{t("cron.unit")}</Label>
                   <Select
                     value={config.special?.interval?.unit || "hours"}
                     onChange={(e) => updateConfig({
@@ -273,15 +279,15 @@ export function CronEditor({ value, onChange }: CronEditorProps) {
                       },
                     })}
                   >
-                    <option value="minutes">分钟</option>
-                    <option value="hours">小时</option>
-                    <option value="days">天</option>
-                    <option value="weeks">周</option>
+                    <option value="minutes">{t("cron.minutes")}</option>
+                    <option value="hours">{t("cron.hours")}</option>
+                    <option value="days">{t("cron.days")}</option>
+                    <option value="weeks">{t("cron.weeks")}</option>
                   </Select>
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>起始时间</Label>
+                <Label>{t("cron.startTime")}</Label>
                 <Input
                   type="time"
                   value={config.special?.interval?.startTime || "09:00"}
@@ -306,7 +312,7 @@ export function CronEditor({ value, onChange }: CronEditorProps) {
             <>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>第几个</Label>
+                  <Label>{t("cron.nthLabel")}</Label>
                   <Select
                     value={config.special?.nthWeekday?.nth?.toString() || "1"}
                     onChange={(e) => updateConfig({
@@ -322,15 +328,15 @@ export function CronEditor({ value, onChange }: CronEditorProps) {
                       },
                     })}
                   >
-                    <option value="1">第 1 个</option>
-                    <option value="2">第 2 个</option>
-                    <option value="3">第 3 个</option>
-                    <option value="4">第 4 个</option>
-                    <option value="5">第 5 个</option>
+                    <option value="1">{t("cron.nth1")}</option>
+                    <option value="2">{t("cron.nth2")}</option>
+                    <option value="3">{t("cron.nth3")}</option>
+                    <option value="4">{t("cron.nth4")}</option>
+                    <option value="5">{t("cron.nth5")}</option>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>星期几</Label>
+                  <Label>{t("cron.weekday")}</Label>
                   <Select
                     value={config.special?.nthWeekday?.weekday?.toString() || "1"}
                     onChange={(e) => updateConfig({
@@ -355,7 +361,7 @@ export function CronEditor({ value, onChange }: CronEditorProps) {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>月份 (可选，不选则每月)</Label>
+                <Label>{t("cron.monthOptional")}</Label>
                 <Select
                   value={config.special?.nthWeekday?.month?.toString() || ""}
                   onChange={(e) => updateConfig({
@@ -371,7 +377,7 @@ export function CronEditor({ value, onChange }: CronEditorProps) {
                     },
                   })}
                 >
-                  <option value="">每月</option>
+                  <option value="">{t("cron.everyMonth")}</option>
                   {MONTH_LABELS.map((label, idx) => (
                     <option key={idx} value={idx + 1}>
                       {label}
@@ -385,7 +391,7 @@ export function CronEditor({ value, onChange }: CronEditorProps) {
           {config.special?.type === "last_day" && (
             <>
               <div className="space-y-2">
-                <Label>类型</Label>
+                <Label>{t("cron.type")}</Label>
                 <Select
                   value={config.special?.lastDay?.type || "last_nth"}
                   onChange={(e) => updateConfig({
@@ -401,15 +407,15 @@ export function CronEditor({ value, onChange }: CronEditorProps) {
                     },
                   })}
                 >
-                  <option value="last_nth">月末倒数第 N 天</option>
-                  <option value="last_workday">月末最后一个工作日</option>
-                  <option value="last_friday">月末最后一个周五</option>
+                  <option value="last_nth">{t("cron.lastNthDay")}</option>
+                  <option value="last_workday">{t("cron.lastWorkday")}</option>
+                  <option value="last_friday">{t("cron.lastFriday")}</option>
                 </Select>
               </div>
 
               {config.special?.lastDay?.type === "last_nth" && (
                 <div className="space-y-2">
-                  <Label>倒数第几天</Label>
+                  <Label>{t("cron.lastNthLabel")}</Label>
                   <Input
                     type="number"
                     min={1}
@@ -429,13 +435,13 @@ export function CronEditor({ value, onChange }: CronEditorProps) {
                     })}
                   />
                   <p className="text-xs text-muted-foreground">
-                    例如：倒数第3天 = 月底前3天（5月倒数第3天是29日）
+                    {t("cron.lastNthHint")}
                   </p>
                 </div>
               )}
 
               <div className="space-y-2">
-                <Label>月份 (可选，不选则每月)</Label>
+                <Label>{t("cron.monthOptional")}</Label>
                 <Select
                   value={config.special?.lastDay?.month?.toString() || ""}
                   onChange={(e) => updateConfig({
@@ -451,7 +457,7 @@ export function CronEditor({ value, onChange }: CronEditorProps) {
                     },
                   })}
                 >
-                  <option value="">每月</option>
+                  <option value="">{t("cron.everyMonth")}</option>
                   {MONTH_LABELS.map((label, idx) => (
                     <option key={idx} value={idx + 1}>
                       {label}
@@ -465,7 +471,7 @@ export function CronEditor({ value, onChange }: CronEditorProps) {
 
         <TabsContent value="advanced" className="space-y-4 pt-4">
           <div className="space-y-2">
-            <Label>Cron 表达式</Label>
+            <Label>{t("cron.cronExpression")}</Label>
             <Input
               value={config.advanced?.expression || "0 9 * * *"}
               onChange={(e) => updateConfig({
@@ -475,22 +481,22 @@ export function CronEditor({ value, onChange }: CronEditorProps) {
               placeholder="0 9 * * *"
             />
             <div className="text-xs text-muted-foreground space-y-1">
-              <p>格式: 分 时 日 月 周</p>
+              <p>{t("cron.cronHint")}</p>
               <div className="grid grid-cols-2 gap-1 text-xs">
-                <span className="font-medium">示例:</span>
+                <span className="font-medium">{t("cron.examples")}:</span>
                 <span></span>
                 <span>0 9 * * *</span>
-                <span>每天 9:00</span>
+                <span>{t("cron.example1")}</span>
                 <span>30 9 * * *</span>
-                <span>每天 9:30</span>
+                <span>{t("cron.example2")}</span>
                 <span>0 9 * * 1</span>
-                <span>每周一 9:00</span>
+                <span>{t("cron.example3")}</span>
                 <span>0 9 1 * *</span>
-                <span>每月1日 9:00</span>
+                <span>{t("cron.example4")}</span>
                 <span>0 9,18 * * *</span>
-                <span>每天 9:00 和 18:00</span>
+                <span>{t("cron.example5")}</span>
                 <span>*/15 * * * *</span>
-                <span>每 15 分钟</span>
+                <span>{t("cron.example6")}</span>
               </div>
             </div>
           </div>
@@ -498,7 +504,7 @@ export function CronEditor({ value, onChange }: CronEditorProps) {
       </Tabs>
 
       <div className="space-y-2 pt-2 border-t">
-        <Label>结束条件</Label>
+        <Label>{t("cron.endCondition")}</Label>
         <div className="grid grid-cols-2 gap-4">
           <Select
             value={config.endCondition?.type || "never"}
@@ -510,9 +516,9 @@ export function CronEditor({ value, onChange }: CronEditorProps) {
               },
             })}
           >
-            <option value="never">永不结束</option>
-            <option value="after_occurrences">执行 N 次后</option>
-            <option value="until_date">指定日期后</option>
+            <option value="never">{t("cron.neverEnd")}</option>
+            <option value="after_occurrences">{t("cron.afterOccurrences")}</option>
+            <option value="until_date">{t("cron.untilDate")}</option>
           </Select>
 
           {config.endCondition?.type === "after_occurrences" && (
@@ -528,7 +534,7 @@ export function CronEditor({ value, onChange }: CronEditorProps) {
                   occurrences: parseInt(e.target.value) || 10,
                 },
               })}
-              placeholder="次数"
+              placeholder={t("cron.occurrences")}
             />
           )}
 
@@ -558,7 +564,7 @@ export function CronEditor({ value, onChange }: CronEditorProps) {
       )}
 
       <div className="text-sm text-muted-foreground bg-muted p-2 rounded">
-        当前配置: {formatCronDescription(config)}
+        {t("cron.currentConfig")}: {formatCronDescription(config)}
       </div>
     </div>
   );

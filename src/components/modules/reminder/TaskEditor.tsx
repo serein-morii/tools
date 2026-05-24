@@ -5,13 +5,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select } from "@/components/ui/select";
-import { X, Loader2 } from "lucide-react";
-import { toast } from "sonner";
+import { X } from "lucide-react";
 import { useTask, useCreateTask, useUpdateTask } from "@/lib/query/taskQueries";
 import { useChannels } from "@/lib/query/channelQueries";
+import { useTemplates } from "@/lib/query/templateQueries";
 import { CronEditor } from "./CronEditor";
 import type { CreateTaskRequest, UpdateTaskRequest } from "@/types";
 import { createDefaultTaskRequest } from "@/lib/cron";
+import { applyTemplateToTaskForm } from "@/lib/taskTemplate";
+import { useTranslation } from "react-i18next";
 
 interface TaskEditorProps {
   open: boolean;
@@ -22,8 +24,10 @@ interface TaskEditorProps {
 export function TaskEditor({ open, onOpenChange, taskId }: TaskEditorProps) {
   const { data: existingTask } = useTask(taskId || "");
   const { data: channels } = useChannels();
+  const { data: templates } = useTemplates();
   const createMutation = useCreateTask();
   const updateMutation = useUpdateTask();
+  const { t } = useTranslation();
 
   const [form, setForm] = useState<CreateTaskRequest>(createDefaultTaskRequest());
 
@@ -45,6 +49,18 @@ export function TaskEditor({ open, onOpenChange, taskId }: TaskEditorProps) {
     }
   }, [existingTask, open]);
 
+  const handleTemplateChange = (templateId: string) => {
+    if (!templateId) {
+      setForm({ ...form, template_id: undefined });
+      return;
+    }
+
+    const template = templates?.find((item) => item.id === templateId);
+    if (template) {
+      setForm(applyTemplateToTaskForm(form, template));
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -64,26 +80,10 @@ export function TaskEditor({ open, onOpenChange, taskId }: TaskEditorProps) {
       };
       updateMutation.mutate(
         { id: taskId, task: updateReq },
-        {
-          onSuccess: () => {
-            toast.success("任务已更新");
-            onOpenChange(false);
-          },
-          onError: (error) => {
-            toast.error("更新失败: " + error.message);
-          }
-        }
+        { onSuccess: () => onOpenChange(false) }
       );
     } else {
-      createMutation.mutate(form, {
-        onSuccess: () => {
-          toast.success("任务已创建");
-          onOpenChange(false);
-        },
-        onError: (error) => {
-          toast.error("创建失败: " + error.message);
-        }
-      });
+      createMutation.mutate(form, { onSuccess: () => onOpenChange(false) });
     }
   };
 
@@ -96,7 +96,7 @@ export function TaskEditor({ open, onOpenChange, taskId }: TaskEditorProps) {
         <Dialog.Content className="fixed left-[50%] top-[50%] z-50 w-full max-w-lg max-h-[85vh] translate-x-[-50%] translate-y-[-50%] bg-background shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] rounded-lg border flex flex-col">
           <div className="flex items-center justify-between p-6 pb-0">
             <Dialog.Title className="text-lg font-semibold">
-              {taskId ? "编辑任务" : "新建任务"}
+              {taskId ? t("task.editTask") : t("task.newTask")}
             </Dialog.Title>
             <Dialog.Close asChild>
               <button
@@ -110,42 +110,61 @@ export function TaskEditor({ open, onOpenChange, taskId }: TaskEditorProps) {
 
           <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 pt-4 space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">任务名称</Label>
+              <Label htmlFor="template_id">{t("task.reminderTemplate")}</Label>
+              <Select
+                id="template_id"
+                value={form.template_id || ""}
+                onChange={(e) => handleTemplateChange(e.target.value)}
+              >
+                <option value="">{t("task.noTemplate")}</option>
+                {templates?.map((template) => (
+                  <option key={template.id} value={template.id}>
+                    {template.name}
+                  </option>
+                ))}
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                {t("task.templateHint")}
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="name">{t("task.taskName")}</Label>
               <Input
                 id="name"
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
-                placeholder="输入任务名称"
+                placeholder={t("task.taskNamePlaceholder")}
                 required
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="description">描述 (可选)</Label>
+              <Label htmlFor="description">{t("task.descriptionOptional")}</Label>
               <Textarea
                 id="description"
                 value={form.description || ""}
                 onChange={(e) => setForm({ ...form, description: e.target.value || undefined })}
-                placeholder="任务描述"
+                placeholder={t("task.descriptionPlaceholder")}
                 rows={2}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="reminder_type">提醒类型</Label>
+              <Label htmlFor="reminder_type">{t("task.reminderType")}</Label>
               <Select
                 id="reminder_type"
                 value={form.reminder_type}
                 onChange={(e) => setForm({ ...form, reminder_type: e.target.value })}
               >
-                <option value="simple">简单通知</option>
-                <option value="confirm">需要确认</option>
-                <option value="feedback">需要反馈</option>
+                <option value="simple">{t("task.simpleNotification")}</option>
+                <option value="confirm">{t("task.needConfirm")}</option>
+                <option value="feedback">{t("task.needFeedback")}</option>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <Label>时间配置</Label>
+              <Label>{t("task.timeConfig")}</Label>
               <CronEditor
                 value={form.cron_config || ""}
                 onChange={(cronExpr, cronConfig) =>
@@ -155,7 +174,7 @@ export function TaskEditor({ open, onOpenChange, taskId }: TaskEditorProps) {
             </div>
 
             <div className="space-y-2">
-              <Label>通知渠道</Label>
+              <Label>{t("task.channels")}</Label>
               <div className="flex flex-wrap gap-2">
                 {channels?.map((channel) => (
                   <label
@@ -183,70 +202,23 @@ export function TaskEditor({ open, onOpenChange, taskId }: TaskEditorProps) {
                 ))}
                 {(!channels || channels.length === 0) && (
                   <p className="text-sm text-muted-foreground">
-                    暂无可用渠道，请先在渠道管理中创建
+                    {t("task.noChannels")}
                   </p>
                 )}
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="priority">优先级</Label>
+              <Label htmlFor="priority">{t("task.priority")}</Label>
               <Select
                 id="priority"
                 value={form.priority?.toString() || "0"}
                 onChange={(e) => setForm({ ...form, priority: parseInt(e.target.value) })}
               >
-                <option value="0">普通</option>
-                <option value="1">重要</option>
-                <option value="2">紧急</option>
+                <option value="0">{t("task.normal")}</option>
+                <option value="1">{t("task.important")}</option>
+                <option value="2">{t("task.urgent")}</option>
               </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>标签</Label>
-              <div className="flex flex-wrap gap-2">
-                {form.tags?.map((tag, idx) => (
-                  <span
-                    key={idx}
-                    className="inline-flex items-center gap-1 px-2 py-1 bg-muted rounded-md text-sm"
-                  >
-                    {tag}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setForm({
-                          ...form,
-                          tags: form.tags?.filter((_, i) => i !== idx),
-                        });
-                      }}
-                      className="text-muted-foreground hover:text-foreground"
-                    >
-                      ×
-                    </button>
-                  </span>
-                ))}
-                <input
-                  type="text"
-                  placeholder="添加标签..."
-                  className="px-2 py-1 border rounded-md text-sm w-24"
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      const value = (e.target as HTMLInputElement).value.trim();
-                      if (value && !form.tags?.includes(value)) {
-                        setForm({
-                          ...form,
-                          tags: [...(form.tags || []), value],
-                        });
-                      }
-                      (e.target as HTMLInputElement).value = "";
-                    }
-                  }}
-                />
-              </div>
-              <p className="text-xs text-muted-foreground">
-                按 Enter 添加标签
-              </p>
             </div>
 
             <div className="flex justify-end gap-2 pt-4 border-t bg-background p-6 -mx-6 -mb-6">
@@ -255,11 +227,10 @@ export function TaskEditor({ open, onOpenChange, taskId }: TaskEditorProps) {
                 variant="outline"
                 onClick={() => onOpenChange(false)}
               >
-                取消
+                {t("common.cancel")}
               </Button>
               <Button type="submit" disabled={isPending}>
-                {isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                {isPending ? "保存中..." : "保存"}
+                {isPending ? t("task.saving") : t("common.save")}
               </Button>
             </div>
           </form>
