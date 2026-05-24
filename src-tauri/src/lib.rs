@@ -7,6 +7,7 @@ use std::sync::{Arc, Mutex};
 use database::{Database, init_schema};
 use services::scheduler::start_scheduler;
 use tauri::Manager;
+use tauri::Emitter;
 use tauri::tray::{TrayIconBuilder, TrayIconEvent};
 use tauri::menu::{MenuBuilder, MenuItem};
 
@@ -90,9 +91,17 @@ pub fn run() {
 
             // Build tray menu
             let show_item = MenuItem::with_id(app, "show", "显示窗口", true, None::<&str>)?;
+            let new_task_item = MenuItem::with_id(app, "new_task", "新建任务", true, None::<&str>)?;
+            let new_note_item = MenuItem::with_id(app, "new_note", "新建笔记", true, None::<&str>)?;
+            let timer_item = MenuItem::with_id(app, "timer", "专注计时", true, None::<&str>)?;
             let quit_item = MenuItem::with_id(app, "quit", "退出", true, None::<&str>)?;
             let menu = MenuBuilder::new(app)
                 .item(&show_item)
+                .separator()
+                .item(&new_task_item)
+                .item(&new_note_item)
+                .item(&timer_item)
+                .separator()
                 .item(&quit_item)
                 .build()?;
 
@@ -106,6 +115,28 @@ pub fn run() {
                         if let Some(window) = app.get_webview_window("main") {
                             window.show().unwrap();
                             window.set_focus().unwrap();
+                        }
+                    }
+                    "new_task" => {
+                        if let Some(window) = app.get_webview_window("main") {
+                            window.show().unwrap();
+                            window.set_focus().unwrap();
+                            // Emit event to frontend to open new task dialog
+                            let _ = window.emit("tray-action", "new-task");
+                        }
+                    }
+                    "new_note" => {
+                        if let Some(window) = app.get_webview_window("main") {
+                            window.show().unwrap();
+                            window.set_focus().unwrap();
+                            let _ = window.emit("tray-action", "new-note");
+                        }
+                    }
+                    "timer" => {
+                        if let Some(window) = app.get_webview_window("main") {
+                            window.show().unwrap();
+                            window.set_focus().unwrap();
+                            let _ = window.emit("tray-action", "timer");
                         }
                     }
                     "quit" => {

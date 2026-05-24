@@ -1,11 +1,12 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { Bell, Settings, StickyNote, ChevronLeft, ChevronRight } from "lucide-react";
+import { Bell, Settings, StickyNote, ChevronLeft, ChevronRight, Timer } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
 
 const primaryItems = [
   { to: "/reminder/tasks", icon: Bell, labelKey: "nav.reminder", match: "/reminder" },
+  { to: "/timer", icon: Timer, labelKey: "nav.timer", match: "/timer" },
   { to: "/notes", icon: StickyNote, labelKey: "nav.notes", match: "/notes" },
 ];
 

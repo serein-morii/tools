@@ -272,12 +272,26 @@
   "notes": {
     "title": "快捷笔记",
     "description": "快速记录想法和备忘",
-    "placeholder": "记录想法...",
+    "placeholder": "记录想法... (Cmd+Enter 保存)",
     "search": "搜索笔记...",
     "empty": "暂无笔记，开始记录你的想法吧",
     "noResults": "没有找到匹配的笔记",
     "pinned": "已置顶",
     "unpinned": "置顶",
+    "other": "其他笔记",
     "deleteConfirm": "确定删除这条笔记吗？"
+  },
+  "timer": {
+    "title": "专注计时",
+    "description": "番茄工作法，提升专注力",
+    "focus": "专注",
+    "shortBreak": "短休息",
+    "longBreak": "长休息",
+    "sessions": "完成轮数",
+    "totalTime": "专注时长",
+    "minutes": "分钟",
+    "start": "开始",
+    "pause": "暂停",
+    "reset": "重置"
   }
 }

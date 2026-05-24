@@ -272,12 +272,26 @@
   "notes": {
     "title": "Quick Notes",
     "description": "Quickly capture your thoughts",
-    "placeholder": "Write something...",
+    "placeholder": "Write something... (Cmd+Enter to save)",
     "search": "Search notes...",
     "empty": "No notes yet. Start capturing your thoughts!",
     "noResults": "No matching notes found",
     "pinned": "Pinned",
     "unpinned": "Pin",
+    "other": "Other notes",
     "deleteConfirm": "Are you sure you want to delete this note?"
+  },
+  "timer": {
+    "title": "Focus Timer",
+    "description": "Pomodoro technique for better focus",
+    "focus": "Focus",
+    "shortBreak": "Short Break",
+    "longBreak": "Long Break",
+    "sessions": "Sessions",
+    "totalTime": "Total Time",
+    "minutes": "min",
+    "start": "Start",
+    "pause": "Pause",
+    "reset": "Reset"
   }
 }

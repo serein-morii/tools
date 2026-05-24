@@ -7,6 +7,7 @@ import { SettingsPage } from "@/pages/SettingsPage";
 import { TemplatesPage } from "@/pages/TemplatesPage";
 import { HistoryPage } from "@/pages/HistoryPage";
 import { QuickNotesPage } from "@/pages/QuickNotesPage";
+import { PomodoroTimerPage } from "@/pages/PomodoroTimerPage";
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
           <Route path="channels" element={<ChannelsPage />} />
           <Route path="history" element={<HistoryPage />} />
         </Route>
+        <Route path="timer" element={<PomodoroTimerPage />} />
         <Route path="notes" element={<QuickNotesPage />} />
         <Route path="settings" element={<SettingsPage />} />
       </Route>

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Plus, Search } from "lucide-react";
 import { TaskList } from "@/components/modules/reminder/TaskList";
 import { TaskEditor } from "@/components/modules/reminder/TaskEditor";
@@ -48,6 +48,13 @@ export function TaskReminderPage() {
       description: t("task.newTask"),
     },
   ]);
+
+  // Listen for tray new-task event
+  useEffect(() => {
+    const handler = () => handleCreate();
+    window.addEventListener("tray-new-task", handler);
+    return () => window.removeEventListener("tray-new-task", handler);
+  }, []);
 
   if (isLoading) {
     return (
