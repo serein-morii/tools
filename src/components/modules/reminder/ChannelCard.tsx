@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Pencil, Trash2, Zap, CheckCircle, XCircle } from "lucide-react";
+import { Pencil, Trash2, Zap, CheckCircle, XCircle, Smartphone, MessageSquare, Bell } from "lucide-react";
 import { toast } from "sonner";
 import { useUpdateChannel, useDeleteChannel, useTestChannel } from "@/lib/query/channelQueries";
 import { useState } from "react";
@@ -13,11 +13,11 @@ interface ChannelCardProps {
   onEdit: (id: string) => void;
 }
 
-const channelTypeLabels: Record<string, string> = {
-  bark: "Bark",
-  feishu: "飞书",
-  wecom: "企业微信",
-  dingtalk: "钉钉",
+const channelTypeIcons: Record<string, React.ReactNode> = {
+  bark: <Smartphone className="h-4 w-4" />,
+  feishu: <MessageSquare className="h-4 w-4" />,
+  wecom: <MessageSquare className="h-4 w-4" />,
+  dingtalk: <Bell className="h-4 w-4" />,
 };
 
 export function ChannelCard({ channel, onEdit }: ChannelCardProps) {
@@ -86,14 +86,14 @@ export function ChannelCard({ channel, onEdit }: ChannelCardProps) {
   return (
     <Card className="p-4">
       <div className="flex items-start gap-4">
+        <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-muted shrink-0">
+          {channelTypeIcons[channel.type] || <Bell className="h-4 w-4" />}
+        </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
             <h3 className="font-medium truncate">{channel.name}</h3>
             <Badge variant={channel.enabled ? "default" : "secondary"}>
               {channel.enabled ? "启用" : "禁用"}
-            </Badge>
-            <Badge variant="outline">
-              {channelTypeLabels[channel.type] || channel.type}
             </Badge>
           </div>
 
@@ -138,14 +138,15 @@ export function ChannelCard({ channel, onEdit }: ChannelCardProps) {
             variant="ghost"
             size="icon"
             onClick={() => onEdit(channel.id)}
+            title="编辑"
           >
             <Pencil className="h-4 w-4" />
           </Button>
           <Button
-            variant="ghost"
+            variant={isDeleting ? "destructive" : "ghost"}
             size="icon"
             onClick={handleDelete}
-            className={isDeleting ? "text-destructive hover:text-destructive" : ""}
+            title={isDeleting ? "再次点击确认删除" : "删除"}
           >
             <Trash2 className="h-4 w-4" />
           </Button>

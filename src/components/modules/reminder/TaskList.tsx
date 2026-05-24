@@ -1,17 +1,25 @@
 import type { Task } from "@/types";
+import { Button } from "@/components/ui/button";
+import { BellPlus } from "lucide-react";
 import { TaskCard } from "./TaskCard";
 
 interface TaskListProps {
   tasks: Task[];
   onEdit: (id: string) => void;
+  onCreate?: () => void;
 }
 
-export function TaskList({ tasks, onEdit }: TaskListProps) {
+export function TaskList({ tasks, onEdit, onCreate }: TaskListProps) {
   if (tasks.length === 0) {
     return (
       <div className="text-center py-12">
+        <BellPlus className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
         <p className="text-muted-foreground mb-2">暂无任务</p>
-        <p className="text-sm text-muted-foreground">点击右上角「新建任务」创建第一个提醒</p>
+        {onCreate && (
+          <Button onClick={onCreate} className="mt-4">
+            创建第一个提醒
+          </Button>
+        )}
       </div>
     );
   }

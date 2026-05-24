@@ -75,11 +75,17 @@ export function TaskCard({ task, onEdit }: TaskCardProps) {
   };
 
   return (
-    <Card className="p-4">
+    <Card className={`p-4 ${task.priority === 2 ? 'border-l-4 border-l-red-500' : task.priority === 1 ? 'border-l-4 border-l-yellow-500' : ''}`}>
       <div className="flex items-start gap-4">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
             <h3 className="font-medium truncate">{task.name}</h3>
+            {task.priority === 2 && (
+              <span className="text-xs px-1.5 py-0.5 bg-red-100 text-red-700 rounded font-medium">紧急</span>
+            )}
+            {task.priority === 1 && (
+              <span className="text-xs px-1.5 py-0.5 bg-yellow-100 text-yellow-700 rounded font-medium">重要</span>
+            )}
             <Badge variant={task.enabled ? "default" : "secondary"}>
               {task.enabled ? "启用" : "禁用"}
             </Badge>
@@ -132,14 +138,15 @@ export function TaskCard({ task, onEdit }: TaskCardProps) {
             variant="ghost"
             size="icon"
             onClick={() => onEdit(task.id)}
+            title="编辑"
           >
             <Pencil className="h-4 w-4" />
           </Button>
           <Button
-            variant="ghost"
+            variant={isDeleting ? "destructive" : "ghost"}
             size="icon"
             onClick={handleDelete}
-            className={isDeleting ? "text-destructive hover:text-destructive" : ""}
+            title={isDeleting ? "再次点击确认删除" : "删除"}
           >
             <Trash2 className="h-4 w-4" />
           </Button>

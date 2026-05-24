@@ -81,7 +81,7 @@ export function TaskReminderPage() {
         </div>
       </div>
 
-      <TaskList tasks={filteredTasks} onEdit={handleEdit} />
+      <TaskList tasks={filteredTasks} onEdit={handleEdit} onCreate={handleCreate} />
 
       <TaskEditor
         open={editorOpen}

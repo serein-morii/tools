@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
-import { X } from "lucide-react";
+import { X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useChannel, useCreateChannel, useUpdateChannel } from "@/lib/query/channelQueries";
 import type {
@@ -339,6 +339,7 @@ export function ChannelEditor({ open, onOpenChange, channelId }: ChannelEditorPr
                 取消
               </Button>
               <Button type="submit" disabled={isPending}>
+                {isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                 {isPending ? "保存中..." : "保存"}
               </Button>
             </div>
