@@ -76,20 +76,22 @@ export function TaskEditor({ open, onOpenChange, taskId }: TaskEditorProps) {
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/50 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
-        <Dialog.Content className="fixed left-[50%] top-[50%] z-50 w-full max-w-lg translate-x-[-50%] translate-y-[-50%] bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] rounded-lg border">
-          <Dialog.Title className="text-lg font-semibold mb-4">
-            {taskId ? "编辑任务" : "新建任务"}
-          </Dialog.Title>
-          <Dialog.Close asChild>
-            <button
-              className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-              aria-label="Close"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </Dialog.Close>
+        <Dialog.Content className="fixed left-[50%] top-[50%] z-50 w-full max-w-lg max-h-[85vh] translate-x-[-50%] translate-y-[-50%] bg-background shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] rounded-lg border flex flex-col">
+          <div className="flex items-center justify-between p-6 pb-0">
+            <Dialog.Title className="text-lg font-semibold">
+              {taskId ? "编辑任务" : "新建任务"}
+            </Dialog.Title>
+            <Dialog.Close asChild>
+              <button
+                className="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                aria-label="Close"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </Dialog.Close>
+          </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 pt-4 space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name">任务名称</Label>
               <Input
@@ -183,7 +185,7 @@ export function TaskEditor({ open, onOpenChange, taskId }: TaskEditorProps) {
               </Select>
             </div>
 
-            <div className="flex justify-end gap-2 pt-4">
+            <div className="flex justify-end gap-2 pt-4 border-t bg-background p-6 -mx-6 -mb-6">
               <Button
                 type="button"
                 variant="outline"
