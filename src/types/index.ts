@@ -159,6 +159,20 @@ export interface BarkConfig {
   group?: string;
 }
 
+export interface FeishuConfig {
+  webhookUrl: string;
+  secret?: string;
+}
+
+export interface WeComConfig {
+  webhookUrl: string;
+}
+
+export interface DingTalkConfig {
+  webhookUrl: string;
+  secret?: string;
+}
+
 // Reminder type matching Rust backend
 export interface Reminder {
   id: string;

@@ -6,7 +6,14 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { X } from "lucide-react";
 import { useChannel, useCreateChannel, useUpdateChannel } from "@/lib/query/channelQueries";
-import type { CreateChannelRequest, UpdateChannelRequest, BarkConfig } from "@/types";
+import type {
+  CreateChannelRequest,
+  UpdateChannelRequest,
+  BarkConfig,
+  FeishuConfig,
+  WeComConfig,
+  DingTalkConfig,
+} from "@/types";
 
 interface ChannelEditorProps {
   open: boolean;
@@ -21,6 +28,20 @@ const defaultBarkConfig: BarkConfig = {
   group: "Tools",
 };
 
+const defaultFeishuConfig: FeishuConfig = {
+  webhookUrl: "",
+  secret: "",
+};
+
+const defaultWeComConfig: WeComConfig = {
+  webhookUrl: "",
+};
+
+const defaultDingTalkConfig: DingTalkConfig = {
+  webhookUrl: "",
+  secret: "",
+};
+
 export function ChannelEditor({ open, onOpenChange, channelId }: ChannelEditorProps) {
   const { data: existingChannel } = useChannel(channelId || "");
   const createMutation = useCreateChannel();
@@ -30,6 +51,9 @@ export function ChannelEditor({ open, onOpenChange, channelId }: ChannelEditorPr
   const [type, setType] = useState("bark");
   const [description, setDescription] = useState("");
   const [barkConfig, setBarkConfig] = useState<BarkConfig>(defaultBarkConfig);
+  const [feishuConfig, setFeishuConfig] = useState<FeishuConfig>(defaultFeishuConfig);
+  const [wecomConfig, setWecomConfig] = useState<WeComConfig>(defaultWeComConfig);
+  const [dingtalkConfig, setDingtalkConfig] = useState<DingTalkConfig>(defaultDingTalkConfig);
 
   useEffect(() => {
     if (existingChannel) {
@@ -38,23 +62,47 @@ export function ChannelEditor({ open, onOpenChange, channelId }: ChannelEditorPr
       setDescription(existingChannel.description || "");
       try {
         const config = JSON.parse(existingChannel.config);
-        setBarkConfig({ ...defaultBarkConfig, ...config });
+        switch (existingChannel.type) {
+          case "bark":
+            setBarkConfig({ ...defaultBarkConfig, ...config });
+            break;
+          case "feishu":
+            setFeishuConfig({ ...defaultFeishuConfig, ...config });
+            break;
+          case "wecom":
+            setWecomConfig({ ...defaultWeComConfig, ...config });
+            break;
+          case "dingtalk":
+            setDingtalkConfig({ ...defaultDingTalkConfig, ...config });
+            break;
+        }
       } catch {
-        setBarkConfig(defaultBarkConfig);
+        // Use defaults
       }
     } else {
       setName("");
       setType("bark");
       setDescription("");
       setBarkConfig(defaultBarkConfig);
+      setFeishuConfig(defaultFeishuConfig);
+      setWecomConfig(defaultWeComConfig);
+      setDingtalkConfig(defaultDingTalkConfig);
     }
   }, [existingChannel, open]);
 
   const getConfigJson = (): string => {
-    if (type === "bark") {
-      return JSON.stringify(barkConfig);
+    switch (type) {
+      case "bark":
+        return JSON.stringify(barkConfig);
+      case "feishu":
+        return JSON.stringify(feishuConfig);
+      case "wecom":
+        return JSON.stringify(wecomConfig);
+      case "dingtalk":
+        return JSON.stringify(dingtalkConfig);
+      default:
+        return "{}";
     }
-    return "{}";
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -141,6 +189,7 @@ export function ChannelEditor({ open, onOpenChange, channelId }: ChannelEditorPr
               />
             </div>
 
+            {/* Bark Config */}
             {type === "bark" && (
               <>
                 <div className="space-y-2">
@@ -175,6 +224,89 @@ export function ChannelEditor({ open, onOpenChange, channelId }: ChannelEditorPr
                     onChange={(e) => setBarkConfig({ ...barkConfig, group: e.target.value })}
                     placeholder="Tools"
                   />
+                </div>
+              </>
+            )}
+
+            {/* Feishu Config */}
+            {type === "feishu" && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="feishuWebhook">Webhook 地址 *</Label>
+                  <Input
+                    id="feishuWebhook"
+                    value={feishuConfig.webhookUrl}
+                    onChange={(e) => setFeishuConfig({ ...feishuConfig, webhookUrl: e.target.value })}
+                    placeholder="https://open.feishu.cn/open-apis/bot/v2/hook/..."
+                    required
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    在飞书群组中添加自定义机器人获取
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="feishuSecret">签名密钥 (可选)</Label>
+                  <Input
+                    id="feishuSecret"
+                    type="password"
+                    value={feishuConfig.secret || ""}
+                    onChange={(e) => setFeishuConfig({ ...feishuConfig, secret: e.target.value })}
+                    placeholder="启用签名验证时填写"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    如果机器人开启了签名验证，需要填写此密钥
+                  </p>
+                </div>
+              </>
+            )}
+
+            {/* WeCom Config */}
+            {type === "wecom" && (
+              <div className="space-y-2">
+                <Label htmlFor="wecomWebhook">Webhook 地址 *</Label>
+                <Input
+                  id="wecomWebhook"
+                  value={wecomConfig.webhookUrl}
+                  onChange={(e) => setWecomConfig({ ...wecomConfig, webhookUrl: e.target.value })}
+                  placeholder="https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=..."
+                  required
+                />
+                <p className="text-xs text-muted-foreground">
+                  在企业微信群组中添加自定义机器人获取
+                </p>
+              </div>
+            )}
+
+            {/* DingTalk Config */}
+            {type === "dingtalk" && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="dingtalkWebhook">Webhook 地址 *</Label>
+                  <Input
+                    id="dingtalkWebhook"
+                    value={dingtalkConfig.webhookUrl}
+                    onChange={(e) => setDingtalkConfig({ ...dingtalkConfig, webhookUrl: e.target.value })}
+                    placeholder="https://oapi.dingtalk.com/robot/send?access_token=..."
+                    required
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    在钉钉群组中添加自定义机器人获取
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="dingtalkSecret">签名密钥 (可选)</Label>
+                  <Input
+                    id="dingtalkSecret"
+                    type="password"
+                    value={dingtalkConfig.secret || ""}
+                    onChange={(e) => setDingtalkConfig({ ...dingtalkConfig, secret: e.target.value })}
+                    placeholder="启用签名验证时填写"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    如果机器人开启了签名验证，需要填写此密钥
+                  </p>
                 </div>
               </>
             )}
