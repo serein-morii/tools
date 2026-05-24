@@ -23,5 +23,11 @@ pub async fn send_wecom(
         .map_err(|e| crate::error::ToolsError::Http(e.to_string()))?;
 
     let text = response.text().await.map_err(|e| crate::error::ToolsError::Http(e.to_string()))?;
-    Ok(text)
+
+    // 企业微信成功响应: {"errcode":0,"errmsg":"ok"}
+    if text.contains("\"errcode\":0") || text.contains("\"errcode\": 0") {
+        Ok("发送成功".to_string())
+    } else {
+        Err(crate::error::ToolsError::NotificationFailed(format!("企业微信响应: {}", text)))
+    }
 }

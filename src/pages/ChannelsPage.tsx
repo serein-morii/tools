@@ -23,7 +23,6 @@ export function ChannelsPage() {
     setEditorOpen(true);
   };
 
-  // Keyboard shortcuts
   useKeyboardShortcuts([
     {
       key: "n",
@@ -34,19 +33,37 @@ export function ChannelsPage() {
   ]);
 
   if (isLoading) {
-    return <div className="p-6"><p className="text-muted-foreground">{t("common.loading")}</p></div>;
+    return (
+      <div className="flex items-center justify-center p-12">
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+          {t("common.loading")}
+        </div>
+      </div>
+    );
   }
 
   if (error) {
-    return <div className="p-6"><p className="text-destructive">{t("channel.loadError")}</p></div>;
+    return (
+      <div className="p-6">
+        <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-sm text-destructive">
+          {t("channel.loadError")}
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-semibold">{t("channel.pageTitle")}</h2>
-        <Button onClick={handleCreate}>
-          <Plus className="h-4 w-4 mr-2" />
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-semibold">{t("channel.pageTitle")}</h2>
+          <p className="text-sm text-muted-foreground">
+            {t("channel.emptyList")}
+          </p>
+        </div>
+        <Button onClick={handleCreate} className="gap-2 shadow-sm">
+          <Plus className="h-4 w-4" />
           {t("channel.newChannel")}
         </Button>
       </div>

@@ -71,5 +71,11 @@ pub async fn send_feishu(
         .map_err(|e| crate::error::ToolsError::Http(e.to_string()))?;
 
     let text = response.text().await.map_err(|e| crate::error::ToolsError::Http(e.to_string()))?;
-    Ok(text)
+
+    // Check if response indicates success (StatusCode: 0)
+    if text.contains("\"StatusCode\":0") || text.contains("\"StatusCode\": 0") {
+        Ok("发送成功".to_string())
+    } else {
+        Err(crate::error::ToolsError::NotificationFailed(format!("飞书响应: {}", text)))
+    }
 }

@@ -12,6 +12,7 @@ export function useTasks() {
   return useQuery({
     queryKey: taskKeys.list(),
     queryFn: taskApi.getAll,
+    refetchInterval: 10000,
   });
 }
 

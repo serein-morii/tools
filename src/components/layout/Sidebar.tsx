@@ -1,12 +1,12 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { Bell, Clock3, NotebookText, Settings } from "lucide-react";
+import { Bell, Settings, StickyNote, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
+import { useState } from "react";
 
 const primaryItems = [
   { to: "/reminder/tasks", icon: Bell, labelKey: "nav.reminder", match: "/reminder" },
-  { to: "/timer", icon: Clock3, labelKey: "nav.timer", match: "/timer" },
-  { to: "/notes", icon: NotebookText, labelKey: "nav.notes", match: "/notes" },
+  { to: "/notes", icon: StickyNote, labelKey: "nav.notes", match: "/notes" },
 ];
 
 const settingsItem = { to: "/settings", icon: Settings, labelKey: "nav.settings", match: "/settings" };
@@ -14,49 +14,81 @@ const settingsItem = { to: "/settings", icon: Settings, labelKey: "nav.settings"
 export function Sidebar() {
   const location = useLocation();
   const { t } = useTranslation();
+  const [collapsed, setCollapsed] = useState(false);
 
   return (
-    <aside className="flex h-screen w-[72px] shrink-0 flex-col border-r bg-card">
-      <div className="flex h-16 items-center justify-center border-b">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-sm font-semibold text-primary-foreground">
-          T
-        </div>
+    <aside
+      className={cn(
+        "flex h-screen flex-col border-r bg-card/50 backdrop-blur-sm transition-all duration-300",
+        collapsed ? "w-[64px]" : "w-[200px]"
+      )}
+    >
+      {/* Header */}
+      <div className="flex h-14 items-center justify-between border-b px-3">
+        {!collapsed && (
+          <div className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 text-sm font-bold text-white shadow-sm">
+              T
+            </div>
+            <span className="text-sm font-semibold text-foreground">Tools</span>
+          </div>
+        )}
+        {collapsed && (
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 text-sm font-bold text-white shadow-sm mx-auto">
+            T
+          </div>
+        )}
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className={cn(
+            "flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground transition-colors",
+            collapsed && "absolute right-2"
+          )}
+        >
+          {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+        </button>
       </div>
 
-      <nav className="flex flex-1 flex-col items-center gap-2 py-4">
+      {/* Navigation */}
+      <nav className="flex flex-1 flex-col gap-1 p-2">
         {primaryItems.map((item) => (
-          <ModuleLink key={item.to} item={item} label={t(item.labelKey)} active={location.pathname.startsWith(item.match)} />
+          <NavLink
+            key={item.to}
+            to={item.to}
+            className={({ isActive }) =>
+              cn(
+                "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200",
+                isActive
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                collapsed && "justify-center px-2"
+              )
+            }
+          >
+            <item.icon className="h-5 w-5 shrink-0" />
+            {!collapsed && <span>{t(item.labelKey)}</span>}
+          </NavLink>
         ))}
       </nav>
 
-      <div className="flex justify-center border-t py-4">
-        <ModuleLink item={settingsItem} label={t(settingsItem.labelKey)} active={location.pathname.startsWith(settingsItem.match)} />
+      {/* Settings at bottom */}
+      <div className="border-t p-2">
+        <NavLink
+          to={settingsItem.to}
+          className={({ isActive }) =>
+            cn(
+              "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200",
+              isActive
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "text-muted-foreground hover:bg-accent hover:text-foreground",
+              collapsed && "justify-center px-2"
+            )
+          }
+        >
+          <settingsItem.icon className="h-5 w-5 shrink-0" />
+          {!collapsed && <span>{t(settingsItem.labelKey)}</span>}
+        </NavLink>
       </div>
     </aside>
-  );
-}
-
-function ModuleLink({
-  item,
-  label,
-  active,
-}: {
-  item: { to: string; icon: typeof Bell; labelKey: string };
-  label: string;
-  active: boolean;
-}) {
-  return (
-    <NavLink
-      to={item.to}
-      className={cn(
-        "flex h-14 w-14 flex-col items-center justify-center rounded-xl text-xs transition-colors",
-        active
-          ? "bg-primary text-primary-foreground"
-          : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
-      )}
-    >
-      <item.icon className="mb-1 h-5 w-5" />
-      <span>{label}</span>
-    </NavLink>
   );
 }

@@ -268,5 +268,16 @@
     "snoozedAt": "Snoozed · {{time}}",
     "processedAt": "Processed: {{action}} · {{time}}",
     "noContent": "No content"
+  },
+  "notes": {
+    "title": "Quick Notes",
+    "description": "Quickly capture your thoughts",
+    "placeholder": "Write something...",
+    "search": "Search notes...",
+    "empty": "No notes yet. Start capturing your thoughts!",
+    "noResults": "No matching notes found",
+    "pinned": "Pinned",
+    "unpinned": "Pin",
+    "deleteConfirm": "Are you sure you want to delete this note?"
   }
 }

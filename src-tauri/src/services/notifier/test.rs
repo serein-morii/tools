@@ -25,12 +25,7 @@ pub async fn test_channel(db: &Arc<Database>, channel_id: &str) -> Result<String
 
     // Send test notification
     let result = match channel_type.as_str() {
-        "bark" => {
-            let key = config["key"].as_str().unwrap_or("");
-            let server_url = config["serverUrl"].as_str().unwrap_or("https://api.day.app");
-            let group = config["group"].as_str().unwrap_or("Tools");
-            send_bark_notification_with_config(&client, server_url, key, group, "Tools 测试", "这是一条测试消息").await
-        },
+        "bark" => send_bark_notification(&channel_config, "Tools 测试", "这是一条测试消息").await,
         "feishu" => {
             let webhook_url = config["webhookUrl"].as_str().unwrap_or("");
             let secret = config["secret"].as_str();
@@ -43,7 +38,14 @@ pub async fn test_channel(db: &Arc<Database>, channel_id: &str) -> Result<String
         "dingtalk" => {
             let webhook_url = config["webhookUrl"].as_str().unwrap_or("");
             let secret = config["secret"].as_str();
-            send_dingtalk(&client, webhook_url, secret, "Tools 测试", "这是一条测试消息").await
+            let at_phones: Vec<String> = config["atPhones"]
+                .as_array()
+                .map(|arr| arr.iter().filter_map(|v| v.as_str().map(|s| s.to_string())).collect())
+                .unwrap_or_default();
+            send_dingtalk(
+                &client, webhook_url, secret, "Tools 测试", "这是一条测试消息",
+                if at_phones.is_empty() { None } else { Some(&at_phones) }
+            ).await
         },
         _ => Err(crate::error::ToolsError::NotificationFailed(format!("未知的渠道类型: {}", channel_type))),
     };
@@ -56,42 +58,4 @@ pub async fn test_channel(db: &Arc<Database>, channel_id: &str) -> Result<String
     }
 
     result
-}
-
-async fn send_bark_notification_with_config(
-    client: &Client,
-    server_url: &str,
-    key: &str,
-    group: &str,
-    title: &str,
-    content: &str,
-) -> Result<String> {
-    if key.is_empty() {
-        return Err(crate::error::ToolsError::NotificationFailed("Bark Key 不能为空".to_string()));
-    }
-
-    let url = format!("{}/{}", server_url.trim_end_matches('/'), key);
-
-    let body = serde_json::json!({
-        "title": title,
-        "body": content,
-        "group": group,
-        "sound": "bell",
-    });
-
-    let response = client
-        .post(&url)
-        .json(&body)
-        .send()
-        .await
-        .map_err(|e| crate::error::ToolsError::Http(e.to_string()))?;
-
-    let status = response.status();
-    let text = response.text().await.map_err(|e| crate::error::ToolsError::Http(e.to_string()))?;
-
-    if status.is_success() {
-        Ok(format!("发送成功: {}", text))
-    } else {
-        Err(crate::error::ToolsError::NotificationFailed(format!("发送失败: {}", text)))
-    }
 }

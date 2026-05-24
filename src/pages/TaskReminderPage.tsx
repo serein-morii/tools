@@ -51,8 +51,11 @@ export function TaskReminderPage() {
 
   if (isLoading) {
     return (
-      <div className="p-6">
-        <p className="text-muted-foreground">{t("common.loading")}</p>
+      <div className="flex items-center justify-center p-12">
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+          {t("common.loading")}
+        </div>
       </div>
     );
   }
@@ -60,44 +63,47 @@ export function TaskReminderPage() {
   if (error) {
     return (
       <div className="p-6">
-        <p className="text-destructive">{t("task.loadError")}</p>
+        <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-sm text-destructive">
+          {t("task.loadError")}
+        </div>
       </div>
     );
   }
 
   return (
     <div className="p-6">
+      {/* Header */}
       <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="relative w-full lg:max-w-md">
+        <div className="relative w-full lg:max-w-sm">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder={t("task.searchPlaceholder")}
-            className="pl-9"
+            className="pl-10 h-10 bg-card"
           />
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <div className="flex rounded-md border bg-background p-1">
+          <div className="flex rounded-lg border bg-card p-1">
             {filterOptions.map((option) => (
               <button
                 key={option.value}
                 type="button"
                 onClick={() => setRange(option.value)}
                 className={cn(
-                  "rounded-sm px-3 py-1.5 text-sm transition-colors",
+                  "rounded-md px-3 py-1.5 text-sm font-medium transition-all duration-200",
                   range === option.value
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:bg-accent hover:text-foreground"
                 )}
               >
                 {option.label}
               </button>
             ))}
           </div>
-          <Button onClick={handleCreate}>
-            <Plus className="mr-2 h-4 w-4" />
+          <Button onClick={handleCreate} className="gap-2 shadow-sm">
+            <Plus className="h-4 w-4" />
             {t("task.newTask")}
           </Button>
         </div>

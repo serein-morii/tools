@@ -74,6 +74,12 @@ pub fn run() {
             commands::set_window_theme,
             commands::export_backup,
             commands::import_backup,
+            commands::get_notes,
+            commands::get_note,
+            commands::create_note,
+            commands::update_note,
+            commands::delete_note,
+            commands::search_notes,
         ])
         .setup(|app| {
             // Store app handle for auto-launch

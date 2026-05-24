@@ -1,4 +1,4 @@
-use chrono::{DateTime, Utc};
+use chrono::Utc;
 use rusqlite::{Connection, Row};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;

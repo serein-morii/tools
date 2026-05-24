@@ -268,5 +268,16 @@
     "snoozedAt": "已稍后提醒 · {{time}}",
     "processedAt": "已处理：{{action}} · {{time}}",
     "noContent": "无内容"
+  },
+  "notes": {
+    "title": "快捷笔记",
+    "description": "快速记录想法和备忘",
+    "placeholder": "记录想法...",
+    "search": "搜索笔记...",
+    "empty": "暂无笔记，开始记录你的想法吧",
+    "noResults": "没有找到匹配的笔记",
+    "pinned": "已置顶",
+    "unpinned": "置顶",
+    "deleteConfirm": "确定删除这条笔记吗？"
   }
 }

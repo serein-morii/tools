@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Pencil, Trash2, Bell, BellOff, AlertCircle } from "lucide-react";
+import { Pencil, Trash2, Bell, BellOff, AlertCircle, Clock } from "lucide-react";
 import { useToggleTask, useDeleteTask } from "@/lib/query/taskQueries";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -26,10 +26,10 @@ export function TaskCard({ task, onEdit }: TaskCardProps) {
     feedback: t("task.needFeedback"),
   };
 
-  const priorityConfig: Record<number, { label: string; color: string; borderColor: string }> = {
-    2: { label: t("task.urgentPriority"), color: "text-red-500", borderColor: "border-l-4 border-l-red-500" },
-    1: { label: t("task.importantPriority"), color: "text-yellow-500", borderColor: "border-l-4 border-l-yellow-500" },
-    0: { label: "", color: "", borderColor: "" },
+  const priorityConfig: Record<number, { label: string; color: string; bgClass: string }> = {
+    2: { label: t("task.urgentPriority"), color: "text-red-600", bgClass: "bg-red-50 border-red-200 dark:bg-red-950/30 dark:border-red-800" },
+    1: { label: t("task.importantPriority"), color: "text-amber-600", bgClass: "bg-amber-50 border-amber-200 dark:bg-amber-950/30 dark:border-amber-800" },
+    0: { label: "", color: "", bgClass: "" },
   };
 
   const handleToggle = () => {
@@ -58,67 +58,88 @@ export function TaskCard({ task, onEdit }: TaskCardProps) {
   };
 
   return (
-    <Card className={cn("p-4", priorityConfig[task.priority]?.borderColor)}>
-      <div className="flex items-start gap-4">
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            <h3 className="font-medium truncate">{task.name}</h3>
-            <Badge variant={task.enabled ? "default" : "secondary"}>
-              {task.enabled ? t("common.enabled") : t("common.disabled")}
-            </Badge>
-            {task.reminder_type !== "simple" && (
-              <Badge variant="outline">
-                {reminderTypeLabels[task.reminder_type] || task.reminder_type}
-              </Badge>
+    <Card
+      className={cn(
+        "group relative overflow-hidden transition-all duration-200 hover:shadow-md",
+        !task.enabled && "opacity-60",
+        priorityConfig[task.priority]?.bgClass
+      )}
+    >
+      <div className="p-4">
+        <div className="flex items-start gap-4">
+          {/* Icon */}
+          <div
+            className={cn(
+              "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg transition-colors",
+              task.enabled
+                ? "bg-gradient-to-br from-violet-500 to-indigo-600 text-white shadow-sm"
+                : "bg-muted text-muted-foreground"
             )}
-            {task.priority > 0 && (
-              <Badge variant="outline" className={cn("gap-1", priorityConfig[task.priority]?.color)}>
-                <AlertCircle className="h-3 w-3" />
-                {priorityConfig[task.priority]?.label}
-              </Badge>
-            )}
+          >
+            {task.enabled ? <Bell className="h-5 w-5" /> : <BellOff className="h-5 w-5" />}
           </div>
 
-          {task.description && (
-            <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
-              {task.description}
-            </p>
-          )}
-
-          <div className="flex items-center gap-4 text-sm text-muted-foreground">
-            <span className="flex items-center gap-1">
-              {task.enabled ? (
-                <Bell className="h-3 w-3" />
-              ) : (
-                <BellOff className="h-3 w-3" />
+          {/* Content */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap mb-1">
+              <h3 className="font-medium text-foreground truncate">{task.name}</h3>
+              {task.priority > 0 && (
+                <Badge variant="outline" className={cn("gap-1 text-xs", priorityConfig[task.priority]?.color)}>
+                  <AlertCircle className="h-3 w-3" />
+                  {priorityConfig[task.priority]?.label}
+                </Badge>
               )}
-              {task.cron_expr}
-            </span>
-            <span>{t("task.nextRunLabel")}: {formatNextRun(task.next_run_at)}</span>
-          </div>
-        </div>
+              {task.reminder_type !== "simple" && (
+                <Badge variant="secondary" className="text-xs">
+                  {reminderTypeLabels[task.reminder_type] || task.reminder_type}
+                </Badge>
+              )}
+            </div>
 
-        <div className="flex items-center gap-2">
-          <Switch
-            checked={task.enabled}
-            onCheckedChange={handleToggle}
-            disabled={toggleMutation.isPending}
-          />
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onEdit(task.id)}
-          >
-            <Pencil className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleDelete}
-            className={isDeleting ? "text-destructive hover:text-destructive" : ""}
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+            {task.description && (
+              <p className="text-sm text-muted-foreground mb-2 line-clamp-1">
+                {task.description}
+              </p>
+            )}
+
+            <div className="flex items-center gap-4 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1.5 font-mono bg-muted/50 px-2 py-0.5 rounded">
+                {task.cron_expr}
+              </span>
+              <span className="flex items-center gap-1.5">
+                <Clock className="h-3 w-3" />
+                {t("task.nextRunLabel")}: {formatNextRun(task.next_run_at)}
+              </span>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex items-center gap-1">
+            <Switch
+              checked={task.enabled}
+              onCheckedChange={handleToggle}
+              disabled={toggleMutation.isPending}
+            />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => onEdit(task.id)}
+              className="opacity-0 group-hover:opacity-100 transition-opacity"
+            >
+              <Pencil className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleDelete}
+              className={cn(
+                "opacity-0 group-hover:opacity-100 transition-opacity",
+                isDeleting && "opacity-100 text-destructive hover:text-destructive"
+              )}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </div>
     </Card>

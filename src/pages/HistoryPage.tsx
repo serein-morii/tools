@@ -10,6 +10,7 @@ export function HistoryPage() {
   const { data: history, isLoading, error } = useReminderHistory();
   const { t } = useTranslation();
   const items = history || [];
+
   const stats = {
     total: items.length,
     sent: items.filter((item) => item.status === "sent").length,
@@ -19,9 +20,11 @@ export function HistoryPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center gap-2 p-6 text-muted-foreground">
-        <Loader2 className="h-4 w-4 animate-spin" />
-        {t("history.loading")}
+      <div className="flex items-center justify-center p-12">
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          {t("history.loading")}
+        </div>
       </div>
     );
   }
@@ -29,7 +32,7 @@ export function HistoryPage() {
   if (error) {
     return (
       <div className="p-6">
-        <Card className="border-destructive/50">
+        <Card className="border-destructive/50 bg-destructive/5">
           <CardContent className="pt-6 text-sm text-destructive">{t("history.loadError")}</CardContent>
         </Card>
       </div>
@@ -37,16 +40,41 @@ export function HistoryPage() {
   }
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="grid gap-3 md:grid-cols-4">
-        <StatCard title={t("history.all")} value={stats.total} />
-        <StatCard title={t("history.success")} value={stats.sent} tone="success" />
-        <StatCard title={t("history.failed")} value={stats.failed} tone="danger" />
-        <StatCard title={t("history.pending")} value={stats.pending} tone="muted" />
+    <div className="p-6">
+      {/* Stats Grid */}
+      <div className="grid grid-cols-4 gap-4 mb-6">
+        <StatCard
+          title={t("history.all")}
+          value={stats.total}
+          icon={Clock3}
+          color="text-muted-foreground"
+          bg="bg-muted/50"
+        />
+        <StatCard
+          title={t("history.success")}
+          value={stats.sent}
+          icon={CheckCircle2}
+          color="text-green-600"
+          bg="bg-green-50 dark:bg-green-950/30"
+        />
+        <StatCard
+          title={t("history.failed")}
+          value={stats.failed}
+          icon={AlertCircle}
+          color="text-red-600"
+          bg="bg-red-50 dark:bg-red-950/30"
+        />
+        <StatCard
+          title={t("history.pending")}
+          value={stats.pending}
+          icon={Clock3}
+          color="text-amber-600"
+          bg="bg-amber-50 dark:bg-amber-950/30"
+        />
       </div>
 
       {items.length === 0 ? (
-        <Card>
+        <Card className="border-dashed">
           <CardContent className="py-12 text-center text-sm text-muted-foreground">
             {t("history.empty")}
           </CardContent>
@@ -65,24 +93,24 @@ export function HistoryPage() {
 function StatCard({
   title,
   value,
-  tone = "default",
+  icon: Icon,
+  color,
+  bg,
 }: {
   title: string;
   value: number;
-  tone?: "default" | "success" | "danger" | "muted";
+  icon: React.ComponentType<{ className?: string }>;
+  color: string;
+  bg: string;
 }) {
-  const toneClass = {
-    default: "text-foreground",
-    success: "text-green-600",
-    danger: "text-destructive",
-    muted: "text-muted-foreground",
-  }[tone];
-
   return (
-    <Card>
-      <CardContent className="pt-6">
-        <div className="text-sm text-muted-foreground">{title}</div>
-        <div className={`mt-2 text-2xl font-semibold ${toneClass}`}>{value}</div>
+    <Card className={bg}>
+      <CardContent className="py-4">
+        <div className="flex items-center gap-2 mb-1">
+          <Icon className={`h-4 w-4 ${color}`} />
+          <span className="text-sm text-muted-foreground">{title}</span>
+        </div>
+        <div className={`text-2xl font-semibold ${color}`}>{value}</div>
       </CardContent>
     </Card>
   );
@@ -92,24 +120,24 @@ function HistoryCard({ item }: { item: ReminderHistoryItem }) {
   const { t } = useTranslation();
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-3">
+    <Card className="overflow-hidden">
+      <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-3 bg-muted/30 border-b">
         <div>
           <CardTitle className="text-base">{item.task_name}</CardTitle>
           <div className="mt-1 text-xs text-muted-foreground">{t("history.taskId")}: {item.task_id}</div>
         </div>
         <StatusBadge status={item.status} />
       </CardHeader>
-      <CardContent className="space-y-3 text-sm">
-        <div className="grid gap-2 md:grid-cols-2">
+      <CardContent className="p-4 space-y-3 text-sm">
+        <div className="grid grid-cols-2 gap-4">
           <TimeRow label={t("history.scheduledTime")} value={item.scheduled_at} />
           <TimeRow label={t("history.executedTime")} value={item.executed_at} />
         </div>
-        <div className="rounded-md bg-muted p-3 text-xs text-muted-foreground">
+        <div className="rounded-lg bg-muted/50 p-3 text-xs text-muted-foreground">
           {summarizeChannelResults(item.channel_results, t)}
         </div>
         {item.error_message && (
-          <div className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/5 p-3 text-xs text-destructive">
+          <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-xs text-destructive">
             <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
             <span>{item.error_message}</span>
           </div>
@@ -125,20 +153,25 @@ function StatusBadge({ status }: { status: string }) {
 
   if (status === "sent") {
     return (
-      <Badge className="bg-green-600 hover:bg-green-600">
-        <CheckCircle2 className="mr-1 h-3 w-3" />
+      <Badge className="bg-green-600 hover:bg-green-600 gap-1">
+        <CheckCircle2 className="h-3 w-3" />
         {t("history.success")}
       </Badge>
     );
   }
 
   if (status === "failed") {
-    return <Badge variant="destructive">{t("history.failed")}</Badge>;
+    return (
+      <Badge variant="destructive" className="gap-1">
+        <AlertCircle className="h-3 w-3" />
+        {t("history.failed")}
+      </Badge>
+    );
   }
 
   return (
-    <Badge variant="secondary">
-      <Clock3 className="mr-1 h-3 w-3" />
+    <Badge variant="secondary" className="gap-1">
+      <Clock3 className="h-3 w-3" />
       {t("history.pending")}
     </Badge>
   );
@@ -146,9 +179,9 @@ function StatusBadge({ status }: { status: string }) {
 
 function TimeRow({ label, value }: { label: string; value?: number | null }) {
   return (
-    <div>
-      <span className="text-muted-foreground">{label}: </span>
-      <span>{value ? new Date(value).toLocaleString() : "-"}</span>
+    <div className="flex items-center gap-2">
+      <span className="text-muted-foreground">{label}:</span>
+      <span className="font-mono text-xs">{value ? new Date(value).toLocaleString() : "-"}</span>
     </div>
   );
 }

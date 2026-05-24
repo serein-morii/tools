@@ -59,7 +59,12 @@ export function useDeleteChannel() {
 }
 
 export function useTestChannel() {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: (id: string) => channelApi.test(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: channelKeys.list() });
+    },
   });
 }

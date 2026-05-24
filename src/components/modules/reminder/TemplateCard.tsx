@@ -1,9 +1,10 @@
-import { Edit, Trash2 } from "lucide-react";
+import { Edit, Trash2, FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import type { Template } from "@/types";
 import { useTranslation } from "react-i18next";
+import { cn } from "@/lib/utils";
 
 interface TemplateCardProps {
   template: Template;
@@ -13,44 +14,67 @@ interface TemplateCardProps {
 
 export function TemplateCard({ template, onEdit, onDelete }: TemplateCardProps) {
   const { t } = useTranslation();
+
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-3">
-        <div>
-          <CardTitle className="text-base">{template.name}</CardTitle>
-          {template.description && (
-            <p className="mt-1 text-sm text-muted-foreground">{template.description}</p>
-          )}
-        </div>
-        <Badge variant="secondary">{template.category}</Badge>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        <div>
-          <div className="text-xs text-muted-foreground">{t("template.titleTemplate")}</div>
-          <div className="mt-1 rounded-md bg-muted px-3 py-2 text-sm">{template.title_template}</div>
-        </div>
-        <div>
-          <div className="text-xs text-muted-foreground">{t("template.bodyTemplate")}</div>
-          <div className="mt-1 whitespace-pre-wrap rounded-md bg-muted px-3 py-2 text-sm">
-            {template.body_template}
+    <Card className="group overflow-hidden transition-all duration-200 hover:shadow-md">
+      <div className="p-4">
+        <div className="flex items-start gap-4">
+          {/* Icon */}
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 text-white shadow-sm">
+            <FileText className="h-5 w-5" />
           </div>
-        </div>
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
-          <div className="text-xs text-muted-foreground">
-            {t("template.defaultCron")}: {template.default_cron || t("template.notSet")}
+
+          {/* Content */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <h3 className="font-medium text-foreground truncate">{template.name}</h3>
+              <Badge variant="secondary" className="text-xs">
+                {template.category}
+              </Badge>
+            </div>
+
+            {template.description && (
+              <p className="text-sm text-muted-foreground mb-3 line-clamp-1">
+                {template.description}
+              </p>
+            )}
+
+            <div className="space-y-2">
+              <div className="text-xs">
+                <span className="text-muted-foreground">{t("template.titleTemplate")}: </span>
+                <code className="bg-muted/50 px-1.5 py-0.5 rounded text-foreground">{template.title_template}</code>
+              </div>
+              <div className="text-xs">
+                <span className="text-muted-foreground">{t("template.bodyTemplate")}: </span>
+                <code className="bg-muted/50 px-1.5 py-0.5 rounded text-foreground line-clamp-1">{template.body_template}</code>
+              </div>
+              <div className="text-xs text-muted-foreground">
+                {t("template.defaultCron")}: <span className="font-mono">{template.default_cron || t("template.notSet")}</span>
+              </div>
+            </div>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => onEdit(template.id)}>
-              <Edit className="mr-1 h-3 w-3" />
-              {t("common.edit")}
+
+          {/* Actions */}
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => onEdit(template.id)}
+              className="opacity-0 group-hover:opacity-100 transition-opacity"
+            >
+              <Edit className="h-4 w-4" />
             </Button>
-            <Button variant="outline" size="sm" onClick={() => onDelete(template.id)}>
-              <Trash2 className="mr-1 h-3 w-3" />
-              {t("common.delete")}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => onDelete(template.id)}
+              className="opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive"
+            >
+              <Trash2 className="h-4 w-4" />
             </Button>
           </div>
         </div>
-      </CardContent>
+      </div>
     </Card>
   );
 }

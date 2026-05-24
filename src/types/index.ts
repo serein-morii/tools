@@ -285,3 +285,24 @@ export interface UpdateTemplateRequest {
   color?: string;
   tags?: string[];
 }
+
+// Quick Note types
+export interface QuickNote {
+  id: string;
+  content: string;
+  color: string;
+  pinned: boolean;
+  created_at: number;
+  updated_at: number;
+}
+
+export interface CreateNoteRequest {
+  content: string;
+  color?: string;
+}
+
+export interface UpdateNoteRequest {
+  content?: string;
+  color?: string;
+  pinned?: boolean;
+}

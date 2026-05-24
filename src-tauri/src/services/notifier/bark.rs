@@ -2,6 +2,14 @@ use reqwest::Client;
 use serde_json::Value;
 use crate::error::{Result, ToolsError};
 
+pub fn build_bark_url(server_url: &str, key: &str) -> Result<String> {
+    if key.trim().is_empty() {
+        return Err(ToolsError::NotificationFailed("Bark key is required".to_string()));
+    }
+
+    Ok(format!("{}/{}/", server_url.trim_end_matches('/'), key.trim_matches('/')))
+}
+
 pub async fn send_bark_notification(
     config_json: &str,
     title: &str,
@@ -13,7 +21,7 @@ pub async fn send_bark_notification(
     let key = config["key"].as_str()
         .ok_or_else(|| ToolsError::NotificationFailed("Bark key is required".to_string()))?;
 
-    let url = format!("{}/{}", server_url, key);
+    let url = build_bark_url(server_url, key)?;
 
     let client = Client::new();
     let response = client
@@ -35,5 +43,22 @@ pub async fn send_bark_notification(
         Ok("发送成功".to_string())
     } else {
         Err(ToolsError::NotificationFailed(format!("Bark 发送失败: {}", response_body)))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn build_bark_url_requires_trailing_slash_for_json_post() {
+        let url = build_bark_url("https://api.day.app/", "/BfNaf8oqxD4ETnERfpavV4/").unwrap();
+
+        assert_eq!(url, "https://api.day.app/BfNaf8oqxD4ETnERfpavV4/");
+    }
+
+    #[test]
+    fn build_bark_url_rejects_empty_key() {
+        assert!(build_bark_url("https://api.day.app", "").is_err());
     }
 }

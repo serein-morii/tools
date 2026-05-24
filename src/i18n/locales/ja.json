@@ -268,5 +268,16 @@
     "snoozedAt": "再通知設定 · {{time}}",
     "processedAt": "処理済み: {{action}} · {{time}}",
     "noContent": "内容なし"
+  },
+  "notes": {
+    "title": "クイックノート",
+    "description": "アイデアを素早く記録",
+    "placeholder": "何か書く...",
+    "search": "ノートを検索...",
+    "empty": "ノートがありません。アイデアを記録しましょう！",
+    "noResults": "一致するノートが見つかりません",
+    "pinned": "ピン留め済み",
+    "unpinned": "ピン留め",
+    "deleteConfirm": "このノートを削除しますか？"
   }
 }

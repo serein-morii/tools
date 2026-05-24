@@ -268,5 +268,16 @@
     "snoozedAt": "다시 알림 설정 · {{time}}",
     "processedAt": "처리됨: {{action}} · {{time}}",
     "noContent": "내용 없음"
+  },
+  "notes": {
+    "title": "빠른 노트",
+    "description": "아이디어를 빠르게 기록",
+    "placeholder": "무엇을 쓸까요...",
+    "search": "노트 검색...",
+    "empty": "노트가 없습니다. 아이디어를 기록하세요!",
+    "noResults": "일치하는 노트가 없습니다",
+    "pinned": "고정됨",
+    "unpinned": "고정",
+    "deleteConfirm": "이 노트를 삭제하시겠습니까?"
   }
 }

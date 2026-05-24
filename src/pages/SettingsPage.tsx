@@ -8,7 +8,7 @@ import { useSettings, useUpdateSetting, getSettingValue } from "@/lib/query/sett
 import { useQueryClient } from "@tanstack/react-query";
 import { open, save } from "@tauri-apps/plugin-dialog";
 import { invoke } from "@tauri-apps/api/core";
-import { Monitor, Moon, Sun, Power, EyeOff, MonitorUp } from "lucide-react";
+import { Monitor, Moon, Sun, Power, EyeOff, MonitorUp, Download, Upload, Info, Palette, Globe, Bell, Database } from "lucide-react";
 import { ToggleRow } from "@/components/ui/toggle-row";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/theme-provider";
@@ -34,7 +34,6 @@ export function SettingsPage() {
   const snoozeMinutes = getSettingValue(settings, "snooze_minutes", DEFAULT_SNOOZE_MINUTES);
   const historyRetentionDays = getSettingValue(settings, "history_retention_days", DEFAULT_HISTORY_RETENTION_DAYS);
 
-  // Get actual system auto-launch status
   useEffect(() => {
     invoke<boolean>("get_auto_launch_status")
       .then((status) => setAutoLaunchSystemStatus(status))
@@ -42,15 +41,22 @@ export function SettingsPage() {
   }, []);
 
   if (isLoading) {
-    return <div className="p-6 text-sm text-muted-foreground">{t("common.loading")}</div>;
+    return (
+      <div className="flex items-center justify-center p-12">
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+          {t("common.loading")}
+        </div>
+      </div>
+    );
   }
 
   if (error) {
     return (
       <div className="p-6">
-        <Card className="border-destructive/50">
-          <CardContent className="pt-6 text-sm text-destructive">{t("common.error")}</CardContent>
-        </Card>
+        <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-sm text-destructive">
+          {t("common.error")}
+        </div>
       </div>
     );
   }
@@ -129,174 +135,193 @@ export function SettingsPage() {
   };
 
   return (
-    <div className="space-y-6 p-6">
-      <div>
-        <h2 className="text-2xl font-semibold">{t("settings.title")}</h2>
-        <p className="mt-1 text-sm text-muted-foreground">{t("settings.description")}</p>
+    <div className="p-6 max-w-3xl">
+      {/* Header */}
+      <div className="mb-8 flex items-center gap-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 shadow-md">
+          <Info className="h-5 w-5 text-white" />
+        </div>
+        <div>
+          <h2 className="text-xl font-semibold">{t("settings.title")}</h2>
+          <p className="text-sm text-muted-foreground">{t("settings.description")}</p>
+        </div>
       </div>
 
-      {/* Appearance Settings */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{t("settings.appearance")}</CardTitle>
-          <CardDescription>{t("settings.themeHint")}</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <LanguageSettings
-            value={i18n.language as "zh" | "en" | "ja" | "ko"}
-            onChange={handleLanguageChange}
-          />
-
-          <section className="space-y-2">
-            <header className="space-y-1">
-              <h3 className="text-sm font-medium">{t("settings.theme")}</h3>
-              <p className="text-xs text-muted-foreground">{t("settings.themeHint")}</p>
-            </header>
-            <div className="inline-flex gap-1 rounded-md border border-border bg-background p-1">
-              <ThemeButton
-                active={theme === "light"}
-                onClick={() => setTheme("light")}
-                icon={Sun}
-              >
-                {t("settings.themeLight")}
-              </ThemeButton>
-              <ThemeButton
-                active={theme === "dark"}
-                onClick={() => setTheme("dark")}
-                icon={Moon}
-              >
-                {t("settings.themeDark")}
-              </ThemeButton>
-              <ThemeButton
-                active={theme === "system"}
-                onClick={() => setTheme("system")}
-                icon={Monitor}
-              >
-                {t("settings.themeSystem")}
-              </ThemeButton>
+      <div className="space-y-4">
+        {/* Appearance Settings */}
+        <Card className="overflow-hidden">
+          <CardHeader className="bg-muted/30 border-b">
+            <div className="flex items-center gap-2">
+              <Palette className="h-4 w-4 text-violet-500" />
+              <CardTitle className="text-base">{t("settings.appearance")}</CardTitle>
             </div>
-          </section>
-        </CardContent>
-      </Card>
+          </CardHeader>
+          <CardContent className="p-4 space-y-4">
+            <LanguageSettings
+              value={i18n.language as "zh" | "en" | "ja" | "ko"}
+              onChange={handleLanguageChange}
+            />
 
-      {/* Launch Settings */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{t("settings.launch")}</CardTitle>
-          <CardDescription>{t("settings.launchOnStartupDescription")}</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <ToggleRow
-            icon={<Power className="h-4 w-4 text-orange-500" />}
-            title={t("settings.launchOnStartup")}
-            description={autoLaunchSystemStatus ? "✓" : "—"}
-            checked={autoLaunch}
-            onCheckedChange={handleAutoLaunchChange}
-          />
+            <section className="space-y-2">
+              <header className="space-y-1">
+                <h3 className="text-sm font-medium">{t("settings.theme")}</h3>
+                <p className="text-xs text-muted-foreground">{t("settings.themeHint")}</p>
+              </header>
+              <div className="inline-flex gap-1 rounded-lg border bg-card p-1">
+                <ThemeButton
+                  active={theme === "light"}
+                  onClick={() => setTheme("light")}
+                  icon={Sun}
+                >
+                  {t("settings.themeLight")}
+                </ThemeButton>
+                <ThemeButton
+                  active={theme === "dark"}
+                  onClick={() => setTheme("dark")}
+                  icon={Moon}
+                >
+                  {t("settings.themeDark")}
+                </ThemeButton>
+                <ThemeButton
+                  active={theme === "system"}
+                  onClick={() => setTheme("system")}
+                  icon={Monitor}
+                >
+                  {t("settings.themeSystem")}
+                </ThemeButton>
+              </div>
+            </section>
+          </CardContent>
+        </Card>
 
-          {autoLaunch && (
+        {/* Launch Settings */}
+        <Card className="overflow-hidden">
+          <CardHeader className="bg-muted/30 border-b">
+            <div className="flex items-center gap-2">
+              <Power className="h-4 w-4 text-orange-500" />
+              <CardTitle className="text-base">{t("settings.launch")}</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="p-4 space-y-3">
             <ToggleRow
-              icon={<EyeOff className="h-4 w-4 text-green-500" />}
-              title={t("settings.silentStartup")}
-              description={t("settings.silentStartupDescription")}
-              checked={silentStartup}
-              onCheckedChange={(value) => saveBoolean("silent_startup", value)}
+              icon={<Power className="h-4 w-4 text-orange-500" />}
+              title={t("settings.launchOnStartup")}
+              description={autoLaunchSystemStatus ? "✓ " + t("common.enabled") : "— " + t("common.disabled")}
+              checked={autoLaunch}
+              onCheckedChange={handleAutoLaunchChange}
             />
-          )}
 
-          <ToggleRow
-            icon={<MonitorUp className="h-4 w-4 text-purple-500" />}
-            title={t("settings.minimizeToTray")}
-            description={t("settings.minimizeToTrayDescription")}
-            checked={minimizeToTray}
-            onCheckedChange={(value) => saveBoolean("minimize_to_tray", value)}
-          />
-        </CardContent>
-      </Card>
+            {autoLaunch && (
+              <ToggleRow
+                icon={<EyeOff className="h-4 w-4 text-green-500" />}
+                title={t("settings.silentStartup")}
+                description={t("settings.silentStartupDescription")}
+                checked={silentStartup}
+                onCheckedChange={(value) => saveBoolean("silent_startup", value)}
+              />
+            )}
 
-      {/* Reminder Settings */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{t("settings.reminder")}</CardTitle>
-          <CardDescription>{t("settings.snoozeMinutesHint")}</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="snoozeMinutes">{t("settings.snoozeMinutes")}</Label>
-            <Input
-              id="snoozeMinutes"
-              type="number"
-              min={1}
-              max={1440}
-              value={snoozeMinutes}
-              onChange={(event) => saveNumber("snooze_minutes", event.target.value, 1, 1440)}
-              className="w-32"
-              disabled={updateSetting.isPending}
+            <ToggleRow
+              icon={<MonitorUp className="h-4 w-4 text-purple-500" />}
+              title={t("settings.minimizeToTray")}
+              description={t("settings.minimizeToTrayDescription")}
+              checked={minimizeToTray}
+              onCheckedChange={(value) => saveBoolean("minimize_to_tray", value)}
             />
-            <p className="text-xs text-muted-foreground">{t("settings.snoozeMinutesHint")}</p>
-          </div>
+          </CardContent>
+        </Card>
 
-          <div className="space-y-2">
-            <Label htmlFor="historyRetentionDays">{t("settings.historyRetentionDays")}</Label>
-            <Input
-              id="historyRetentionDays"
-              type="number"
-              min={1}
-              max={3650}
-              value={historyRetentionDays}
-              onChange={(event) => saveNumber("history_retention_days", event.target.value, 1, 3650)}
-              className="w-32"
-              disabled={updateSetting.isPending}
-            />
-            <p className="text-xs text-muted-foreground">{t("settings.historyRetentionDaysHint")}</p>
-          </div>
-        </CardContent>
-      </Card>
+        {/* Reminder Settings */}
+        <Card className="overflow-hidden">
+          <CardHeader className="bg-muted/30 border-b">
+            <div className="flex items-center gap-2">
+              <Bell className="h-4 w-4 text-blue-500" />
+              <CardTitle className="text-base">{t("settings.reminder")}</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="p-4 space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="snoozeMinutes">{t("settings.snoozeMinutes")}</Label>
+                <Input
+                  id="snoozeMinutes"
+                  type="number"
+                  min={1}
+                  max={1440}
+                  value={snoozeMinutes}
+                  onChange={(event) => saveNumber("snooze_minutes", event.target.value, 1, 1440)}
+                  className="w-full"
+                  disabled={updateSetting.isPending}
+                />
+                <p className="text-xs text-muted-foreground">{t("settings.snoozeMinutesHint")}</p>
+              </div>
 
-      {/* Data Management */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{t("settings.dataManagement")}</CardTitle>
-          <CardDescription>{t("settings.dataManagementHint")}</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex flex-wrap items-center gap-3">
-            <Button variant="outline" onClick={handleExport}>
-              {t("settings.exportData")}
-            </Button>
-            <Button variant="outline" onClick={handleImport}>
-              {t("settings.importData")}
-            </Button>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            {t("settings.dataManagementHint")}
-          </p>
-          {backupMessage && <p className="text-xs text-green-600">{backupMessage}</p>}
-          {backupError && <p className="text-xs text-destructive">{backupError}</p>}
-        </CardContent>
-      </Card>
+              <div className="space-y-2">
+                <Label htmlFor="historyRetentionDays">{t("settings.historyRetentionDays")}</Label>
+                <Input
+                  id="historyRetentionDays"
+                  type="number"
+                  min={1}
+                  max={3650}
+                  value={historyRetentionDays}
+                  onChange={(event) => saveNumber("history_retention_days", event.target.value, 1, 3650)}
+                  className="w-full"
+                  disabled={updateSetting.isPending}
+                />
+                <p className="text-xs text-muted-foreground">{t("settings.historyRetentionDaysHint")}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
-      {/* About */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{t("settings.about")}</CardTitle>
-          <CardDescription>{t("app.description")}</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">{t("settings.version")}</span>
-            <span>0.1.0</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">{t("settings.framework")}</span>
-            <span>Tauri v2 + React 19</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">{t("settings.author")}</span>
-            <span>pengchenghui</span>
-          </div>
-        </CardContent>
-      </Card>
+        {/* Data Management */}
+        <Card className="overflow-hidden">
+          <CardHeader className="bg-muted/30 border-b">
+            <div className="flex items-center gap-2">
+              <Database className="h-4 w-4 text-green-500" />
+              <CardTitle className="text-base">{t("settings.dataManagement")}</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="p-4 space-y-4">
+            <div className="flex flex-wrap items-center gap-3">
+              <Button variant="outline" onClick={handleExport} className="gap-2">
+                <Download className="h-4 w-4" />
+                {t("settings.exportData")}
+              </Button>
+              <Button variant="outline" onClick={handleImport} className="gap-2">
+                <Upload className="h-4 w-4" />
+                {t("settings.importData")}
+              </Button>
+            </div>
+            {backupMessage && <p className="text-xs text-green-600 bg-green-50 dark:bg-green-950/30 p-2 rounded">{backupMessage}</p>}
+            {backupError && <p className="text-xs text-destructive bg-destructive/10 p-2 rounded">{backupError}</p>}
+          </CardContent>
+        </Card>
+
+        {/* About */}
+        <Card className="overflow-hidden">
+          <CardHeader className="bg-muted/30 border-b">
+            <div className="flex items-center gap-2">
+              <Info className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-base">{t("settings.about")}</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="p-4 space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">{t("settings.version")}</span>
+              <span className="font-mono">0.1.0</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">{t("settings.framework")}</span>
+              <span>Tauri v2 + React 19</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">{t("settings.author")}</span>
+              <span>pengchenghui</span>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
