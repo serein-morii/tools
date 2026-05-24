@@ -231,6 +231,7 @@ fn is_workday(date: NaiveDate) -> bool {
 mod tests {
     use super::*;
     use chrono::TimeZone;
+    use chrono::Timelike;
 
     #[test]
     fn test_nth_weekday() {
@@ -254,5 +255,27 @@ mod tests {
         let result = get_nth_day_of_month(13, Some(5), "14:30").unwrap();
         let date = chrono::Utc.timestamp_millis_opt(result).single().unwrap();
         assert_eq!(date.day(), 13);
+    }
+
+    #[test]
+    fn test_local_timezone_conversion() {
+        // 测试本地时区转换
+        // 创建一个本地时间 2026-05-29 09:00:00
+        let result = get_nth_weekday_of_month_for_date(1, 5, 2026, 5, 9, 0).unwrap();
+
+        // 使用 Local 时区转换回来
+        let local_time = Local.timestamp_millis_opt(result).single().unwrap();
+
+        // 验证本地时间的日期和时间
+        assert_eq!(local_time.year(), 2026);
+        assert_eq!(local_time.month(), 5);
+        assert_eq!(local_time.day(), 1);
+        assert_eq!(local_time.hour(), 9);
+        assert_eq!(local_time.minute(), 0);
+
+        // 打印信息用于调试
+        println!("本地时间: {}", local_time.format("%Y-%m-%d %H:%M:%S %Z"));
+        println!("UTC时间: {}", local_time.with_timezone(&chrono::Utc).format("%Y-%m-%d %H:%M:%S UTC"));
+        println!("时间戳: {}", result);
     }
 }
