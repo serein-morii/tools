@@ -1,9 +1,10 @@
 import { NavLink } from "react-router-dom";
-import { Bell, Settings } from "lucide-react";
+import { Bell, Radio, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { to: "/", icon: Bell, label: "任务提醒" },
+  { to: "/channels", icon: Radio, label: "通知渠道" },
   { to: "/settings", icon: Settings, label: "设置" },
 ];
 
