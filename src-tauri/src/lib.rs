@@ -5,6 +5,7 @@ mod services;
 
 use std::sync::Arc;
 use database::{Database, init_schema};
+use services::scheduler::start_scheduler;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -25,6 +26,9 @@ pub fn run() {
         }
     };
 
+    // Start scheduler
+    start_scheduler(db.clone());
+
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .manage(db)
@@ -41,6 +45,8 @@ pub fn run() {
             commands::update_channel,
             commands::delete_channel,
             commands::test_channel_cmd,
+            commands::get_pending_reminders,
+            commands::get_task_reminders,
         ])
         .setup(|app| {
             if cfg!(debug_assertions) {
