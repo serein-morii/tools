@@ -2,7 +2,8 @@ import { useTasks } from "@/lib/query/taskQueries";
 import { TaskList } from "@/components/modules/reminder/TaskList";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { Plus, Search, Bell, BellOff, CheckCircle } from "lucide-react";
 import { useState, useMemo } from "react";
 import { TaskEditor } from "@/components/modules/reminder/TaskEditor";
 import type { Task } from "@/types";
@@ -12,6 +13,15 @@ export function TaskReminderPage() {
   const [editorOpen, setEditorOpen] = useState(false);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+
+  const stats = useMemo(() => {
+    if (!tasks) return { total: 0, enabled: 0, disabled: 0 };
+    return {
+      total: tasks.length,
+      enabled: tasks.filter((t: Task) => t.enabled).length,
+      disabled: tasks.filter((t: Task) => !t.enabled).length,
+    };
+  }, [tasks]);
 
   const filteredTasks = useMemo(() => {
     if (!tasks) return [];
@@ -79,6 +89,42 @@ export function TaskReminderPage() {
             新建任务
           </Button>
         </div>
+      </div>
+
+      <div className="grid grid-cols-3 gap-4 mb-6">
+        <Card className="p-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <Bell className="h-5 w-5 text-blue-600" />
+            </div>
+            <div>
+              <p className="text-2xl font-semibold">{stats.total}</p>
+              <p className="text-sm text-muted-foreground">总任务</p>
+            </div>
+          </div>
+        </Card>
+        <Card className="p-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-green-100 rounded-lg">
+              <CheckCircle className="h-5 w-5 text-green-600" />
+            </div>
+            <div>
+              <p className="text-2xl font-semibold">{stats.enabled}</p>
+              <p className="text-sm text-muted-foreground">已启用</p>
+            </div>
+          </div>
+        </Card>
+        <Card className="p-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-gray-100 rounded-lg">
+              <BellOff className="h-5 w-5 text-gray-600" />
+            </div>
+            <div>
+              <p className="text-2xl font-semibold">{stats.disabled}</p>
+              <p className="text-sm text-muted-foreground">已暂停</p>
+            </div>
+          </div>
+        </Card>
       </div>
 
       <TaskList tasks={filteredTasks} onEdit={handleEdit} onCreate={handleCreate} />

@@ -7,6 +7,7 @@ import { Pencil, Trash2, Bell, BellOff } from "lucide-react";
 import { toast } from "sonner";
 import { useToggleTask, useDeleteTask } from "@/lib/query/taskQueries";
 import { useState, useMemo } from "react";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 interface TaskCardProps {
   task: Task;
@@ -22,7 +23,7 @@ const reminderTypeLabels: Record<string, string> = {
 export function TaskCard({ task, onEdit }: TaskCardProps) {
   const toggleMutation = useToggleTask();
   const deleteMutation = useDeleteTask();
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const tags = useMemo(() => {
     try {
@@ -47,20 +48,15 @@ export function TaskCard({ task, onEdit }: TaskCardProps) {
   };
 
   const handleDelete = () => {
-    if (isDeleting) {
-      deleteMutation.mutate(task.id, {
-        onSuccess: () => {
-          toast.success("任务已删除");
-          setIsDeleting(false);
-        },
-        onError: (error) => {
-          toast.error("删除失败: " + error.message);
-        }
-      });
-    } else {
-      setIsDeleting(true);
-      setTimeout(() => setIsDeleting(false), 3000);
-    }
+    deleteMutation.mutate(task.id, {
+      onSuccess: () => {
+        toast.success("任务已删除");
+        setShowDeleteConfirm(false);
+      },
+      onError: (error) => {
+        toast.error("删除失败: " + error.message);
+      }
+    });
   };
 
   const formatNextRun = (timestamp?: number) => {
@@ -143,15 +139,25 @@ export function TaskCard({ task, onEdit }: TaskCardProps) {
             <Pencil className="h-4 w-4" />
           </Button>
           <Button
-            variant={isDeleting ? "destructive" : "ghost"}
+            variant="ghost"
             size="icon"
-            onClick={handleDelete}
-            title={isDeleting ? "再次点击确认删除" : "删除"}
+            onClick={() => setShowDeleteConfirm(true)}
+            title="删除"
           >
             <Trash2 className="h-4 w-4" />
           </Button>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={showDeleteConfirm}
+        onOpenChange={setShowDeleteConfirm}
+        title="删除任务"
+        description={`确定要删除任务「${task.name}」吗？此操作无法撤销。`}
+        confirmText="删除"
+        onConfirm={handleDelete}
+        destructive
+      />
     </Card>
   );
 }

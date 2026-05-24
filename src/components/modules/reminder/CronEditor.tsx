@@ -500,16 +500,21 @@ export function CronEditor({ value, onChange }: CronEditorProps) {
       <div className="text-sm text-muted-foreground bg-muted p-2 rounded">
         <div className="mb-1">当前配置: {formatCronDescription(config)}</div>
         <div className="text-xs">
-          <span className="font-medium">下次执行: </span>
+          <span className="font-medium">即将执行: </span>
           {(() => {
-            const next = getNextOccurrences(config, 1);
+            const next = getNextOccurrences(config, 3);
             if (next.length > 0) {
-              return next[0].toLocaleString("zh-CN", {
-                month: "short",
-                day: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-              });
+              return next.map((date, idx) => (
+                <span key={idx}>
+                  {idx > 0 && "、"}
+                  {date.toLocaleString("zh-CN", {
+                    month: "short",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </span>
+              ));
             }
             return "无法计算";
           })()}

@@ -7,6 +7,7 @@ import { Pencil, Trash2, Zap, CheckCircle, XCircle, Smartphone, MessageSquare, B
 import { toast } from "sonner";
 import { useUpdateChannel, useDeleteChannel, useTestChannel } from "@/lib/query/channelQueries";
 import { useState } from "react";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 interface ChannelCardProps {
   channel: Channel;
@@ -24,7 +25,7 @@ export function ChannelCard({ channel, onEdit }: ChannelCardProps) {
   const updateMutation = useUpdateChannel();
   const deleteMutation = useDeleteChannel();
   const testMutation = useTestChannel();
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const handleToggle = () => {
     updateMutation.mutate(
@@ -41,20 +42,15 @@ export function ChannelCard({ channel, onEdit }: ChannelCardProps) {
   };
 
   const handleDelete = () => {
-    if (isDeleting) {
-      deleteMutation.mutate(channel.id, {
-        onSuccess: () => {
-          toast.success("渠道已删除");
-          setIsDeleting(false);
-        },
-        onError: (error) => {
-          toast.error("删除失败: " + error.message);
-        }
-      });
-    } else {
-      setIsDeleting(true);
-      setTimeout(() => setIsDeleting(false), 3000);
-    }
+    deleteMutation.mutate(channel.id, {
+      onSuccess: () => {
+        toast.success("渠道已删除");
+        setShowDeleteConfirm(false);
+      },
+      onError: (error) => {
+        toast.error("删除失败: " + error.message);
+      }
+    });
   };
 
   const handleTest = () => {
@@ -143,15 +139,25 @@ export function ChannelCard({ channel, onEdit }: ChannelCardProps) {
             <Pencil className="h-4 w-4" />
           </Button>
           <Button
-            variant={isDeleting ? "destructive" : "ghost"}
+            variant="ghost"
             size="icon"
-            onClick={handleDelete}
-            title={isDeleting ? "再次点击确认删除" : "删除"}
+            onClick={() => setShowDeleteConfirm(true)}
+            title="删除"
           >
             <Trash2 className="h-4 w-4" />
           </Button>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={showDeleteConfirm}
+        onOpenChange={setShowDeleteConfirm}
+        title="删除渠道"
+        description={`确定要删除渠道「${channel.name}」吗？此操作无法撤销。`}
+        confirmText="删除"
+        onConfirm={handleDelete}
+        destructive
+      />
     </Card>
   );
 }
