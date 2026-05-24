@@ -70,7 +70,7 @@ async fn send_bark_notification_with_config(
         return Err(crate::error::ToolsError::NotificationFailed("Bark Key 不能为空".to_string()));
     }
 
-    let url = format!("{}{}", server_url, key);
+    let url = format!("{}/{}", server_url.trim_end_matches('/'), key);
 
     let body = serde_json::json!({
         "title": title,
