@@ -133,3 +133,39 @@ export interface Settings {
   value: string;
   updatedAt: string;
 }
+
+// Channel type matching Rust backend
+export interface Channel {
+  id: string;
+  name: string;
+  type: string;
+  enabled: boolean;
+  config: string;
+  last_test_at?: number;
+  last_test_result?: string;
+  description?: string;
+  created_at: number;
+  updated_at: number;
+}
+
+export interface CreateChannelRequest {
+  name: string;
+  type: string;
+  config: string;
+  description?: string;
+  enabled?: boolean;
+}
+
+export interface UpdateChannelRequest {
+  name?: string;
+  config?: string;
+  description?: string;
+  enabled?: boolean;
+}
+
+export interface BarkConfig {
+  serverUrl?: string;
+  key: string;
+  sound?: string;
+  group?: string;
+}
