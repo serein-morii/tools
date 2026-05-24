@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -9,6 +10,7 @@ import { open, save } from "@tauri-apps/plugin-dialog";
 import { invoke } from "@tauri-apps/api/core";
 import { Monitor, Moon, Sun, Power, EyeOff, MonitorUp } from "lucide-react";
 import { ToggleRow } from "@/components/ui/toggle-row";
+import { LanguageSettings } from "@/components/settings/LanguageSettings";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/theme-provider";
 
@@ -16,6 +18,7 @@ const DEFAULT_SNOOZE_MINUTES = "5";
 const DEFAULT_HISTORY_RETENTION_DAYS = "30";
 
 export function SettingsPage() {
+  const { t, i18n } = useTranslation();
   const { data: settings, isLoading, error } = useSettings();
   const updateSetting = useUpdateSetting();
   const queryClient = useQueryClient();
@@ -38,14 +41,14 @@ export function SettingsPage() {
   }, []);
 
   if (isLoading) {
-    return <div className="p-6 text-sm text-muted-foreground">加载设置中...</div>;
+    return <div className="p-6 text-sm text-muted-foreground">{t("common.loading")}</div>;
   }
 
   if (error) {
     return (
       <div className="p-6">
         <Card className="border-destructive/50">
-          <CardContent className="pt-6 text-sm text-destructive">设置加载失败</CardContent>
+          <CardContent className="pt-6 text-sm text-destructive">{t("common.error")}</CardContent>
         </Card>
       </div>
     );
@@ -63,15 +66,18 @@ export function SettingsPage() {
     updateSetting.mutate({ key, value });
   };
 
+  const handleLanguageChange = (lang: "zh" | "en") => {
+    i18n.changeLanguage(lang);
+    window.localStorage.setItem("language", lang);
+  };
+
   const handleAutoLaunchChange = async (value: boolean) => {
-    // Update setting in database
     saveBoolean("auto_launch", value);
-    // Update system auto-launch
     try {
       await invoke("set_auto_launch", { enabled: value });
       setAutoLaunchSystemStatus(value);
     } catch {
-      // Ignore error, UI will show database value
+      // Ignore error
     }
   };
 
@@ -90,7 +96,7 @@ export function SettingsPage() {
           { request: { path } }
         );
         setBackupMessage(
-          `已导出到 ${result.path}（任务 ${result.counts.tasks}，渠道 ${result.counts.channels}，模板 ${result.counts.templates}，设置 ${result.counts.settings}）`
+          `${t("settings.exportData")}: ${result.path} (${t("nav.tasks")}: ${result.counts.tasks}, ${t("nav.channels")}: ${result.counts.channels}, ${t("nav.templates")}: ${result.counts.templates})`
         );
       }
     } catch (err) {
@@ -112,9 +118,8 @@ export function SettingsPage() {
           { request: { path } }
         );
         setBackupMessage(
-          `已导入：任务 ${result.counts.tasks}，渠道 ${result.counts.channels}，模板 ${result.counts.templates}，设置 ${result.counts.settings}`
+          `${t("settings.importData")}: ${t("nav.tasks")}: ${result.counts.tasks}, ${t("nav.channels")}: ${result.counts.channels}, ${t("nav.templates")}: ${result.counts.templates}`
         );
-        // Refresh all data after import
         queryClient.invalidateQueries();
       }
     } catch (err) {
@@ -125,21 +130,26 @@ export function SettingsPage() {
   return (
     <div className="space-y-6 p-6">
       <div>
-        <h2 className="text-2xl font-semibold">设置</h2>
-        <p className="mt-1 text-sm text-muted-foreground">保存应用行为和提醒偏好</p>
+        <h2 className="text-2xl font-semibold">{t("settings.title")}</h2>
+        <p className="mt-1 text-sm text-muted-foreground">{t("settings.description")}</p>
       </div>
 
       {/* Appearance Settings */}
       <Card>
         <CardHeader>
-          <CardTitle>外观</CardTitle>
-          <CardDescription>主题与显示设置</CardDescription>
+          <CardTitle>{t("settings.appearance")}</CardTitle>
+          <CardDescription>{t("settings.themeHint")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          <LanguageSettings
+            value={i18n.language as "zh" | "en"}
+            onChange={handleLanguageChange}
+          />
+
           <section className="space-y-2">
             <header className="space-y-1">
-              <h3 className="text-sm font-medium">主题</h3>
-              <p className="text-xs text-muted-foreground">选择应用的外观主题</p>
+              <h3 className="text-sm font-medium">{t("settings.theme")}</h3>
+              <p className="text-xs text-muted-foreground">{t("settings.themeHint")}</p>
             </header>
             <div className="inline-flex gap-1 rounded-md border border-border bg-background p-1">
               <ThemeButton
@@ -147,21 +157,21 @@ export function SettingsPage() {
                 onClick={() => setTheme("light")}
                 icon={Sun}
               >
-                浅色
+                {t("settings.themeLight")}
               </ThemeButton>
               <ThemeButton
                 active={theme === "dark"}
                 onClick={() => setTheme("dark")}
                 icon={Moon}
               >
-                深色
+                {t("settings.themeDark")}
               </ThemeButton>
               <ThemeButton
                 active={theme === "system"}
                 onClick={() => setTheme("system")}
                 icon={Monitor}
               >
-                系统
+                {t("settings.themeSystem")}
               </ThemeButton>
             </div>
           </section>
@@ -171,14 +181,14 @@ export function SettingsPage() {
       {/* Launch Settings */}
       <Card>
         <CardHeader>
-          <CardTitle>启动设置</CardTitle>
-          <CardDescription>应用程序启动行为</CardDescription>
+          <CardTitle>{t("settings.launch")}</CardTitle>
+          <CardDescription>{t("settings.launchOnStartupDescription")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           <ToggleRow
             icon={<Power className="h-4 w-4 text-orange-500" />}
-            title="开机自启动"
-            description={autoLaunchSystemStatus ? "已注册系统自启动" : "尚未注册系统自启动"}
+            title={t("settings.launchOnStartup")}
+            description={autoLaunchSystemStatus ? "✓" : "—"}
             checked={autoLaunch}
             onCheckedChange={handleAutoLaunchChange}
           />
@@ -186,8 +196,8 @@ export function SettingsPage() {
           {autoLaunch && (
             <ToggleRow
               icon={<EyeOff className="h-4 w-4 text-green-500" />}
-              title="静默启动"
-              description="开机自启时不显示主窗口，仅在后台运行"
+              title={t("settings.silentStartup")}
+              description={t("settings.silentStartupDescription")}
               checked={silentStartup}
               onCheckedChange={(value) => saveBoolean("silent_startup", value)}
             />
@@ -195,8 +205,8 @@ export function SettingsPage() {
 
           <ToggleRow
             icon={<MonitorUp className="h-4 w-4 text-purple-500" />}
-            title="最小化到托盘"
-            description="关闭窗口时隐藏到系统托盘而非退出"
+            title={t("settings.minimizeToTray")}
+            description={t("settings.minimizeToTrayDescription")}
             checked={minimizeToTray}
             onCheckedChange={(value) => saveBoolean("minimize_to_tray", value)}
           />
@@ -206,12 +216,12 @@ export function SettingsPage() {
       {/* Reminder Settings */}
       <Card>
         <CardHeader>
-          <CardTitle>提醒设置</CardTitle>
-          <CardDescription>任务提醒相关配置</CardDescription>
+          <CardTitle>{t("settings.reminder")}</CardTitle>
+          <CardDescription>{t("settings.snoozeMinutesHint")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="snoozeMinutes">稍后提醒间隔 (分钟)</Label>
+            <Label htmlFor="snoozeMinutes">{t("settings.snoozeMinutes")}</Label>
             <Input
               id="snoozeMinutes"
               type="number"
@@ -222,11 +232,11 @@ export function SettingsPage() {
               className="w-32"
               disabled={updateSetting.isPending}
             />
-            <p className="text-xs text-muted-foreground">用于历史页中的"稍后提醒"按钮，范围 1-1440 分钟</p>
+            <p className="text-xs text-muted-foreground">{t("settings.snoozeMinutesHint")}</p>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="historyRetentionDays">历史保留天数</Label>
+            <Label htmlFor="historyRetentionDays">{t("settings.historyRetentionDays")}</Label>
             <Input
               id="historyRetentionDays"
               type="number"
@@ -237,7 +247,7 @@ export function SettingsPage() {
               className="w-32"
               disabled={updateSetting.isPending}
             />
-            <p className="text-xs text-muted-foreground">保存历史保留偏好，范围 1-3650 天</p>
+            <p className="text-xs text-muted-foreground">{t("settings.historyRetentionDaysHint")}</p>
           </div>
         </CardContent>
       </Card>
@@ -245,20 +255,20 @@ export function SettingsPage() {
       {/* Data Management */}
       <Card>
         <CardHeader>
-          <CardTitle>数据管理</CardTitle>
-          <CardDescription>数据存储与备份</CardDescription>
+          <CardTitle>{t("settings.dataManagement")}</CardTitle>
+          <CardDescription>{t("settings.dataManagementHint")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-wrap items-center gap-3">
             <Button variant="outline" onClick={handleExport}>
-              导出数据
+              {t("settings.exportData")}
             </Button>
             <Button variant="outline" onClick={handleImport}>
-              导入数据
+              {t("settings.importData")}
             </Button>
           </div>
           <p className="text-xs text-muted-foreground">
-            导出任务、渠道、模板和设置；导入会替换这些配置数据，不包含提醒执行历史。
+            {t("settings.dataManagementHint")}
           </p>
           {backupMessage && <p className="text-xs text-green-600">{backupMessage}</p>}
           {backupError && <p className="text-xs text-destructive">{backupError}</p>}
@@ -268,20 +278,20 @@ export function SettingsPage() {
       {/* About */}
       <Card>
         <CardHeader>
-          <CardTitle>关于</CardTitle>
-          <CardDescription>应用程序信息</CardDescription>
+          <CardTitle>{t("settings.about")}</CardTitle>
+          <CardDescription>{t("app.description")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-2">
           <div className="flex justify-between">
-            <span className="text-muted-foreground">版本</span>
+            <span className="text-muted-foreground">{t("settings.version")}</span>
             <span>0.1.0</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-muted-foreground">框架</span>
+            <span className="text-muted-foreground">{t("settings.framework")}</span>
             <span>Tauri v2 + React 19</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-muted-foreground">作者</span>
+            <span className="text-muted-foreground">{t("settings.author")}</span>
             <span>pengchenghui</span>
           </div>
         </CardContent>

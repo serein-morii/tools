@@ -208,7 +208,7 @@ export function CronEditor({ value, onChange }: CronEditorProps) {
                 const type = e.target.value as "nth_weekday" | "last_day" | "offset" | "interval";
                 updateConfig({
                   ...config,
-                  special: { ...config.special!, type },
+                  special: { ...config.special!, type, time: config.special?.time || "09:00" },
                 });
               }}
             >
@@ -217,6 +217,21 @@ export function CronEditor({ value, onChange }: CronEditorProps) {
               <option value="last_day">月末特定日期</option>
             </Select>
           </div>
+
+          {/* 时间设置 - 对 nth_weekday 和 last_day 都需要 */}
+          {(config.special?.type === "nth_weekday" || config.special?.type === "last_day") && (
+            <div className="space-y-2">
+              <Label>时间</Label>
+              <Input
+                type="time"
+                value={config.special?.time || "09:00"}
+                onChange={(e) => updateConfig({
+                  ...config,
+                  special: { ...config.special!, time: e.target.value },
+                })}
+              />
+            </div>
+          )}
 
           {config.special?.type === "interval" && (
             <>

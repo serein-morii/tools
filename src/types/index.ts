@@ -12,6 +12,7 @@ export interface CronConfig {
   };
   special?: {
     type: "nth_weekday" | "last_day" | "offset" | "interval";
+    time?: string;  // 时间设置，用于 nth_weekday 和 last_day
     nthWeekday?: {
       nth: number;
       weekday: number;  // 1=周一, 2=周二, ..., 7=周日
