@@ -1,6 +1,7 @@
 mod commands;
 mod database;
 mod error;
+mod services;
 
 use std::sync::Arc;
 use database::{Database, init_schema};
@@ -34,6 +35,12 @@ pub fn run() {
             commands::update_task,
             commands::delete_task,
             commands::toggle_task,
+            commands::get_channels,
+            commands::get_channel,
+            commands::create_channel,
+            commands::update_channel,
+            commands::delete_channel,
+            commands::test_channel_cmd,
         ])
         .setup(|app| {
             if cfg!(debug_assertions) {

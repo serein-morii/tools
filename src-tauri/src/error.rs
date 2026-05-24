@@ -11,6 +11,9 @@ pub enum ToolsError {
     #[error("JSON error: {0}")]
     Json(#[from] serde_json::Error),
 
+    #[error("HTTP error: {0}")]
+    Http(String),
+
     #[error("Task not found: {0}")]
     TaskNotFound(String),
 
@@ -25,6 +28,12 @@ pub enum ToolsError {
 
     #[error("Notification failed: {0}")]
     NotificationFailed(String),
+}
+
+impl From<reqwest::Error> for ToolsError {
+    fn from(err: reqwest::Error) -> Self {
+        ToolsError::Http(err.to_string())
+    }
 }
 
 impl serde::Serialize for ToolsError {
