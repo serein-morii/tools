@@ -7,6 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select } from "@/components/ui/select";
 import { X } from "lucide-react";
 import { useTask, useCreateTask, useUpdateTask } from "@/lib/query/taskQueries";
+import { useChannels } from "@/lib/query/channelQueries";
+import { CronEditor } from "./CronEditor";
 import type { CreateTaskRequest, UpdateTaskRequest } from "@/types";
 import { createDefaultTaskRequest } from "@/lib/cron";
 
@@ -18,6 +20,7 @@ interface TaskEditorProps {
 
 export function TaskEditor({ open, onOpenChange, taskId }: TaskEditorProps) {
   const { data: existingTask } = useTask(taskId || "");
+  const { data: channels } = useChannels();
   const createMutation = useCreateTask();
   const updateMutation = useUpdateTask();
 
@@ -123,16 +126,61 @@ export function TaskEditor({ open, onOpenChange, taskId }: TaskEditorProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="cron_expr">Cron 表达式</Label>
-              <Input
-                id="cron_expr"
-                value={form.cron_expr}
-                onChange={(e) => setForm({ ...form, cron_expr: e.target.value })}
-                placeholder="0 9 * * *"
+              <Label>时间配置</Label>
+              <CronEditor
+                value={form.cron_config || ""}
+                onChange={(cronExpr, cronConfig) =>
+                  setForm({ ...form, cron_expr: cronExpr, cron_config: cronConfig })
+                }
               />
-              <p className="text-xs text-muted-foreground">
-                格式: 分 时 日 月 周 (例如: 0 9 * * * 表示每天9:00)
-              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label>通知渠道</Label>
+              <div className="flex flex-wrap gap-2">
+                {channels?.map((channel) => (
+                  <label
+                    key={channel.id}
+                    className="flex items-center gap-2 px-3 py-1.5 border rounded-md cursor-pointer hover:bg-muted transition-colors"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={form.channel_ids?.includes(channel.id) || false}
+                      onChange={(e) => {
+                        const currentIds = form.channel_ids || [];
+                        if (e.target.checked) {
+                          setForm({ ...form, channel_ids: [...currentIds, channel.id] });
+                        } else {
+                          setForm({
+                            ...form,
+                            channel_ids: currentIds.filter((id) => id !== channel.id),
+                          });
+                        }
+                      }}
+                      className="h-4 w-4"
+                    />
+                    <span className="text-sm">{channel.name}</span>
+                  </label>
+                ))}
+                {(!channels || channels.length === 0) && (
+                  <p className="text-sm text-muted-foreground">
+                    暂无可用渠道，请先在渠道管理中创建
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="priority">优先级</Label>
+              <Select
+                id="priority"
+                value={form.priority?.toString() || "0"}
+                onChange={(e) => setForm({ ...form, priority: parseInt(e.target.value) })}
+              >
+                <option value="0">普通</option>
+                <option value="1">重要</option>
+                <option value="2">紧急</option>
+              </Select>
             </div>
 
             <div className="flex justify-end gap-2 pt-4">
