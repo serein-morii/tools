@@ -27,5 +27,6 @@ chrono = { version = "0.4", features = ["serde"] }
 uuid = { version = "1.10", features = ["v4", "serde"] }
 dirs = "5.0"
 thiserror = "1.0"
-tokio = { version = "1", features = ["sync"] }
+tokio = { version = "1", features = ["sync", "rt-multi-thread", "time"] }
 reqwest = { version = "0.12", features = ["json"] }
+cron = "0.12"
