@@ -6,6 +6,8 @@ import { Card } from "@/components/ui/card";
 import { Bell, Radio, FileText, CheckCircle2, AlertCircle, Clock3, TrendingUp } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
+import { formatCronDescription } from "@/lib/cron";
+import type { CronConfig } from "@/types";
 
 export function DashboardPage() {
   const { data: tasks } = useTasks();
@@ -135,8 +137,15 @@ export function DashboardPage() {
                   </div>
                   <div>
                     <div className="font-medium">{task.name}</div>
-                    <div className="text-xs text-muted-foreground font-mono">
-                      {task.cron_expr}
+                    <div className="text-xs text-muted-foreground">
+                      {(() => {
+                        try {
+                          const config = JSON.parse(task.cron_config) as CronConfig;
+                          return formatCronDescription(config, t);
+                        } catch {
+                          return task.cron_config;
+                        }
+                      })()}
                     </div>
                   </div>
                 </div>
