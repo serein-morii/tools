@@ -107,17 +107,6 @@ export interface MessageTemplate {
   updatedAt: string;
 }
 
-export interface Reminder {
-  id: string;
-  taskId: string;
-  scheduledTime: string;
-  status: "pending" | "sent" | "confirmed" | "feedback_received" | "failed";
-  sentAt?: string;
-  confirmedAt?: string;
-  feedback?: string;
-  createdAt: string;
-}
-
 export interface ReminderHistory {
   id: string;
   taskId: string;
@@ -168,4 +157,19 @@ export interface BarkConfig {
   key: string;
   sound?: string;
   group?: string;
+}
+
+// Reminder type matching Rust backend
+export interface Reminder {
+  id: string;
+  task_id: string;
+  scheduled_at: number;
+  executed_at?: number;
+  status: string;
+  channel_results: string;
+  error_message?: string;
+  user_action?: string;
+  user_feedback?: string;
+  action_at?: number;
+  created_at: number;
 }
