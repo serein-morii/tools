@@ -1,4 +1,4 @@
-use chrono::{Local, TimeZone, Timelike, Duration, Utc};
+use chrono::{Local, TimeZone, Timelike, Utc};
 use crate::error::Result;
 
 pub fn get_next_run_time(cron_expr: &str) -> Result<Option<i64>> {

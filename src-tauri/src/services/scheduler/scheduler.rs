@@ -599,7 +599,7 @@ fn get_days_in_month(year: i32, month: u32) -> u32 {
 /// Test task notification - send notification immediately for testing
 pub async fn test_task_notification(db: &Arc<Database>, task_id: &str) -> Result<String> {
     // Get all needed data first, then release lock before async operation
-    let (task, title, content, channels) = {
+    let (_task, title, content, channels) = {
         let conn = db.conn().lock().unwrap();
         let task = TaskDao::get_by_id(&conn, task_id)?
             .ok_or_else(|| crate::error::ToolsError::TaskNotFound(task_id.to_string()))?;
