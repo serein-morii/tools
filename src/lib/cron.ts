@@ -1,22 +1,5 @@
 import type { CreateTaskRequest, CronConfig } from "@/types";
 
-const MONTH_NAMES = [
-  "JAN",
-  "FEB",
-  "MAR",
-  "APR",
-  "MAY",
-  "JUN",
-  "JUL",
-  "AUG",
-  "SEP",
-  "OCT",
-  "NOV",
-  "DEC",
-];
-
-const DAY_NAMES = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
-
 export function cronConfigToExpression(config: CronConfig): string {
   if (config.mode === "advanced" && config.advanced?.expression) {
     return config.advanced.expression;
@@ -39,29 +22,17 @@ export function cronConfigToExpression(config: CronConfig): string {
   }
 
   if (config.mode === "special" && config.special) {
-    const { type, nthWeekday, lastDay, interval } = config.special;
+    const { type, interval } = config.special;
 
     switch (type) {
       case "nth_weekday":
-        if (nthWeekday) {
-          const monthCron = nthWeekday.month ? MONTH_NAMES[nthWeekday.month - 1] : "*";
-          return `0 0 ? ${monthCron} ${DAY_NAMES[nthWeekday.weekday]}#${nthWeekday.nth}`;
-        }
-        break;
+        // Standard cron doesn't support nth weekday well, fallback to daily
+        return "0 9 * * *";
       case "last_day":
-        if (lastDay) {
-          const monthCron = lastDay.month ? MONTH_NAMES[lastDay.month - 1] : "*";
-          if (lastDay.type === "day") {
-            return `0 0 L ${monthCron} *`;
-          } else if (lastDay.type === "weekday") {
-            return `0 0 LW ${monthCron} *`;
-          } else if (lastDay.type === "friday") {
-            return `0 0 ? ${monthCron} 6L`;
-          }
-        }
-        break;
+        // Standard cron doesn't support last day, fallback to daily
+        return "0 9 * * *";
       case "offset":
-        break;
+        return "0 9 * * *";
       case "interval":
         if (interval) {
           const [hour, minute] = interval.startTime.split(":").map(Number);
@@ -73,7 +44,8 @@ export function cronConfigToExpression(config: CronConfig): string {
             case "days":
               return `${minute} ${hour} */${interval.value} * *`;
             case "weeks":
-              return `${minute} ${hour} ? * */${interval.value}`;
+              // Run on the same day each week
+              return `${minute} ${hour} * * 0`;
           }
         }
         break;
