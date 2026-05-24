@@ -45,12 +45,27 @@ fn update_task_next_runs(db: &Arc<Database>) -> Result<()> {
 
     for task in tasks {
         if task.enabled && task.next_run_at.is_none() {
-            if let Some(next_run) = get_next_run_time(&task.cron_expr)? {
-                let conn = db.conn().lock().unwrap();
-                conn.execute(
-                    "UPDATE tasks SET next_run_at = ?1 WHERE id = ?2",
-                    rusqlite::params![next_run, task.id],
-                )?;
+            match get_next_run_time(&task.cron_expr) {
+                Ok(Some(next_run)) => {
+                    let conn = db.conn().lock().unwrap();
+                    conn.execute(
+                        "UPDATE tasks SET next_run_at = ?1 WHERE id = ?2",
+                        rusqlite::params![next_run, task.id],
+                    )?;
+                }
+                Ok(None) => {
+                    log::warn!("No next run time for task {}", task.id);
+                }
+                Err(e) => {
+                    log::error!("Invalid cron for task {}: {}", task.id, e);
+                    // Set a default next_run_at to prevent repeated errors
+                    let conn = db.conn().lock().unwrap();
+                    let default_next = Utc::now().timestamp_millis() + 24 * 60 * 60 * 1000; // 24 hours from now
+                    conn.execute(
+                        "UPDATE tasks SET next_run_at = ?1 WHERE id = ?2",
+                        rusqlite::params![default_next, task.id],
+                    )?;
+                }
             }
         }
     }
@@ -119,12 +134,27 @@ async fn execute_pending_reminders(db: &Arc<Database>) -> Result<()> {
             }
 
             // Update next_run_at
-            if let Some(next_run) = get_next_run_time(&task.cron_expr)? {
-                let conn = db.conn().lock().unwrap();
-                conn.execute(
-                    "UPDATE tasks SET next_run_at = ?1, last_run_at = ?2 WHERE id = ?3",
-                    rusqlite::params![next_run, reminder.scheduled_at, task.id],
-                )?;
+            match get_next_run_time(&task.cron_expr) {
+                Ok(Some(next_run)) => {
+                    let conn = db.conn().lock().unwrap();
+                    conn.execute(
+                        "UPDATE tasks SET next_run_at = ?1, last_run_at = ?2 WHERE id = ?3",
+                        rusqlite::params![next_run, reminder.scheduled_at, task.id],
+                    )?;
+                }
+                Ok(None) => {
+                    log::warn!("No next run time for task {}", task.id);
+                }
+                Err(e) => {
+                    log::error!("Invalid cron for task {}: {}", task.id, e);
+                    // Set a default next_run_at
+                    let conn = db.conn().lock().unwrap();
+                    let default_next = Utc::now().timestamp_millis() + 24 * 60 * 60 * 1000;
+                    conn.execute(
+                        "UPDATE tasks SET next_run_at = ?1, last_run_at = ?2 WHERE id = ?3",
+                        rusqlite::params![default_next, reminder.scheduled_at, task.id],
+                    )?;
+                }
             }
         }
     }
