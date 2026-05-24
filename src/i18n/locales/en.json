@@ -87,7 +87,9 @@
     "nextRun": "Next Run",
     "nextRunLabel": "Next",
     "notScheduled": "Not Scheduled",
-    "saving": "Saving..."
+    "saving": "Saving...",
+    "emptyList": "No tasks yet",
+    "emptyHint": "Click \"New Task\" in the top right to create your first reminder"
   },
   "template": {
     "newTemplate": "New Template",
@@ -104,7 +106,9 @@
     "varDate": "Date",
     "varTime": "Time",
     "varWeekday": "Weekday",
-    "description": "Description"
+    "description": "Description",
+    "emptyList": "No templates yet",
+    "emptyHint": "Click \"New Template\" in the top right to create your first template"
   },
   "channel": {
     "newChannel": "New Channel",
@@ -136,7 +140,9 @@
     "signSecretHint": "If the robot has sign verification enabled, fill this secret",
     "atPhonesOptional": "@ Phone Numbers (Optional)",
     "atPhonesPlaceholder": "Separate by comma, e.g.: 13800138000,13900139000",
-    "atPhonesHint": "These phone number users will be @ mentioned when sending"
+    "atPhonesHint": "These phone number users will be @ mentioned when sending",
+    "emptyList": "No notification channels yet",
+    "emptyHint": "Click \"New Channel\" in the top right to add your first notification channel"
   },
   "cron": {
     "standard": "Standard",
@@ -231,6 +237,17 @@
     "scheduledTime": "Scheduled Time",
     "executedTime": "Executed Time",
     "noChannelResult": "No channel results",
-    "unknownChannel": "Unknown Channel"
+    "unknownChannel": "Unknown Channel",
+    "pendingAction": "Pending Action",
+    "feedbackPlaceholder": "Enter your feedback",
+    "submitFeedback": "Submit Feedback",
+    "confirmComplete": "Confirm Complete",
+    "snoozeMinutes": "Remind in {{minutes}} minutes",
+    "unknownTime": "Unknown time",
+    "confirmedAt": "Confirmed complete · {{time}}",
+    "feedbackAt": "Feedback submitted: {{feedback}} · {{time}}",
+    "snoozedAt": "Snoozed · {{time}}",
+    "processedAt": "Processed: {{action}} · {{time}}",
+    "noContent": "No content"
   }
 }

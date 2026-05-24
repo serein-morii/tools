@@ -1,5 +1,6 @@
 import type { Channel } from "@/types";
 import { ChannelCard } from "./ChannelCard";
+import { useTranslation } from "react-i18next";
 
 interface ChannelListProps {
   channels: Channel[];
@@ -7,11 +8,13 @@ interface ChannelListProps {
 }
 
 export function ChannelList({ channels, onEdit }: ChannelListProps) {
+  const { t } = useTranslation();
+
   if (channels.length === 0) {
     return (
       <div className="text-center py-12">
-        <p className="text-muted-foreground mb-2">暂无通知渠道</p>
-        <p className="text-sm text-muted-foreground">点击右上角「新建渠道」添加第一个通知渠道</p>
+        <p className="text-muted-foreground mb-2">{t("channel.emptyList")}</p>
+        <p className="text-sm text-muted-foreground">{t("channel.emptyHint")}</p>
       </div>
     );
   }

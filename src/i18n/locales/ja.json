@@ -87,7 +87,9 @@
     "nextRun": "次回実行",
     "nextRunLabel": "次回",
     "notScheduled": "未設定",
-    "saving": "保存中..."
+    "saving": "保存中...",
+    "emptyList": "タスクがありません",
+    "emptyHint": "右上の「新規タスク」をクリックして最初のリマインダーを作成"
   },
   "template": {
     "newTemplate": "新規テンプレート",
@@ -104,7 +106,9 @@
     "varDate": "日付",
     "varTime": "時間",
     "varWeekday": "曜日",
-    "description": "説明"
+    "description": "説明",
+    "emptyList": "テンプレートがありません",
+    "emptyHint": "右上の「新規テンプレート」をクリックして最初のテンプレートを作成"
   },
   "channel": {
     "newChannel": "新規チャンネル",
@@ -136,7 +140,9 @@
     "signSecretHint": "ボットで署名検証が有効な場合、このシークレットが必要",
     "atPhonesOptional": "@ 携帯番号（オプション）",
     "atPhonesPlaceholder": "カンマ区切り、例: 09012345678,09098765432",
-    "atPhonesHint": "メッセージ送信時にこれらの番号のユーザーを@します"
+    "atPhonesHint": "メッセージ送送時にこれらの番号のユーザーを@します",
+    "emptyList": "通知チャンネルがありません",
+    "emptyHint": "右上の「新規チャンネル」をクリックして最初の通知チャンネルを追加"
   },
   "cron": {
     "standard": "標準",
@@ -231,6 +237,17 @@
     "scheduledTime": "予定時間",
     "executedTime": "実行時間",
     "noChannelResult": "チャンネル結果なし",
-    "unknownChannel": "不明なチャンネル"
+    "unknownChannel": "不明なチャンネル",
+    "pendingAction": "待機中のアクション",
+    "feedbackPlaceholder": "フィードバックを入力",
+    "submitFeedback": "フィードバックを送信",
+    "confirmComplete": "完了を確認",
+    "snoozeMinutes": "{{minutes}} 分後に再通知",
+    "unknownTime": "不明な時間",
+    "confirmedAt": "完了確認 · {{time}}",
+    "feedbackAt": "フィードバック送信: {{feedback}} · {{time}}",
+    "snoozedAt": "再通知設定 · {{time}}",
+    "processedAt": "処理済み: {{action}} · {{time}}",
+    "noContent": "内容なし"
   }
 }

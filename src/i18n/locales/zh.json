@@ -87,7 +87,9 @@
     "nextRun": "下次执行",
     "nextRunLabel": "下次",
     "notScheduled": "未安排",
-    "saving": "保存中..."
+    "saving": "保存中...",
+    "emptyList": "暂无任务",
+    "emptyHint": "点击右上角「新建任务」创建第一个提醒"
   },
   "template": {
     "newTemplate": "新建模板",
@@ -104,7 +106,9 @@
     "varDate": "日期",
     "varTime": "时间",
     "varWeekday": "星期",
-    "description": "描述"
+    "description": "描述",
+    "emptyList": "暂无提醒模板",
+    "emptyHint": "点击右上角「新建模板」创建第一个模板"
   },
   "channel": {
     "newChannel": "新建渠道",
@@ -136,7 +140,9 @@
     "signSecretHint": "如果机器人开启了签名验证，需要填写此密钥",
     "atPhonesOptional": "@ 手机号 (可选)",
     "atPhonesPlaceholder": "多个手机号用逗号分隔，如: 13800138000,13900139000",
-    "atPhonesHint": "发送消息时会 @ 这些手机号对应的用户"
+    "atPhonesHint": "发送消息时会 @ 这些手机号对应的用户",
+    "emptyList": "暂无通知渠道",
+    "emptyHint": "点击右上角「新建渠道」添加第一个通知渠道"
   },
   "cron": {
     "standard": "标准",
@@ -231,6 +237,17 @@
     "scheduledTime": "计划时间",
     "executedTime": "执行时间",
     "noChannelResult": "暂无渠道结果",
-    "unknownChannel": "未知渠道"
+    "unknownChannel": "未知渠道",
+    "pendingAction": "待处理动作",
+    "feedbackPlaceholder": "输入处理反馈",
+    "submitFeedback": "提交反馈",
+    "confirmComplete": "确认完成",
+    "snoozeMinutes": "{{minutes}} 分钟后提醒",
+    "unknownTime": "未知时间",
+    "confirmedAt": "已确认完成 · {{time}}",
+    "feedbackAt": "已提交反馈：{{feedback}} · {{time}}",
+    "snoozedAt": "已稍后提醒 · {{time}}",
+    "processedAt": "已处理：{{action}} · {{time}}",
+    "noContent": "无内容"
   }
 }
