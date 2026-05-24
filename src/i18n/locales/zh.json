@@ -24,6 +24,10 @@
     "timer": "计时",
     "notes": "笔记"
   },
+  "reminder": {
+    "title": "任务提醒",
+    "description": "管理定时任务、消息模板、通知渠道和提醒记录"
+  },
   "settings": {
     "title": "设置",
     "description": "配置应用行为和提醒偏好",
@@ -89,7 +93,12 @@
     "notScheduled": "未安排",
     "saving": "保存中...",
     "emptyList": "暂无任务",
-    "emptyHint": "点击右上角「新建任务」创建第一个提醒"
+    "emptyHint": "点击右上角「新建任务」创建第一个提醒",
+    "filterToday": "今天",
+    "filterWeek": "本周",
+    "filterAll": "全部",
+    "searchPlaceholder": "搜索任务名称或描述",
+    "loadError": "加载失败"
   },
   "template": {
     "newTemplate": "新建模板",
@@ -108,7 +117,15 @@
     "varWeekday": "星期",
     "description": "描述",
     "emptyList": "暂无提醒模板",
-    "emptyHint": "点击右上角「新建模板」创建第一个模板"
+    "emptyHint": "点击右上角「新建模板」创建第一个模板",
+    "pageTitle": "提醒模板",
+    "pageDescription": "复用常见提醒标题、正文和默认 Cron 配置",
+    "loading": "加载模板中...",
+    "loadError": "模板加载失败",
+    "deleteSuccess": "模板已删除",
+    "deleteFailed": "删除失败",
+    "deleteTitle": "删除模板",
+    "deleteDescription": "确定删除这个模板吗？此操作不可撤销。"
   },
   "channel": {
     "newChannel": "新建渠道",
@@ -142,7 +159,9 @@
     "atPhonesPlaceholder": "多个手机号用逗号分隔，如: 13800138000,13900139000",
     "atPhonesHint": "发送消息时会 @ 这些手机号对应的用户",
     "emptyList": "暂无通知渠道",
-    "emptyHint": "点击右上角「新建渠道」添加第一个通知渠道"
+    "emptyHint": "点击右上角「新建渠道」添加第一个通知渠道",
+    "pageTitle": "通知渠道",
+    "loadError": "加载失败"
   },
   "cron": {
     "standard": "标准",

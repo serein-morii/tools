@@ -24,6 +24,10 @@
     "timer": "Timer",
     "notes": "Notes"
   },
+  "reminder": {
+    "title": "Task Reminders",
+    "description": "Manage scheduled tasks, message templates, notification channels and reminder history"
+  },
   "settings": {
     "title": "Settings",
     "description": "Configure app behavior and reminder preferences",
@@ -89,7 +93,12 @@
     "notScheduled": "Not Scheduled",
     "saving": "Saving...",
     "emptyList": "No tasks yet",
-    "emptyHint": "Click \"New Task\" in the top right to create your first reminder"
+    "emptyHint": "Click \"New Task\" in the top right to create your first reminder",
+    "filterToday": "Today",
+    "filterWeek": "This Week",
+    "filterAll": "All",
+    "searchPlaceholder": "Search task name or description",
+    "loadError": "Load failed"
   },
   "template": {
     "newTemplate": "New Template",
@@ -108,7 +117,15 @@
     "varWeekday": "Weekday",
     "description": "Description",
     "emptyList": "No templates yet",
-    "emptyHint": "Click \"New Template\" in the top right to create your first template"
+    "emptyHint": "Click \"New Template\" in the top right to create your first template",
+    "pageTitle": "Reminder Templates",
+    "pageDescription": "Reuse common reminder titles, body and default Cron configurations",
+    "loading": "Loading templates...",
+    "loadError": "Failed to load templates",
+    "deleteSuccess": "Template deleted",
+    "deleteFailed": "Delete failed",
+    "deleteTitle": "Delete Template",
+    "deleteDescription": "Are you sure you want to delete this template? This action cannot be undone."
   },
   "channel": {
     "newChannel": "New Channel",
@@ -142,7 +159,9 @@
     "atPhonesPlaceholder": "Separate by comma, e.g.: 13800138000,13900139000",
     "atPhonesHint": "These phone number users will be @ mentioned when sending",
     "emptyList": "No notification channels yet",
-    "emptyHint": "Click \"New Channel\" in the top right to add your first notification channel"
+    "emptyHint": "Click \"New Channel\" in the top right to add your first notification channel",
+    "pageTitle": "Notification Channels",
+    "loadError": "Load failed"
   },
   "cron": {
     "standard": "Standard",

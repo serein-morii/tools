@@ -24,6 +24,10 @@
     "timer": "타이머",
     "notes": "노트"
   },
+  "reminder": {
+    "title": "작업 알림",
+    "description": "작업, 템플릿, 알림 채널, 알림 기록 관리"
+  },
   "settings": {
     "title": "설정",
     "description": "앱 동작 및 알림 설정 구성",
@@ -89,7 +93,12 @@
     "notScheduled": "미설정",
     "saving": "저장 중...",
     "emptyList": "작업이 없습니다",
-    "emptyHint": "우측 상단의 \"새 작업\"을 클릭하여 첫 번째 알림 생성"
+    "emptyHint": "우측 상단의 \"새 작업\"을 클릭하여 첫 번째 알림 생성",
+    "filterToday": "오늘",
+    "filterWeek": "이번 주",
+    "filterAll": "전체",
+    "searchPlaceholder": "작업 이름 또는 설명 검색",
+    "loadError": "로딩 실패"
   },
   "template": {
     "newTemplate": "새 템플릿",
@@ -108,7 +117,15 @@
     "varWeekday": "요일",
     "description": "설명",
     "emptyList": "템플릿이 없습니다",
-    "emptyHint": "우측 상단의 \"새 템플릿\"을 클릭하여 첫 번째 템플릿 생성"
+    "emptyHint": "우측 상단의 \"새 템플릿\"을 클릭하여 첫 번째 템플릿 생성",
+    "pageTitle": "알림 템플릿",
+    "pageDescription": "자주 사용하는 제목, 본문, 기본 Cron 설정 재사용",
+    "loading": "템플릿 로딩 중...",
+    "loadError": "템플릿 로딩 실패",
+    "deleteSuccess": "템플릿 삭제 완료",
+    "deleteFailed": "삭제 실패",
+    "deleteTitle": "템플릿 삭제",
+    "deleteDescription": "이 템플릿을 삭제하시겠습니까? 이 작업은 취소할 수 없습니다."
   },
   "channel": {
     "newChannel": "새 채널",
@@ -142,7 +159,9 @@
     "atPhonesPlaceholder": "쉼표로 구분, 예: 01012345678,01098765432",
     "atPhonesHint": "메시지 전송 시 이 번호의 사용자를 @합니다",
     "emptyList": "알림 채널이 없습니다",
-    "emptyHint": "우측 상단의 \"새 채널\"을 클릭하여 첫 번째 알림 채널 추가"
+    "emptyHint": "우측 상단의 \"새 채널\"을 클릭하여 첫 번째 알림 채널 추가",
+    "pageTitle": "알림 채널",
+    "loadError": "로딩 실패"
   },
   "cron": {
     "standard": "표준",
