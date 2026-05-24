@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import type { Template } from "@/types";
 import { useTranslation } from "react-i18next";
-import { cn } from "@/lib/utils";
 
 interface TemplateCardProps {
   template: Template;

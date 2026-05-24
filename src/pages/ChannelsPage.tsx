@@ -1,7 +1,7 @@
 import { useChannels } from "@/lib/query/channelQueries";
 import { ChannelList } from "@/components/modules/reminder/ChannelList";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, Radio } from "lucide-react";
 import { useState } from "react";
 import { ChannelEditor } from "@/components/modules/reminder/ChannelEditor";
 import { useKeyboardShortcuts } from "@/lib/useKeyboardShortcuts";
@@ -55,12 +55,18 @@ export function ChannelsPage() {
 
   return (
     <div className="p-6">
+      {/* Header */}
       <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h2 className="text-lg font-semibold">{t("channel.pageTitle")}</h2>
-          <p className="text-sm text-muted-foreground">
-            {t("channel.emptyList")}
-          </p>
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-cyan-600 shadow-md">
+            <Radio className="h-5 w-5 text-white" />
+          </div>
+          <div>
+            <h2 className="text-xl font-semibold">{t("channel.pageTitle")}</h2>
+            <p className="text-sm text-muted-foreground">
+              {(channels || []).length === 0 ? t("channel.emptyList") : `${(channels || []).length} ${t("channel.pageTitle").toLowerCase()}`}
+            </p>
+          </div>
         </div>
         <Button onClick={handleCreate} className="gap-2 shadow-sm">
           <Plus className="h-4 w-4" />

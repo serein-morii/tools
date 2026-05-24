@@ -39,3 +39,8 @@ pub fn toggle_task(db: State<'_, Arc<Database>>, id: String, enabled: bool) -> R
     let conn = db.conn().lock().unwrap();
     TaskDao::toggle(&conn, &id, enabled)
 }
+
+#[tauri::command]
+pub async fn test_task(db: State<'_, Arc<Database>>, id: String) -> Result<String> {
+    crate::services::scheduler::scheduler::test_task_notification(&db, &id).await
+}

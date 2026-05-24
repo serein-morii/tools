@@ -22,7 +22,16 @@
     "settings": "设置",
     "reminder": "提醒",
     "timer": "计时",
-    "notes": "笔记"
+    "notes": "笔记",
+    "home": "概览"
+  },
+  "dashboard": {
+    "title": "概览",
+    "description": "查看应用整体状态",
+    "successRate": "成功率",
+    "available": "可用",
+    "upcoming": "本周即将执行",
+    "noUpcoming": "暂无即将执行的任务"
   },
   "reminder": {
     "title": "任务提醒",

@@ -1,9 +1,10 @@
 import { useMemo, useState, useEffect } from "react";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, Bell } from "lucide-react";
 import { TaskList } from "@/components/modules/reminder/TaskList";
 import { TaskEditor } from "@/components/modules/reminder/TaskEditor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Kbd } from "@/components/ui/kbd";
 import { useTasks } from "@/lib/query/taskQueries";
 import { cn } from "@/lib/utils";
 import { filterTasks, type TaskFilterRange } from "@/lib/taskFilters";
@@ -80,6 +81,19 @@ export function TaskReminderPage() {
   return (
     <div className="p-6">
       {/* Header */}
+      <div className="mb-6 flex items-center gap-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 shadow-md">
+          <Bell className="h-5 w-5 text-white" />
+        </div>
+        <div>
+          <h2 className="text-xl font-semibold">{t("reminder.title")}</h2>
+          <p className="text-sm text-muted-foreground">
+            {t("reminder.description")}
+          </p>
+        </div>
+      </div>
+
+      {/* Filters */}
       <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="relative w-full lg:max-w-sm">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -112,6 +126,7 @@ export function TaskReminderPage() {
           <Button onClick={handleCreate} className="gap-2 shadow-sm">
             <Plus className="h-4 w-4" />
             {t("task.newTask")}
+            <Kbd keys={["⌘", "N"]} className="ml-1" />
           </Button>
         </div>
       </div>

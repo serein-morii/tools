@@ -22,7 +22,16 @@
     "settings": "設定",
     "reminder": "リマインダー",
     "timer": "タイマー",
-    "notes": "ノート"
+    "notes": "ノート",
+    "home": "ダッシュボード"
+  },
+  "dashboard": {
+    "title": "ダッシュボード",
+    "description": "アプリの全体状態",
+    "successRate": "成功率",
+    "available": "利用可能",
+    "upcoming": "今週の予定タスク",
+    "noUpcoming": "予定のタスクはありません"
   },
   "reminder": {
     "title": "タスクリマインダー",

@@ -1,13 +1,25 @@
-import type { Task } from "@/types";
+import type { Task, CronConfig } from "@/types";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Pencil, Trash2, Bell, BellOff, AlertCircle, Clock } from "lucide-react";
-import { useToggleTask, useDeleteTask } from "@/lib/query/taskQueries";
+import { Pencil, Trash2, Bell, BellOff, AlertCircle, Clock, Send } from "lucide-react";
+import { useToggleTask, useDeleteTask, useTestTask } from "@/lib/query/taskQueries";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
+import { formatCronDescription } from "@/lib/cron";
+import { toast } from "sonner";
+
+// Parse cron_config and return human-readable description
+function getCronDescription(cronConfigStr: string, t?: (key: string) => string): string {
+  try {
+    const config = JSON.parse(cronConfigStr) as CronConfig;
+    return formatCronDescription(config, t);
+  } catch {
+    return cronConfigStr || "自定义时间";
+  }
+}
 
 interface TaskCardProps {
   task: Task;
@@ -17,6 +29,7 @@ interface TaskCardProps {
 export function TaskCard({ task, onEdit }: TaskCardProps) {
   const toggleMutation = useToggleTask();
   const deleteMutation = useDeleteTask();
+  const testMutation = useTestTask();
   const [isDeleting, setIsDeleting] = useState(false);
   const { t } = useTranslation();
 
@@ -44,6 +57,17 @@ export function TaskCard({ task, onEdit }: TaskCardProps) {
       setIsDeleting(true);
       setTimeout(() => setIsDeleting(false), 3000);
     }
+  };
+
+  const handleTest = () => {
+    testMutation.mutate(task.id, {
+      onSuccess: () => {
+        toast.success(t("channel.testSuccess"));
+      },
+      onError: (error) => {
+        toast.error(`${t("channel.testFailed")}: ${error}`);
+      },
+    });
   };
 
   const formatNextRun = (timestamp?: number) => {
@@ -103,11 +127,11 @@ export function TaskCard({ task, onEdit }: TaskCardProps) {
             )}
 
             <div className="flex items-center gap-4 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1.5 font-mono bg-muted/50 px-2 py-0.5 rounded">
-                {task.cron_expr}
-              </span>
               <span className="flex items-center gap-1.5">
                 <Clock className="h-3 w-3" />
+                {getCronDescription(task.cron_config, t)}
+              </span>
+              <span className="flex items-center gap-1.5">
                 {t("task.nextRunLabel")}: {formatNextRun(task.next_run_at)}
               </span>
             </div>
@@ -115,6 +139,16 @@ export function TaskCard({ task, onEdit }: TaskCardProps) {
 
           {/* Actions */}
           <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleTest}
+              disabled={testMutation.isPending}
+              className="opacity-0 group-hover:opacity-100 transition-opacity"
+              title={t("channel.testChannel")}
+            >
+              <Send className={cn("h-4 w-4", testMutation.isPending && "animate-pulse")} />
+            </Button>
             <Switch
               checked={task.enabled}
               onCheckedChange={handleToggle}

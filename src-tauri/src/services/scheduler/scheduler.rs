@@ -596,6 +596,127 @@ fn get_days_in_month(year: i32, month: u32) -> u32 {
     }
 }
 
+/// Test task notification - send notification immediately for testing
+pub async fn test_task_notification(db: &Arc<Database>, task_id: &str) -> Result<String> {
+    // Get all needed data first, then release lock before async operation
+    let (task, title, content, channels) = {
+        let conn = db.conn().lock().unwrap();
+        let task = TaskDao::get_by_id(&conn, task_id)?
+            .ok_or_else(|| crate::error::ToolsError::TaskNotFound(task_id.to_string()))?;
+
+        let channel_ids: Vec<String> = serde_json::from_str(&task.channel_ids)?;
+
+        // Get template and render messages
+        let (title, content) = if let Some(template_id) = &task.template_id {
+            if let Ok(Some(template)) = TemplateDao::get_by_id(&conn, template_id) {
+                let rendered_title = render_template(&template.title_template, &task);
+                let rendered_body = render_template(&template.body_template, &task);
+                (rendered_title, rendered_body)
+            } else {
+                (task.name.clone(), task.description.clone().unwrap_or_default())
+            }
+        } else {
+            (task.name.clone(), task.description.clone().unwrap_or_default())
+        };
+
+        // Get all channels
+        let mut channels = Vec::new();
+        for channel_id in &channel_ids {
+            if let Ok(Some(channel)) = ChannelDao::get_by_id(&conn, channel_id) {
+                if channel.enabled {
+                    let config: serde_json::Value = serde_json::from_str(&channel.config)
+                        .unwrap_or(serde_json::json!({}));
+                    channels.push((channel.id, channel.name, channel.type_, config));
+                }
+            }
+        }
+
+        (task, title, content, channels)
+    };
+
+    // Now send notifications without holding the lock
+    let client = Client::new();
+    let mut results = Vec::new();
+
+    for (channel_id, channel_name, channel_type, config) in channels {
+        let at_phones: Vec<String> = config["atPhones"]
+            .as_array()
+            .map(|arr| arr.iter().filter_map(|v| v.as_str().map(|s| s.to_string())).collect())
+            .unwrap_or_default();
+
+        let (success, message) = match channel_type.as_str() {
+            "bark" => {
+                let key = config["key"].as_str().unwrap_or("");
+                let server_url = config["serverUrl"].as_str().unwrap_or("https://api.day.app");
+                let group = config["group"].as_str().unwrap_or("Tools");
+                let url = build_bark_url(server_url, key)?;
+                let body = serde_json::json!({
+                    "title": &title,
+                    "body": &content,
+                    "group": group,
+                    "sound": "bell",
+                });
+                let result = client.post(&url).json(&body).send().await;
+                match result {
+                    Ok(resp) => {
+                        let status = resp.status();
+                        let text = resp.text().await.unwrap_or_default();
+                        if status.is_success() {
+                            (true, format!("发送成功: {}", text))
+                        } else {
+                            (false, format!("发送失败: {}", text))
+                        }
+                    }
+                    Err(e) => (false, e.to_string()),
+                }
+            },
+            "feishu" => {
+                let webhook_url = config["webhookUrl"].as_str().unwrap_or("");
+                let secret = config["secret"].as_str();
+                let result = crate::services::notifier::feishu::send_feishu(
+                    &client, webhook_url, secret, &title, &content
+                ).await;
+                match result {
+                    Ok(msg) => (true, msg),
+                    Err(e) => (false, e.to_string()),
+                }
+            },
+            "wecom" => {
+                let webhook_url = config["webhookUrl"].as_str().unwrap_or("");
+                let result = crate::services::notifier::wecom::send_wecom(
+                    &client, webhook_url, &title, &content
+                ).await;
+                match result {
+                    Ok(msg) => (true, msg),
+                    Err(e) => (false, e.to_string()),
+                }
+            },
+            "dingtalk" => {
+                let webhook_url = config["webhookUrl"].as_str().unwrap_or("");
+                let secret = config["secret"].as_str();
+                let result = crate::services::notifier::dingtalk::send_dingtalk(
+                    &client, webhook_url, secret, &title, &content,
+                    if at_phones.is_empty() { None } else { Some(&at_phones) }
+                ).await;
+                match result {
+                    Ok(msg) => (true, msg),
+                    Err(e) => (false, e.to_string()),
+                }
+            },
+            _ => (false, format!("未知渠道类型: {}", channel_type)),
+        };
+
+        results.push(serde_json::json!({
+            "channel_id": channel_id,
+            "channel_name": channel_name,
+            "success": success,
+            "message": message
+        }));
+    }
+
+    Ok(serde_json::to_string(&results)?)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

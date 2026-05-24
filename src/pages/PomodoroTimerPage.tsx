@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Play, Pause, RotateCcw, Coffee, Focus, Settings2, Volume2, VolumeX } from "lucide-react";
+import { Play, Pause, RotateCcw, Coffee, Focus, Volume2, VolumeX, Timer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useTranslation } from "react-i18next";

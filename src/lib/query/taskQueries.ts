@@ -71,3 +71,9 @@ export function useToggleTask() {
     },
   });
 }
+
+export function useTestTask() {
+  return useMutation({
+    mutationFn: (id: string) => taskApi.test(id),
+  });
+}

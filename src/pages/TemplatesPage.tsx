@@ -1,7 +1,6 @@
 import { useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { TemplateEditor } from "@/components/modules/reminder/TemplateEditor";
 import { TemplateList } from "@/components/modules/reminder/TemplateList";
@@ -78,12 +77,18 @@ export function TemplatesPage() {
 
   return (
     <div className="p-6">
+      {/* Header */}
       <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h2 className="text-lg font-semibold">{t("template.pageTitle")}</h2>
-          <p className="text-sm text-muted-foreground">
-            {t("template.pageDescription")}
-          </p>
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 shadow-md">
+            <FileText className="h-5 w-5 text-white" />
+          </div>
+          <div>
+            <h2 className="text-xl font-semibold">{t("template.pageTitle")}</h2>
+            <p className="text-sm text-muted-foreground">
+              {t("template.pageDescription")}
+            </p>
+          </div>
         </div>
         <Button onClick={handleCreate} className="gap-2 shadow-sm">
           <Plus className="h-4 w-4" />

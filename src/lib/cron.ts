@@ -106,8 +106,8 @@ export function validateCronConfig(config: CronConfig): {
   return { valid: errors.length === 0, errors };
 }
 
-export function formatCronDescription(config: CronConfig): string {
-  const endConditionStr = formatEndCondition(config);
+export function formatCronDescription(config: CronConfig, t?: (key: string) => string): string {
+  const endConditionStr = formatEndCondition(config, t);
 
   if (config.mode === "standard" && config.standard) {
     const { frequency, time, dayOfWeek, dayOfMonth, month } = config.standard;
@@ -116,21 +116,28 @@ export function formatCronDescription(config: CronConfig): string {
     let desc = "";
     switch (frequency) {
       case "daily":
-        desc = `每天 ${timeStr}`;
+        desc = t ? `${t("cron.daily")} ${timeStr}` : `每天 ${timeStr}`;
         break;
       case "weekly":
-        const weekdays = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
-        desc = `每${weekdays[dayOfWeek ?? 0]} ${timeStr}`;
+        if (t) {
+          const weekdays = [t("cron.weekdaySun"), t("cron.weekdayMon"), t("cron.weekdayTue"), t("cron.weekdayWed"), t("cron.weekdayThu"), t("cron.weekdayFri"), t("cron.weekdaySat")];
+          desc = `${t("cron.weekly")}${weekdays[dayOfWeek ?? 0]} ${timeStr}`;
+        } else {
+          const weekdays = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
+          desc = `每${weekdays[dayOfWeek ?? 0]} ${timeStr}`;
+        }
         break;
       case "monthly":
-        desc = `每月 ${dayOfMonth} 日 ${timeStr}`;
+        desc = t ? `${t("cron.monthly")} ${dayOfMonth} ${t("cron.day")} ${timeStr}` : `每月 ${dayOfMonth} 日 ${timeStr}`;
         break;
       case "yearly":
-        const months = [
-          "一月", "二月", "三月", "四月", "五月", "六月",
-          "七月", "八月", "九月", "十月", "十一月", "十二月",
-        ];
-        desc = `每年${months[month ?? 0]} ${dayOfMonth} 日 ${timeStr}`;
+        if (t) {
+          const months = [t("cron.monthJan"), t("cron.monthFeb"), t("cron.monthMar"), t("cron.monthApr"), t("cron.monthMay"), t("cron.monthJun"), t("cron.monthJul"), t("cron.monthAug"), t("cron.monthSep"), t("cron.monthOct"), t("cron.monthNov"), t("cron.monthDec")];
+          desc = `${t("cron.yearly")}${months[month ?? 0]} ${dayOfMonth} ${t("cron.day")} ${timeStr}`;
+        } else {
+          const months = ["一月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "十一月", "十二月"];
+          desc = `每年${months[month ?? 0]} ${dayOfMonth} 日 ${timeStr}`;
+        }
         break;
     }
     return endConditionStr ? `${desc}，${endConditionStr}` : desc;
@@ -143,72 +150,80 @@ export function formatCronDescription(config: CronConfig): string {
     switch (type) {
       case "interval":
         if (interval) {
-          const unitNames = {
-            minutes: "分钟",
-            hours: "小时",
-            days: "天",
-            weeks: "周",
-          };
-          desc = `每 ${interval.value} ${unitNames[interval.unit]}，从 ${interval.startTime} 开始`;
+          const unitName = t ? t(`cron.${interval.unit}`) : { minutes: "分钟", hours: "小时", days: "天", weeks: "周" }[interval.unit];
+          desc = t
+            ? `${t("cron.every")} ${interval.value} ${unitName}，${t("cron.startTime")} ${interval.startTime}`
+            : `每 ${interval.value} ${unitName}，从 ${interval.startTime} 开始`;
         }
         break;
 
       case "nth_weekday":
         if (nthWeekday) {
-          const nthNames = ["", "第 1 个", "第 2 个", "第 3 个", "第 4 个", "第 5 个"];
-          const weekdays = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"];
-          const nthStr = nthNames[nthWeekday.nth] || "";
-          const weekdayStr = weekdays[nthWeekday.weekday] || "";
+          const nthName = t ? [t("cron.everyMonth"), t("cron.nth1"), t("cron.nth2"), t("cron.nth3"), t("cron.nth4"), t("cron.nth5")][nthWeekday.nth] : ["", "第 1 个", "第 2 个", "第 3 个", "第 4 个", "第 5 个"][nthWeekday.nth];
+          const weekdayName = t
+            ? [t("cron.weekdayMon"), t("cron.weekdayTue"), t("cron.weekdayWed"), t("cron.weekdayThu"), t("cron.weekdayFri"), t("cron.weekdaySat"), t("cron.weekdaySun")][nthWeekday.weekday]
+            : ["周一", "周二", "周三", "周四", "周五", "周六", "周日"][nthWeekday.weekday];
 
           if (nthWeekday.month && nthWeekday.month > 0) {
-            const months = [
-              "一月", "二月", "三月", "四月", "五月", "六月",
-              "七月", "八月", "九月", "十月", "十一月", "十二月",
-            ];
-            desc = `每年${months[nthWeekday.month - 1]}${nthStr}${weekdayStr}`;
+            const monthName = t
+              ? [t("cron.monthJan"), t("cron.monthFeb"), t("cron.monthMar"), t("cron.monthApr"), t("cron.monthMay"), t("cron.monthJun"), t("cron.monthJul"), t("cron.monthAug"), t("cron.monthSep"), t("cron.monthOct"), t("cron.monthNov"), t("cron.monthDec")][nthWeekday.month - 1]
+              : ["一月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "十一月", "十二月"][nthWeekday.month - 1];
+            desc = t ? `${t("cron.yearly")}${monthName}${nthName}${weekdayName}` : `每年${monthName}${nthName}${weekdayName}`;
           } else {
-            desc = `每月${nthStr}${weekdayStr}`;
+            desc = t ? `${t("cron.monthly")}${nthName}${weekdayName}` : `每月${nthName}${weekdayName}`;
           }
         }
         break;
 
       case "last_day":
         if (lastDay) {
-          const typeNames: Record<string, string> = {
-            last_nth: "倒数第N天",
-            last_workday: "最后一个工作日",
-            last_friday: "最后一个周五",
-            day: "最后一天",
-            weekday: "最后一个工作日",
-            friday: "最后一个周五",
-          };
-          const typeStr = typeNames[lastDay.type] || "最后一天";
-
           if (lastDay.type === "last_nth" && lastDay.nth) {
-            const nthStr = `倒数第${lastDay.nth}天`;
-            if (lastDay.month && lastDay.month > 0) {
-              const months = [
-                "一月", "二月", "三月", "四月", "五月", "六月",
-                "七月", "八月", "九月", "十月", "十一月", "十二月",
-              ];
-              desc = `每年${months[lastDay.month - 1]}${nthStr}`;
+            if (t) {
+              const nthStr = `${t("cron.lastNthLabel").replace("N", String(lastDay.nth))}`;
+              if (lastDay.month && lastDay.month > 0) {
+                const monthName = [t("cron.monthJan"), t("cron.monthFeb"), t("cron.monthMar"), t("cron.monthApr"), t("cron.monthMay"), t("cron.monthJun"), t("cron.monthJul"), t("cron.monthAug"), t("cron.monthSep"), t("cron.monthOct"), t("cron.monthNov"), t("cron.monthDec")][lastDay.month - 1];
+                desc = `${t("cron.yearly")}${monthName}${nthStr}`;
+              } else {
+                desc = `${t("cron.monthly")}${nthStr}`;
+              }
             } else {
-              desc = `每月${nthStr}`;
+              const nthStr = `倒数第${lastDay.nth}天`;
+              if (lastDay.month && lastDay.month > 0) {
+                const months = ["一月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "十一月", "十二月"];
+                desc = `每年${months[lastDay.month - 1]}${nthStr}`;
+              } else {
+                desc = `每月${nthStr}`;
+              }
             }
-          } else if (lastDay.month && lastDay.month > 0) {
-            const months = [
-              "一月", "二月", "三月", "四月", "五月", "六月",
-              "七月", "八月", "九月", "十月", "十一月", "十二月",
-            ];
-            desc = `每年${months[lastDay.month - 1]}${typeStr}`;
+          } else if (lastDay.type === "last_workday") {
+            const typeName = t ? t("cron.lastWorkday") : "最后一个工作日";
+            if (lastDay.month && lastDay.month > 0) {
+              const monthName = t
+                ? [t("cron.monthJan"), t("cron.monthFeb"), t("cron.monthMar"), t("cron.monthApr"), t("cron.monthMay"), t("cron.monthJun"), t("cron.monthJul"), t("cron.monthAug"), t("cron.monthSep"), t("cron.monthOct"), t("cron.monthNov"), t("cron.monthDec")][lastDay.month - 1]
+                : ["一月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "十一月", "十二月"][lastDay.month - 1];
+              desc = t ? `${t("cron.yearly")}${monthName}${typeName}` : `每年${monthName}${typeName}`;
+            } else {
+              desc = t ? `${t("cron.monthly")}${typeName}` : `每月${typeName}`;
+            }
+          } else if (lastDay.type === "last_friday") {
+            const typeName = t ? t("cron.lastFriday") : "最后一个周五";
+            if (lastDay.month && lastDay.month > 0) {
+              const monthName = t
+                ? [t("cron.monthJan"), t("cron.monthFeb"), t("cron.monthMar"), t("cron.monthApr"), t("cron.monthMay"), t("cron.monthJun"), t("cron.monthJul"), t("cron.monthAug"), t("cron.monthSep"), t("cron.monthOct"), t("cron.monthNov"), t("cron.monthDec")][lastDay.month - 1]
+                : ["一月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "十一月", "十二月"][lastDay.month - 1];
+              desc = t ? `${t("cron.yearly")}${monthName}${typeName}` : `每年${monthName}${typeName}`;
+            } else {
+              desc = t ? `${t("cron.monthly")}${typeName}` : `每月${typeName}`;
+            }
           } else {
-            desc = `每月${typeStr}`;
+            const typeName = t ? t("cron.lastDayOfMonth") : "最后一天";
+            desc = t ? `${t("cron.monthly")}${typeName}` : `每月${typeName}`;
           }
         }
         break;
 
       case "offset":
-        desc = "自定义偏移日期";
+        desc = t ? t("cron.special") : "自定义偏移日期";
         break;
     }
 
@@ -216,22 +231,28 @@ export function formatCronDescription(config: CronConfig): string {
   }
 
   if (config.mode === "advanced" && config.advanced) {
-    return `高级: ${config.advanced.expression}${endConditionStr ? `，${endConditionStr}` : ""}`;
+    return t
+      ? `${t("cron.advanced")}: ${config.advanced.expression}${endConditionStr ? `，${endConditionStr}` : ""}`
+      : `高级: ${config.advanced.expression}${endConditionStr ? `，${endConditionStr}` : ""}`;
   }
 
-  return "自定义时间";
+  return t ? t("cron.special") : "自定义时间";
 }
 
-function formatEndCondition(config: CronConfig): string {
+function formatEndCondition(config: CronConfig, t?: (key: string) => string): string {
   if (!config.endCondition || config.endCondition.type === "never") {
     return "";
   }
 
   switch (config.endCondition.type) {
     case "after_occurrences":
-      return `执行 ${config.endCondition.occurrences ?? 10} 次后结束`;
+      return t
+        ? `${t("cron.afterOccurrences").replace("N", String(config.endCondition.occurrences ?? 10))}`
+        : `执行 ${config.endCondition.occurrences ?? 10} 次后结束`;
     case "until_date":
-      return `${config.endCondition.untilDate} 后结束`;
+      return t
+        ? `${config.endCondition.untilDate} ${t("cron.untilDateLabel")}`
+        : `${config.endCondition.untilDate} 后结束`;
     default:
       return "";
   }

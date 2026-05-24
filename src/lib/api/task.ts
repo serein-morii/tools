@@ -16,4 +16,6 @@ export const taskApi = {
 
   toggle: (id: string, enabled: boolean): Promise<Task> =>
     call<Task>("toggle_task", { id, enabled }),
+
+  test: (id: string): Promise<string> => call<string>("test_task", { id }),
 };

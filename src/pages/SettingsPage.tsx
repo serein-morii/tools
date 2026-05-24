@@ -1,6 +1,6 @@
 import { useState, useEffect, lazy } from "react";
 import { useTranslation } from "react-i18next";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,7 @@ import { useSettings, useUpdateSetting, getSettingValue } from "@/lib/query/sett
 import { useQueryClient } from "@tanstack/react-query";
 import { open, save } from "@tauri-apps/plugin-dialog";
 import { invoke } from "@tauri-apps/api/core";
-import { Monitor, Moon, Sun, Power, EyeOff, MonitorUp, Download, Upload, Info, Palette, Globe, Bell, Database } from "lucide-react";
+import { Monitor, Moon, Sun, Power, EyeOff, MonitorUp, Download, Upload, Info, Palette, Bell, Database } from "lucide-react";
 import { ToggleRow } from "@/components/ui/toggle-row";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/theme-provider";

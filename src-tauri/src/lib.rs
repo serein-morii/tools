@@ -51,6 +51,7 @@ pub fn run() {
             commands::update_task,
             commands::delete_task,
             commands::toggle_task,
+            commands::test_task,
             commands::get_channels,
             commands::get_channel,
             commands::create_channel,

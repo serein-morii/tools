@@ -8,12 +8,13 @@ import { TemplatesPage } from "@/pages/TemplatesPage";
 import { HistoryPage } from "@/pages/HistoryPage";
 import { QuickNotesPage } from "@/pages/QuickNotesPage";
 import { PomodoroTimerPage } from "@/pages/PomodoroTimerPage";
+import { DashboardPage } from "@/pages/DashboardPage";
 
 function App() {
   return (
     <Routes>
       <Route path="/" element={<MainLayout />}>
-        <Route index element={<Navigate to="/reminder/tasks" replace />} />
+        <Route index element={<DashboardPage />} />
         <Route path="reminder" element={<ReminderLayout />}>
           <Route index element={<Navigate to="/reminder/tasks" replace />} />
           <Route path="tasks" element={<TaskReminderPage />} />

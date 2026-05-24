@@ -9,14 +9,14 @@ import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 
 const NOTE_COLORS = [
-  { value: "default", bg: "bg-card", dot: "bg-muted-foreground", border: "border-border" },
-  { value: "red", bg: "bg-red-50 dark:bg-red-950/40", dot: "bg-red-500", border: "border-red-200 dark:border-red-800" },
-  { value: "orange", bg: "bg-orange-50 dark:bg-orange-950/40", dot: "bg-orange-500", border: "border-orange-200 dark:border-orange-800" },
-  { value: "yellow", bg: "bg-yellow-50 dark:bg-yellow-950/40", dot: "bg-yellow-500", border: "border-yellow-200 dark:border-yellow-800" },
-  { value: "green", bg: "bg-green-50 dark:bg-green-950/40", dot: "bg-green-500", border: "border-green-200 dark:border-green-800" },
-  { value: "blue", bg: "bg-blue-50 dark:bg-blue-950/40", dot: "bg-blue-500", border: "border-blue-200 dark:border-blue-800" },
-  { value: "purple", bg: "bg-purple-50 dark:bg-purple-950/40", dot: "bg-purple-500", border: "border-purple-200 dark:border-purple-800" },
-  { value: "pink", bg: "bg-pink-50 dark:bg-pink-950/40", dot: "bg-pink-500", border: "border-pink-200 dark:border-pink-800" },
+  { value: "default", bg: "bg-card", dot: "bg-muted-foreground", border: "border-border", label: "Default" },
+  { value: "red", bg: "bg-red-50 dark:bg-red-950/40", dot: "bg-red-500", border: "border-red-200 dark:border-red-800", label: "Red" },
+  { value: "orange", bg: "bg-orange-50 dark:bg-orange-950/40", dot: "bg-orange-500", border: "border-orange-200 dark:border-orange-800", label: "Orange" },
+  { value: "yellow", bg: "bg-yellow-50 dark:bg-yellow-950/40", dot: "bg-yellow-500", border: "border-yellow-200 dark:border-yellow-800", label: "Yellow" },
+  { value: "green", bg: "bg-green-50 dark:bg-green-950/40", dot: "bg-green-500", border: "border-green-200 dark:border-green-800", label: "Green" },
+  { value: "blue", bg: "bg-blue-50 dark:bg-blue-950/40", dot: "bg-blue-500", border: "border-blue-200 dark:border-blue-800", label: "Blue" },
+  { value: "purple", bg: "bg-purple-50 dark:bg-purple-950/40", dot: "bg-purple-500", border: "border-purple-200 dark:border-purple-800", label: "Purple" },
+  { value: "pink", bg: "bg-pink-50 dark:bg-pink-950/40", dot: "bg-pink-500", border: "border-pink-200 dark:border-pink-800", label: "Pink" },
 ];
 
 export function QuickNotesPage() {

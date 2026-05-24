@@ -1,10 +1,11 @@
-import { NavLink, useLocation } from "react-router-dom";
-import { Bell, Settings, StickyNote, ChevronLeft, ChevronRight, Timer } from "lucide-react";
+import { NavLink } from "react-router-dom";
+import { Bell, Settings, StickyNote, ChevronLeft, ChevronRight, Timer, Home } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
 
 const primaryItems = [
+  { to: "/", icon: Home, labelKey: "nav.home", match: "/" },
   { to: "/reminder/tasks", icon: Bell, labelKey: "nav.reminder", match: "/reminder" },
   { to: "/timer", icon: Timer, labelKey: "nav.timer", match: "/timer" },
   { to: "/notes", icon: StickyNote, labelKey: "nav.notes", match: "/notes" },
@@ -13,7 +14,6 @@ const primaryItems = [
 const settingsItem = { to: "/settings", icon: Settings, labelKey: "nav.settings", match: "/settings" };
 
 export function Sidebar() {
-  const location = useLocation();
   const { t } = useTranslation();
   const [collapsed, setCollapsed] = useState(false);
 
@@ -56,6 +56,7 @@ export function Sidebar() {
           <NavLink
             key={item.to}
             to={item.to}
+            end={item.to === "/"}
             className={({ isActive }) =>
               cn(
                 "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200",

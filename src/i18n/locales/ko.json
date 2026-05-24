@@ -22,7 +22,16 @@
     "settings": "설정",
     "reminder": "알림",
     "timer": "타이머",
-    "notes": "노트"
+    "notes": "노트",
+    "home": "대시보드"
+  },
+  "dashboard": {
+    "title": "대시보드",
+    "description": "앱 전체 상태 보기",
+    "successRate": "성공률",
+    "available": "사용 가능",
+    "upcoming": "이번 주 예정 작업",
+    "noUpcoming": "예정된 작업 없음"
   },
   "reminder": {
     "title": "작업 알림",
@@ -291,7 +300,7 @@
     "totalTime": "집중 시간",
     "minutes": "분",
     "start": "시작",
-    "pause": "暂停",
-    "reset": "重置"
+    "pause": "일시정지",
+    "reset": "초기화"
   }
 }

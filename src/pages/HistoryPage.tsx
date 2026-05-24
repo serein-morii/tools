@@ -1,4 +1,4 @@
-import { AlertCircle, CheckCircle2, Clock3, Loader2 } from "lucide-react";
+import { AlertCircle, CheckCircle2, Clock3, Loader2, History } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ReminderActionPanel } from "@/components/modules/reminder/ReminderActionPanel";
@@ -41,6 +41,19 @@ export function HistoryPage() {
 
   return (
     <div className="p-6">
+      {/* Header */}
+      <div className="mb-6 flex items-center gap-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-md">
+          <History className="h-5 w-5 text-white" />
+        </div>
+        <div>
+          <h2 className="text-xl font-semibold">{t("history.title")}</h2>
+          <p className="text-sm text-muted-foreground">
+            {items.length === 0 ? t("history.empty") : `${items.length} ${t("history.title").toLowerCase()}`}
+          </p>
+        </div>
+      </div>
+
       {/* Stats Grid */}
       <div className="grid grid-cols-4 gap-4 mb-6">
         <StatCard

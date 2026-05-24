@@ -22,7 +22,16 @@
     "settings": "Settings",
     "reminder": "Reminders",
     "timer": "Timer",
-    "notes": "Notes"
+    "notes": "Notes",
+    "home": "Dashboard"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "description": "Overview of your app status",
+    "successRate": "Success Rate",
+    "available": "available",
+    "upcoming": "Upcoming Tasks (This Week)",
+    "noUpcoming": "No upcoming tasks"
   },
   "reminder": {
     "title": "Task Reminders",
