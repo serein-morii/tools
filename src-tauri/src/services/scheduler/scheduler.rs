@@ -2,6 +2,7 @@ use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
 use chrono::Utc;
+use reqwest::Client;
 use crate::database::Database;
 use crate::database::dao::{TaskDao, ChannelDao, ReminderDao, task::Task, reminder::CreateReminderRequest};
 use crate::services::scheduler::cron_parser::get_next_run_time;
@@ -132,6 +133,7 @@ async fn execute_pending_reminders(db: &Arc<Database>) -> Result<()> {
 }
 
 async fn send_notification_for_task(db: &Arc<Database>, task: &Task) -> Result<String> {
+    let client = Client::new();
     let conn = db.conn().lock().unwrap();
     let channel_ids: Vec<String> = serde_json::from_str(&task.channel_ids)?;
 
@@ -144,21 +146,67 @@ async fn send_notification_for_task(db: &Arc<Database>, task: &Task) -> Result<S
                 continue;
             }
 
+            let config: serde_json::Value = serde_json::from_str(&channel.config)
+                .unwrap_or(serde_json::json!({}));
+
             let (success, message) = match channel.type_.as_str() {
                 "bark" => {
-                    let result = crate::services::notifier::bark::send_bark_notification(
-                        &channel.config,
-                        &task.name,
-                        task.description.as_deref().unwrap_or("")
+                    let key = config["key"].as_str().unwrap_or("");
+                    let server_url = config["serverUrl"].as_str().unwrap_or("https://api.day.app");
+                    let group = config["group"].as_str().unwrap_or("Tools");
+                    let url = format!("{}/{}", server_url.trim_end_matches('/'), key);
+                    let body = serde_json::json!({
+                        "title": &task.name,
+                        "body": task.description.as_deref().unwrap_or(""),
+                        "group": group,
+                        "sound": "bell",
+                    });
+                    let result = client.post(&url).json(&body).send().await;
+                    match result {
+                        Ok(resp) => {
+                            let status = resp.status();
+                            let text = resp.text().await.unwrap_or_default();
+                            if status.is_success() {
+                                (true, format!("发送成功: {}", text))
+                            } else {
+                                (false, format!("发送失败: {}", text))
+                            }
+                        }
+                        Err(e) => (false, e.to_string()),
+                    }
+                },
+                "feishu" => {
+                    let webhook_url = config["webhookUrl"].as_str().unwrap_or("");
+                    let secret = config["secret"].as_str();
+                    let result = crate::services::notifier::feishu::send_feishu(
+                        &client, webhook_url, secret, &task.name, task.description.as_deref().unwrap_or("")
                     ).await;
                     match result {
                         Ok(msg) => (true, msg),
                         Err(e) => (false, e.to_string()),
                     }
                 },
-                "feishu" => (true, "飞书待实现".to_string()),
-                "wecom" => (true, "企业微信待实现".to_string()),
-                "dingtalk" => (true, "钉钉待实现".to_string()),
+                "wecom" => {
+                    let webhook_url = config["webhookUrl"].as_str().unwrap_or("");
+                    let result = crate::services::notifier::wecom::send_wecom(
+                        &client, webhook_url, &task.name, task.description.as_deref().unwrap_or("")
+                    ).await;
+                    match result {
+                        Ok(msg) => (true, msg),
+                        Err(e) => (false, e.to_string()),
+                    }
+                },
+                "dingtalk" => {
+                    let webhook_url = config["webhookUrl"].as_str().unwrap_or("");
+                    let secret = config["secret"].as_str();
+                    let result = crate::services::notifier::dingtalk::send_dingtalk(
+                        &client, webhook_url, secret, &task.name, task.description.as_deref().unwrap_or("")
+                    ).await;
+                    match result {
+                        Ok(msg) => (true, msg),
+                        Err(e) => (false, e.to_string()),
+                    }
+                },
                 _ => (false, format!("未知渠道类型: {}", channel.type_)),
             };
 

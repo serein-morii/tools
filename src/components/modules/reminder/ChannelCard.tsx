@@ -78,7 +78,7 @@ export function ChannelCard({ channel, onEdit }: ChannelCardProps) {
             <span className="flex items-center gap-1">
               {testMutation.isPending ? (
                 <Zap className="h-3 w-3 animate-pulse" />
-              ) : channel.last_test_result === "发送成功" ? (
+              ) : channel.last_test_result?.includes("发送成功") ? (
                 <CheckCircle className="h-3 w-3 text-green-500" />
               ) : channel.last_test_at ? (
                 <XCircle className="h-3 w-3 text-red-500" />
