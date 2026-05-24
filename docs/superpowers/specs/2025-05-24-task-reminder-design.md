@@ -4,15 +4,28 @@
 
 ### 1.1 项目定位
 
-**Tools** 是一个本地优先的桌面工具箱应用，首期核心功能为**任务提醒**。设计理念参考 [CC-Switch](https://github.com/farion1231/cc-switch) 的架构模式，采用 Tauri v2 + React 19 技术栈。
+**Tools** 是一个本地优先的桌面工具箱应用，采用**可扩展的模块化架构**。首期核心功能为**任务提醒**，后续可扩展计时器、笔记等其他工具模块。
+
+设计理念参考 [CC-Switch](https://github.com/farion1231/cc-switch) 的架构模式，采用 Tauri v2 + React 19 技术栈。
 
 ### 1.2 核心价值
 
+- **工具箱定位**：侧边栏导航 + 模块化设计，支持后续扩展
 - **本地优先**：所有数据存储在本地 SQLite，可选 WebDAV 云同步
 - **高度灵活**：支持极其丰富的提醒时间配置
 - **多渠道推送**：支持 Bark、飞书、企业微信、钉钉等多种通知渠道
 - **模板化**：消息模板、渠道模板、预设模板三层抽象
 - **状态追踪**：支持简单通知、确认提醒、反馈提醒三种模式
+
+### 1.3 工具模块规划
+
+| 模块 | 图标 | 说明 | 优先级 |
+|-----|------|------|-------|
+| 任务提醒 | 🔔 | 定时任务与提醒 | P0 (首期) |
+| 计时器 | ⏱️ | 番茄钟/倒计时/秒表 | P1 |
+| 笔记 | 📝 | 快速笔记/剪贴板历史 | P2 |
+| 待扩展 | ... | ... | ... |
+| 设置 | ⚙️ | 应用配置 | 必需 |
 
 ---
 
@@ -25,11 +38,16 @@
 │                        前端 (React 19 + TypeScript)              │
 ├─────────────────────────────────────────────────────────────────┤
 │  页面层                                                          │
-│  ├── 任务列表页 (TaskListPage)                                   │
-│  ├── 任务详情页 (TaskDetailPage)                                 │
-│  ├── 模板管理页 (TemplatePage)                                   │
-│  ├── 渠道配置页 (ChannelPage)                                    │
-│  └── 设置页 (SettingsPage)                                       │
+│  ├── Sidebar (侧边栏 - 一级导航)                                 │
+│  │   └── 模块入口：提醒/计时器/笔记/设置                         │
+│  ├── reminder/ (任务提醒模块)                                    │
+│  │   ├── TaskListPage                                           │
+│  │   ├── TemplatePage                                           │
+│  │   ├── ChannelPage                                            │
+│  │   └── HistoryPage                                            │
+│  ├── timer/ (计时器模块 - 预留)                                  │
+│  ├── notes/ (笔记模块 - 预留)                                    │
+│  └── settings/ (设置页)                                          │
 ├─────────────────────────────────────────────────────────────────┤
 │  组件层                                                          │
 │  ├── TaskCard / TaskEditor / CronEditor                         │
@@ -98,6 +116,58 @@
 tools/
 ├── src/                          # 前端源码
 │   ├── App.tsx                   # 主应用入口
+│   ├── main.tsx                  # React 挂载点
+│   ├── index.css                 # 全局样式
+│   ├── components/               # 组件
+│   │   ├── ui/                   # 基础 UI 组件 (Radix + Tailwind)
+│   │   ├── layout/               # 布局组件
+│   │   │   ├── Sidebar.tsx       # 侧边栏 (一级导航)
+│   │   │   ├── MainContent.tsx   # 主内容区
+│   │   │   └── TabBar.tsx        # 二级 Tab 导航
+│   │   ├── common/               # 通用组件
+│   │   │   ├── ConfirmDialog.tsx
+│   │   │   ├── Toast.tsx
+│   │   │   └── Modal.tsx
+│   │   └── modules/              # 模块组件
+│   │       ├── reminder/         # 任务提醒模块
+│   │       │   ├── TaskCard.tsx
+│   │       │   ├── TaskEditor.tsx
+│   │       │   ├── CronEditor.tsx
+│   │       │   ├── TemplateEditor.tsx
+│   │       │   └── ChannelConfig.tsx
+│   │       ├── timer/            # 计时器模块 (预留)
+│   │       └── notes/            # 笔记模块 (预留)
+│   ├── pages/                    # 页面
+│   │   ├── reminder/             # 任务提醒页面
+│   │   │   ├── TaskListPage.tsx
+│   │   │   ├── TemplatePage.tsx
+│   │   │   ├── ChannelPage.tsx
+│   │   │   └── HistoryPage.tsx
+│   │   ├── timer/                # 计时器页面 (预留)
+│   │   ├── notes/                # 笔记页面 (预留)
+│   │   └── settings/             # 设置页面
+│   │       └── SettingsPage.tsx
+│   ├── hooks/                    # 自定义 Hooks
+│   ├── lib/                      # 工具库
+│   │   ├── api/                  # API 封装
+│   │   │   ├── index.ts
+│   │   │   ├── reminder/         # 提醒模块 API
+│   │   │   │   ├── task.ts
+│   │   │   │   ├── template.ts
+│   │   │   │   ├── channel.ts
+│   │   │   │   └── reminder.ts
+│   │   │   └── settings.ts
+│   │   ├── query/                # React Query 配置
+│   │   ├── utils.ts              # 工具函数
+│   │   └── platform.ts           # 平台检测
+│   ├── types/                    # TypeScript 类型
+│   │   ├── reminder.ts           # 提醒模块类型
+│   │   └── settings.ts           # 设置类型
+│   ├── contexts/                 # React Context
+│   │   └── ModuleContext.tsx     # 当前模块上下文
+│   └── config/                   # 配置文件
+│       ├── modules.ts            # 模块注册配置
+│       └── constants.ts          # 常量定义
 │   ├── main.tsx                  # React 挂载点
 │   ├── index.css                 # 全局样式
 │   ├── components/               # 组件
@@ -710,35 +780,177 @@ impl Notifier for FeishuNotifier {
 
 ## 6. 前端设计
 
-### 6.1 页面结构
+### 6.1 整体布局结构
+
+采用**侧边栏 + 内容区**的经典布局，支持模块化扩展：
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │  Tools                                              [_][□][×]    │
-├─────────────────────────────────────────────────────────────────┤
-│  [任务] [模板] [渠道] [历史] [设置]                               │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │  搜索框 [________]  [+ 新建任务]  [今天] [本周] [全部]   │   │
-│  └─────────────────────────────────────────────────────────┘   │
-│                                                                 │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │  📋 每日站会提醒                                         │   │
-│  │     每天 09:30 | 简单通知 | 下次: 明天 09:30              │   │
-│  │     [编辑] [暂停] [删除]                                 │   │
-│  └─────────────────────────────────────────────────────────┘   │
-│                                                                 │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │  📅 月度汇报提醒                                    ✓    │   │
-│  │     每月第2个周一 14:00 | 需确认 | 下次: 6月10日         │   │
-│  │     [编辑] [确认] [稍后提醒]                             │   │
-│  └─────────────────────────────────────────────────────────┘   │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
+├────────┬────────────────────────────────────────────────────────┤
+│        │  [任务] [模板] [渠道] [历史]         <- 二级 Tab 导航   │
+│  🔔    ├────────────────────────────────────────────────────────┤
+│  提醒  │                                                        │
+│        │  ┌────────────────────────────────────────────────┐   │
+│  ───   │  │  搜索 [________] [+新建] [今天][本周][全部]    │   │
+│        │  └────────────────────────────────────────────────┘   │
+│  ⏱️    │                                                        │
+│  计时  │  ┌────────────────────────────────────────────────┐   │
+│        │  │  📋 每日站会提醒                                 │   │
+│  ───   │  │     每天 09:30 | 简单通知 | 下次: 明天 09:30    │   │
+│        │  │     [编辑] [暂停] [删除]                         │   │
+│  📝    │  └────────────────────────────────────────────────┘   │
+│  笔记  │                                                        │
+│        │  ┌────────────────────────────────────────────────┐   │
+│  ───   │  │  📅 月度汇报提醒                            ✓    │   │
+│        │  │     每月第2个周一 14:00 | 需确认 | 下次: 6月10日│   │
+│  ⚙️    │  │     [编辑] [确认] [稍后提醒]                    │   │
+│  设置  │  └────────────────────────────────────────────────┘   │
+│        │                                                        │
+└────────┴────────────────────────────────────────────────────────┘
+   ↑
+   侧边栏 (一级导航)
 ```
 
-### 6.2 任务编辑器
+**布局说明**：
+
+| 区域 | 宽度 | 说明 |
+|-----|------|------|
+| 侧边栏 | 72px (可折叠至 48px) | 一级导航，展示各模块图标+名称 |
+| 内容区 | 剩余宽度 | 各模块的具体内容 |
+| Tab 栏 | 全宽 | 二级导航，仅当前模块生效 |
+
+**侧边栏设计**：
+
+```typescript
+// src/config/modules.ts
+
+export interface ModuleConfig {
+  id: string;
+  name: string;
+  icon: React.ComponentType;
+  path: string;
+  enabled: boolean;
+  order: number;
+}
+
+export const modules: ModuleConfig[] = [
+  {
+    id: 'reminder',
+    name: '提醒',
+    icon: BellIcon,
+    path: '/reminder',
+    enabled: true,
+    order: 1,
+  },
+  {
+    id: 'timer',
+    name: '计时',
+    icon: TimerIcon,
+    path: '/timer',
+    enabled: true,
+    order: 2,
+  },
+  {
+    id: 'notes',
+    name: '笔记',
+    icon: FileTextIcon,
+    path: '/notes',
+    enabled: true,
+    order: 3,
+  },
+  {
+    id: 'settings',
+    name: '设置',
+    icon: SettingsIcon,
+    path: '/settings',
+    enabled: true,
+    order: 99, // 始终在底部
+  },
+];
+```
+
+**侧边栏组件**：
+
+```tsx
+// src/components/layout/Sidebar.tsx
+
+function Sidebar() {
+  const [collapsed, setCollapsed] = useState(false);
+  const location = useLocation();
+
+  const visibleModules = modules
+    .filter(m => m.enabled)
+    .sort((a, b) => a.order - b.order);
+
+  // 设置模块单独放在底部
+  const mainModules = visibleModules.filter(m => m.id !== 'settings');
+  const settingsModule = visibleModules.find(m => m.id === 'settings');
+
+  return (
+    <aside className={cn(
+      "flex flex-col bg-muted/30 border-r",
+      collapsed ? "w-12" : "w-[72px]"
+    )}>
+      {/* 主模块 */}
+      <nav className="flex-1 py-4">
+        {mainModules.map(module => (
+          <NavItem
+            key={module.id}
+            module={module}
+            collapsed={collapsed}
+            active={location.pathname.startsWith(module.path)}
+          />
+        ))}
+      </nav>
+
+      {/* 设置模块 */}
+      <nav className="py-4 border-t">
+        {settingsModule && (
+          <NavItem
+            module={settingsModule}
+            collapsed={collapsed}
+            active={location.pathname === settingsModule.path}
+          />
+        )}
+      </nav>
+
+      {/* 折叠按钮 */}
+      <button
+        className="p-2 text-muted-foreground hover:text-foreground"
+        onClick={() => setCollapsed(!collapsed)}
+      >
+        {collapsed ? <ChevronRight /> : <ChevronLeft />}
+      </button>
+    </aside>
+  );
+}
+```
+
+### 6.2 任务提醒模块页面结构
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  Tools                                              [_][□][×]    │
+├────────┬────────────────────────────────────────────────────────┤
+│  🔔    │  [任务] [模板] [渠道] [历史]                            │
+│  提醒  ├────────────────────────────────────────────────────────┤
+│  ...   │                                                        │
+└────────┴────────────────────────────────────────────────────────┘
+              ↑
+              二级导航 (Tab)
+```
+
+**Tab 导航配置**：
+
+| Tab | 路由 | 说明 |
+|-----|------|------|
+| 任务 | `/reminder/tasks` | 任务列表，默认页 |
+| 模板 | `/reminder/templates` | 模板管理 |
+| 渠道 | `/reminder/channels` | 渠道配置 |
+| 历史 | `/reminder/history` | 提醒历史 |
+
+### 6.3 任务列表页
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -793,10 +1005,21 @@ impl Notifier for FeishuNotifier {
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### 6.3 Cron 编辑器组件
+### 6.4 任务编辑器
 
 ```typescript
 // src/components/tasks/CronEditor.tsx
+
+interface CronEditorProps {
+  value: string;
+  config: CronConfig;
+  onChange: (expr: string, config: CronConfig) => void;
+}
+
+### 6.5 Cron 编辑器组件
+
+```typescript
+// src/components/modules/reminder/CronEditor.tsx
 
 interface CronEditorProps {
   value: string;
