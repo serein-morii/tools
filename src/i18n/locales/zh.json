@@ -244,7 +244,8 @@
     "monthSep": "九月",
     "monthOct": "十月",
     "monthNov": "十一月",
-    "monthDec": "十二月"
+    "monthDec": "十二月",
+    "nextRuns": "接下来执行时间"
   },
   "history": {
     "title": "提醒历史",

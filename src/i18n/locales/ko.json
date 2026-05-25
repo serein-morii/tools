@@ -244,7 +244,8 @@
     "monthSep": "9월",
     "monthOct": "10월",
     "monthNov": "11월",
-    "monthDec": "12월"
+    "monthDec": "12월",
+    "nextRuns": "다음 실행 시간"
   },
   "history": {
     "title": "알림 기록",

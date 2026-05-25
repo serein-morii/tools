@@ -1,13 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Clock, Repeat, Settings2 } from "lucide-react";
+import { Clock, Repeat, Settings2, CalendarClock } from "lucide-react";
 import type { CronConfig } from "@/types";
 import {
   cronConfigToExpression,
   formatCronDescription,
+  getNextOccurrences,
   validateCronConfig,
 } from "@/lib/cron";
 import { useTranslation } from "react-i18next";
@@ -565,6 +566,45 @@ export function CronEditor({ value, onChange }: CronEditorProps) {
 
       <div className="text-sm text-muted-foreground bg-muted p-2 rounded">
         {t("cron.currentConfig")}: {formatCronDescription(config)}
+      </div>
+
+      <NextOccurrencesPreview config={config} />
+    </div>
+  );
+}
+
+function NextOccurrencesPreview({ config }: { config: CronConfig }) {
+  const { t } = useTranslation();
+
+  const occurrences = useMemo(() => getNextOccurrences(config, 5), [config]);
+
+  if (occurrences.length === 0) return null;
+
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+        <CalendarClock className="h-3.5 w-3.5" />
+        {t("cron.nextRuns")}
+      </div>
+      <div className="grid gap-1">
+        {occurrences.map((date, i) => (
+          <div key={i} className="text-xs text-muted-foreground flex items-center gap-2">
+            <span className="text-foreground font-mono">{i + 1}.</span>
+            <span>
+              {date.toLocaleDateString(undefined, {
+                month: "short",
+                day: "numeric",
+                weekday: "short",
+              })}
+            </span>
+            <span className="font-mono">
+              {date.toLocaleTimeString(undefined, {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </span>
+          </div>
+        ))}
       </div>
     </div>
   );

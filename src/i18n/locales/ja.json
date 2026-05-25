@@ -244,7 +244,8 @@
     "monthSep": "9月",
     "monthOct": "10月",
     "monthNov": "11月",
-    "monthDec": "12月"
+    "monthDec": "12月",
+    "nextRuns": "次回実行時間"
   },
   "history": {
     "title": "リマインダー履歴",

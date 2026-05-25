@@ -1,3 +1,4 @@
+import { useState, useMemo } from "react";
 import { AlertCircle, CheckCircle2, Clock3, Loader2, History } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -5,10 +6,14 @@ import { ReminderActionPanel } from "@/components/modules/reminder/ReminderActio
 import { useReminderHistory } from "@/lib/query/reminderQueries";
 import type { ReminderHistoryItem } from "@/types";
 import { useTranslation } from "react-i18next";
+import { cn } from "@/lib/utils";
+
+type StatusFilter = "all" | "sent" | "failed" | "pending";
 
 export function HistoryPage() {
   const { data: history, isLoading, error } = useReminderHistory();
   const { t } = useTranslation();
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const items = history || [];
 
   const stats = {
@@ -17,6 +22,11 @@ export function HistoryPage() {
     failed: items.filter((item) => item.status === "failed").length,
     pending: items.filter((item) => item.status === "pending").length,
   };
+
+  const filteredItems = useMemo(() => {
+    if (statusFilter === "all") return items;
+    return items.filter((item) => item.status === statusFilter);
+  }, [items, statusFilter]);
 
   if (isLoading) {
     return (
@@ -62,6 +72,8 @@ export function HistoryPage() {
           icon={Clock3}
           color="text-muted-foreground"
           bg="bg-muted/50"
+          active={statusFilter === "all"}
+          onClick={() => setStatusFilter("all")}
         />
         <StatCard
           title={t("history.success")}
@@ -69,6 +81,8 @@ export function HistoryPage() {
           icon={CheckCircle2}
           color="text-green-600"
           bg="bg-green-50 dark:bg-green-950/30"
+          active={statusFilter === "sent"}
+          onClick={() => setStatusFilter("sent")}
         />
         <StatCard
           title={t("history.failed")}
@@ -76,6 +90,8 @@ export function HistoryPage() {
           icon={AlertCircle}
           color="text-red-600"
           bg="bg-red-50 dark:bg-red-950/30"
+          active={statusFilter === "failed"}
+          onClick={() => setStatusFilter("failed")}
         />
         <StatCard
           title={t("history.pending")}
@@ -83,10 +99,12 @@ export function HistoryPage() {
           icon={Clock3}
           color="text-amber-600"
           bg="bg-amber-50 dark:bg-amber-950/30"
+          active={statusFilter === "pending"}
+          onClick={() => setStatusFilter("pending")}
         />
       </div>
 
-      {items.length === 0 ? (
+      {filteredItems.length === 0 ? (
         <Card className="border-dashed">
           <CardContent className="py-12 text-center text-sm text-muted-foreground">
             {t("history.empty")}
@@ -94,7 +112,7 @@ export function HistoryPage() {
         </Card>
       ) : (
         <div className="space-y-3">
-          {items.map((item) => (
+          {filteredItems.map((item) => (
             <HistoryCard key={item.id} item={item} />
           ))}
         </div>
@@ -109,15 +127,26 @@ function StatCard({
   icon: Icon,
   color,
   bg,
+  active,
+  onClick,
 }: {
   title: string;
   value: number;
   icon: React.ComponentType<{ className?: string }>;
   color: string;
   bg: string;
+  active?: boolean;
+  onClick?: () => void;
 }) {
   return (
-    <Card className={bg}>
+    <Card
+      className={cn(
+        bg,
+        "cursor-pointer transition-all hover:shadow-md",
+        active && "ring-2 ring-primary"
+      )}
+      onClick={onClick}
+    >
       <CardContent className="py-4">
         <div className="flex items-center gap-2 mb-1">
           <Icon className={`h-4 w-4 ${color}`} />

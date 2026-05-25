@@ -1,3 +1,4 @@
+import { CronExpressionParser } from "cron-parser";
 import type { CreateTaskRequest, CronConfig } from "@/types";
 
 export function cronConfigToExpression(config: CronConfig): string {
@@ -57,11 +58,20 @@ export function cronConfigToExpression(config: CronConfig): string {
 
 export function getNextOccurrences(
   config: CronConfig,
-  _count: number = 5
+  count: number = 5
 ): Date[] {
-  const expression = cronConfigToExpression(config);
-  console.log("Cron expression:", expression);
-  return [];
+  try {
+    const expression = cronConfigToExpression(config);
+    const interval = CronExpressionParser.parse(expression);
+    const results: Date[] = [];
+    for (let i = 0; i < count; i++) {
+      const next = interval.next();
+      results.push(next.toDate());
+    }
+    return results;
+  } catch {
+    return [];
+  }
 }
 
 export function validateCronConfig(config: CronConfig): {
