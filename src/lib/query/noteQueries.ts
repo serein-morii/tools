@@ -9,14 +9,6 @@ export function useNotes() {
   });
 }
 
-export function useNote(id: string) {
-  return useQuery({
-    queryKey: ["notes", id],
-    queryFn: () => invoke<QuickNote | null>("get_note", { id }),
-    enabled: !!id,
-  });
-}
-
 export function useCreateNote() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -60,13 +52,5 @@ export function useDeleteNote() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notes"] });
     },
-  });
-}
-
-export function useSearchNotes(query: string) {
-  return useQuery({
-    queryKey: ["notes", "search", query],
-    queryFn: () => invoke<QuickNote[]>("search_notes", { query }),
-    enabled: query.length > 0,
   });
 }

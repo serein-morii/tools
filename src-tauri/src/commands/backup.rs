@@ -49,6 +49,7 @@ pub fn export_backup(db: State<'_, Arc<Database>>, request: Option<ExportBackupR
         channels: data.channels.len(),
         templates: data.templates.len(),
         settings: data.settings.len(),
+        quick_notes: data.quick_notes.len(),
     };
     let content = serde_json::to_string_pretty(&data)?;
     std::fs::write(&path, content)?;

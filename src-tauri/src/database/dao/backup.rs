@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::database::dao::{
     channel::Channel,
+    note::QuickNote,
     settings::{Setting, SettingsDao},
     task::Task,
     template::Template,
@@ -18,6 +19,8 @@ pub struct BackupData {
     pub channels: Vec<Channel>,
     pub templates: Vec<Template>,
     pub settings: Vec<Setting>,
+    #[serde(default)]
+    pub quick_notes: Vec<QuickNote>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -26,6 +29,7 @@ pub struct BackupCounts {
     pub channels: usize,
     pub templates: usize,
     pub settings: usize,
+    pub quick_notes: usize,
 }
 
 pub struct BackupDao;
@@ -39,6 +43,7 @@ impl BackupDao {
             channels: load_channels(conn)?,
             templates: load_templates(conn)?,
             settings: SettingsDao::get_all(conn)?,
+            quick_notes: load_quick_notes(conn)?,
         })
     }
 
@@ -52,6 +57,7 @@ impl BackupDao {
         tx.execute("DELETE FROM channels", [])?;
         tx.execute("DELETE FROM templates", [])?;
         tx.execute("DELETE FROM settings", [])?;
+        tx.execute("DELETE FROM quick_notes", [])?;
 
         for task in &data.tasks {
             tx.execute(
@@ -133,6 +139,21 @@ impl BackupDao {
             )?;
         }
 
+        for note in &data.quick_notes {
+            tx.execute(
+                "INSERT INTO quick_notes (id, content, color, pinned, created_at, updated_at)
+                 VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+                rusqlite::params![
+                    note.id,
+                    note.content,
+                    note.color,
+                    if note.pinned { 1 } else { 0 },
+                    note.created_at,
+                    note.updated_at,
+                ],
+            )?;
+        }
+
         tx.commit()?;
 
         Ok(BackupCounts {
@@ -140,6 +161,7 @@ impl BackupDao {
             channels: data.channels.len(),
             templates: data.templates.len(),
             settings: data.settings.len(),
+            quick_notes: data.quick_notes.len(),
         })
     }
 }
@@ -229,6 +251,26 @@ fn load_templates(conn: &Connection) -> Result<Vec<Template>> {
     Ok(rows)
 }
 
+fn load_quick_notes(conn: &Connection) -> Result<Vec<QuickNote>> {
+    let mut stmt = conn.prepare(
+        "SELECT id, content, color, pinned, created_at, updated_at
+         FROM quick_notes ORDER BY pinned DESC, created_at DESC"
+    )?;
+
+    let rows = stmt.query_map([], |row| {
+        Ok(QuickNote {
+            id: row.get(0)?,
+            content: row.get(1)?,
+            color: row.get(2)?,
+            pinned: row.get::<_, i32>(3)? != 0,
+            created_at: row.get(4)?,
+            updated_at: row.get(5)?,
+        })
+    })?.collect::<rusqlite::Result<Vec<_>>>()?;
+
+    Ok(rows)
+}
+
 #[cfg(test)]
 mod tests {
     use super::BackupDao;
@@ -285,6 +327,14 @@ mod tests {
             CREATE TABLE settings (
                 key TEXT PRIMARY KEY,
                 value TEXT NOT NULL
+            );
+            CREATE TABLE quick_notes (
+                id TEXT PRIMARY KEY,
+                content TEXT NOT NULL,
+                color TEXT NOT NULL DEFAULT 'default',
+                pinned INTEGER NOT NULL DEFAULT 0,
+                created_at INTEGER NOT NULL,
+                updated_at INTEGER NOT NULL
             );"
         ).unwrap();
         conn
@@ -298,7 +348,9 @@ mod tests {
              VALUES ('channel-1', 'Bark', 'bark', 1, '{\"key\":\"local\"}', 'desc', 1000, 1000);
              INSERT INTO templates (id, name, description, category, title_template, body_template, default_cron, default_channels, tags, created_at, updated_at)
              VALUES ('template-1', '模板', 'desc', 'custom', '标题', '内容', '0 9 * * *', '[\"channel-1\"]', '[]', 1000, 1000);
-             INSERT INTO settings (key, value) VALUES ('snooze_minutes', '12');"
+             INSERT INTO settings (key, value) VALUES ('snooze_minutes', '12');
+             INSERT INTO quick_notes (id, content, color, pinned, created_at, updated_at)
+             VALUES ('note-1', '测试笔记', 'blue', 1, 1000, 1000);"
         ).unwrap();
     }
 
@@ -313,6 +365,7 @@ mod tests {
         assert_eq!(data.channels.len(), 1);
         assert_eq!(data.templates.len(), 1);
         assert_eq!(data.settings.len(), 1);
+        assert_eq!(data.quick_notes.len(), 1);
 
         let mut target = setup_conn();
         let counts = BackupDao::import_data(&mut target, data).unwrap();
@@ -320,10 +373,18 @@ mod tests {
         assert_eq!(counts.channels, 1);
         assert_eq!(counts.templates, 1);
         assert_eq!(counts.settings, 1);
+        assert_eq!(counts.quick_notes, 1);
 
         let task_name: String = target.query_row("SELECT name FROM tasks WHERE id = 'task-1'", [], |row| row.get(0)).unwrap();
         let setting_value: String = target.query_row("SELECT value FROM settings WHERE key = 'snooze_minutes'", [], |row| row.get(0)).unwrap();
+        let note_content: String = target.query_row("SELECT content FROM quick_notes WHERE id = 'note-1'", [], |row| row.get(0)).unwrap();
+        let note_pinned: bool = target.query_row("SELECT pinned FROM quick_notes WHERE id = 'note-1'", [], |row| {
+            let v: i32 = row.get(0)?;
+            Ok(v != 0)
+        }).unwrap();
         assert_eq!(task_name, "备份任务");
         assert_eq!(setting_value, "12");
+        assert_eq!(note_content, "测试笔记");
+        assert!(note_pinned);
     }
 }
