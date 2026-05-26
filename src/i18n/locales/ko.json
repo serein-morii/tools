@@ -107,7 +107,8 @@
     "filterWeek": "이번 주",
     "filterAll": "전체",
     "searchPlaceholder": "작업 이름 또는 설명 검색",
-    "loadError": "로딩 실패"
+    "loadError": "로딩 실패",
+    "nameRequired": "작업 이름을 입력하세요"
   },
   "template": {
     "newTemplate": "새 템플릿",

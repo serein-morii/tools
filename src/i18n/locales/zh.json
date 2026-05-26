@@ -107,7 +107,8 @@
     "filterWeek": "本周",
     "filterAll": "全部",
     "searchPlaceholder": "搜索任务名称或描述",
-    "loadError": "加载失败"
+    "loadError": "加载失败",
+    "nameRequired": "请输入任务名称"
   },
   "template": {
     "newTemplate": "新建模板",

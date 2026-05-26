@@ -10,11 +10,35 @@ import { formatCronDescription } from "@/lib/cron";
 import type { CronConfig } from "@/types";
 
 export function DashboardPage() {
-  const { data: tasks } = useTasks();
-  const { data: channels } = useChannels();
-  const { data: templates } = useTemplates();
-  const { data: history } = useReminderHistory();
+  const { data: tasks, isLoading: tasksLoading, error: tasksError } = useTasks();
+  const { data: channels, isLoading: channelsLoading, error: channelsError } = useChannels();
+  const { data: templates, isLoading: templatesLoading, error: templatesError } = useTemplates();
+  const { data: history, isLoading: historyLoading, error: historyError } = useReminderHistory();
   const { t } = useTranslation();
+
+  const isLoading = tasksLoading || channelsLoading || templatesLoading || historyLoading;
+  const error = tasksError || channelsError || templatesError || historyError;
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center p-12">
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+          {t("common.loading")}
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6">
+        <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-sm text-destructive">
+          {t("common.error")}
+        </div>
+      </div>
+    );
+  }
 
   const activeTasks = (tasks || []).filter((t) => t.enabled).length;
   const totalTasks = (tasks || []).length;

@@ -107,7 +107,8 @@
     "filterWeek": "This Week",
     "filterAll": "All",
     "searchPlaceholder": "Search task name or description",
-    "loadError": "Load failed"
+    "loadError": "Load failed",
+    "nameRequired": "Task name is required"
   },
   "template": {
     "newTemplate": "New Template",

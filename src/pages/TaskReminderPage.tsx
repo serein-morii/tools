@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useCallback } from "react";
 import { Plus, Search, Bell } from "lucide-react";
 import { TaskList } from "@/components/modules/reminder/TaskList";
 import { TaskEditor } from "@/components/modules/reminder/TaskEditor";
@@ -30,15 +30,15 @@ export function TaskReminderPage() {
     [tasks, search, range],
   );
 
-  const handleCreate = () => {
+  const handleCreate = useCallback(() => {
     setEditingTaskId(null);
     setEditorOpen(true);
-  };
+  }, []);
 
-  const handleEdit = (id: string) => {
+  const handleEdit = useCallback((id: string) => {
     setEditingTaskId(id);
     setEditorOpen(true);
-  };
+  }, []);
 
   // Keyboard shortcuts
   useKeyboardShortcuts([
@@ -55,7 +55,7 @@ export function TaskReminderPage() {
     const handler = () => handleCreate();
     window.addEventListener("tray-new-task", handler);
     return () => window.removeEventListener("tray-new-task", handler);
-  }, []);
+  }, [handleCreate]);
 
   if (isLoading) {
     return (

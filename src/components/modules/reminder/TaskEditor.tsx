@@ -13,6 +13,7 @@ import { CronEditor } from "./CronEditor";
 import type { CreateTaskRequest, UpdateTaskRequest } from "@/types";
 import { createDefaultTaskRequest } from "@/lib/cron";
 import { applyTemplateToTaskForm } from "@/lib/taskTemplate";
+import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 
 interface TaskEditorProps {
@@ -64,7 +65,10 @@ export function TaskEditor({ open, onOpenChange, taskId }: TaskEditorProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!form.name.trim()) return;
+    if (!form.name.trim()) {
+      toast.error(t("task.nameRequired"));
+      return;
+    }
 
     if (taskId) {
       const updateReq: UpdateTaskRequest = {
@@ -80,10 +84,16 @@ export function TaskEditor({ open, onOpenChange, taskId }: TaskEditorProps) {
       };
       updateMutation.mutate(
         { id: taskId, task: updateReq },
-        { onSuccess: () => onOpenChange(false) }
+        {
+          onSuccess: () => onOpenChange(false),
+          onError: (err) => toast.error(String(err)),
+        }
       );
     } else {
-      createMutation.mutate(form, { onSuccess: () => onOpenChange(false) });
+      createMutation.mutate(form, {
+        onSuccess: () => onOpenChange(false),
+        onError: (err) => toast.error(String(err)),
+      });
     }
   };
 

@@ -65,7 +65,7 @@ pub fn get_nth_weekday_of_month(nth: u32, weekday: u32, month: Option<u32>, time
     }
 
     // 使用本地时区转换
-    let local_time = Local.from_local_datetime(&target_date.and_hms_opt(hour, minute, 0).unwrap()).single()
+    let local_time = Local.from_local_datetime(&target_date.and_hms_opt(hour, minute, 0).ok_or_else(|| crate::error::ToolsError::InvalidCron("无效时间".to_string()))?).single()
         .ok_or_else(|| crate::error::ToolsError::InvalidCron("无效时间".to_string()))?;
     Ok(local_time.timestamp_millis())
 }
@@ -95,7 +95,7 @@ fn get_nth_weekday_of_month_for_date(nth: u32, weekday: u32, year: i32, month: u
     }
 
     // 使用本地时区转换
-    let local_time = Local.from_local_datetime(&target_date.and_hms_opt(hour, minute, 0).unwrap()).single()
+    let local_time = Local.from_local_datetime(&target_date.and_hms_opt(hour, minute, 0).ok_or_else(|| crate::error::ToolsError::InvalidCron("无效时间".to_string()))?).single()
         .ok_or_else(|| crate::error::ToolsError::InvalidCron("无效时间".to_string()))?;
     Ok(local_time.timestamp_millis())
 }
@@ -145,12 +145,12 @@ pub fn get_nth_day_of_month(day: i32, month: Option<u32>, time: &str) -> Result<
         let next_date = NaiveDate::from_ymd_opt(next_year, next_month, next_target_day)
             .ok_or_else(|| crate::error::ToolsError::InvalidCron("无效日期".to_string()))?;
 
-        let local_time = Local.from_local_datetime(&next_date.and_hms_opt(hour, minute, 0).unwrap()).single()
+        let local_time = Local.from_local_datetime(&next_date.and_hms_opt(hour, minute, 0).ok_or_else(|| crate::error::ToolsError::InvalidCron("无效时间".to_string()))?).single()
             .ok_or_else(|| crate::error::ToolsError::InvalidCron("无效时间".to_string()))?;
         return Ok(local_time.timestamp_millis());
     }
 
-    let local_time = Local.from_local_datetime(&target_date.and_hms_opt(hour, minute, 0).unwrap()).single()
+    let local_time = Local.from_local_datetime(&target_date.and_hms_opt(hour, minute, 0).ok_or_else(|| crate::error::ToolsError::InvalidCron("无效时间".to_string()))?).single()
         .ok_or_else(|| crate::error::ToolsError::InvalidCron("无效时间".to_string()))?;
     Ok(local_time.timestamp_millis())
 }
@@ -171,10 +171,10 @@ pub fn get_last_workday_of_month(month: Option<u32>, time: &str) -> Result<i64> 
 
     // 从最后一天往前找工作日
     for day in (1..=days_in_month).rev() {
-        let date = NaiveDate::from_ymd_opt(target_year, target_month, day).unwrap();
+        let date = NaiveDate::from_ymd_opt(target_year, target_month, day).ok_or_else(|| crate::error::ToolsError::InvalidCron("无效日期".to_string()))?;
         if is_workday(date) {
             if date > today {
-                let local_time = Local.from_local_datetime(&date.and_hms_opt(hour, minute, 0).unwrap()).single()
+                let local_time = Local.from_local_datetime(&date.and_hms_opt(hour, minute, 0).ok_or_else(|| crate::error::ToolsError::InvalidCron("无效时间".to_string()))?).single()
                     .ok_or_else(|| crate::error::ToolsError::InvalidCron("无效时间".to_string()))?;
                 return Ok(local_time.timestamp_millis());
             }
@@ -188,9 +188,9 @@ pub fn get_last_workday_of_month(month: Option<u32>, time: &str) -> Result<i64> 
     let days_in_next_month = get_days_in_month(next_year, next_month);
 
     for day in (1..=days_in_next_month).rev() {
-        let date = NaiveDate::from_ymd_opt(next_year, next_month, day).unwrap();
+        let date = NaiveDate::from_ymd_opt(next_year, next_month, day).ok_or_else(|| crate::error::ToolsError::InvalidCron("无效日期".to_string()))?;
         if is_workday(date) {
-            let local_time = Local.from_local_datetime(&date.and_hms_opt(hour, minute, 0).unwrap()).single()
+            let local_time = Local.from_local_datetime(&date.and_hms_opt(hour, minute, 0).ok_or_else(|| crate::error::ToolsError::InvalidCron("无效时间".to_string()))?).single()
                 .ok_or_else(|| crate::error::ToolsError::InvalidCron("无效时间".to_string()))?;
             return Ok(local_time.timestamp_millis());
         }
@@ -234,37 +234,40 @@ mod tests {
     use chrono::Timelike;
 
     #[test]
-    fn test_nth_weekday() {
+    fn test_nth_weekday() -> std::result::Result<(), Box<dyn std::error::Error>> {
         // 2026年5月第3个周一应该是5月18日 (weekday=1 表示周一)
-        let result = get_nth_weekday_of_month_for_date(3, 1, 2026, 5, 9, 0).unwrap();
-        let date = chrono::Utc.timestamp_millis_opt(result).single().unwrap();
+        let result = get_nth_weekday_of_month_for_date(3, 1, 2026, 5, 9, 0)?;
+        let date = chrono::Utc.timestamp_millis_opt(result).single().ok_or_else(|| crate::error::ToolsError::InvalidCron("无效日期".to_string()))?;
         assert_eq!(date.day(), 18);
+        Ok(())
     }
 
     #[test]
-    fn test_nth_last_day() {
+    fn test_nth_last_day() -> std::result::Result<(), Box<dyn std::error::Error>> {
         // 2026年5月倒数第3天应该是5月29日（5月有31天）
-        let result = get_nth_day_of_month(-3, Some(5), "09:00").unwrap();
-        let date = chrono::Utc.timestamp_millis_opt(result).single().unwrap();
+        let result = get_nth_day_of_month(-3, Some(5), "09:00")?;
+        let date = chrono::Utc.timestamp_millis_opt(result).single().ok_or_else(|| crate::error::ToolsError::InvalidCron("无效日期".to_string()))?;
         assert_eq!(date.day(), 29);
+        Ok(())
     }
 
     #[test]
-    fn test_nth_day_with_time() {
+    fn test_nth_day_with_time() -> std::result::Result<(), Box<dyn std::error::Error>> {
         // 测试自定义时间
-        let result = get_nth_day_of_month(13, Some(5), "14:30").unwrap();
-        let date = chrono::Utc.timestamp_millis_opt(result).single().unwrap();
+        let result = get_nth_day_of_month(13, Some(5), "14:30")?;
+        let date = chrono::Utc.timestamp_millis_opt(result).single().ok_or_else(|| crate::error::ToolsError::InvalidCron("无效日期".to_string()))?;
         assert_eq!(date.day(), 13);
+        Ok(())
     }
 
     #[test]
-    fn test_local_timezone_conversion() {
+    fn test_local_timezone_conversion() -> std::result::Result<(), Box<dyn std::error::Error>> {
         // 测试本地时区转换
         // 创建一个本地时间 2026-05-29 09:00:00
-        let result = get_nth_weekday_of_month_for_date(1, 5, 2026, 5, 9, 0).unwrap();
+        let result = get_nth_weekday_of_month_for_date(1, 5, 2026, 5, 9, 0)?;
 
         // 使用 Local 时区转换回来
-        let local_time = Local.timestamp_millis_opt(result).single().unwrap();
+        let local_time = Local.timestamp_millis_opt(result).single().ok_or_else(|| crate::error::ToolsError::InvalidCron("无效日期".to_string()))?;
 
         // 验证本地时间的日期和时间
         assert_eq!(local_time.year(), 2026);
@@ -277,5 +280,6 @@ mod tests {
         println!("本地时间: {}", local_time.format("%Y-%m-%d %H:%M:%S %Z"));
         println!("UTC时间: {}", local_time.with_timezone(&chrono::Utc).format("%Y-%m-%d %H:%M:%S UTC"));
         println!("时间戳: {}", result);
+        Ok(())
     }
 }

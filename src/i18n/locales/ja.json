@@ -107,7 +107,8 @@
     "filterWeek": "今週",
     "filterAll": "全て",
     "searchPlaceholder": "タスク名または説明を検索",
-    "loadError": "読み込み失敗"
+    "loadError": "読み込み失敗",
+    "nameRequired": "タスク名を入力してください"
   },
   "template": {
     "newTemplate": "新規テンプレート",

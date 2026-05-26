@@ -3,6 +3,7 @@ use std::thread;
 use std::time::Duration;
 use chrono::{Utc, Datelike, Weekday};
 use reqwest::Client;
+use uuid::Uuid;
 use serde::Deserialize;
 use crate::database::Database;
 use crate::database::dao::{TaskDao, ChannelDao, ReminderDao, template::TemplateDao, task::Task, reminder::CreateReminderRequest};
@@ -317,21 +318,41 @@ async fn execute_pending_reminders(db: &Arc<Database>) -> Result<()> {
 
             {
                 let conn = db.conn().lock().unwrap();
-                match results {
+                let (status, channel_results) = match results {
                     Ok(res) => {
                         if channel_results_have_success(&res) {
                             ReminderDao::update_status(&conn, &reminder.id, "sent", &res, None)?;
                             log::info!("Reminder {} sent successfully", reminder.id);
+                            ("sent", res)
                         } else {
                             ReminderDao::update_status(&conn, &reminder.id, "failed", &res, Some("所有通知渠道发送失败"))?;
                             log::error!("Reminder {} failed: all channels failed", reminder.id);
+                            ("failed", res)
                         }
                     }
                     Err(e) => {
                         ReminderDao::update_status(&conn, &reminder.id, "failed", "[]", Some(&e.to_string()))?;
                         log::error!("Reminder {} failed: {}", reminder.id, e);
+                        ("failed", "[]".to_string())
                     }
-                }
+                };
+                // Insert into reminder_history
+                let now = Utc::now().timestamp_millis();
+                conn.execute(
+                    "INSERT INTO reminder_history (id, reminder_id, task_id, task_name, scheduled_at, executed_at, status, channel_results, created_at)
+                     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
+                    rusqlite::params![
+                        Uuid::new_v4().to_string(),
+                        reminder.id,
+                        task.id,
+                        task.name,
+                        reminder.scheduled_at,
+                        now,
+                        status,
+                        channel_results,
+                        now,
+                    ],
+                )?;
             }
 
             match get_next_run_time(&task.cron_expr) {

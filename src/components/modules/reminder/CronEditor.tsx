@@ -64,10 +64,6 @@ export function CronEditor({ value, onChange }: CronEditorProps) {
     setConfig(parseCronConfig(value));
   }, [value]);
 
-  useEffect(() => {
-    setConfig(parseCronConfig(value));
-  }, [value]);
-
   const updateConfig = (newConfig: CronConfig) => {
     setConfig(newConfig);
 

@@ -2,6 +2,7 @@ import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { ReminderLayout } from "@/components/modules/reminder/ReminderLayout";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const DashboardPage = lazy(() => import("@/pages/DashboardPage").then((m) => ({ default: m.DashboardPage })));
 const TaskReminderPage = lazy(() => import("@/pages/TaskReminderPage").then((m) => ({ default: m.TaskReminderPage })));
@@ -14,29 +15,31 @@ const SettingsPage = lazy(() => import("@/pages/SettingsPage").then((m) => ({ de
 
 function App() {
   return (
-    <Suspense
-      fallback={
-        <div className="flex h-screen items-center justify-center">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-        </div>
-      }
-    >
-      <Routes>
-        <Route path="/" element={<MainLayout />}>
-          <Route index element={<DashboardPage />} />
-          <Route path="reminder" element={<ReminderLayout />}>
-            <Route index element={<Navigate to="/reminder/tasks" replace />} />
-            <Route path="tasks" element={<TaskReminderPage />} />
-            <Route path="templates" element={<TemplatesPage />} />
-            <Route path="channels" element={<ChannelsPage />} />
-            <Route path="history" element={<HistoryPage />} />
+    <ErrorBoundary>
+      <Suspense
+        fallback={
+          <div className="flex h-screen items-center justify-center">
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          </div>
+        }
+      >
+        <Routes>
+          <Route path="/" element={<MainLayout />}>
+            <Route index element={<DashboardPage />} />
+            <Route path="reminder" element={<ReminderLayout />}>
+              <Route index element={<Navigate to="/reminder/tasks" replace />} />
+              <Route path="tasks" element={<TaskReminderPage />} />
+              <Route path="templates" element={<TemplatesPage />} />
+              <Route path="channels" element={<ChannelsPage />} />
+              <Route path="history" element={<HistoryPage />} />
+            </Route>
+            <Route path="timer" element={<PomodoroTimerPage />} />
+            <Route path="notes" element={<QuickNotesPage />} />
+            <Route path="settings" element={<SettingsPage />} />
           </Route>
-          <Route path="timer" element={<PomodoroTimerPage />} />
-          <Route path="notes" element={<QuickNotesPage />} />
-          <Route path="settings" element={<SettingsPage />} />
-        </Route>
-      </Routes>
-    </Suspense>
+        </Routes>
+      </Suspense>
+    </ErrorBoundary>
   );
 }
 
