@@ -304,5 +304,12 @@
     "start": "Start",
     "pause": "Pause",
     "reset": "Reset"
+  },
+  "gitlab": {
+    "title": "GitLab Code Scan",
+    "description": "Scan code commits and detect test coverage",
+    "overview": "Overview",
+    "history": "History",
+    "settings": "Settings"
   }
 }
