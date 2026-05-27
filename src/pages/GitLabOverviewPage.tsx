@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useGitLabConfigured, useGitLabScanHistory, useTriggerGitLabScan } from "@/lib/query/gitlabQueries";
 import { FirstTimeSetupModal } from "@/components/modules/gitlab/FirstTimeSetupModal";
+import { TrendChart, ContributorRanking } from "@/components/modules/gitlab/TrendChart";
+import { generateWeeklyReport, downloadReport } from "@/components/modules/gitlab/reportGenerator";
 import { toast } from "sonner";
 import type { GitLabScanHistory, GitLabProjectResult } from "@/types";
 
@@ -125,13 +127,24 @@ function ProjectTable({ projects }: { projects: GitLabProjectResult[] }) {
 export function GitLabOverviewPage() {
   const [showSetupModal, setShowSetupModal] = useState(false);
   const { data: isConfigured, refetch } = useGitLabConfigured();
-  const { data: history } = useGitLabScanHistory(1);
+  const { data: history } = useGitLabScanHistory(4);
   const triggerScan = useTriggerGitLabScan();
 
   const latestHistory = history?.[0];
   const projects: GitLabProjectResult[] = latestHistory
     ? JSON.parse(latestHistory.summary || "[]")
     : [];
+
+  const handleExport = () => {
+    if (!latestHistory) {
+      toast.error("暂无扫描数据可导出");
+      return;
+    }
+    const report = generateWeeklyReport(latestHistory);
+    const date = new Date(latestHistory.scan_at).toISOString().split("T")[0];
+    downloadReport(report, `gitlab-weekly-report-${date}.md`);
+    toast.success("报告已导出");
+  };
 
   const handleScan = async () => {
     try {
@@ -175,7 +188,7 @@ export function GitLabOverviewPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={handleExport}>
             <Download className="mr-2 h-4 w-4" />
             导出报告
           </Button>
@@ -188,6 +201,17 @@ export function GitLabOverviewPage() {
 
       {/* Summary Cards */}
       <SummaryCards history={latestHistory} />
+
+      {/* Trend Charts */}
+      <div className="border-t">
+        <div className="px-6 py-4">
+          <h3 className="font-semibold">趋势分析</h3>
+        </div>
+        <div className="grid grid-cols-2 gap-0">
+          <TrendChart history={history || []} />
+          <ContributorRanking history={history || []} />
+        </div>
+      </div>
 
       {/* Project Table */}
       <div className="border-t">
