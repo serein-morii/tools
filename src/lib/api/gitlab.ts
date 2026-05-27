@@ -11,7 +11,7 @@ export const gitlabApi = {
     call<boolean>("test_gitlab_connection", { config }),
 
   triggerScan: (scanType: string): Promise<GitLabScanResult> =>
-    call<GitLabScanResult>("trigger_gitlab_scan", { scan_type: scanType }),
+    call<GitLabScanResult>("trigger_gitlab_scan", { scanType }),
 
   getScanHistory: (limit?: number): Promise<GitLabScanHistory[]> =>
     call<GitLabScanHistory[]>("get_gitlab_scan_history", { limit }),

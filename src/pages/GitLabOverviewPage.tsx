@@ -323,10 +323,17 @@ export function GitLabOverviewPage() {
   const handleScan = async () => {
     try {
       toast.loading("正在扫描...");
-      await triggerScan.mutateAsync("manual");
+      const result = await triggerScan.mutateAsync("manual");
+      console.log("Scan result:", result);
       toast.success("扫描完成");
-    } catch (error) {
-      toast.error("扫描失败: " + String(error));
+    } catch (error: unknown) {
+      console.error("Scan error:", error);
+      const errorMessage = error instanceof Error
+        ? error.message
+        : typeof error === 'object' && error !== null && 'message' in error
+          ? String((error as { message?: string }).message)
+          : String(error);
+      toast.error("扫描失败: " + errorMessage);
     }
   };
 

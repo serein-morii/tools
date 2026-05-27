@@ -36,26 +36,41 @@ export function FirstTimeSetupModal({ onComplete, onSkip }: FirstTimeSetupModalP
   const handleTest = async () => {
     setConnectionStatus("testing");
     try {
+      console.log("Testing connection with config:", formData);
       const result = await testConnection.mutateAsync(formData);
+      console.log("Test connection result:", result);
       setConnectionStatus(result ? "success" : "failed");
       if (result) {
         toast.success("连接成功");
       } else {
-        toast.error("连接失败");
+        toast.error("连接失败：服务器返回失败状态");
       }
-    } catch (error) {
+    } catch (error: unknown) {
+      console.error("Test connection error:", error);
       setConnectionStatus("failed");
-      toast.error("连接失败: " + String(error));
+      const errorMessage = error instanceof Error
+        ? error.message
+        : typeof error === 'object' && error !== null && 'message' in error
+          ? String((error as { message?: string }).message)
+          : String(error);
+      toast.error("连接失败: " + errorMessage);
     }
   };
 
   const handleSave = async () => {
     try {
+      console.log("Saving config:", formData);
       await saveConfig.mutateAsync(formData);
       toast.success("配置已保存");
       onComplete();
-    } catch (error) {
-      toast.error("保存失败: " + String(error));
+    } catch (error: unknown) {
+      console.error("Save config error:", error);
+      const errorMessage = error instanceof Error
+        ? error.message
+        : typeof error === 'object' && error !== null && 'message' in error
+          ? String((error as { message?: string }).message)
+          : String(error);
+      toast.error("保存失败: " + errorMessage);
     }
   };
 
