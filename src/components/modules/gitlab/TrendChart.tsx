@@ -113,8 +113,13 @@ export function ContributorRanking({ history }: { history: GitLabScanHistory[] }
   const latestHistory = history[0];
   const projects: GitLabProjectResult[] = JSON.parse(latestHistory.summary || "[]");
 
-  // Calculate contribution per person
-  const contributionMap = new Map<string, { commits: number; linesAdded: number; linesRemoved: number }>();
+  // Calculate contribution per person with active projects
+  const contributionMap = new Map<string, {
+    commits: number;
+    linesAdded: number;
+    linesRemoved: number;
+    projects: Set<string>;
+  }>();
 
   projects.forEach((project) => {
     const perContributor = project.contributors.length > 0
@@ -129,12 +134,20 @@ export function ContributorRanking({ history }: { history: GitLabScanHistory[] }
       ? Math.floor(project.lines_removed / project.contributors.length)
       : project.lines_removed;
 
+    const shortName = project.project_name.split("/").pop() || project.project_name;
+
     project.contributors.forEach((contributor) => {
-      const existing = contributionMap.get(contributor) || { commits: 0, linesAdded: 0, linesRemoved: 0 };
+      const existing = contributionMap.get(contributor) || {
+        commits: 0,
+        linesAdded: 0,
+        linesRemoved: 0,
+        projects: new Set<string>(),
+      };
       contributionMap.set(contributor, {
         commits: existing.commits + perContributor,
         linesAdded: existing.linesAdded + linesPerContributor,
         linesRemoved: existing.linesRemoved + linesRemovedPerContributor,
+        projects: new Set([...existing.projects, shortName]),
       });
     });
   });
@@ -151,7 +164,7 @@ export function ContributorRanking({ history }: { history: GitLabScanHistory[] }
         <h4 className="mb-4 text-sm font-medium flex items-center gap-2">
           👥 本周贡献者排行
         </h4>
-        <div className="space-y-2">
+        <div className="space-y-3">
           {sortedContributors.map(([name, stats], index) => (
             <div key={name} className="flex items-center gap-3 text-sm">
               <span className="w-6 text-center font-medium">
@@ -160,14 +173,25 @@ export function ContributorRanking({ history }: { history: GitLabScanHistory[] }
                 {index === 2 && "🥉"}
                 {index > 2 && index + 1}
               </span>
-              <span className="flex-1 truncate">{name}</span>
-              <span className="text-muted-foreground">{stats.commits}次提交</span>
-              <span className="text-green-600 text-xs">+{stats.linesAdded.toLocaleString()}</span>
-              <span className="text-red-600 text-xs">-{stats.linesRemoved.toLocaleString()}</span>
+              <span className="w-20 truncate font-medium" title={name}>{name}</span>
+              <span className="text-muted-foreground text-xs w-16">{stats.commits}次提交</span>
+              <span className="text-green-600 text-xs w-16">+{formatNum(stats.linesAdded)}</span>
+              <span className="text-red-600 text-xs w-12">-{formatNum(stats.linesRemoved)}</span>
+              <span className="text-muted-foreground text-xs flex-1 truncate" title={[...stats.projects].join(", ")}>
+                {[...stats.projects].slice(0, 2).join(", ")}
+                {stats.projects.size > 2 && `+${stats.projects.size - 2}`}
+              </span>
             </div>
           ))}
         </div>
       </div>
     </div>
   );
+}
+
+function formatNum(num: number): string {
+  if (num >= 1000) {
+    return (num / 1000).toFixed(1) + "k";
+  }
+  return num.toString();
 }
