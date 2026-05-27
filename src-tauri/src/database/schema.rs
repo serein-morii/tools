@@ -102,12 +102,31 @@ pub fn init_schema(conn: &Connection) -> Result<()> {
             updated_at      INTEGER NOT NULL
         );
 
+        -- GitLab Scan History table
+        CREATE TABLE IF NOT EXISTS gitlab_scan_history (
+            id                  TEXT PRIMARY KEY,
+            scan_type           TEXT NOT NULL,
+            scan_at             INTEGER NOT NULL,
+            scan_range_start    TEXT,
+            scan_range_end      TEXT,
+            total_projects      INTEGER,
+            total_commits       INTEGER,
+            total_lines_added   INTEGER,
+            total_lines_removed INTEGER,
+            test_projects       INTEGER,
+            pending_mrs         INTEGER,
+            contributors        TEXT,
+            summary             TEXT,
+            created_at          INTEGER NOT NULL
+        );
+
         -- Create indexes
         CREATE INDEX IF NOT EXISTS idx_reminders_scheduled ON reminders(scheduled_at);
         CREATE INDEX IF NOT EXISTS idx_reminders_status ON reminders(status);
         CREATE INDEX IF NOT EXISTS idx_reminders_task ON reminders(task_id);
         CREATE INDEX IF NOT EXISTS idx_history_task ON reminder_history(task_id);
         CREATE INDEX IF NOT EXISTS idx_history_time ON reminder_history(scheduled_at);
+        CREATE INDEX IF NOT EXISTS idx_gitlab_scan_time ON gitlab_scan_history(scan_at);
 
         -- Insert default settings if not exists
         INSERT OR IGNORE INTO settings (key, value) VALUES

@@ -23,7 +23,8 @@
     "reminder": "提醒",
     "timer": "计时",
     "notes": "笔记",
-    "home": "概览"
+    "home": "概览",
+    "gitlab": "GitLab"
   },
   "dashboard": {
     "title": "概览",
@@ -304,5 +305,12 @@
     "start": "开始",
     "pause": "暂停",
     "reset": "重置"
+  },
+  "gitlab": {
+    "title": "GitLab 代码扫描",
+    "description": "扫描代码提交，检测单测覆盖情况",
+    "overview": "概览",
+    "history": "历史",
+    "settings": "配置"
   }
 }

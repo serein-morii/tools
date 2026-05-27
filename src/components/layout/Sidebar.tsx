@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { Bell, Settings, StickyNote, ChevronLeft, ChevronRight, Timer, Home } from "lucide-react";
+import { Bell, Settings, ChevronLeft, ChevronRight, Home, GitBranch } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
@@ -7,8 +7,7 @@ import { useState } from "react";
 const primaryItems = [
   { to: "/", icon: Home, labelKey: "nav.home", match: "/" },
   { to: "/reminder/tasks", icon: Bell, labelKey: "nav.reminder", match: "/reminder" },
-  { to: "/timer", icon: Timer, labelKey: "nav.timer", match: "/timer" },
-  { to: "/notes", icon: StickyNote, labelKey: "nav.notes", match: "/notes" },
+  { to: "/gitlab", icon: GitBranch, labelKey: "nav.gitlab", match: "/gitlab" },
 ];
 
 const settingsItem = { to: "/settings", icon: Settings, labelKey: "nav.settings", match: "/settings" };
@@ -29,14 +28,14 @@ export function Sidebar() {
         {!collapsed && (
           <div className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 text-sm font-bold text-white shadow-sm">
-              T
+              DT
             </div>
-            <span className="text-sm font-semibold text-foreground">Tools</span>
+            <span className="text-sm font-semibold text-foreground">Dev Tools</span>
           </div>
         )}
         {collapsed && (
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 text-sm font-bold text-white shadow-sm mx-auto">
-            T
+            DT
           </div>
         )}
         <button

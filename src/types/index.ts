@@ -306,3 +306,62 @@ export interface UpdateNoteRequest {
   color?: string;
   pinned?: boolean;
 }
+
+// GitLab types
+export interface GitLabConfig {
+  url: string;
+  auth_type: "token" | "password";
+  token?: string;
+  username?: string;
+  password?: string;
+  filter_mode: "include" | "exclude" | "all";
+  filter_projects: string[];
+  test_keywords: string[];
+  scan_schedule: string;
+  scan_channels: string[];
+  scan_range_type: "week" | "days";
+  scan_range_days?: number;
+}
+
+export interface GitLabScanResult {
+  scan_at: number;
+  scan_type: string;
+  total_projects: number;
+  total_commits: number;
+  total_lines_added: number;
+  total_lines_removed: number;
+  test_projects: number;
+  pending_mrs: number;
+  contributors: string[];
+  projects: GitLabProjectResult[];
+}
+
+export interface GitLabProjectResult {
+  project_id: number;
+  project_name: string;
+  commits: number;
+  lines_added: number;
+  lines_removed: number;
+  has_test: boolean;
+  test_commits: string[];
+  pending_mrs: number;
+  contributors: string[];
+  last_commit_at: string;
+}
+
+export interface GitLabScanHistory {
+  id: string;
+  scan_type: string;
+  scan_at: number;
+  scan_range_start?: string;
+  scan_range_end?: string;
+  total_projects: number;
+  total_commits: number;
+  total_lines_added: number;
+  total_lines_removed: number;
+  test_projects: number;
+  pending_mrs: number;
+  contributors: string;
+  summary: string;
+  created_at: number;
+}

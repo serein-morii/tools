@@ -2,6 +2,7 @@ import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { ReminderLayout } from "@/components/modules/reminder/ReminderLayout";
+import { GitLabLayout } from "@/components/modules/gitlab/GitLabLayout";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const DashboardPage = lazy(() => import("@/pages/DashboardPage").then((m) => ({ default: m.DashboardPage })));
@@ -12,6 +13,9 @@ const HistoryPage = lazy(() => import("@/pages/HistoryPage").then((m) => ({ defa
 const PomodoroTimerPage = lazy(() => import("@/pages/PomodoroTimerPage").then((m) => ({ default: m.PomodoroTimerPage })));
 const QuickNotesPage = lazy(() => import("@/pages/QuickNotesPage").then((m) => ({ default: m.QuickNotesPage })));
 const SettingsPage = lazy(() => import("@/pages/SettingsPage").then((m) => ({ default: m.SettingsPage })));
+const GitLabOverviewPage = lazy(() => import("@/pages/GitLabOverviewPage").then((m) => ({ default: m.GitLabOverviewPage })));
+const GitLabHistoryPage = lazy(() => import("@/pages/GitLabHistoryPage").then((m) => ({ default: m.GitLabHistoryPage })));
+const GitLabSettingsPage = lazy(() => import("@/pages/GitLabSettingsPage").then((m) => ({ default: m.GitLabSettingsPage })));
 
 function App() {
   return (
@@ -32,6 +36,12 @@ function App() {
               <Route path="templates" element={<TemplatesPage />} />
               <Route path="channels" element={<ChannelsPage />} />
               <Route path="history" element={<HistoryPage />} />
+            </Route>
+            <Route path="gitlab" element={<GitLabLayout />}>
+              <Route index element={<Navigate to="/gitlab/overview" replace />} />
+              <Route path="overview" element={<GitLabOverviewPage />} />
+              <Route path="history" element={<GitLabHistoryPage />} />
+              <Route path="settings" element={<GitLabSettingsPage />} />
             </Route>
             <Route path="timer" element={<PomodoroTimerPage />} />
             <Route path="notes" element={<QuickNotesPage />} />

@@ -26,14 +26,7 @@ function TrayEventListener() {
       switch (action) {
         case "new-task":
           navigate("/reminder/tasks");
-          // Dispatch custom event for TaskReminderPage to handle
           window.dispatchEvent(new CustomEvent("tray-new-task"));
-          break;
-        case "new-note":
-          navigate("/notes");
-          break;
-        case "timer":
-          navigate("/timer");
           break;
       }
     });

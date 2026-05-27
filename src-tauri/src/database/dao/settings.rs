@@ -37,6 +37,10 @@ impl SettingsDao {
         )?;
         Ok(())
     }
+
+    pub fn upsert(conn: &Connection, key: &str, value: &str) -> Result<()> {
+        Self::update(conn, key, value)
+    }
 }
 
 #[cfg(test)]

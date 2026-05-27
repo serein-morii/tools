@@ -5,10 +5,10 @@ mod services;
 
 use std::sync::{Arc, Mutex};
 use database::{Database, init_schema};
-use services::scheduler::start_scheduler;
+use services::scheduler::{start_scheduler, start_gitlab_scheduler};
 use tauri::Manager;
 use tauri::Emitter;
-use tauri::tray::{TrayIconBuilder, TrayIconEvent};
+use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 use tauri::menu::{MenuBuilder, MenuItem};
 
 // Global app handle for auto-launch
@@ -35,6 +35,9 @@ pub fn run() {
 
     // Start scheduler
     start_scheduler(db.clone());
+
+    // Start GitLab scheduler
+    start_gitlab_scheduler(db.clone());
 
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
@@ -82,6 +85,14 @@ pub fn run() {
             commands::update_note,
             commands::delete_note,
             commands::search_notes,
+            commands::get_gitlab_config,
+            commands::save_gitlab_config,
+            commands::test_gitlab_connection,
+            commands::trigger_gitlab_scan,
+            commands::get_gitlab_scan_history,
+            commands::get_gitlab_scan_detail,
+            commands::delete_gitlab_scan_history,
+            commands::get_gitlab_configured,
         ])
         .setup(|app| {
             // Store app handle for auto-launch
@@ -93,24 +104,19 @@ pub fn run() {
             // Build tray menu
             let show_item = MenuItem::with_id(app, "show", "显示窗口", true, None::<&str>)?;
             let new_task_item = MenuItem::with_id(app, "new_task", "新建任务", true, None::<&str>)?;
-            let new_note_item = MenuItem::with_id(app, "new_note", "新建笔记", true, None::<&str>)?;
-            let timer_item = MenuItem::with_id(app, "timer", "专注计时", true, None::<&str>)?;
             let quit_item = MenuItem::with_id(app, "quit", "退出", true, None::<&str>)?;
             let menu = MenuBuilder::new(app)
                 .item(&show_item)
                 .separator()
                 .item(&new_task_item)
-                .item(&new_note_item)
-                .item(&timer_item)
                 .separator()
                 .item(&quit_item)
                 .build()?;
 
             // Build tray icon
             let tray = TrayIconBuilder::with_id("tools-tray")
-                .tooltip("Tools 提醒工具")
+                .tooltip("Dev Tools 开发工具")
                 .menu(&menu)
-                .show_menu_on_left_click(true)
                 .on_menu_event(|app, event| match event.id.as_ref() {
                     "show" => {
                         if let Some(window) = app.get_webview_window("main") {
@@ -122,22 +128,7 @@ pub fn run() {
                         if let Some(window) = app.get_webview_window("main") {
                             window.show().unwrap();
                             window.set_focus().unwrap();
-                            // Emit event to frontend to open new task dialog
                             let _ = window.emit("tray-action", "new-task");
-                        }
-                    }
-                    "new_note" => {
-                        if let Some(window) = app.get_webview_window("main") {
-                            window.show().unwrap();
-                            window.set_focus().unwrap();
-                            let _ = window.emit("tray-action", "new-note");
-                        }
-                    }
-                    "timer" => {
-                        if let Some(window) = app.get_webview_window("main") {
-                            window.show().unwrap();
-                            window.set_focus().unwrap();
-                            let _ = window.emit("tray-action", "timer");
                         }
                     }
                     "quit" => {
@@ -146,7 +137,7 @@ pub fn run() {
                     _ => {}
                 })
                 .on_tray_icon_event(|tray, event| {
-                    if let TrayIconEvent::Click { .. } = event {
+                    if let TrayIconEvent::Click { button: MouseButton::Left, button_state: MouseButtonState::Up, .. } = event {
                         let app = tray.app_handle();
                         if let Some(window) = app.get_webview_window("main") {
                             window.show().unwrap();

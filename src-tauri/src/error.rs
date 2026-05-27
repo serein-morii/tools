@@ -49,13 +49,6 @@ impl From<tauri_plugin_autostart::Error> for ToolsError {
     }
 }
 
-#[cfg(target_os = "windows")]
-impl From<winreg::Error> for ToolsError {
-    fn from(err: winreg::Error) -> Self {
-        ToolsError::AutoLaunch(err.to_string())
-    }
-}
-
 impl From<reqwest::Error> for ToolsError {
     fn from(err: reqwest::Error) -> Self {
         ToolsError::Http(err.to_string())
