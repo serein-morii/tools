@@ -57,6 +57,17 @@ pub struct GitLabDiffStats {
     pub changes: i64,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GitLabPipeline {
+    pub id: i64,
+    pub status: String,
+    #[serde(rename = "ref")]
+    pub ref_name: String,
+    pub web_url: String,
+    pub created_at: String,
+    pub updated_at: String,
+}
+
 pub struct GitLabClient {
     base_url: String,
     auth: GitLabAuth,
@@ -251,5 +262,26 @@ impl GitLabClient {
         response.json::<Vec<GitLabMergeRequest>>()
             .await
             .map_err(|e| ToolsError::Http(format!("Failed to parse merge requests: {}", e)))
+    }
+
+    pub async fn get_project_pipelines(&self, project_id: i64, per_page: i32) -> Result<Vec<GitLabPipeline>> {
+        let url = format!(
+            "{}/api/v4/projects/{}/pipelines?per_page={}",
+            self.base_url, project_id, per_page
+        );
+
+        let request = self.http_client.get(&url);
+        let response = self.build_request(request)
+            .send()
+            .await
+            .map_err(|e| ToolsError::Http(format!("Failed to fetch pipelines: {}", e)))?;
+
+        if !response.status().is_success() {
+            return Ok(Vec::new());
+        }
+
+        response.json::<Vec<GitLabPipeline>>()
+            .await
+            .map_err(|e| ToolsError::Http(format!("Failed to parse pipelines: {}", e)))
     }
 }

@@ -37,6 +37,9 @@ pub struct ScanResult {
     pub pending_mrs: i32,
     pub contributors: Vec<String>,
     pub projects: Vec<ProjectScanResult>,
+    pub pipeline_total: i32,
+    pub pipeline_success: i32,
+    pub pipeline_failed: i32,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -49,8 +52,22 @@ pub struct ProjectScanResult {
     pub has_test: bool,
     pub test_commits: Vec<String>,
     pub pending_mrs: i32,
+    pub mr_details: Vec<MrDetail>,
     pub contributors: Vec<String>,
     pub last_commit_at: String,
+    pub latest_pipeline_status: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MrDetail {
+    pub iid: i64,
+    pub title: String,
+    pub source_branch: String,
+    pub target_branch: String,
+    pub author: String,
+    pub web_url: String,
+    pub pipeline_status: Option<String>,
+    pub created_at: String,
 }
 
 pub struct GitLabScanner {
@@ -77,6 +94,9 @@ impl GitLabScanner {
         let mut total_lines_removed = 0i64;
         let mut test_projects = 0i32;
         let mut pending_mrs = 0i32;
+        let mut pipeline_total = 0i32;
+        let mut pipeline_success = 0i32;
+        let mut pipeline_failed = 0i32;
         let mut all_contributors: HashSet<String> = HashSet::new();
 
         for project in filtered_projects {
@@ -89,6 +109,14 @@ impl GitLabScanner {
                         test_projects += 1;
                     }
                     pending_mrs += result.pending_mrs;
+                    for mr in &result.mr_details {
+                        match &mr.pipeline_status {
+                            Some(s) if s == "success" => { pipeline_success += 1; pipeline_total += 1; }
+                            Some(s) if s == "failed" || s == "canceled" => { pipeline_failed += 1; pipeline_total += 1; }
+                            Some(_) => { pipeline_total += 1; }
+                            None => {}
+                        }
+                    }
                     for contributor in &result.contributors {
                         all_contributors.insert(contributor.clone());
                     }
@@ -111,6 +139,9 @@ impl GitLabScanner {
             pending_mrs,
             contributors: all_contributors.into_iter().collect(),
             projects,
+            pipeline_total,
+            pipeline_success,
+            pipeline_failed,
         })
     }
 
@@ -167,8 +198,10 @@ impl GitLabScanner {
                 has_test: false,
                 test_commits: Vec::new(),
                 pending_mrs: 0,
+                mr_details: Vec::new(),
                 contributors: Vec::new(),
                 last_commit_at: String::new(),
+                latest_pipeline_status: None,
             });
         }
 
@@ -198,9 +231,32 @@ impl GitLabScanner {
             }
         }
 
+        // Get pipelines (fetch before MRs so we can match)
+        let pipelines = self.client.get_project_pipelines(project.id, 20).await?;
+        let latest_pipeline_status = pipelines.first().map(|p| p.status.clone());
+
         // Get pending MRs
         let mrs = self.client.get_merge_requests(project.id, "opened").await?;
         let pending_mrs_count = mrs.len() as i32;
+
+        // Build MR details with pipeline status matched by source branch
+        let mr_details: Vec<MrDetail> = mrs.into_iter()
+            .map(|mr| {
+                let pipeline_status = pipelines.iter()
+                    .find(|p| p.ref_name == mr.source_branch)
+                    .map(|p| p.status.clone());
+                MrDetail {
+                    iid: mr.iid,
+                    title: mr.title,
+                    source_branch: mr.source_branch,
+                    target_branch: mr.target_branch,
+                    author: mr.author.name,
+                    web_url: mr.web_url,
+                    pipeline_status,
+                    created_at: mr.created_at,
+                }
+            })
+            .collect();
 
         let last_commit_at = commits.first()
             .map(|c| c.created_at.clone())
@@ -215,8 +271,10 @@ impl GitLabScanner {
             has_test,
             test_commits,
             pending_mrs: pending_mrs_count,
+            mr_details,
             contributors: contributors_set.into_iter().collect(),
             last_commit_at,
+            latest_pipeline_status,
         })
     }
 

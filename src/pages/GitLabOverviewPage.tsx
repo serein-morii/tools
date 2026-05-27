@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { RefreshCw, Download, BarChart3, Users, GitCommit, CheckCircle, Plus, Minus, GitPullRequest, TrendingUp, TrendingDown, MinusCircle, ExternalLink, Inbox } from "lucide-react";
+import { RefreshCw, Download, BarChart3, Users, GitCommit, CheckCircle, Plus, Minus, GitPullRequest, TrendingUp, TrendingDown, MinusCircle, ExternalLink, Inbox, Circle, GitBranch, Clock, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useGitLabConfigured, useGitLabScanHistory, useTriggerGitLabScan } from "@/lib/query/gitlabQueries";
@@ -7,7 +7,7 @@ import { FirstTimeSetupModal } from "@/components/modules/gitlab/FirstTimeSetupM
 import { TrendChart, ContributorRanking } from "@/components/modules/gitlab/TrendChart";
 import { generateWeeklyReport, downloadReport } from "@/components/modules/gitlab/reportGenerator";
 import { toast } from "sonner";
-import type { GitLabScanHistory, GitLabProjectResult } from "@/types";
+import type { GitLabScanHistory, GitLabProjectResult, MrDetail } from "@/types";
 
 function formatNumber(num: number): string {
   if (num >= 10000) {
@@ -18,6 +18,49 @@ function formatNumber(num: number): string {
 
 function formatTimestamp(ts: number): string {
   return new Date(ts).toLocaleString("zh-CN");
+}
+
+function formatRelativeTime(ts: string): string {
+  const now = Date.now();
+  const date = new Date(ts).getTime();
+  const diff = now - date;
+  const hours = Math.floor(diff / (1000 * 60 * 60));
+  if (hours < 1) return "刚刚";
+  if (hours < 24) return `${hours}小时前`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}天前`;
+  return new Date(ts).toLocaleDateString("zh-CN");
+}
+
+function PipelineBadge({ status }: { status: string | null }) {
+  if (!status) return null;
+  const config: Record<string, { color: string; bg: string; label: string }> = {
+    success: { color: "text-green-600", bg: "bg-green-100", label: "passed" },
+    running: { color: "text-blue-600", bg: "bg-blue-100", label: "running" },
+    pending: { color: "text-amber-600", bg: "bg-amber-100", label: "pending" },
+    failed: { color: "text-red-600", bg: "bg-red-100", label: "failed" },
+    canceled: { color: "text-gray-600", bg: "bg-gray-100", label: "canceled" },
+    skipped: { color: "text-gray-500", bg: "bg-gray-50", label: "skipped" },
+  };
+  const c = config[status] || { color: "text-muted-foreground", bg: "bg-muted", label: status };
+  return (
+    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${c.bg} ${c.color}`}>
+      <Circle className={`h-2 w-2 fill-current ${c.color}`} />
+      {c.label}
+    </span>
+  );
+}
+
+function PipelineMiniIcon({ status }: { status: string | null }) {
+  if (!status) return <Circle className="h-3 w-3 text-muted-foreground" />;
+  const colors: Record<string, string> = {
+    success: "text-green-500 fill-green-500",
+    running: "text-blue-500 fill-blue-500",
+    pending: "text-amber-500 fill-amber-500",
+    failed: "text-red-500 fill-red-500",
+    canceled: "text-gray-400 fill-gray-400",
+  };
+  return <Circle className={`h-3 w-3 ${colors[status] || "text-muted-foreground"}`} />;
 }
 
 function TrendIndicator({ current, previous }: { current: number; previous?: number }) {
@@ -100,10 +143,19 @@ function SummaryCards({ current, previous }: { current?: GitLabScanHistory; prev
       color: "text-rose-500",
       invertTrend: true,
     },
+    {
+      icon: Circle,
+      label: "Pipeline 成功率",
+      value: current && current.pipeline_total > 0
+        ? `${Math.round((current.pipeline_success / current.pipeline_total) * 100)}%`
+        : "-",
+      secondaryValue: current ? `${current.pipeline_success}/${current.pipeline_total}` : undefined,
+      color: "text-cyan-500",
+    },
   ];
 
   return (
-    <div className="grid grid-cols-3 gap-4 p-6">
+    <div className="grid grid-cols-4 gap-4 p-6">
       {cards.map((card) => (
         <Card key={card.label} className="bg-card/50">
           <CardContent className="flex items-center gap-4 p-4">
@@ -133,13 +185,26 @@ function SummaryCards({ current, previous }: { current?: GitLabScanHistory; prev
 }
 
 function MrKanban({ projects }: { projects: GitLabProjectResult[] }) {
-  const mrProjects = projects.filter(p => p.pending_mrs > 0);
+  const allMrs: { project: GitLabProjectResult; mr: MrDetail }[] = [];
+  for (const project of projects) {
+    for (const mr of project.mr_details || []) {
+      allMrs.push({ project, mr });
+    }
+  }
 
-  if (mrProjects.length === 0) {
+  if (allMrs.length === 0) {
     return null;
   }
 
-  const totalMrs = mrProjects.reduce((sum, p) => sum + p.pending_mrs, 0);
+  // Group by project
+  const grouped = new Map<string, { project: GitLabProjectResult; mrs: MrDetail[] }>();
+  for (const { project, mr } of allMrs) {
+    const key = project.project_name;
+    if (!grouped.has(key)) {
+      grouped.set(key, { project, mrs: [] });
+    }
+    grouped.get(key)!.mrs.push(mr);
+  }
 
   return (
     <div className="p-6 pt-0">
@@ -148,41 +213,51 @@ function MrKanban({ projects }: { projects: GitLabProjectResult[] }) {
           <div className="flex items-center justify-between mb-4">
             <h4 className="font-medium flex items-center gap-2">
               <GitPullRequest className="h-4 w-4" />
-              待审核 MR
+              MR 看板
             </h4>
-            <span className="text-sm text-muted-foreground">共 {totalMrs} 个待处理</span>
+            <span className="text-sm text-muted-foreground">共 {allMrs.length} 个待处理</span>
           </div>
 
-          <div className="space-y-3">
-            {mrProjects.map((project) => (
-              <div
-                key={project.project_id}
-                className="flex items-center justify-between rounded-lg border bg-muted/30 p-3"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-rose-100">
-                    <GitPullRequest className="h-4 w-4 text-rose-600" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-sm">
-                      {project.project_name.split("/").pop()}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {project.contributors.slice(0, 2).join(", ")}
-                      {project.contributors.length > 2 && "..."}
-                    </p>
-                  </div>
+          <div className="space-y-4">
+            {Array.from(grouped.entries()).map(([projectName, { project, mrs }]) => (
+              <div key={projectName}>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-sm font-medium">{projectName.split("/").pop()}</span>
+                  <span className="text-xs text-muted-foreground">({mrs.length} MR)</span>
                 </div>
-                <div className="flex items-center gap-4">
-                  <div className="text-right">
-                    <p className="text-sm font-medium">{project.pending_mrs} 个 MR</p>
-                    <p className="text-xs text-muted-foreground">
-                      {project.commits} 次提交
-                    </p>
-                  </div>
-                  <Button variant="ghost" size="sm">
-                    <ExternalLink className="h-4 w-4" />
-                  </Button>
+                <div className="space-y-2">
+                  {mrs.map((mr) => (
+                    <a
+                      key={`${project.project_id}-${mr.iid}`}
+                      href={mr.web_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 rounded-lg border bg-muted/30 p-3 hover:bg-muted/50 transition-colors cursor-pointer"
+                    >
+                      <PipelineMiniIcon status={mr.pipeline_status} />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-medium truncate">{mr.title}</p>
+                          <PipelineBadge status={mr.pipeline_status} />
+                        </div>
+                        <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <GitBranch className="h-3 w-3" />
+                            {mr.source_branch} → {mr.target_branch}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <User className="h-3 w-3" />
+                            {mr.author}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            {formatRelativeTime(mr.created_at)}
+                          </span>
+                        </div>
+                      </div>
+                      <ExternalLink className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                    </a>
+                  ))}
                 </div>
               </div>
             ))}
@@ -232,6 +307,7 @@ function ProjectTable({ projects, previousProjects }: { projects: GitLabProjectR
               <th className="px-4 py-3 text-right font-medium">+行数</th>
               <th className="px-4 py-3 text-right font-medium">-行数</th>
               <th className="px-4 py-3 text-center font-medium">单测状态</th>
+              <th className="px-4 py-3 text-center font-medium">CI</th>
               <th className="px-4 py-3 text-right font-medium">待审MR</th>
               <th className="px-4 py-3 text-left font-medium">贡献者</th>
               <th className="px-4 py-3 text-center font-medium">趋势</th>
@@ -258,6 +334,9 @@ function ProjectTable({ projects, previousProjects }: { projects: GitLabProjectR
                       </span>
                     )}
                   </td>
+                  <td className="px-4 py-3 text-center">
+                    <PipelineMiniIcon status={project.latest_pipeline_status} />
+                  </td>
                   <td className="px-4 py-3 text-right">{project.pending_mrs}</td>
                   <td className="px-4 py-3 text-left text-muted-foreground">
                     {project.contributors.slice(0, 3).join(", ")}
@@ -282,7 +361,7 @@ function ProjectTable({ projects, previousProjects }: { projects: GitLabProjectR
             })}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">
+                <td colSpan={10} className="px-4 py-8 text-center text-muted-foreground">
                   暂无项目数据
                 </td>
               </tr>

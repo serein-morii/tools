@@ -117,7 +117,10 @@ pub fn init_schema(conn: &Connection) -> Result<()> {
             pending_mrs         INTEGER,
             contributors        TEXT,
             summary             TEXT,
-            created_at          INTEGER NOT NULL
+            created_at          INTEGER NOT NULL,
+            pipeline_total      INTEGER DEFAULT 0,
+            pipeline_success    INTEGER DEFAULT 0,
+            pipeline_failed     INTEGER DEFAULT 0
         );
 
         -- Create indexes
@@ -144,6 +147,11 @@ pub fn init_schema(conn: &Connection) -> Result<()> {
             ('webdav_password', '""');
         "#
     ))?;
+
+    // Safe migrations for columns added in later versions (ignore errors if they already exist)
+    let _ = conn.execute("ALTER TABLE gitlab_scan_history ADD COLUMN pipeline_total INTEGER DEFAULT 0", []);
+    let _ = conn.execute("ALTER TABLE gitlab_scan_history ADD COLUMN pipeline_success INTEGER DEFAULT 0", []);
+    let _ = conn.execute("ALTER TABLE gitlab_scan_history ADD COLUMN pipeline_failed INTEGER DEFAULT 0", []);
 
     Ok(())
 }

@@ -19,6 +19,9 @@ pub struct GitLabScanHistory {
     pub contributors: String,
     pub summary: String,
     pub created_at: i64,
+    pub pipeline_total: i32,
+    pub pipeline_success: i32,
+    pub pipeline_failed: i32,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -43,8 +46,9 @@ impl GitLabScanDao {
             "INSERT INTO gitlab_scan_history (
                 id, scan_type, scan_at, scan_range_start, scan_range_end,
                 total_projects, total_commits, total_lines_added, total_lines_removed,
-                test_projects, pending_mrs, contributors, summary, created_at
-            ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)",
+                test_projects, pending_mrs, contributors, summary, created_at,
+                pipeline_total, pipeline_success, pipeline_failed
+            ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17)",
             params![
                 id,
                 req.scan_type,
@@ -59,7 +63,10 @@ impl GitLabScanDao {
                 req.result.pending_mrs,
                 contributors,
                 summary,
-                now
+                now,
+                req.result.pipeline_total,
+                req.result.pipeline_success,
+                req.result.pipeline_failed,
             ],
         )?;
 
@@ -78,6 +85,9 @@ impl GitLabScanDao {
             contributors,
             summary,
             created_at: now,
+            pipeline_total: req.result.pipeline_total,
+            pipeline_success: req.result.pipeline_success,
+            pipeline_failed: req.result.pipeline_failed,
         })
     }
 
@@ -86,7 +96,8 @@ impl GitLabScanDao {
         let mut stmt = conn.prepare(
             "SELECT id, scan_type, scan_at, scan_range_start, scan_range_end,
                     total_projects, total_commits, total_lines_added, total_lines_removed,
-                    test_projects, pending_mrs, contributors, summary, created_at
+                    test_projects, pending_mrs, contributors, summary, created_at,
+                    pipeline_total, pipeline_success, pipeline_failed
              FROM gitlab_scan_history
              ORDER BY scan_at DESC
              LIMIT ?1"
@@ -108,6 +119,9 @@ impl GitLabScanDao {
                 contributors: row.get(11)?,
                 summary: row.get(12)?,
                 created_at: row.get(13)?,
+                pipeline_total: row.get(14)?,
+                pipeline_success: row.get(15)?,
+                pipeline_failed: row.get(16)?,
             })
         })?;
 
@@ -123,7 +137,8 @@ impl GitLabScanDao {
         let mut stmt = conn.prepare(
             "SELECT id, scan_type, scan_at, scan_range_start, scan_range_end,
                     total_projects, total_commits, total_lines_added, total_lines_removed,
-                    test_projects, pending_mrs, contributors, summary, created_at
+                    test_projects, pending_mrs, contributors, summary, created_at,
+                    pipeline_total, pipeline_success, pipeline_failed
              FROM gitlab_scan_history
              WHERE id = ?1"
         )?;
@@ -144,6 +159,9 @@ impl GitLabScanDao {
                 contributors: row.get(11)?,
                 summary: row.get(12)?,
                 created_at: row.get(13)?,
+                pipeline_total: row.get(14)?,
+                pipeline_success: row.get(15)?,
+                pipeline_failed: row.get(16)?,
             })
         })?;
 

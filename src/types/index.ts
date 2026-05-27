@@ -323,6 +323,17 @@ export interface GitLabConfig {
   scan_range_days?: number;
 }
 
+export interface MrDetail {
+  iid: number;
+  title: string;
+  source_branch: string;
+  target_branch: string;
+  author: string;
+  web_url: string;
+  pipeline_status: string | null;
+  created_at: string;
+}
+
 export interface GitLabScanResult {
   scan_at: number;
   scan_type: string;
@@ -334,6 +345,9 @@ export interface GitLabScanResult {
   pending_mrs: number;
   contributors: string[];
   projects: GitLabProjectResult[];
+  pipeline_total: number;
+  pipeline_success: number;
+  pipeline_failed: number;
 }
 
 export interface GitLabProjectResult {
@@ -345,8 +359,10 @@ export interface GitLabProjectResult {
   has_test: boolean;
   test_commits: string[];
   pending_mrs: number;
+  mr_details: MrDetail[];
   contributors: string[];
   last_commit_at: string;
+  latest_pipeline_status: string | null;
 }
 
 export interface GitLabScanHistory {
@@ -364,4 +380,7 @@ export interface GitLabScanHistory {
   contributors: string;
   summary: string;
   created_at: number;
+  pipeline_total: number;
+  pipeline_success: number;
+  pipeline_failed: number;
 }
