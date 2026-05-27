@@ -1,0 +1,23 @@
+src/components/modules/gitlab/FirstTimeSetupModal.tsx
+  s_3fa5cef6ec2946::t_4effd73aff23c1 39,41,46,48-49,51-56,62,66-73
+src/lib/api/gitlab.ts
+  s_3fa5cef6ec2946::t_39b14b212b14c2 14
+src/pages/GitLabOverviewPage.tsx
+  s_3fa5cef6ec2946::t_2dd9cea4f590b0 326-327,329-336
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "38d90721701f0e757c652c3f256c471e379931b5",
+  "prompts": {},
+  "sessions": {
+    "s_3fa5cef6ec2946": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3186f0ff-6f40-4f0b-9cb6-c68899340ddc",
+        "model": "astron-code-latest"
+      },
+      "human_author": "pengchenghui <pengchenghui@jtexpress.com>"
+    }
+  }
+}
