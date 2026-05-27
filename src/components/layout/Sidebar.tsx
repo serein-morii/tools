@@ -6,8 +6,8 @@ import { useState } from "react";
 
 const primaryItems = [
   { to: "/", icon: Home, labelKey: "nav.home", match: "/" },
-  { to: "/reminder/tasks", icon: Bell, labelKey: "nav.reminder", match: "/reminder" },
   { to: "/gitlab", icon: GitBranch, labelKey: "nav.gitlab", match: "/gitlab" },
+  { to: "/reminder/tasks", icon: Bell, labelKey: "nav.reminder", match: "/reminder" },
 ];
 
 const settingsItem = { to: "/settings", icon: Settings, labelKey: "nav.settings", match: "/settings" };
@@ -27,16 +27,20 @@ export function Sidebar() {
       <div className="flex h-14 items-center justify-between border-b px-3">
         {!collapsed && (
           <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 text-sm font-bold text-white shadow-sm">
-              DT
-            </div>
+            <img
+              src="/app-icon.png"
+              alt="Dev Tools"
+              className="h-8 w-8 rounded-lg shadow-sm"
+            />
             <span className="text-sm font-semibold text-foreground">Dev Tools</span>
           </div>
         )}
         {collapsed && (
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 text-sm font-bold text-white shadow-sm mx-auto">
-            DT
-          </div>
+          <img
+            src="/app-icon.png"
+            alt="Dev Tools"
+            className="h-8 w-8 rounded-lg shadow-sm mx-auto"
+          />
         )}
         <button
           onClick={() => setCollapsed(!collapsed)}

@@ -23,6 +23,17 @@ const defaultConfig: GitLabConfig = {
   scan_channels: [],
   scan_range_type: "week",
   scan_range_days: 7,
+  walkin_enabled: false,
+  walkin_url: "",
+  walkin_username: "",
+  walkin_password: "",
+  walkin_dept_name: "",
+  walkin_dept_id: "",
+  walkin_workspace_name: "",
+  walkin_csrf_token: "",
+  walkin_project_header: "",
+  walkin_x_auth_token: "",
+  walkin_project_mappings: [],
 };
 
 export function FirstTimeSetupModal({ onComplete, onSkip }: FirstTimeSetupModalProps) {

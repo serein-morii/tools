@@ -20,11 +20,11 @@
     "channels": "渠道",
     "history": "历史",
     "settings": "设置",
-    "reminder": "提醒",
+    "reminder": "任务提醒",
     "timer": "计时",
     "notes": "笔记",
     "home": "概览",
-    "gitlab": "GitLab"
+    "gitlab": "代码扫描"
   },
   "dashboard": {
     "title": "概览",

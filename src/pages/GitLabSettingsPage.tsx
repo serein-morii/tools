@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
-import { Link2, CheckCircle, XCircle, Loader2, Plus, X, AlertCircle } from "lucide-react";
+import { Link2, CheckCircle, XCircle, Loader2, Plus, X, AlertCircle, Shield, Clock, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useGitLabConfig, useSaveGitLabConfig, useTestGitLabConnection } from "@/lib/query/gitlabQueries";
 import { useChannels } from "@/lib/query/channelQueries";
 import { toast } from "sonner";
+import { useWalkinAuth } from "@/components/modules/gitlab/WalkinAuthManager";
 import type { GitLabConfig } from "@/types";
 
 const defaultConfig: GitLabConfig = {
@@ -19,6 +20,17 @@ const defaultConfig: GitLabConfig = {
   scan_channels: [],
   scan_range_type: "week",
   scan_range_days: 7,
+  walkin_enabled: false,
+  walkin_url: "",
+  walkin_username: "",
+  walkin_password: "",
+  walkin_dept_name: "",
+  walkin_dept_id: "",
+  walkin_workspace_name: "",
+  walkin_csrf_token: "",
+  walkin_project_header: "",
+  walkin_x_auth_token: "",
+  walkin_project_mappings: [],
 };
 
 function isValidUrl(url: string): boolean {
@@ -42,12 +54,26 @@ export function GitLabSettingsPage() {
   const [newProject, setNewProject] = useState("");
   const [newKeyword, setNewKeyword] = useState("");
   const [validationErrors, setValidationErrors] = useState<{ url?: string; token?: string }>({});
+  const { isLoggedIn, userName, checkLogin, startAutoLogin } = useWalkinAuth();
+  const [isCheckingLogin, setIsCheckingLogin] = useState(false);
+
+  // 定时检测间隔
+  const [loginCheckInterval, setLoginCheckInterval] = useState<number>(() => {
+    const saved = localStorage.getItem("walkin_login_check_interval");
+    return saved ? parseInt(saved) : 0;
+  });
 
   useEffect(() => {
     if (config) {
       setFormData(config);
     }
   }, [config]);
+
+  // 保存检测间隔到 localStorage
+  const handleIntervalChange = (interval: number) => {
+    setLoginCheckInterval(interval);
+    localStorage.setItem("walkin_login_check_interval", interval.toString());
+  };
 
   const validateForm = (): boolean => {
     const errors: { url?: string; token?: string } = {};
@@ -428,6 +454,278 @@ export function GitLabSettingsPage() {
         </CardContent>
       </Card>
 
+      {/* Walkin 集成配置 */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Shield className="h-5 w-5" />
+            Walkin 代码质量集成
+          </CardTitle>
+          <CardDescription>集成 Walkin 平台的 SonarQube 代码质量数据</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium">启用</label>
+            <div className="flex gap-4">
+              <Button
+                variant={formData.walkin_enabled ? "default" : "outline"}
+                size="sm"
+                onClick={() => setFormData({ ...formData, walkin_enabled: true })}
+              >
+                启用
+              </Button>
+              <Button
+                variant={!formData.walkin_enabled ? "default" : "outline"}
+                size="sm"
+                onClick={() => setFormData({ ...formData, walkin_enabled: false })}
+              >
+                禁用
+              </Button>
+            </div>
+          </div>
+
+          {formData.walkin_enabled && (
+            <>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Walkin 地址</label>
+                  <Input
+                    placeholder="https://walkin.example.com"
+                    value={formData.walkin_url}
+                    onChange={(e) => setFormData({ ...formData, walkin_url: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">部门名称</label>
+                  <Input
+                    placeholder="输入部门名称"
+                    value={formData.walkin_dept_name}
+                    onChange={(e) => setFormData({ ...formData, walkin_dept_name: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">部门 ID</label>
+                  <Input
+                    placeholder="输入部门 ID（用于团队覆盖率看板）"
+                    value={formData.walkin_dept_id}
+                    onChange={(e) => setFormData({ ...formData, walkin_dept_id: e.target.value })}
+                  />
+                  <p className="text-xs text-muted-foreground">在 Walkin 平台的团队覆盖率看板 URL 中获取</p>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">工作空间名称</label>
+                  <Input
+                    placeholder="输入工作空间名称"
+                    value={formData.walkin_workspace_name}
+                    onChange={(e) => setFormData({ ...formData, walkin_workspace_name: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">LDAP 用户名</label>
+                  <Input
+                    placeholder="输入 LDAP 用户名"
+                    value={formData.walkin_username}
+                    onChange={(e) => setFormData({ ...formData, walkin_username: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">LDAP 密码</label>
+                  <Input
+                    type="password"
+                    placeholder="输入 LDAP 密码"
+                    value={formData.walkin_password}
+                    onChange={(e) => setFormData({ ...formData, walkin_password: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              {/* 登录状态 */}
+              <div className="border rounded-lg p-3 bg-muted/30">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    {isLoggedIn ? (
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                    ) : (
+                      <XCircle className="h-4 w-4 text-red-500" />
+                    )}
+                    <span className="text-sm font-medium">
+                      {isLoggedIn ? `已登录: ${userName || "未知用户"}` : "未登录"}
+                    </span>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={async () => {
+                        setIsCheckingLogin(true);
+                        try {
+                          await checkLogin();
+                        } finally {
+                          setIsCheckingLogin(false);
+                        }
+                      }}
+                      disabled={isCheckingLogin}
+                    >
+                      <RefreshCw className={`mr-1.5 h-3.5 w-3.5 ${isCheckingLogin ? "animate-spin" : ""}`} />
+                      检测
+                    </Button>
+                    {!isLoggedIn && (
+                      <Button
+                        size="sm"
+                        onClick={async () => {
+                          // 先保存配置，再触发登录
+                          try {
+                            toast.info("正在保存配置...");
+                            await saveConfig.mutateAsync(formData);
+                            toast.info("配置已保存，正在登录...");
+                            await startAutoLogin({
+                              username: formData.walkin_username,
+                              password: formData.walkin_password,
+                            });
+                          } catch (e) {
+                            const msg = e instanceof Error ? e.message : String(e);
+                            toast.error("操作失败: " + msg);
+                          }
+                        }}
+                      >
+                        登录
+                      </Button>
+                    )}
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={async () => {
+                        const cleared = {
+                          ...formData,
+                          walkin_csrf_token: "",
+                          walkin_project_header: "",
+                          walkin_x_auth_token: "",
+                        };
+                        setFormData(cleared);
+                        try {
+                          await saveConfig.mutateAsync(cleared);
+                          toast.success("Token 已清除，请重新登录");
+                        } catch (e) {
+                          const msg = e instanceof Error ? e.message : String(e);
+                          toast.error("清除失败: " + msg);
+                        }
+                      }}
+                    >
+                      清除Token
+                    </Button>
+                  </div>
+                </div>
+                {formData.walkin_csrf_token && (
+                  <div className="mt-2 text-xs text-muted-foreground">
+                    Token: {formData.walkin_x_auth_token.slice(0, 8)}...{formData.walkin_x_auth_token.slice(-8)}
+                  </div>
+                )}
+              </div>
+
+              {/* 定时检测设置 */}
+              <div className="border-t pt-4 space-y-2">
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-medium">登录状态定时检测</span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  定时检测登录状态，如果 token 失效会自动尝试重新登录
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { value: 0, label: "不定时检测" },
+                    { value: 10, label: "10分钟" },
+                    { value: 30, label: "30分钟" },
+                    { value: 60, label: "1小时" },
+                    { value: 120, label: "2小时" },
+                    { value: 360, label: "6小时" },
+                  ].map((option) => (
+                    <Button
+                      key={option.value}
+                      variant={loginCheckInterval === option.value ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => handleIntervalChange(option.value)}
+                    >
+                      {option.label}
+                    </Button>
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {loginCheckInterval > 0
+                    ? `每 ${loginCheckInterval >= 60 ? `${loginCheckInterval / 60} 小时` : `${loginCheckInterval} 分钟`} 自动检测一次登录状态`
+                    : "不会自动检测登录状态"}
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">项目名称映射</label>
+                <p className="text-xs text-muted-foreground">
+                  当 GitLab 项目名与 Walkin 项目名不一致时，手动指定映射关系
+                </p>
+                <div className="space-y-2">
+                  {formData.walkin_project_mappings.map((mapping, idx) => (
+                    <div key={idx} className="flex items-center gap-2">
+                      <Input
+                        placeholder="GitLab 项目路径"
+                        value={mapping.gitlab_project}
+                        onChange={(e) => {
+                          const updated = [...formData.walkin_project_mappings];
+                          updated[idx] = { ...updated[idx], gitlab_project: e.target.value };
+                          setFormData({ ...formData, walkin_project_mappings: updated });
+                        }}
+                        className="flex-1"
+                      />
+                      <span className="text-muted-foreground">→</span>
+                      <Input
+                        placeholder="Walkin 项目名"
+                        value={mapping.walkin_project}
+                        onChange={(e) => {
+                          const updated = [...formData.walkin_project_mappings];
+                          updated[idx] = { ...updated[idx], walkin_project: e.target.value };
+                          setFormData({ ...formData, walkin_project_mappings: updated });
+                        }}
+                        className="flex-1"
+                      />
+                      <X
+                        className="h-4 w-4 cursor-pointer hover:text-red-500 shrink-0"
+                        onClick={() => {
+                          setFormData({
+                            ...formData,
+                            walkin_project_mappings: formData.walkin_project_mappings.filter((_, i) => i !== idx),
+                          });
+                        }}
+                      />
+                    </div>
+                  ))}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    setFormData({
+                      ...formData,
+                      walkin_project_mappings: [
+                        ...formData.walkin_project_mappings,
+                        { gitlab_project: "", walkin_project: "" },
+                      ],
+                    })
+                  }
+                >
+                  <Plus className="mr-1 h-3.5 w-3.5" />
+                  添加映射
+                </Button>
+              </div>
+            </>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Save Button */}
       <div className="flex justify-end gap-4">
         <Button variant="outline" onClick={() => setFormData(defaultConfig)}>
@@ -438,6 +736,7 @@ export function GitLabSettingsPage() {
           保存配置
         </Button>
       </div>
+
     </div>
   );
 }

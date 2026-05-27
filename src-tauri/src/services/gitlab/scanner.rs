@@ -1,5 +1,6 @@
 use crate::error::Result;
 use super::client::{GitLabClient, GitLabProject, GitLabCommit};
+use crate::services::walkin::{WalkinMetrics, WalkinProjectData, ProjectMapping};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use chrono::Datelike;
@@ -41,6 +42,11 @@ pub struct ScanResult {
     pub pipeline_success: i32,
     pub pipeline_failed: i32,
     pub developer_stats: Vec<DeveloperStat>,
+    pub walkin_total_bugs: i64,
+    pub walkin_total_vulnerabilities: i64,
+    pub walkin_total_code_smells: i64,
+    pub walkin_avg_coverage: Option<f64>,
+    pub walkin_projects_matched: i32,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -51,13 +57,16 @@ pub struct ProjectScanResult {
     pub lines_added: i64,
     pub lines_removed: i64,
     pub has_test: bool,
-    pub test_commits: Vec<String>,
+    pub test_commits: Vec<TestCommit>,
     pub pending_mrs: i32,
     pub mr_details: Vec<MrDetail>,
     pub contributors: Vec<String>,
     pub last_commit_at: String,
     pub latest_pipeline_status: Option<String>,
     pub author_stats: Vec<AuthorStat>,
+    pub walkin_metrics: Option<WalkinMetrics>,
+    #[serde(rename = "walkin_metrics_by_branch")]
+    pub walkin_metrics_by_branch: Option<HashMap<String, WalkinMetrics>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -69,6 +78,13 @@ pub struct MrDetail {
     pub author: String,
     pub web_url: String,
     pub pipeline_status: Option<String>,
+    pub created_at: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TestCommit {
+    pub title: String,
+    pub author: String,
     pub created_at: String,
 }
 
@@ -92,6 +108,81 @@ pub struct DeveloperStat {
     pub projects: Vec<String>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ScanProgress {
+    pub current: i32,
+    pub total: i32,
+    pub project_name: String,
+    pub commits_scanned: i32,
+    pub commits_total: i32,
+    #[serde(default)]
+    pub phase: Option<String>,
+}
+
+impl ScanResult {
+    pub fn merge_walkin_metrics(&mut self, walkin_projects: &[WalkinProjectData], mappings: &[ProjectMapping]) {
+        // Build a lookup: walkin_project_name -> Vec<WalkinProjectData> (one per branch)
+        let mut walkin_by_name: HashMap<String, Vec<&WalkinProjectData>> = HashMap::new();
+        for wp in walkin_projects {
+            walkin_by_name.entry(wp.project_name.clone()).or_default().push(wp);
+        }
+
+        for project in &mut self.projects {
+            let short_name = project.project_name.split('/').last().unwrap_or(&project.project_name);
+            // 1. Check custom mappings
+            let walkin_name = mappings.iter()
+                .find(|m| project.project_name.contains(&m.gitlab_project))
+                .map(|m| m.walkin_project.as_str())
+                // 2. Match by last segment of GitLab path
+                .unwrap_or(short_name);
+
+            if let Some(entries) = walkin_by_name.get(walkin_name) {
+                // Build per-branch metrics
+                let mut by_branch: HashMap<String, WalkinMetrics> = HashMap::new();
+                for entry in entries {
+                    let branch = entry.branch.clone().unwrap_or_else(|| "master".to_string());
+                    by_branch.insert(branch, WalkinMetrics::from((*entry).clone()));
+                }
+
+                // Pick the "main" metrics: prefer master/main, otherwise latest by analysis_date
+                let main_metrics = entries.iter()
+                    .filter(|e| matches!(e.branch.as_deref(), Some("master") | Some("main")))
+                    .max_by_key(|e| e.analysis_date.unwrap_or(0))
+                    .or_else(|| entries.iter().max_by_key(|e| e.analysis_date.unwrap_or(0)))
+                    .map(|e| WalkinMetrics::from((*e).clone()));
+
+                if by_branch.len() > 1 {
+                    project.walkin_metrics_by_branch = Some(by_branch);
+                }
+                project.walkin_metrics = main_metrics;
+            }
+        }
+
+        // Aggregate totals from main metrics only
+        let mut total_bugs = 0i64;
+        let mut total_vulnerabilities = 0i64;
+        let mut total_code_smells = 0i64;
+        let mut coverage_sum = 0.0;
+        let mut coverage_count = 0i32;
+        for project in &self.projects {
+            if let Some(ref m) = project.walkin_metrics {
+                total_bugs += m.bugs;
+                total_vulnerabilities += m.vulnerabilities;
+                total_code_smells += m.code_smells;
+                if let Some(cov) = m.coverage {
+                    coverage_sum += cov;
+                    coverage_count += 1;
+                }
+            }
+        }
+        self.walkin_total_bugs = total_bugs;
+        self.walkin_total_vulnerabilities = total_vulnerabilities;
+        self.walkin_total_code_smells = total_code_smells;
+        self.walkin_avg_coverage = if coverage_count > 0 { Some(coverage_sum / coverage_count as f64) } else { None };
+        self.walkin_projects_matched = coverage_count;
+    }
+}
+
 pub struct GitLabScanner {
     client: GitLabClient,
     config: ScanConfig,
@@ -102,13 +193,17 @@ impl GitLabScanner {
         Self { client, config }
     }
 
-    pub async fn scan(&self, scan_type: &str) -> Result<ScanResult> {
+    pub async fn scan_with_progress<F>(&self, scan_type: &str, mut progress_callback: F) -> Result<ScanResult>
+    where
+        F: FnMut(ScanProgress) + Send,
+    {
         let scan_at = chrono::Utc::now().timestamp_millis();
         let since = self.calculate_since()?;
 
         // Get all projects
         let all_projects = self.client.get_all_projects().await?;
         let filtered_projects = self.filter_projects(all_projects);
+        let total_projects = filtered_projects.len() as i32;
 
         let mut projects = Vec::new();
         let mut total_commits = 0i32;
@@ -121,11 +216,24 @@ impl GitLabScanner {
         let mut pipeline_failed = 0i32;
         let mut all_contributors: HashSet<String> = HashSet::new();
         let mut dev_map: HashMap<String, DeveloperStat> = HashMap::new();
+        let mut current_idx = 0i32;
 
         for project in filtered_projects {
+            current_idx += 1;
             let project_name = project.path_with_namespace.clone();
+
+            // Emit progress before scanning project
+            progress_callback(ScanProgress {
+                current: current_idx,
+                total: total_projects,
+                project_name: project_name.clone(),
+                commits_scanned: total_commits,
+                commits_total: 0, // Unknown until we fetch
+                phase: Some("gitlab".to_string()),
+            });
+
             match self.scan_project(&project, &since).await {
-                Ok(result) => {
+                Ok(Some(result)) => {
                     total_commits += result.commits;
                     total_lines_added += result.lines_added;
                     total_lines_removed += result.lines_removed;
@@ -185,6 +293,9 @@ impl GitLabScanner {
                     }
                     projects.push(result);
                 }
+                Ok(None) => {
+                    // No commits in this project during scan range, skip
+                }
                 Err(e) => {
                     log::warn!("Failed to scan project {}: {}", project.path_with_namespace, e);
                 }
@@ -209,7 +320,16 @@ impl GitLabScanner {
             pipeline_success,
             pipeline_failed,
             developer_stats,
+            walkin_total_bugs: 0,
+            walkin_total_vulnerabilities: 0,
+            walkin_total_code_smells: 0,
+            walkin_avg_coverage: None,
+            walkin_projects_matched: 0,
         })
+    }
+
+    pub async fn scan(&self, scan_type: &str) -> Result<ScanResult> {
+        self.scan_with_progress(scan_type, |_| {}).await
     }
 
     fn calculate_since(&self) -> Result<String> {
@@ -252,25 +372,11 @@ impl GitLabScanner {
         }
     }
 
-    async fn scan_project(&self, project: &GitLabProject, since: &str) -> Result<ProjectScanResult> {
+    async fn scan_project(&self, project: &GitLabProject, since: &str) -> Result<Option<ProjectScanResult>> {
         let commits = self.client.get_all_commits(project.id, since).await?;
 
         if commits.is_empty() {
-            return Ok(ProjectScanResult {
-                project_id: project.id,
-                project_name: project.path_with_namespace.clone(),
-                commits: 0,
-                lines_added: 0,
-                lines_removed: 0,
-                has_test: false,
-                test_commits: Vec::new(),
-                pending_mrs: 0,
-                mr_details: Vec::new(),
-                contributors: Vec::new(),
-                last_commit_at: String::new(),
-                latest_pipeline_status: None,
-                author_stats: Vec::new(),
-            });
+            return Ok(None);
         }
 
         // Collect contributors and per-author commit counts
@@ -348,7 +454,7 @@ impl GitLabScanner {
             .map(|c| c.created_at.clone())
             .unwrap_or_default();
 
-        Ok(ProjectScanResult {
+        Ok(Some(ProjectScanResult {
             project_id: project.id,
             project_name: project.path_with_namespace.clone(),
             commits: commits.len() as i32,
@@ -362,17 +468,23 @@ impl GitLabScanner {
             last_commit_at,
             latest_pipeline_status,
             author_stats,
-        })
+            walkin_metrics: None,
+            walkin_metrics_by_branch: None,
+        }))
     }
 
-    fn detect_test_commits(&self, commits: &[GitLabCommit]) -> Vec<String> {
+    fn detect_test_commits(&self, commits: &[GitLabCommit]) -> Vec<TestCommit> {
         commits.iter()
             .filter(|commit| {
                 let message_lower = commit.message.to_lowercase();
                 self.config.test_keywords.iter()
                     .any(|keyword| message_lower.contains(&keyword.to_lowercase()))
             })
-            .map(|commit| commit.title.clone())
+            .map(|commit| TestCommit {
+                title: commit.title.clone(),
+                author: commit.author_name.clone(),
+                created_at: commit.created_at.clone(),
+            })
             .collect()
     }
 }

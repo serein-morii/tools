@@ -93,6 +93,11 @@ pub fn run() {
             commands::get_gitlab_scan_detail,
             commands::delete_gitlab_scan_history,
             commands::get_gitlab_configured,
+            commands::walkin_auto_login,
+            commands::walkin_get_captcha,
+            commands::walkin_ldap_login,
+            commands::walkin_fetch_unit_board,
+            commands::walkin_check_login,
         ])
         .setup(|app| {
             // Store app handle for auto-launch

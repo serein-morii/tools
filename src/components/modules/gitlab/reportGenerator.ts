@@ -10,25 +10,38 @@ export function generateWeeklyReport(history: GitLabScanHistory): string {
     : 0;
 
   const noTestProjects = projects.filter((p) => !p.has_test);
-  const pendingMrProjects = projects.filter((p) => p.pending_mrs > 0);
 
   // Sort projects by commits
   const sortedProjects = [...projects].sort((a, b) => b.commits - a.commits);
 
-  // Calculate contribution
-  const contributionMap = new Map<string, number>();
-  projects.forEach((project) => {
-    const perContributor = project.contributors.length > 0
-      ? Math.floor(project.commits / project.contributors.length)
-      : project.commits;
-    project.contributors.forEach((contributor) => {
-      contributionMap.set(contributor, (contributionMap.get(contributor) || 0) + perContributor);
-    });
-  });
+  // Use developer_stats if available, otherwise calculate from projects
+  let topContributors: [string, number][] = [];
+  try {
+    const devStats = JSON.parse(history.developer_stats || "[]");
+    if (devStats.length > 0) {
+      topContributors = devStats
+        .sort((a: { commits: number }, b: { commits: number }) => b.commits - a.commits)
+        .slice(0, 5)
+        .map((d: { name: string; commits: number }) => [d.name, d.commits]);
+    }
+  } catch {
+    // Fallback to old calculation
+  }
 
-  const topContributors = Array.from(contributionMap.entries())
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5);
+  if (topContributors.length === 0) {
+    const contributionMap = new Map<string, number>();
+    projects.forEach((project) => {
+      const perContributor = project.contributors.length > 0
+        ? Math.floor(project.commits / project.contributors.length)
+        : project.commits;
+      project.contributors.forEach((contributor) => {
+        contributionMap.set(contributor, (contributionMap.get(contributor) || 0) + perContributor);
+      });
+    });
+    topContributors = Array.from(contributionMap.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5);
+  }
 
   let report = `# 本周代码提交报告
 
@@ -39,11 +52,10 @@ export function generateWeeklyReport(history: GitLabScanHistory): string {
 
 | 指标 | 数值 |
 |------|------|
-| 扫描项目 | ${history.total_projects} 个 |
+| 变更项目 | ${history.total_projects} 个 |
 | 代码提交 | ${history.total_commits} 次 |
 | 参与人员 | ${contributors.length} 人 |
 | 单测覆盖 | ${testCoverage}% (${history.test_projects}/${history.total_projects}) |
-| 待审MR | ${history.pending_mrs} 个 |
 
 ## 📈 代码变更
 
@@ -52,33 +64,31 @@ export function generateWeeklyReport(history: GitLabScanHistory): string {
 
 ## 📋 项目详情
 
-| 项目 | 提交数 | 单测状态 | 待审MR |
-|------|-------|---------|-------|
+| 项目 | 提交数 | 单测状态 |
+|------|-------|---------|
 `;
 
   sortedProjects.forEach((project) => {
     const shortName = project.project_name.split("/").pop() || project.project_name;
-    const testStatus = project.has_test ? "✅" : "❌";
-    report += `| ${shortName} | ${project.commits} | ${testStatus} | ${project.pending_mrs} |
-`;
+    const testStatus = project.has_test ? "✅ 有" : "❌ 无";
+    report += `| ${shortName} | ${project.commits} | ${testStatus} |\n`;
   });
 
-  if (noTestProjects.length > 0 || pendingMrProjects.length > 0) {
+  if (noTestProjects.length > 0) {
     report += `
-## ⚠️ 需关注项目
+## ⚠️ 无单测项目
 
 `;
-    noTestProjects.slice(0, 3).forEach((project) => {
+    noTestProjects.forEach((project) => {
       const shortName = project.project_name.split("/").pop() || project.project_name;
-      report += `- **${shortName}**: ${project.commits}次提交，未发现单测
-`;
+      report += `- **${shortName}**: ${project.commits}次提交\n`;
     });
+  } else {
+    report += `
+## ✅ 单测情况
 
-    pendingMrProjects.slice(0, 2).forEach((project) => {
-      const shortName = project.project_name.split("/").pop() || project.project_name;
-      report += `- **${shortName}**: ${project.pending_mrs}个MR待审核
+所有项目均有单测覆盖
 `;
-    });
   }
 
   if (topContributors.length > 0) {
@@ -90,8 +100,7 @@ export function generateWeeklyReport(history: GitLabScanHistory): string {
 `;
     topContributors.forEach(([name, commits], index) => {
       const medal = index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : `${index + 1}`;
-      report += `| ${medal} | ${name} | ${commits} |
-`;
+      report += `| ${medal} | ${name} | ${commits} |\n`;
     });
   }
 

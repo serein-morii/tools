@@ -321,6 +321,17 @@ export interface GitLabConfig {
   scan_channels: string[];
   scan_range_type: "week" | "days";
   scan_range_days?: number;
+  walkin_enabled: boolean;
+  walkin_url: string;
+  walkin_username: string;
+  walkin_password: string;
+  walkin_dept_name: string;
+  walkin_dept_id: string;
+  walkin_workspace_name: string;
+  walkin_csrf_token: string;
+  walkin_project_header: string;
+  walkin_x_auth_token: string;
+  walkin_project_mappings: ProjectMapping[];
 }
 
 export interface MrDetail {
@@ -345,6 +356,65 @@ export interface DeveloperStat {
   projects: string[];
 }
 
+export interface GitLabScanProgress {
+  current: number;
+  total: number;
+  project_name: string;
+  commits_scanned: number;
+  commits_total: number;
+  phase?: "gitlab" | "walkin";
+}
+
+export interface WalkinMetrics {
+  branch: string | null;
+  bugs: number;
+  vulnerabilities: number;
+  code_smells: number;
+  // 全量覆盖率
+  coverage: number | null;
+  line_coverage: number | null;
+  branch_coverage: number | null;
+  lines_to_cover: number | null;
+  conditions_to_cover: number | null;
+  uncovered_conditions: number | null;
+  // 增量覆盖率
+  new_coverage: number | null;
+  new_line_coverage: number | null;
+  new_condition_coverage: number | null;
+  new_lines_to_cover: number | null;
+  new_line_cover: number | null;
+  new_un_line_cover: number | null;
+  new_condition_to_cover: number | null;
+  new_un_condition_to_cover: number | null;
+  // 其他
+  duplicated_lines_density: number | null;
+  duplicated_blocks: number;
+  reliability_rating: string | null;
+  security_rating: string | null;
+  maintainability_rating: string | null;
+  new_bugs: number;
+  new_vulnerabilities: number;
+  new_code_smells: number;
+  analysis_date: number | null;
+}
+
+export interface ProjectMapping {
+  gitlab_project: string;
+  walkin_project: string;
+}
+
+export interface UnitBoardData {
+  ynewValue: number | null;
+  yallValue: number | null;
+  ynewLineValue: number | null;
+  yallLineValue: number | null;
+  ynewBranchValue: number | null;
+  yallBranchValue: number | null;
+  xvalue: string | null;
+  startDateFrom: string | null;
+  startDateTo: string | null;
+}
+
 export interface GitLabScanResult {
   scan_at: number;
   scan_type: string;
@@ -360,6 +430,17 @@ export interface GitLabScanResult {
   pipeline_success: number;
   pipeline_failed: number;
   developer_stats: DeveloperStat[];
+  walkin_total_bugs: number;
+  walkin_total_vulnerabilities: number;
+  walkin_total_code_smells: number;
+  walkin_avg_coverage: number | null;
+  walkin_projects_matched: number;
+}
+
+export interface TestCommit {
+  title: string;
+  author: string;
+  created_at: string;
 }
 
 export interface GitLabProjectResult {
@@ -369,12 +450,50 @@ export interface GitLabProjectResult {
   lines_added: number;
   lines_removed: number;
   has_test: boolean;
-  test_commits: string[];
+  test_commits: TestCommit[];
   pending_mrs: number;
   mr_details: MrDetail[];
   contributors: string[];
   last_commit_at: string;
   latest_pipeline_status: string | null;
+  walkin_metrics: WalkinMetrics | null;
+  walkin_metrics_by_branch: Record<string, WalkinMetrics> | null;
+}
+
+export interface CaptchaData {
+  uuid: string;
+  image_base64: string;
+}
+
+export interface AutoLoginResult {
+  success: boolean;
+  csrf_token?: string;
+  project?: string;
+  workspace?: string;
+  x_auth_token?: string;
+  needs_manual_captcha: boolean;
+  captcha_image?: string;
+  captcha_uuid?: string;
+  message?: string;
+}
+
+export interface WalkinSigninResponse {
+  success: boolean;
+  message?: string;
+  data?: {
+    csrfToken?: string;
+    sessionId?: string;
+    lastWorkspaceId?: string;
+    lastProjectId?: string;
+    id?: string;
+    name?: string;
+  };
+}
+
+export interface LoginStatusResult {
+  logged_in: boolean;
+  user_name?: string;
+  message?: string;
 }
 
 export interface GitLabScanHistory {
