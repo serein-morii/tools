@@ -462,14 +462,16 @@ export function GitLabOverviewPage() {
 
       {latestHistory && (
         <>
-          {/* Trend Charts */}
+          {/* Trend Charts + Developer Ranking */}
           <div className="border-t">
             <div className="px-6 py-4">
               <h3 className="font-semibold">趋势分析</h3>
             </div>
+            <div className="flex items-stretch">
+              <TrendChart history={history || []} />
+              <ContributorRanking history={history || []} />
+            </div>
           </div>
-          <TrendChart history={history || []} />
-          <ContributorRanking history={history || []} />
 
           {/* MR Kanban */}
           <div className="border-t">
