@@ -22,7 +22,7 @@ export function TrendChart({ history }: TrendChartProps) {
   const weeks = history.slice(0, 4).reverse();
 
   return (
-    <div className="p-6 pt-0">
+    <div className="px-6 pb-4">
       <div className="rounded-lg border bg-card/50 p-4">
         <h4 className="mb-4 text-sm font-medium">提交趋势（近{weeks.length}周）</h4>
 
@@ -114,8 +114,8 @@ export function ContributorRanking({ history }: { history: GitLabScanHistory[] }
   const maxCommits = Math.max(devStats[0]?.commits || 1, 1);
 
   return (
-    <div className="p-6 pt-0 h-full">
-      <div className="rounded-lg border bg-card/50 p-4 h-full">
+    <div className="px-6 pb-4">
+      <div className="rounded-lg border bg-card/50 p-4">
         <h4 className="mb-4 text-sm font-medium">开发者贡献排行</h4>
         <div className="space-y-2">
           {devStats.slice(0, 8).map((dev, index) => {

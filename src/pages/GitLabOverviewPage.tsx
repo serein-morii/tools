@@ -143,19 +143,10 @@ function SummaryCards({ current, previous }: { current?: GitLabScanHistory; prev
       color: "text-rose-500",
       invertTrend: true,
     },
-    {
-      icon: Circle,
-      label: "Pipeline 成功率",
-      value: current && current.pipeline_total > 0
-        ? `${Math.round((current.pipeline_success / current.pipeline_total) * 100)}%`
-        : "-",
-      secondaryValue: current ? `${current.pipeline_success}/${current.pipeline_total}` : undefined,
-      color: "text-cyan-500",
-    },
   ];
 
   return (
-    <div className="grid grid-cols-4 gap-4 p-6">
+    <div className="grid grid-cols-3 gap-4 p-6">
       {cards.map((card) => (
         <Card key={card.label} className="bg-card/50">
           <CardContent className="flex items-center gap-4 p-4">
@@ -476,11 +467,9 @@ export function GitLabOverviewPage() {
             <div className="px-6 py-4">
               <h3 className="font-semibold">趋势分析</h3>
             </div>
-            <div className="grid grid-cols-2 gap-0">
-              <TrendChart history={history || []} />
-              <ContributorRanking history={history || []} />
-            </div>
           </div>
+          <TrendChart history={history || []} />
+          <ContributorRanking history={history || []} />
 
           {/* MR Kanban */}
           <div className="border-t">
