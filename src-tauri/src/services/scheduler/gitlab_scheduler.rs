@@ -266,7 +266,7 @@ fn format_attention_projects(projects: &[crate::services::gitlab::scanner::Proje
 }
 
 fn format_top_contributors(
-    contributors: &[String],
+    _contributors: &[String],
     projects: &[crate::services::gitlab::scanner::ProjectScanResult]
 ) -> String {
     use std::collections::HashMap;

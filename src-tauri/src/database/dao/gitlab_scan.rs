@@ -159,6 +159,7 @@ impl GitLabScanDao {
         Ok(())
     }
 
+    #[allow(dead_code)]
     pub fn delete_old(conn: &Connection, keep_count: i32) -> Result<i32> {
         let deleted = conn.execute(
             "DELETE FROM gitlab_scan_history WHERE id NOT IN (

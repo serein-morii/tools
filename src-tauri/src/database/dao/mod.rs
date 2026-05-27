@@ -10,4 +10,3 @@ pub mod gitlab_scan;
 pub use task::*;
 pub use channel::*;
 pub use reminder::*;
-pub use gitlab_scan::*;
