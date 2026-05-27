@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input";
 import { useSaveGitLabConfig, useTestGitLabConnection } from "@/lib/query/gitlabQueries";
 import { toast } from "sonner";
+import { defaultGitLabConfig } from "@/lib/gitlab/defaults";
 import type { GitLabConfig } from "@/types";
 
 interface FirstTimeSetupModalProps {
@@ -12,32 +13,8 @@ interface FirstTimeSetupModalProps {
   onSkip: () => void;
 }
 
-const defaultConfig: GitLabConfig = {
-  url: "",
-  auth_type: "token",
-  token: "",
-  filter_mode: "include",
-  filter_projects: ["basicdata", "lmdm", "network", "notice", "message", "scm"],
-  test_keywords: ["单测", "测试", "用例", "test", "spec"],
-  scan_schedule: "0 9 * * 1",
-  scan_channels: [],
-  scan_range_type: "week",
-  scan_range_days: 7,
-  walkin_enabled: false,
-  walkin_url: "",
-  walkin_username: "",
-  walkin_password: "",
-  walkin_dept_name: "",
-  walkin_dept_id: "",
-  walkin_workspace_name: "",
-  walkin_csrf_token: "",
-  walkin_project_header: "",
-  walkin_x_auth_token: "",
-  walkin_project_mappings: [],
-};
-
 export function FirstTimeSetupModal({ onComplete, onSkip }: FirstTimeSetupModalProps) {
-  const [formData, setFormData] = useState<GitLabConfig>(defaultConfig);
+  const [formData, setFormData] = useState<GitLabConfig>(defaultGitLabConfig);
   const [showToken, setShowToken] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<"idle" | "testing" | "success" | "failed">("idle");
 
@@ -47,9 +24,7 @@ export function FirstTimeSetupModal({ onComplete, onSkip }: FirstTimeSetupModalP
   const handleTest = async () => {
     setConnectionStatus("testing");
     try {
-      console.log("Testing connection with config:", formData);
       const result = await testConnection.mutateAsync(formData);
-      console.log("Test connection result:", result);
       setConnectionStatus(result ? "success" : "failed");
       if (result) {
         toast.success("连接成功");
@@ -70,12 +45,10 @@ export function FirstTimeSetupModal({ onComplete, onSkip }: FirstTimeSetupModalP
 
   const handleSave = async () => {
     try {
-      console.log("Saving config:", formData);
       await saveConfig.mutateAsync(formData);
       toast.success("配置已保存");
       onComplete();
     } catch (error: unknown) {
-      console.error("Save config error:", error);
       const errorMessage = error instanceof Error
         ? error.message
         : typeof error === 'object' && error !== null && 'message' in error

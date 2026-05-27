@@ -7,31 +7,10 @@ import { useGitLabConfig, useSaveGitLabConfig, useTestGitLabConnection } from "@
 import { useChannels } from "@/lib/query/channelQueries";
 import { toast } from "sonner";
 import { useWalkinAuth } from "@/components/modules/gitlab/WalkinAuthManager";
+import { defaultGitLabConfig } from "@/lib/gitlab/defaults";
 import type { GitLabConfig } from "@/types";
 
-const defaultConfig: GitLabConfig = {
-  url: "",
-  auth_type: "token",
-  token: "",
-  filter_mode: "include",
-  filter_projects: ["basicdata", "lmdm", "network", "notice", "message", "scm"],
-  test_keywords: ["单测", "测试", "用例", "test", "spec"],
-  scan_schedule: "0 9 * * 1",
-  scan_channels: [],
-  scan_range_type: "week",
-  scan_range_days: 7,
-  walkin_enabled: false,
-  walkin_url: "",
-  walkin_username: "",
-  walkin_password: "",
-  walkin_dept_name: "",
-  walkin_dept_id: "",
-  walkin_workspace_name: "",
-  walkin_csrf_token: "",
-  walkin_project_header: "",
-  walkin_x_auth_token: "",
-  walkin_project_mappings: [],
-};
+const defaultConfig = defaultGitLabConfig;
 
 function isValidUrl(url: string): boolean {
   try {

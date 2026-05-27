@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef, createContext, useContext, type ReactNode } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo, createContext, useContext, type ReactNode } from "react";
 import { Loader2, KeyRound, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -186,7 +186,10 @@ export function WalkinAuthProvider({ config, onAuthUpdate, children }: WalkinAut
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
   }, [config?.walkin_enabled, config?.walkin_x_auth_token, checkLogin, startAutoLogin]);
 
-  const contextValue: WalkinAuthContextType = { isLoggedIn, userName, checkLogin, startAutoLogin };
+  const contextValue: WalkinAuthContextType = useMemo(
+    () => ({ isLoggedIn, userName, checkLogin, startAutoLogin }),
+    [isLoggedIn, userName, checkLogin, startAutoLogin],
+  );
 
   return (
     <WalkinAuthContext.Provider value={contextValue}>

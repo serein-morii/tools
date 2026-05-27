@@ -254,12 +254,18 @@ function HistoryCard({ item, selected, onToggleSelect, onClick }: {
   onToggleSelect: () => void;
   onClick: () => void;
 }) {
-  const projects: GitLabProjectResult[] = JSON.parse(item.summary || "[]");
-  const contributors: string[] = JSON.parse(item.contributors || "[]");
+  const projects: GitLabProjectResult[] = useMemo(
+    () => JSON.parse(item.summary || "[]"),
+    [item.summary],
+  );
+  const contributors: string[] = useMemo(
+    () => JSON.parse(item.contributors || "[]"),
+    [item.contributors],
+  );
 
-  const noTestProjects = projects.filter((p) => !p.has_test);
+  const noTestProjects = useMemo(() => projects.filter((p) => !p.has_test), [projects]);
   const coverage = item.total_projects > 0 ? Math.round((item.test_projects / item.total_projects) * 100) : 0;
-  const walkin = useMemo(() => computeWalkinAggregates(projects), [item.summary]);
+  const walkin = useMemo(() => computeWalkinAggregates(projects), [projects]);
 
   return (
     <Card
@@ -358,14 +364,20 @@ function CompareView({ left, right, onClose }: {
   right: GitLabScanHistory;
   onClose: () => void;
 }) {
-  const leftProjects: GitLabProjectResult[] = JSON.parse(left.summary || "[]");
-  const rightProjects: GitLabProjectResult[] = JSON.parse(right.summary || "[]");
+  const leftProjects: GitLabProjectResult[] = useMemo(
+    () => JSON.parse(left.summary || "[]"),
+    [left.summary],
+  );
+  const rightProjects: GitLabProjectResult[] = useMemo(
+    () => JSON.parse(right.summary || "[]"),
+    [right.summary],
+  );
 
   const leftCoverage = left.total_projects > 0 ? Math.round((left.test_projects / left.total_projects) * 100) : 0;
   const rightCoverage = right.total_projects > 0 ? Math.round((right.test_projects / right.total_projects) * 100) : 0;
 
-  const leftWalkin = useMemo(() => computeWalkinAggregates(leftProjects), [left.summary]);
-  const rightWalkin = useMemo(() => computeWalkinAggregates(rightProjects), [right.summary]);
+  const leftWalkin = useMemo(() => computeWalkinAggregates(leftProjects), [leftProjects]);
+  const rightWalkin = useMemo(() => computeWalkinAggregates(rightProjects), [rightProjects]);
 
   const diff = (a: number, b: number) => {
     const d = a - b;

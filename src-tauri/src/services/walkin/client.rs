@@ -496,44 +496,10 @@ pub struct LoginStatusResult {
     pub message: Option<String>,
 }
 
-/// 独立的登录状态检查函数
+/// 独立的登录状态检查函数（委托给 WalkinClient）
 pub async fn check_walkin_login(base_url: &str, auth: &WalkinAuth) -> Result<LoginStatusResult> {
-    let http_client = Client::builder()
-        .timeout(std::time::Duration::from_secs(15))
-        .danger_accept_invalid_certs(true)
-        .build()
-        .map_err(|e| ToolsError::Http(format!("Failed to create HTTP client: {}", e)))?;
-
-    let url = format!("{}/is-login", base_url.trim_end_matches('/'));
-
-    let response = http_client
-        .get(&url)
-        .header("CSRF-TOKEN", &auth.csrf_token)
-        .header("PROJECT", &auth.project)
-        .header("WORKSPACE", &auth.workspace)
-        .header("X-AUTH-TOKEN", &auth.x_auth_token)
-        .header("Accept", "application/json, text/plain, */*")
-        .send()
-        .await
-        .map_err(|e| ToolsError::Http(format!("Login check request failed: {}", e)))?;
-
-    if !response.status().is_success() {
-        let status = response.status();
-        return Ok(LoginStatusResult {
-            logged_in: false,
-            user_name: None,
-            message: Some(format!("HTTP error: {}", status)),
-        });
-    }
-
-    let api_response: IsLoginResponse = response.json().await
-        .map_err(|e| ToolsError::Http(format!("Failed to parse login check response: {}", e)))?;
-
-    Ok(LoginStatusResult {
-        logged_in: api_response.success && api_response.data.is_some(),
-        user_name: api_response.data.and_then(|d| d.name),
-        message: if api_response.success { None } else { api_response.message },
-    })
+    let client = WalkinClient::new(base_url, auth.clone(), String::new(), String::new())?;
+    client.check_login().await
 }
 
 pub struct WalkinClient {

@@ -11,30 +11,8 @@ import { useWalkinAuth } from "@/components/modules/gitlab/WalkinAuthManager";
 import { gitlabApi } from "@/lib/api/gitlab";
 import { toast } from "sonner";
 import { CustomSelect } from "@/components/ui/custom-select";
+import { formatTimestamp, formatRelativeTime, formatNumber } from "@/lib/gitlab/format";
 import type { GitLabScanHistory, GitLabProjectResult, MrDetail, UnitBoardData } from "@/types";
-
-function formatNumber(num: number): string {
-  if (num >= 10000) {
-    return (num / 10000).toFixed(1) + "w";
-  }
-  return num.toLocaleString();
-}
-
-function formatTimestamp(ts: number): string {
-  return new Date(ts).toLocaleString("zh-CN");
-}
-
-function formatRelativeTime(ts: string): string {
-  const now = Date.now();
-  const date = new Date(ts).getTime();
-  const diff = now - date;
-  const hours = Math.floor(diff / (1000 * 60 * 60));
-  if (hours < 1) return "刚刚";
-  if (hours < 24) return `${hours}小时前`;
-  const days = Math.floor(hours / 24);
-  if (days < 7) return `${days}天前`;
-  return new Date(ts).toLocaleDateString("zh-CN");
-}
 
 function TrendIndicator({ current, previous }: { current: number; previous?: number }) {
   if (previous === undefined) return null;
@@ -61,8 +39,14 @@ function TrendIndicator({ current, previous }: { current: number; previous?: num
 }
 
 function SummaryCards({ current, previous }: { current?: GitLabScanHistory; previous?: GitLabScanHistory }) {
-  const currentContributors = current ? JSON.parse(current.contributors || "[]").length : 0;
-  const previousContributors = previous ? JSON.parse(previous.contributors || "[]").length : undefined;
+  const currentContributors = useMemo(
+    () => current ? JSON.parse(current.contributors || "[]").length : 0,
+    [current],
+  );
+  const previousContributors = useMemo(
+    () => previous ? JSON.parse(previous.contributors || "[]").length : undefined,
+    [previous],
+  );
 
   const currentCoverage = current && current.total_projects > 0
     ? Math.round((current.test_projects / current.total_projects) * 100)
@@ -188,19 +172,22 @@ function MrKanban({ projects }: { projects: GitLabProjectResult[] }) {
   const [authorFilter, setAuthorFilter] = useState<string>("all");
   const [timeFilter, setTimeFilter] = useState<string>("all");
 
-  const allMrs: { project: GitLabProjectResult; mr: MrDetail }[] = [];
-  for (const project of projects) {
-    for (const mr of project.mr_details || []) {
-      allMrs.push({ project, mr });
+  const allMrs = useMemo(() => {
+    const result: { project: GitLabProjectResult; mr: MrDetail }[] = [];
+    for (const project of projects) {
+      for (const mr of project.mr_details || []) {
+        result.push({ project, mr });
+      }
     }
-  }
+    return result;
+  }, [projects]);
 
   // Get unique authors for filter
   const uniqueAuthors = useMemo(() => {
     const authors = new Set<string>();
     allMrs.forEach(({ mr }) => authors.add(mr.author));
     return Array.from(authors).sort();
-  }, [allMrs.length]);
+  }, [allMrs]);
 
   // Filter MRs
   const filteredMrs = useMemo(() => {
@@ -875,9 +862,10 @@ export function GitLabOverviewPage() {
   // Selected scan data (defaults to latest)
   const selectedHistory = history?.[selectedScanIndex];
   const previousHistory = history?.[selectedScanIndex + 1];
-  const projects: GitLabProjectResult[] = selectedHistory
-    ? JSON.parse(selectedHistory.summary || "[]")
-    : [];
+  const projects: GitLabProjectResult[] = useMemo(
+    () => selectedHistory ? JSON.parse(selectedHistory.summary || "[]") : [],
+    [selectedHistory],
+  );
 
   // Latest Walkin analysis date across all projects
   const latestWalkinDate = useMemo(() => {
