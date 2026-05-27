@@ -1,5 +1,6 @@
 import { useMemo } from "react";
-import type { GitLabScanHistory, GitLabProjectResult } from "@/types";
+import type { GitLabScanHistory, DeveloperStat } from "@/types";
+import { CheckCircle, XCircle, GitCommit, Plus, Minus, GitPullRequest } from "lucide-react";
 
 interface TrendChartProps {
   history: GitLabScanHistory[];
@@ -54,16 +55,11 @@ export function TrendChart({ history }: TrendChartProps) {
         <div>
           <h4 className="mb-4 text-sm font-medium">单测覆盖率趋势</h4>
           <div className="relative h-24 border-l border-b">
-            {/* Y-axis labels */}
             <div className="absolute -left-8 top-0 text-xs text-muted-foreground">100%</div>
             <div className="absolute -left-8 bottom-0 text-xs text-muted-foreground">0%</div>
-
-            {/* Grid lines */}
             <div className="absolute top-1/4 left-0 right-0 border-t border-dashed border-muted" />
             <div className="absolute top-1/2 left-0 right-0 border-t border-dashed border-muted" />
             <div className="absolute top-3/4 left-0 right-0 border-t border-dashed border-muted" />
-
-            {/* Line */}
             <svg className="absolute inset-0 w-full h-full" preserveAspectRatio="none">
               <polyline
                 points={weeks.map((week, i) => {
@@ -111,78 +107,68 @@ export function ContributorRanking({ history }: { history: GitLabScanHistory[] }
   if (history.length === 0) return null;
 
   const latestHistory = history[0];
-  const projects: GitLabProjectResult[] = JSON.parse(latestHistory.summary || "[]");
+  const devStats: DeveloperStat[] = JSON.parse(latestHistory.developer_stats || "[]");
 
-  // Calculate contribution per person with active projects
-  const contributionMap = new Map<string, {
-    commits: number;
-    linesAdded: number;
-    linesRemoved: number;
-    projects: Set<string>;
-  }>();
+  if (devStats.length === 0) return null;
 
-  projects.forEach((project) => {
-    const perContributor = project.contributors.length > 0
-      ? Math.floor(project.commits / project.contributors.length)
-      : project.commits;
-
-    const linesPerContributor = project.contributors.length > 0
-      ? Math.floor(project.lines_added / project.contributors.length)
-      : project.lines_added;
-
-    const linesRemovedPerContributor = project.contributors.length > 0
-      ? Math.floor(project.lines_removed / project.contributors.length)
-      : project.lines_removed;
-
-    const shortName = project.project_name.split("/").pop() || project.project_name;
-
-    project.contributors.forEach((contributor) => {
-      const existing = contributionMap.get(contributor) || {
-        commits: 0,
-        linesAdded: 0,
-        linesRemoved: 0,
-        projects: new Set<string>(),
-      };
-      contributionMap.set(contributor, {
-        commits: existing.commits + perContributor,
-        linesAdded: existing.linesAdded + linesPerContributor,
-        linesRemoved: existing.linesRemoved + linesRemovedPerContributor,
-        projects: new Set([...existing.projects, shortName]),
-      });
-    });
-  });
-
-  const sortedContributors = Array.from(contributionMap.entries())
-    .sort((a, b) => b[1].commits - a[1].commits)
-    .slice(0, 5);
-
-  if (sortedContributors.length === 0) return null;
+  const maxCommits = Math.max(devStats[0]?.commits || 1, 1);
 
   return (
-    <div className="p-6 pt-0">
-      <div className="rounded-lg border bg-card/50 p-4">
-        <h4 className="mb-4 text-sm font-medium flex items-center gap-2">
-          👥 本周贡献者排行
-        </h4>
-        <div className="space-y-3">
-          {sortedContributors.map(([name, stats], index) => (
-            <div key={name} className="flex items-center gap-3 text-sm">
-              <span className="w-6 text-center font-medium">
-                {index === 0 && "🥇"}
-                {index === 1 && "🥈"}
-                {index === 2 && "🥉"}
-                {index > 2 && index + 1}
-              </span>
-              <span className="w-20 truncate font-medium" title={name}>{name}</span>
-              <span className="text-muted-foreground text-xs w-16">{stats.commits}次提交</span>
-              <span className="text-green-600 text-xs w-16">+{formatNum(stats.linesAdded)}</span>
-              <span className="text-red-600 text-xs w-12">-{formatNum(stats.linesRemoved)}</span>
-              <span className="text-muted-foreground text-xs flex-1 truncate" title={[...stats.projects].join(", ")}>
-                {[...stats.projects].slice(0, 2).join(", ")}
-                {stats.projects.size > 2 && `+${stats.projects.size - 2}`}
-              </span>
-            </div>
-          ))}
+    <div className="p-6 pt-0 h-full">
+      <div className="rounded-lg border bg-card/50 p-4 h-full">
+        <h4 className="mb-4 text-sm font-medium">开发者贡献排行</h4>
+        <div className="space-y-2">
+          {devStats.slice(0, 8).map((dev, index) => {
+            const barWidth = (dev.commits / maxCommits) * 100;
+            return (
+              <div key={dev.name} className="flex items-center gap-3">
+                <span className="w-6 text-center text-sm font-medium text-muted-foreground">
+                  {index === 0 && "🥇"}
+                  {index === 1 && "🥈"}
+                  {index === 2 && "🥉"}
+                  {index > 2 && index + 1}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between mb-0.5">
+                    <span className="text-sm font-medium truncate" title={dev.name}>
+                      {dev.name}
+                    </span>
+                    <span className="text-xs text-muted-foreground ml-2 flex-shrink-0">
+                      {dev.projects.length}个项目
+                    </span>
+                  </div>
+                  <div className="w-full bg-muted rounded-full h-1.5">
+                    <div
+                      className="h-1.5 rounded-full bg-gradient-to-r from-violet-500 to-indigo-500"
+                      style={{ width: `${Math.max(barWidth, 2)}%` }}
+                    />
+                  </div>
+                  <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-0.5">
+                      <GitCommit className="h-3 w-3" />{dev.commits}
+                    </span>
+                    <span className="flex items-center gap-0.5 text-green-600">
+                      <Plus className="h-3 w-3" />{formatNum(dev.lines_added)}
+                    </span>
+                    <span className="flex items-center gap-0.5 text-red-600">
+                      <Minus className="h-3 w-3" />{formatNum(dev.lines_removed)}
+                    </span>
+                    {dev.mrs_created > 0 && (
+                      <span className="flex items-center gap-0.5">
+                        <GitPullRequest className="h-3 w-3" />{dev.mrs_created}
+                      </span>
+                    )}
+                    {dev.mrs_pipeline_success + dev.mrs_pipeline_failed > 0 && (
+                      <span className="flex items-center gap-0.5 ml-auto">
+                        <CheckCircle className="h-3 w-3 text-green-500" />{dev.mrs_pipeline_success}
+                        <XCircle className="h-3 w-3 text-red-500 ml-0.5" />{dev.mrs_pipeline_failed}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>

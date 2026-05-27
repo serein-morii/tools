@@ -334,6 +334,17 @@ export interface MrDetail {
   created_at: string;
 }
 
+export interface DeveloperStat {
+  name: string;
+  commits: number;
+  lines_added: number;
+  lines_removed: number;
+  mrs_created: number;
+  mrs_pipeline_success: number;
+  mrs_pipeline_failed: number;
+  projects: string[];
+}
+
 export interface GitLabScanResult {
   scan_at: number;
   scan_type: string;
@@ -348,6 +359,7 @@ export interface GitLabScanResult {
   pipeline_total: number;
   pipeline_success: number;
   pipeline_failed: number;
+  developer_stats: DeveloperStat[];
 }
 
 export interface GitLabProjectResult {
@@ -383,4 +395,5 @@ export interface GitLabScanHistory {
   pipeline_total: number;
   pipeline_success: number;
   pipeline_failed: number;
+  developer_stats: string;
 }

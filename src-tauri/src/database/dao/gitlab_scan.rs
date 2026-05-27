@@ -22,6 +22,7 @@ pub struct GitLabScanHistory {
     pub pipeline_total: i32,
     pub pipeline_success: i32,
     pub pipeline_failed: i32,
+    pub developer_stats: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -41,14 +42,15 @@ impl GitLabScanDao {
 
         let contributors = serde_json::to_string(&req.result.contributors).unwrap_or_else(|_| "[]".to_string());
         let summary = serde_json::to_string(&req.result.projects).unwrap_or_else(|_| "[]".to_string());
+        let developer_stats = serde_json::to_string(&req.result.developer_stats).unwrap_or_else(|_| "[]".to_string());
 
         conn.execute(
             "INSERT INTO gitlab_scan_history (
                 id, scan_type, scan_at, scan_range_start, scan_range_end,
                 total_projects, total_commits, total_lines_added, total_lines_removed,
                 test_projects, pending_mrs, contributors, summary, created_at,
-                pipeline_total, pipeline_success, pipeline_failed
-            ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17)",
+                pipeline_total, pipeline_success, pipeline_failed, developer_stats
+            ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18)",
             params![
                 id,
                 req.scan_type,
@@ -67,6 +69,7 @@ impl GitLabScanDao {
                 req.result.pipeline_total,
                 req.result.pipeline_success,
                 req.result.pipeline_failed,
+                developer_stats,
             ],
         )?;
 
@@ -88,6 +91,7 @@ impl GitLabScanDao {
             pipeline_total: req.result.pipeline_total,
             pipeline_success: req.result.pipeline_success,
             pipeline_failed: req.result.pipeline_failed,
+            developer_stats,
         })
     }
 
@@ -97,7 +101,7 @@ impl GitLabScanDao {
             "SELECT id, scan_type, scan_at, scan_range_start, scan_range_end,
                     total_projects, total_commits, total_lines_added, total_lines_removed,
                     test_projects, pending_mrs, contributors, summary, created_at,
-                    pipeline_total, pipeline_success, pipeline_failed
+                    pipeline_total, pipeline_success, pipeline_failed, developer_stats
              FROM gitlab_scan_history
              ORDER BY scan_at DESC
              LIMIT ?1"
@@ -122,6 +126,7 @@ impl GitLabScanDao {
                 pipeline_total: row.get(14)?,
                 pipeline_success: row.get(15)?,
                 pipeline_failed: row.get(16)?,
+                developer_stats: row.get(17)?,
             })
         })?;
 
@@ -138,7 +143,7 @@ impl GitLabScanDao {
             "SELECT id, scan_type, scan_at, scan_range_start, scan_range_end,
                     total_projects, total_commits, total_lines_added, total_lines_removed,
                     test_projects, pending_mrs, contributors, summary, created_at,
-                    pipeline_total, pipeline_success, pipeline_failed
+                    pipeline_total, pipeline_success, pipeline_failed, developer_stats
              FROM gitlab_scan_history
              WHERE id = ?1"
         )?;
@@ -162,6 +167,7 @@ impl GitLabScanDao {
                 pipeline_total: row.get(14)?,
                 pipeline_success: row.get(15)?,
                 pipeline_failed: row.get(16)?,
+                developer_stats: row.get(17)?,
             })
         })?;
 

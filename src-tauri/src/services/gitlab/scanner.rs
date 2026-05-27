@@ -1,7 +1,7 @@
 use crate::error::Result;
 use super::client::{GitLabClient, GitLabProject, GitLabCommit};
 use serde::{Deserialize, Serialize};
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use chrono::Datelike;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -40,6 +40,7 @@ pub struct ScanResult {
     pub pipeline_total: i32,
     pub pipeline_success: i32,
     pub pipeline_failed: i32,
+    pub developer_stats: Vec<DeveloperStat>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -56,6 +57,7 @@ pub struct ProjectScanResult {
     pub contributors: Vec<String>,
     pub last_commit_at: String,
     pub latest_pipeline_status: Option<String>,
+    pub author_stats: Vec<AuthorStat>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -68,6 +70,26 @@ pub struct MrDetail {
     pub web_url: String,
     pub pipeline_status: Option<String>,
     pub created_at: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AuthorStat {
+    pub name: String,
+    pub commits: i32,
+    pub lines_added: i64,
+    pub lines_removed: i64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DeveloperStat {
+    pub name: String,
+    pub commits: i32,
+    pub lines_added: i64,
+    pub lines_removed: i64,
+    pub mrs_created: i32,
+    pub mrs_pipeline_success: i32,
+    pub mrs_pipeline_failed: i32,
+    pub projects: Vec<String>,
 }
 
 pub struct GitLabScanner {
@@ -98,8 +120,10 @@ impl GitLabScanner {
         let mut pipeline_success = 0i32;
         let mut pipeline_failed = 0i32;
         let mut all_contributors: HashSet<String> = HashSet::new();
+        let mut dev_map: HashMap<String, DeveloperStat> = HashMap::new();
 
         for project in filtered_projects {
+            let project_name = project.path_with_namespace.clone();
             match self.scan_project(&project, &since).await {
                 Ok(result) => {
                     total_commits += result.commits;
@@ -116,6 +140,45 @@ impl GitLabScanner {
                             Some(_) => { pipeline_total += 1; }
                             None => {}
                         }
+                        // Count MRs per developer
+                        let dev = dev_map.entry(mr.author.clone()).or_insert_with(|| DeveloperStat {
+                            name: mr.author.clone(),
+                            commits: 0,
+                            lines_added: 0,
+                            lines_removed: 0,
+                            mrs_created: 0,
+                            mrs_pipeline_success: 0,
+                            mrs_pipeline_failed: 0,
+                            projects: Vec::new(),
+                        });
+                        dev.mrs_created += 1;
+                        match &mr.pipeline_status {
+                            Some(s) if s == "success" => dev.mrs_pipeline_success += 1,
+                            Some(s) if s == "failed" || s == "canceled" => dev.mrs_pipeline_failed += 1,
+                            _ => {}
+                        }
+                        if !dev.projects.contains(&project_name) {
+                            dev.projects.push(project_name.clone());
+                        }
+                    }
+                    // Aggregate per-author stats
+                    for author in &result.author_stats {
+                        let dev = dev_map.entry(author.name.clone()).or_insert_with(|| DeveloperStat {
+                            name: author.name.clone(),
+                            commits: 0,
+                            lines_added: 0,
+                            lines_removed: 0,
+                            mrs_created: 0,
+                            mrs_pipeline_success: 0,
+                            mrs_pipeline_failed: 0,
+                            projects: Vec::new(),
+                        });
+                        dev.commits += author.commits;
+                        dev.lines_added += author.lines_added;
+                        dev.lines_removed += author.lines_removed;
+                        if !dev.projects.contains(&project_name) {
+                            dev.projects.push(project_name.clone());
+                        }
                     }
                     for contributor in &result.contributors {
                         all_contributors.insert(contributor.clone());
@@ -127,6 +190,9 @@ impl GitLabScanner {
                 }
             }
         }
+
+        let mut developer_stats: Vec<DeveloperStat> = dev_map.into_values().collect();
+        developer_stats.sort_by(|a, b| b.commits.cmp(&a.commits));
 
         Ok(ScanResult {
             scan_at,
@@ -142,6 +208,7 @@ impl GitLabScanner {
             pipeline_total,
             pipeline_success,
             pipeline_failed,
+            developer_stats,
         })
     }
 
@@ -202,34 +269,53 @@ impl GitLabScanner {
                 contributors: Vec::new(),
                 last_commit_at: String::new(),
                 latest_pipeline_status: None,
+                author_stats: Vec::new(),
             });
         }
 
-        // Collect contributors
+        // Collect contributors and per-author commit counts
         let mut contributors_set: HashSet<String> = HashSet::new();
+        let mut author_commits: HashMap<String, i32> = HashMap::new();
         for commit in &commits {
-            contributors_set.insert(commit.author_name.clone());
+            let name = &commit.author_name;
+            contributors_set.insert(name.clone());
+            *author_commits.entry(name.clone()).or_insert(0) += 1;
         }
 
         // Detect test commits
         let test_commits = self.detect_test_commits(&commits);
         let has_test = !test_commits.is_empty();
 
-        // Calculate diff stats
+        // Calculate diff stats and per-author line counts
         let mut total_lines_added = 0i64;
         let mut total_lines_removed = 0i64;
+        let mut author_added: HashMap<String, i64> = HashMap::new();
+        let mut author_removed: HashMap<String, i64> = HashMap::new();
 
         for commit in &commits {
             match self.client.get_commit_diff(project.id, &commit.id).await {
                 Ok(diff) => {
                     total_lines_added += diff.additions;
                     total_lines_removed += diff.deletions;
+                    *author_added.entry(commit.author_name.clone()).or_insert(0) += diff.additions;
+                    *author_removed.entry(commit.author_name.clone()).or_insert(0) += diff.deletions;
                 }
                 Err(e) => {
                     log::debug!("Failed to get diff for commit {}: {}", commit.short_id, e);
                 }
             }
         }
+
+        // Build per-author stats
+        let mut author_stats: Vec<AuthorStat> = contributors_set.iter()
+            .map(|name| AuthorStat {
+                name: name.clone(),
+                commits: author_commits.get(name).copied().unwrap_or(0),
+                lines_added: author_added.get(name).copied().unwrap_or(0),
+                lines_removed: author_removed.get(name).copied().unwrap_or(0),
+            })
+            .collect();
+        author_stats.sort_by(|a, b| b.commits.cmp(&a.commits));
 
         // Get pipelines (fetch before MRs so we can match)
         let pipelines = self.client.get_project_pipelines(project.id, 20).await?;
@@ -275,6 +361,7 @@ impl GitLabScanner {
             contributors: contributors_set.into_iter().collect(),
             last_commit_at,
             latest_pipeline_status,
+            author_stats,
         })
     }
 

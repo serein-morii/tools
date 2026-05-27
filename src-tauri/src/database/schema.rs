@@ -120,7 +120,8 @@ pub fn init_schema(conn: &Connection) -> Result<()> {
             created_at          INTEGER NOT NULL,
             pipeline_total      INTEGER DEFAULT 0,
             pipeline_success    INTEGER DEFAULT 0,
-            pipeline_failed     INTEGER DEFAULT 0
+            pipeline_failed     INTEGER DEFAULT 0,
+            developer_stats     TEXT DEFAULT '[]'
         );
 
         -- Create indexes
@@ -152,6 +153,7 @@ pub fn init_schema(conn: &Connection) -> Result<()> {
     let _ = conn.execute("ALTER TABLE gitlab_scan_history ADD COLUMN pipeline_total INTEGER DEFAULT 0", []);
     let _ = conn.execute("ALTER TABLE gitlab_scan_history ADD COLUMN pipeline_success INTEGER DEFAULT 0", []);
     let _ = conn.execute("ALTER TABLE gitlab_scan_history ADD COLUMN pipeline_failed INTEGER DEFAULT 0", []);
+    let _ = conn.execute("ALTER TABLE gitlab_scan_history ADD COLUMN developer_stats TEXT DEFAULT '[]'", []);
 
     Ok(())
 }
