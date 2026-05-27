@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { Link2, CheckCircle, XCircle, Loader2, Plus, X } from "lucide-react";
+import { Link2, CheckCircle, XCircle, Loader2, Plus, X, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useGitLabConfig, useSaveGitLabConfig, useTestGitLabConnection } from "@/lib/query/gitlabQueries";
 import { useChannels } from "@/lib/query/channelQueries";
@@ -21,6 +21,15 @@ const defaultConfig: GitLabConfig = {
   scan_range_days: 7,
 };
 
+function isValidUrl(url: string): boolean {
+  try {
+    new URL(url);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function GitLabSettingsPage() {
   const { data: config, isLoading } = useGitLabConfig();
   const { data: channels } = useChannels();
@@ -32,6 +41,7 @@ export function GitLabSettingsPage() {
   const [connectionStatus, setConnectionStatus] = useState<"idle" | "testing" | "success" | "failed">("idle");
   const [newProject, setNewProject] = useState("");
   const [newKeyword, setNewKeyword] = useState("");
+  const [validationErrors, setValidationErrors] = useState<{ url?: string; token?: string }>({});
 
   useEffect(() => {
     if (config) {
@@ -39,7 +49,31 @@ export function GitLabSettingsPage() {
     }
   }, [config]);
 
+  const validateForm = (): boolean => {
+    const errors: { url?: string; token?: string } = {};
+
+    if (!formData.url) {
+      errors.url = "服务器地址不能为空";
+    } else if (!isValidUrl(formData.url)) {
+      errors.url = "请输入有效的URL地址（如 http://code.jms.com）";
+    }
+
+    if (formData.auth_type === "token" && !formData.token) {
+      errors.token = "Token不能为空";
+    }
+
+    if (formData.auth_type === "password" && (!formData.username || !formData.password)) {
+      errors.token = "用户名和密码不能为空";
+    }
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleTest = async () => {
+    if (!validateForm()) {
+      return;
+    }
     setConnectionStatus("testing");
     try {
       const result = await testConnection.mutateAsync(formData);
@@ -47,20 +81,26 @@ export function GitLabSettingsPage() {
       if (result) {
         toast.success("连接成功");
       } else {
-        toast.error("连接失败");
+        toast.error("连接失败：请检查URL和认证信息");
       }
-    } catch (error) {
+    } catch (error: unknown) {
       setConnectionStatus("failed");
-      toast.error("连接失败: " + String(error));
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      toast.error("连接失败: " + errorMessage);
     }
   };
 
   const handleSave = async () => {
+    if (!validateForm()) {
+      toast.error("请检查配置信息");
+      return;
+    }
     try {
       await saveConfig.mutateAsync(formData);
       toast.success("配置已保存");
-    } catch (error) {
-      toast.error("保存失败: " + String(error));
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      toast.error("保存失败: " + errorMessage);
     }
   };
 
@@ -103,6 +143,7 @@ export function GitLabSettingsPage() {
             <Link2 className="h-5 w-5" />
             GitLab 连接配置
           </CardTitle>
+          <CardDescription>配置 GitLab 服务器连接信息</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
@@ -110,8 +151,16 @@ export function GitLabSettingsPage() {
             <Input
               placeholder="http://code.jms.com"
               value={formData.url}
-              onChange={(e) => setFormData({ ...formData, url: e.target.value })}
+              onChange={(e) => {
+                setFormData({ ...formData, url: e.target.value });
+                setValidationErrors({ ...validationErrors, url: undefined });
+              }}
             />
+            {validationErrors.url && (
+              <p className="text-sm text-red-500 flex items-center gap-1">
+                <AlertCircle className="h-3 w-3" /> {validationErrors.url}
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">

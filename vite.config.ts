@@ -19,4 +19,16 @@ export default defineConfig({
       ignored: ["**/src-tauri/**"],
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          "vendor-react": ["react", "react-dom", "react-router-dom"],
+          "vendor-tanstack": ["@tanstack/react-query"],
+          "vendor-lucide": ["lucide-react"],
+        },
+      },
+    },
+    chunkSizeWarningLimit: 500,
+  },
 });

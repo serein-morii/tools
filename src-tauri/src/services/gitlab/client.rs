@@ -68,7 +68,9 @@ impl GitLabClient {
         let base_url = base_url.trim_end_matches('/').to_string();
 
         let http_client = Client::builder()
-            .timeout(std::time::Duration::from_secs(30))
+            .timeout(std::time::Duration::from_secs(60))
+            .connect_timeout(std::time::Duration::from_secs(10))
+            .pool_idle_timeout(std::time::Duration::from_secs(30))
             .build()
             .map_err(|e| ToolsError::Http(format!("Failed to create HTTP client: {}", e)))?;
 

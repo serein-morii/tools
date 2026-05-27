@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { RefreshCw, Download, BarChart3, Users, GitCommit, CheckCircle, Plus, Minus, GitPullRequest, TrendingUp, TrendingDown, MinusCircle, ExternalLink } from "lucide-react";
+import { RefreshCw, Download, BarChart3, Users, GitCommit, CheckCircle, Plus, Minus, GitPullRequest, TrendingUp, TrendingDown, MinusCircle, ExternalLink, Inbox } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useGitLabConfigured, useGitLabScanHistory, useTriggerGitLabScan } from "@/lib/query/gitlabQueries";
@@ -321,19 +321,17 @@ export function GitLabOverviewPage() {
   };
 
   const handleScan = async () => {
+    const scanId = toast.loading("正在扫描，请稍候...");
     try {
-      toast.loading("正在扫描...");
-      const result = await triggerScan.mutateAsync("manual");
-      console.log("Scan result:", result);
-      toast.success("扫描完成");
+      await triggerScan.mutateAsync("manual");
+      toast.success("扫描完成", { id: scanId });
     } catch (error: unknown) {
-      console.error("Scan error:", error);
       const errorMessage = error instanceof Error
         ? error.message
         : typeof error === 'object' && error !== null && 'message' in error
           ? String((error as { message?: string }).message)
           : String(error);
-      toast.error("扫描失败: " + errorMessage);
+      toast.error("扫描失败: " + errorMessage, { id: scanId });
     }
   };
 
@@ -383,32 +381,45 @@ export function GitLabOverviewPage() {
       {/* Summary Cards */}
       <SummaryCards current={latestHistory} previous={previousHistory} />
 
-      {/* Trend Charts */}
-      <div className="border-t">
-        <div className="px-6 py-4">
-          <h3 className="font-semibold">趋势分析</h3>
+      {/* Empty State */}
+      {!latestHistory && (
+        <div className="flex flex-col items-center justify-center py-12 px-6">
+          <Inbox className="h-16 w-16 text-muted-foreground mb-4" />
+          <p className="text-lg font-medium mb-2">暂无扫描数据</p>
+          <p className="text-sm text-muted-foreground mb-4">点击"立即扫描"开始第一次扫描</p>
         </div>
-        <div className="grid grid-cols-2 gap-0">
-          <TrendChart history={history || []} />
-          <ContributorRanking history={history || []} />
-        </div>
-      </div>
+      )}
 
-      {/* MR Kanban */}
-      <div className="border-t">
-        <div className="px-6 py-4">
-          <h3 className="font-semibold">MR 看板</h3>
-        </div>
-        <MrKanban projects={projects} />
-      </div>
+      {latestHistory && (
+        <>
+          {/* Trend Charts */}
+          <div className="border-t">
+            <div className="px-6 py-4">
+              <h3 className="font-semibold">趋势分析</h3>
+            </div>
+            <div className="grid grid-cols-2 gap-0">
+              <TrendChart history={history || []} />
+              <ContributorRanking history={history || []} />
+            </div>
+          </div>
 
-      {/* Project Table */}
-      <div className="border-t">
-        <div className="px-6 py-4">
-          <h3 className="font-semibold">项目详情</h3>
-        </div>
-        <ProjectTable projects={projects} previousProjects={previousProjects} />
-      </div>
+          {/* MR Kanban */}
+          <div className="border-t">
+            <div className="px-6 py-4">
+              <h3 className="font-semibold">MR 看板</h3>
+            </div>
+            <MrKanban projects={projects} />
+          </div>
+
+          {/* Project Table */}
+          <div className="border-t">
+            <div className="px-6 py-4">
+              <h3 className="font-semibold">项目详情</h3>
+            </div>
+            <ProjectTable projects={projects} previousProjects={previousProjects} />
+          </div>
+        </>
+      )}
     </div>
   );
 }
