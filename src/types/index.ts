@@ -329,6 +329,7 @@ export interface GitLabConfig {
   auth_type: "token" | "password";
   // Selected profile IDs
   selected_token_id?: string;
+  selected_token_ids?: string[]; // Multi-select for token profiles
   selected_ldap_id?: string;
   // Token profiles (multiple tokens)
   token_profiles: TokenProfile[];

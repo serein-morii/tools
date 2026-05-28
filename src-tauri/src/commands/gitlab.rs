@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use std::collections::HashSet;
 use tauri::{State, AppHandle, Emitter};
 use serde::{Deserialize, Serialize};
 use crate::database::{Database, dao::settings::SettingsDao, dao::gitlab_scan::{GitLabScanDao, GitLabScanHistory, CreateGitLabScanRequest}, dao::channel::ChannelDao};
@@ -9,9 +10,31 @@ use crate::services::walkin::{WalkinClient, WalkinAuth, ProjectMapping, CaptchaD
 use crate::error::{Result, ToolsError};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TokenProfile {
+    pub id: String,
+    pub token: String,
+    pub label: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LdapProfile {
+    pub id: String,
+    pub username: String,
+    pub password: String,
+    pub label: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GitLabConfig {
     pub url: String,
     pub auth_type: String,
+    // Multi-token support
+    pub token_profiles: Vec<TokenProfile>,
+    pub selected_token_ids: Vec<String>,
+    // Multi-LDAP support
+    pub ldap_profiles: Vec<LdapProfile>,
+    pub selected_ldap_id: Option<String>,
+    // Legacy fields for backward compatibility
     pub token: Option<String>,
     pub username: Option<String>,
     pub password: Option<String>,
@@ -40,6 +63,13 @@ impl Default for GitLabConfig {
         Self {
             url: String::new(),
             auth_type: "token".to_string(),
+            token_profiles: vec![
+                TokenProfile { id: "token-1".to_string(), token: "W9aPbyo6a2GGKmzsxYWL".to_string(), label: "孙强".to_string() },
+                TokenProfile { id: "token-2".to_string(), token: "Kf8mydzuhw2xDwmhsmM4".to_string(), label: "海兵".to_string() },
+            ],
+            selected_token_ids: vec!["token-1".to_string(), "token-2".to_string()],
+            ldap_profiles: vec![],
+            selected_ldap_id: None,
             token: None,
             username: None,
             password: None,
@@ -96,9 +126,37 @@ fn get_gitlab_config_from_settings(conn: &rusqlite::Connection) -> Result<GitLab
             .unwrap_or_default()
     };
 
+    let parse_token_profiles = || -> Vec<TokenProfile> {
+        settings.iter()
+            .find(|s| s.key == "gitlab_token_profiles")
+            .and_then(|s| serde_json::from_str(&s.value).ok())
+            .unwrap_or_else(|| vec![
+                TokenProfile { id: "token-1".to_string(), token: "W9aPbyo6a2GGKmzsxYWL".to_string(), label: "孙强".to_string() },
+                TokenProfile { id: "token-2".to_string(), token: "Kf8mydzuhw2xDwmhsmM4".to_string(), label: "海兵".to_string() },
+            ])
+    };
+
+    let parse_ldap_profiles = || -> Vec<LdapProfile> {
+        settings.iter()
+            .find(|s| s.key == "gitlab_ldap_profiles")
+            .and_then(|s| serde_json::from_str(&s.value).ok())
+            .unwrap_or_default()
+    };
+
+    let parse_selected_token_ids = || -> Vec<String> {
+        settings.iter()
+            .find(|s| s.key == "gitlab_selected_token_ids")
+            .and_then(|s| serde_json::from_str(&s.value).ok())
+            .unwrap_or_else(|| vec!["token-1".to_string(), "token-2".to_string()])
+    };
+
     Ok(GitLabConfig {
         url: get_setting("gitlab_url", ""),
         auth_type: get_setting("gitlab_auth_type", "token"),
+        token_profiles: parse_token_profiles(),
+        selected_token_ids: parse_selected_token_ids(),
+        ldap_profiles: parse_ldap_profiles(),
+        selected_ldap_id: get_setting_opt("gitlab_selected_ldap_id"),
         token: get_setting_opt("gitlab_token"),
         username: get_setting_opt("gitlab_username"),
         password: get_setting_opt("gitlab_password"),
@@ -127,6 +185,17 @@ fn save_gitlab_config_to_settings(conn: &rusqlite::Connection, config: &GitLabCo
     SettingsDao::upsert(conn, "gitlab_url", &config.url)?;
     SettingsDao::upsert(conn, "gitlab_auth_type", &config.auth_type)?;
 
+    // Save token profiles (multi-token support)
+    SettingsDao::upsert(conn, "gitlab_token_profiles", &serde_json::to_string(&config.token_profiles).unwrap_or_else(|_| "[]".to_string()))?;
+    SettingsDao::upsert(conn, "gitlab_selected_token_ids", &serde_json::to_string(&config.selected_token_ids).unwrap_or_else(|_| "[]".to_string()))?;
+
+    // Save LDAP profiles (multi-LDAP support)
+    SettingsDao::upsert(conn, "gitlab_ldap_profiles", &serde_json::to_string(&config.ldap_profiles).unwrap_or_else(|_| "[]".to_string()))?;
+    if let Some(ref id) = config.selected_ldap_id {
+        SettingsDao::upsert(conn, "gitlab_selected_ldap_id", id)?;
+    }
+
+    // Legacy fields
     if let Some(token) = &config.token {
         SettingsDao::upsert(conn, "gitlab_token", token)?;
     }
@@ -224,16 +293,24 @@ pub async fn trigger_gitlab_scan(
         return Err(ToolsError::Http("GitLab URL is not configured".to_string()));
     }
 
-    let auth = match config.auth_type.as_str() {
-        "token" => GitLabAuth::Token(config.token.clone().unwrap_or_default()),
-        "password" => GitLabAuth::Password {
-            username: config.username.clone().unwrap_or_default(),
-            password: config.password.clone().unwrap_or_default(),
-        },
-        _ => return Err(ToolsError::Http("Invalid auth type".to_string())),
+    // Get selected token IDs (default to all if empty)
+    let selected_token_ids = if config.selected_token_ids.is_empty() {
+        config.token_profiles.iter().map(|p| p.id.clone()).collect::<Vec<_>>()
+    } else {
+        config.selected_token_ids.clone()
     };
 
-    let client = GitLabClient::new(&config.url, auth)?;
+    // Get selected tokens
+    let selected_tokens: Vec<&TokenProfile> = config.token_profiles
+        .iter()
+        .filter(|p| selected_token_ids.contains(&p.id))
+        .collect();
+
+    if selected_tokens.is_empty() {
+        return Err(ToolsError::Http("No token profiles selected".to_string()));
+    }
+
+    log::info!("Scanning with {} token(s)", selected_tokens.len());
 
     let filter_mode = match config.filter_mode.as_str() {
         "include" => FilterMode::Include,
@@ -248,18 +325,90 @@ pub async fn trigger_gitlab_scan(
 
     let scan_config = ScanConfig {
         filter_mode,
-        filter_projects: config.filter_projects,
-        test_keywords: config.test_keywords,
+        filter_projects: config.filter_projects.clone(),
+        test_keywords: config.test_keywords.clone(),
         scan_range,
     };
 
-    let scanner = GitLabScanner::new(client, scan_config);
+    // Scan with each token and merge results
+    let mut merged_result: Option<ScanResult> = None;
+    let mut seen_project_ids: std::collections::HashSet<i64> = std::collections::HashSet::new();
+    let total_tokens = selected_tokens.len();
+    let mut token_idx = 0;
 
-    // Scan with progress callback
-    let app_clone = app.clone();
-    let mut result = scanner.scan_with_progress(&scan_type, move |progress| {
-        let _ = app_clone.emit("gitlab-scan-progress", &progress);
-    }).await?;
+    for token_profile in selected_tokens {
+        token_idx += 1;
+        log::info!("Scanning with token: {} ({}/{})", token_profile.label, token_idx, total_tokens);
+
+        let auth = GitLabAuth::Token(token_profile.token.clone());
+        let client = GitLabClient::new(&config.url, auth)?;
+
+        let scanner = GitLabScanner::new(client, scan_config.clone());
+
+        // Scan with progress callback
+        let app_clone = app.clone();
+        let token_label = token_profile.label.clone();
+        let result = scanner.scan_with_progress(&scan_type, move |progress| {
+            let _ = app_clone.emit("gitlab-scan-progress", &ScanProgress {
+                current: progress.current,
+                total: progress.total,
+                project_name: format!("[{}] {}", token_label, progress.project_name),
+                commits_scanned: progress.commits_scanned,
+                commits_total: progress.commits_total,
+                phase: progress.phase.clone(),
+            });
+        }).await?;
+
+        // Merge results, deduplicating by project_id
+        if let Some(ref mut merged) = merged_result {
+            for project in result.projects {
+                if !seen_project_ids.contains(&project.project_id) {
+                    seen_project_ids.insert(project.project_id);
+                    merged.projects.push(project);
+                }
+            }
+            // Aggregate totals
+            merged.total_commits += result.total_commits;
+            merged.total_lines_added += result.total_lines_added;
+            merged.total_lines_removed += result.total_lines_removed;
+            merged.test_projects += result.test_projects;
+            merged.pending_mrs += result.pending_mrs;
+            merged.pipeline_total += result.pipeline_total;
+            merged.pipeline_success += result.pipeline_success;
+            merged.pipeline_failed += result.pipeline_failed;
+            // Merge contributors
+            for contributor in result.contributors {
+                if !merged.contributors.contains(&contributor) {
+                    merged.contributors.push(contributor);
+                }
+            }
+            // Merge developer stats
+            for dev in result.developer_stats {
+                if let Some(existing) = merged.developer_stats.iter_mut().find(|d| d.name == dev.name) {
+                    existing.commits += dev.commits;
+                    existing.lines_added += dev.lines_added;
+                    existing.lines_removed += dev.lines_removed;
+                    existing.mrs_created += dev.mrs_created;
+                    existing.mrs_pipeline_success += dev.mrs_pipeline_success;
+                    existing.mrs_pipeline_failed += dev.mrs_pipeline_failed;
+                    for p in dev.projects {
+                        if !existing.projects.contains(&p) {
+                            existing.projects.push(p);
+                        }
+                    }
+                } else {
+                    merged.developer_stats.push(dev);
+                }
+            }
+            // Update project count
+            merged.total_projects = merged.projects.len() as i32;
+        } else {
+            seen_project_ids.extend(result.projects.iter().map(|p| p.project_id));
+            merged_result = Some(result);
+        }
+    }
+
+    let mut result = merged_result.ok_or_else(|| ToolsError::Http("No scan results".to_string()))?;
 
     // Fetch Walkin metrics if enabled
     log::info!("Walkin config: enabled={}, url={}, has_csrf={}, has_x_auth={}",

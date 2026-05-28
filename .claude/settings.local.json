@@ -3,7 +3,14 @@
     "allow": [
       "Bash(git remote:*)",
       "Bash(git rm:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(ssh -T git@github.com)",
+      "Bash(ssh-add ~/.ssh/serein-morii-GitHub)",
+      "Bash(git config:*)",
+      "Bash(git fetch:*)",
+      "Bash(git pull:*)"
     ]
   }
 }

@@ -2,7 +2,7 @@ import type { GitLabConfig, TokenProfile, LdapProfile } from "@/types";
 
 // Default token profiles
 export const defaultTokenProfiles: TokenProfile[] = [
-  { id: "token-1", token: "yTeXMdEjKoKqvG8ay8VQ", label: "孙强" },
+  { id: "token-1", token: "W9aPbyo6a2GGKmzsxYWL", label: "孙强" },
   { id: "token-2", token: "Kf8mydzuhw2xDwmhsmM4", label: "海兵" },
 ];
 
@@ -16,10 +16,14 @@ export const defaultLdapProfiles: LdapProfile[] = [
   },
 ];
 
+// Default selected token IDs (multi-select)
+export const defaultSelectedTokenIds: string[] = ["token-1", "token-2"];
+
 export const defaultGitLabConfig: GitLabConfig = {
   url: "http://code.jms.com",
   auth_type: "token",
   selected_token_id: "token-1",
+  selected_token_ids: defaultSelectedTokenIds,
   token_profiles: defaultTokenProfiles,
   ldap_profiles: defaultLdapProfiles,
   filter_mode: "include",

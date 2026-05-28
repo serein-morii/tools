@@ -86,11 +86,11 @@ function parseCronToHuman(cron: string): string {
   return `${timeStr} ${weekdayStr}`;
 }
 
-// Token Profile Editor Component
+// Token Profile Editor Component (Multi-select)
 function TokenProfileEditor({
   profiles,
-  selectedId,
-  onSelect,
+  selectedIds,
+  onToggleSelect,
   onUpdate,
   onAdd,
   onDelete,
@@ -98,8 +98,8 @@ function TokenProfileEditor({
   setShowToken,
 }: {
   profiles: TokenProfile[];
-  selectedId?: string;
-  onSelect: (id: string) => void;
+  selectedIds: string[];
+  onToggleSelect: (id: string) => void;
   onUpdate: (profiles: TokenProfile[]) => void;
   onAdd: () => void;
   onDelete: (id: string) => void;
@@ -109,31 +109,35 @@ function TokenProfileEditor({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <label className="text-sm font-medium">Token 配置（可选择、可新增、可修改）</label>
+        <label className="text-sm font-medium">Token 配置（可多选）</label>
         <Button variant="outline" size="sm" onClick={onAdd}>
           <Plus className="h-3.5 w-3.5 mr-1" /> 新增
         </Button>
       </div>
 
-      {/* Profile Selection */}
+      {/* Profile Selection (Multi-select) */}
       <div className="flex flex-wrap gap-2">
-        {profiles.map((profile) => (
-          <Button
-            key={profile.id}
-            variant={selectedId === profile.id ? "default" : "outline"}
-            size="sm"
-            onClick={() => onSelect(profile.id)}
-          >
-            {profile.label || `Token ${profile.id.slice(0, 8)}`}
-          </Button>
-        ))}
+        {profiles.map((profile) => {
+          const isSelected = selectedIds.includes(profile.id);
+          return (
+            <Button
+              key={profile.id}
+              variant={isSelected ? "default" : "outline"}
+              size="sm"
+              onClick={() => onToggleSelect(profile.id)}
+            >
+              {isSelected && <CheckCircle className="h-3 w-3 mr-1" />}
+              {profile.label || `Token ${profile.id.slice(0, 8)}`}
+            </Button>
+          );
+        })}
       </div>
 
-      {/* Selected Profile Details */}
-      {selectedId && (
-        <div className="border rounded-lg p-3 bg-muted/30 space-y-2">
-          {profiles.filter(p => p.id === selectedId).map((profile) => (
-            <div key={profile.id} className="space-y-2">
+      {/* Selected Profiles Details */}
+      {selectedIds.length > 0 && (
+        <div className="space-y-2">
+          {profiles.filter(p => selectedIds.includes(p.id)).map((profile) => (
+            <div key={profile.id} className="border rounded-lg p-3 bg-muted/30 space-y-2">
               <div className="flex items-center gap-2">
                 <Input
                   placeholder="备注/标签"
@@ -171,6 +175,10 @@ function TokenProfileEditor({
           ))}
         </div>
       )}
+
+      <p className="text-xs text-muted-foreground">
+        💡 已选择 {selectedIds.length} 个账号，扫描时会合并所有账号的项目（重复项目只取一个）
+      </p>
     </div>
   );
 }
@@ -289,16 +297,23 @@ export function GitLabSettingsPage() {
       if (!config.token_profiles || config.token_profiles.length === 0) {
         if (config.token) {
           migratedConfig.token_profiles = [{ id: "token-legacy", token: config.token, label: "默认" }];
+          migratedConfig.selected_token_ids = ["token-legacy"];
         } else {
           migratedConfig.token_profiles = defaultConfig.token_profiles;
+          migratedConfig.selected_token_ids = defaultConfig.selected_token_ids;
+        }
+      }
+      // Migrate from old selected_token_id to new selected_token_ids
+      if (!config.selected_token_ids || config.selected_token_ids.length === 0) {
+        if (config.selected_token_id) {
+          migratedConfig.selected_token_ids = [config.selected_token_id];
+        } else if (migratedConfig.token_profiles && migratedConfig.token_profiles.length > 0) {
+          migratedConfig.selected_token_ids = migratedConfig.token_profiles.map(p => p.id);
         }
       }
       if (!config.ldap_profiles || config.ldap_profiles.length === 0) {
         // No ldap profiles in old config - use default
         migratedConfig.ldap_profiles = defaultConfig.ldap_profiles;
-      }
-      if (!config.selected_token_id && migratedConfig.token_profiles.length > 0) {
-        migratedConfig.selected_token_id = migratedConfig.token_profiles[0].id;
       }
       setFormData(migratedConfig);
     }
@@ -390,28 +405,46 @@ export function GitLabSettingsPage() {
     setFormData({ ...formData, test_keywords: formData.test_keywords.filter((k) => k !== keyword) });
   };
 
-  // Token profile handlers
+  // Token profile handlers (multi-select)
   const addTokenProfile = () => {
     const newProfile: TokenProfile = { id: generateId(), token: "", label: "" };
     setFormData({
       ...formData,
       token_profiles: [...formData.token_profiles, newProfile],
-      selected_token_id: newProfile.id,
+      selected_token_ids: [...(formData.selected_token_ids || []), newProfile.id],
     });
   };
 
   const deleteTokenProfile = (id: string) => {
     const updated = formData.token_profiles.filter(p => p.id !== id);
-    const newSelectedId = formData.selected_token_id === id ? updated[0]?.id : formData.selected_token_id;
+    const newSelectedIds = (formData.selected_token_ids || []).filter(i => i !== id);
     setFormData({
       ...formData,
       token_profiles: updated,
-      selected_token_id: newSelectedId,
+      selected_token_ids: newSelectedIds.length > 0 ? newSelectedIds : updated[0] ? [updated[0].id] : [],
     });
   };
 
   const updateTokenProfiles = (profiles: TokenProfile[]) => {
     setFormData({ ...formData, token_profiles: profiles });
+  };
+
+  const toggleTokenSelection = (id: string) => {
+    const currentSelected = formData.selected_token_ids || [];
+    if (currentSelected.includes(id)) {
+      // Remove from selection (but keep at least one)
+      const newSelected = currentSelected.filter(i => i !== id);
+      setFormData({
+        ...formData,
+        selected_token_ids: newSelected.length > 0 ? newSelected : currentSelected,
+      });
+    } else {
+      // Add to selection
+      setFormData({
+        ...formData,
+        selected_token_ids: [...currentSelected, id],
+      });
+    }
   };
 
   // LDAP profile handlers (for Walkin)
@@ -484,8 +517,8 @@ export function GitLabSettingsPage() {
           {/* Token Profiles */}
           <TokenProfileEditor
             profiles={formData.token_profiles}
-            selectedId={formData.selected_token_id}
-            onSelect={(id) => setFormData({ ...formData, selected_token_id: id })}
+            selectedIds={formData.selected_token_ids || []}
+            onToggleSelect={toggleTokenSelection}
             onUpdate={updateTokenProfiles}
             onAdd={addTokenProfile}
             onDelete={deleteTokenProfile}
