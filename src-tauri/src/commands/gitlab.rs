@@ -548,7 +548,7 @@ pub async fn trigger_gitlab_scan(
         let walkin_section = if result.walkin_projects_matched > 0 {
             let coverage_info = match (result.walkin_max_new_coverage, result.walkin_max_coverage) {
                 (Some(new_cov), Some(all_cov)) => format!(
-                    "• 增量覆盖率：{:.2}%\n                 • 全量覆盖率：{:.2}%",
+                    "• 增量覆盖率：{:.2}%\n• 全量覆盖率：{:.2}%",
                     new_cov, all_cov
                 ),
                 (Some(new_cov), None) => format!("• 增量覆盖率：{:.2}%", new_cov),

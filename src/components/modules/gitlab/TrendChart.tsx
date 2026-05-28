@@ -1,6 +1,6 @@
-import { useMemo, useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { GitLabScanHistory, DeveloperStat, GitLabProjectResult } from "@/types";
-import { GitCommit, Plus, Minus, ArrowUpDown, ChevronDown } from "lucide-react";
+import { GitCommit, Plus, Minus, ChevronDown } from "lucide-react";
 
 interface TrendChartProps {
   history: GitLabScanHistory[];
@@ -213,29 +213,6 @@ export function TrendChart({ history }: TrendChartProps) {
 }
 
 export function ContributorRanking({ history }: { history: GitLabScanHistory[] }) {
-  // Sort state with localStorage persistence
-  type SortByType = "commits" | "lines_added" | "lines_removed";
-  const [sortBy, setSortBy] = useState<SortByType>(() => {
-    const saved = localStorage.getItem("gitlab-dev-sort-by");
-    return (saved as SortByType) || "commits";
-  });
-  const [sortOpen, setSortOpen] = useState(false);
-  const sortRef = useMemo(() => ({ current: null as HTMLDivElement | null }), []);
-
-  useEffect(() => {
-    localStorage.setItem("gitlab-dev-sort-by", sortBy);
-  }, [sortBy]);
-
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (sortRef.current && !sortRef.current.contains(e.target as Node)) {
-        setSortOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [sortRef]);
-
   if (history.length === 0) {
     return (
       <div className="px-6 pb-4 flex-1">
@@ -259,95 +236,53 @@ export function ContributorRanking({ history }: { history: GitLabScanHistory[] }
     );
   }
 
-  // Sort by selected metric
+  // Sort by code volume (lines_added + lines_removed)
   devStats = [...devStats].sort((a, b) => {
-    switch (sortBy) {
-      case "commits":
-        return b.commits - a.commits;
-      case "lines_added":
-        return b.lines_added - a.lines_added;
-      case "lines_removed":
-        return b.lines_removed - a.lines_removed;
-      default:
-        return 0;
-    }
+    const aTotal = a.lines_added + a.lines_removed;
+    const bTotal = b.lines_added + b.lines_removed;
+    return bTotal - aTotal;
   });
 
-  const maxValue = Math.max(
-    sortBy === "commits" ? devStats[0]?.commits || 1 :
-    sortBy === "lines_added" ? devStats[0]?.lines_added || 1 :
-    devStats[0]?.lines_removed || 1,
-    1
-  );
+  // Get max code volume for bar scaling
+  const maxCodeVolume = Math.max(...devStats.map(d => d.lines_added + d.lines_removed), 1);
 
-  const sortOptions = [
-    { value: "commits", label: "提交数" },
-    { value: "lines_added", label: "新增代码" },
-    { value: "lines_removed", label: "删除代码" },
-  ];
-
-  const selectedLabel = sortOptions.find(o => o.value === sortBy)?.label || "提交数";
+  // Take only TOP 3
+  const top3 = devStats.slice(0, 3);
 
   return (
     <div className="px-6 pb-4 flex-1">
       <div className="rounded-lg border bg-card/50 p-4 h-full flex flex-col">
         <div className="mb-4 flex items-center justify-between flex-shrink-0">
-          <h4 className="text-sm font-medium">开发者贡献排行</h4>
-          <div ref={(el) => { sortRef.current = el; }} className="relative">
-            <button
-              type="button"
-              onClick={() => setSortOpen(!sortOpen)}
-              className="flex items-center gap-1 h-7 rounded-md border border-input bg-background px-2 text-xs ring-offset-background transition-colors hover:bg-muted/50 focus:outline-none focus:ring-1 focus:ring-ring"
-            >
-              <ArrowUpDown className="h-3 w-3 text-muted-foreground" />
-              <span>{selectedLabel}</span>
-              <ChevronDown className={`h-3 w-3 text-muted-foreground transition-transform ${sortOpen ? "rotate-180" : ""}`} />
-            </button>
-            {sortOpen && (
-              <div className="absolute right-0 z-50 mt-1 min-w-[100px] rounded-md border bg-popover p-1 shadow-md animate-in fade-in-0 zoom-in-95">
-                {sortOptions.map((opt) => (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={() => {
-                      setSortBy(opt.value as typeof sortBy);
-                      setSortOpen(false);
-                    }}
-                    className={`flex w-full items-center rounded-sm px-2 py-1.5 text-xs transition-colors hover:bg-accent hover:text-accent-foreground ${opt.value === sortBy ? "bg-accent/50 font-medium" : ""}`}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          <h4 className="text-sm font-medium">🏆 本周贡献TOP3</h4>
+          <span className="text-xs text-muted-foreground">按代码量排名</span>
         </div>
-        <div className="space-y-2.5 flex-1">
-          {devStats.slice(0, 5).map((dev, index) => {
-            const sortValue = sortBy === "commits" ? dev.commits :
-              sortBy === "lines_added" ? dev.lines_added :
-              dev.lines_removed;
-            const barWidth = (sortValue / maxValue) * 100;
+        <div className="space-y-3 flex-1">
+          {top3.map((dev, index) => {
+            const codeVolume = dev.lines_added + dev.lines_removed;
+            const barWidth = (codeVolume / maxCodeVolume) * 100;
             return (
               <div key={dev.name} className="flex items-center gap-3">
-                <span className="w-5 text-center text-sm font-medium text-muted-foreground flex-shrink-0">
-                  {index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : index + 1}
+                <span className="w-6 text-center text-lg flex-shrink-0">
+                  {index === 0 ? "🥇" : index === 1 ? "🥈" : "🥉"}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between mb-0.5">
+                  <div className="flex items-center justify-between mb-1">
                     <span className="text-sm font-medium truncate" title={dev.name}>{dev.name}</span>
-                    <span className="text-xs text-muted-foreground ml-2 flex-shrink-0">{dev.projects.length}个项目</span>
+                    <span className="text-xs font-semibold text-primary ml-2 flex-shrink-0">
+                      {formatNum(codeVolume)} 行代码
+                    </span>
                   </div>
-                  <div className="w-full bg-muted rounded-full h-1.5">
+                  <div className="w-full bg-muted rounded-full h-2">
                     <div
-                      className="h-1.5 rounded-full bg-primary"
-                      style={{ width: `${Math.max(barWidth, 3)}%` }}
+                      className="h-2 rounded-full bg-gradient-to-r from-primary/80 to-primary"
+                      style={{ width: `${Math.max(barWidth, 5)}%` }}
                     />
                   </div>
-                  <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
-                    <span className="flex items-center gap-0.5"><GitCommit className="h-3 w-3" />{dev.commits}</span>
+                  <div className="flex items-center gap-4 mt-1.5 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-0.5"><GitCommit className="h-3 w-3" />{dev.commits}提交</span>
                     <span className="flex items-center gap-0.5 text-green-600"><Plus className="h-3 w-3" />{formatNum(dev.lines_added)}</span>
                     <span className="flex items-center gap-0.5 text-red-600"><Minus className="h-3 w-3" />{formatNum(dev.lines_removed)}</span>
+                    <span className="text-muted-foreground">{dev.projects.length}项目</span>
                   </div>
                 </div>
               </div>
