@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { listen } from "@tauri-apps/api/event";
 import type { GitLabScanProgress } from "@/types";
 import { Loader2, CheckCircle, GitBranch, Shield } from "lucide-react";
@@ -9,6 +10,7 @@ interface ScanProgressModalProps {
 }
 
 export function ScanProgressModal({ isOpen, onClose }: ScanProgressModalProps) {
+  const { t } = useTranslation();
   const [progress, setProgress] = useState<GitLabScanProgress | null>(null);
   const [isComplete, setIsComplete] = useState(false);
 
@@ -66,7 +68,7 @@ export function ScanProgressModal({ isOpen, onClose }: ScanProgressModalProps) {
             <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
           )}
           <h3 className="font-medium">
-            {isComplete ? "扫描完成！" : isWalkinPhase ? "正在加载 Walkin 数据..." : "正在扫描 GitLab 项目..."}
+            {isComplete ? t("gitlab.scan.completed") : isWalkinPhase ? t("gitlab.scan.loadingWalkin") : t("gitlab.scan.scanningGitLab")}
           </h3>
         </div>
 
@@ -80,7 +82,7 @@ export function ScanProgressModal({ isOpen, onClose }: ScanProgressModalProps) {
               />
             </div>
             <div className="flex justify-between mt-1 text-xs text-muted-foreground">
-              <span>{progress ? `${progress.current}/${progress.total} 项目` : "准备中..."}</span>
+              <span>{progress ? `${progress.current}/${progress.total}${t("gitlab.scan.projectsSuffix")}` : t("gitlab.scan.preparing")}</span>
               <span>{percent}%</span>
             </div>
           </div>
@@ -94,7 +96,7 @@ export function ScanProgressModal({ isOpen, onClose }: ScanProgressModalProps) {
             </div>
             <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
               <Loader2 className="h-3 w-3 animate-spin" />
-              <span>正在从 Walkin 平台获取代码质量数据...</span>
+              <span>{t("gitlab.scan.fetchingWalkinData")}</span>
             </div>
           </div>
         )}
@@ -106,7 +108,7 @@ export function ScanProgressModal({ isOpen, onClose }: ScanProgressModalProps) {
               <div className="h-full rounded-full bg-green-500" style={{ width: "100%" }} />
             </div>
             <div className="flex justify-between mt-1 text-xs text-muted-foreground">
-              <span>全部完成</span>
+              <span>{t("gitlab.scan.allDone")}</span>
               <span>100%</span>
             </div>
           </div>
@@ -118,7 +120,7 @@ export function ScanProgressModal({ isOpen, onClose }: ScanProgressModalProps) {
             <GitBranch className="h-3.5 w-3.5 flex-shrink-0" />
             <span className="font-medium text-foreground">{projectName}</span>
             {progress.commits_scanned > 0 && (
-              <span>({progress.commits_scanned} 提交)</span>
+              <span>{t("gitlab.scan.commitsScanned", { count: progress.commits_scanned })}</span>
             )}
           </div>
         )}
@@ -133,7 +135,7 @@ export function ScanProgressModal({ isOpen, onClose }: ScanProgressModalProps) {
         {/* Completion message */}
         {isComplete && (
           <div className="text-sm text-green-600 font-medium">
-            数据已更新，页面将自动刷新
+            {t("gitlab.scan.dataUpdated")}
           </div>
         )}
 
@@ -144,7 +146,7 @@ export function ScanProgressModal({ isOpen, onClose }: ScanProgressModalProps) {
             onClick={onClose}
             className="rounded-md border px-3 py-1.5 text-sm hover:bg-muted/50 transition-colors"
           >
-            {isComplete ? "关闭" : "后台运行"}
+            {isComplete ? t("common.close") : t("gitlab.scan.runInBackground")}
           </button>
         </div>
       </div>

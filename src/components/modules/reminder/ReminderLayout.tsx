@@ -29,25 +29,27 @@ export function ReminderLayout() {
           </div>
         </div>
 
-        {/* Tabs */}
+        {/* Tabs - pill style like cc-switch AppSwitcher */}
         <nav className="flex gap-1 px-6 pb-3">
-          {tabs.map((tab) => (
-            <NavLink
-              key={tab.to}
-              to={tab.to}
-              className={({ isActive }) =>
-                cn(
-                  "flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200",
-                  isActive
-                    ? "bg-primary text-primary-foreground shadow-sm"
-                    : "text-muted-foreground hover:bg-accent hover:text-foreground"
-                )
-              }
-            >
-              <tab.icon className="h-4 w-4" />
-              {tab.label}
-            </NavLink>
-          ))}
+          <div className="inline-flex gap-1 rounded-xl bg-muted p-1">
+            {tabs.map((tab) => (
+              <NavLink
+                key={tab.to}
+                to={tab.to}
+                className={({ isActive }) =>
+                  cn(
+                    "flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium transition-all duration-200",
+                    isActive
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground hover:bg-background/50"
+                  )
+                }
+              >
+                <tab.icon className="h-4 w-4" />
+                {tab.label}
+              </NavLink>
+            ))}
+          </div>
         </nav>
       </div>
 

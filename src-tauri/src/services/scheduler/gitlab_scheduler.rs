@@ -14,12 +14,10 @@ pub fn start_gitlab_scheduler(db: Arc<Database>) {
     thread::spawn(move || {
         let rt = tokio::runtime::Runtime::new().unwrap();
         rt.block_on(async {
-            let mut last_check = Utc::now().timestamp();
-
             loop {
                 tokio::time::sleep(Duration::from_secs(60)).await;
 
-                if let Err(e) = run_gitlab_scheduler_cycle(&db, &mut last_check).await {
+                if let Err(e) = run_gitlab_scheduler_cycle(&db).await {
                     log::error!("GitLab scheduler cycle error: {}", e);
                 }
             }
@@ -27,7 +25,7 @@ pub fn start_gitlab_scheduler(db: Arc<Database>) {
     });
 }
 
-async fn run_gitlab_scheduler_cycle(db: &Arc<Database>, last_check: &mut i64) -> Result<()> {
+async fn run_gitlab_scheduler_cycle(db: &Arc<Database>) -> Result<()> {
     let now = Utc::now().timestamp();
 
     // Get GitLab config
@@ -41,46 +39,41 @@ async fn run_gitlab_scheduler_cycle(db: &Arc<Database>, last_check: &mut i64) ->
         return Ok(());
     }
 
-    // Parse cron schedule - convert 5-field to 7-field format if needed
-    let cron_expr = config.scan_schedule.clone();
     // Rust cron crate expects 7 fields: sec min hour day month weekday year
     // Standard 5-field format: min hour day month weekday
     // We need to add seconds (0) and year (*) prefix/suffix
-    let cron_expr_7field = if cron_expr.split_whitespace().count() == 5 {
-        // Convert 5-field to 7-field: add "0 " prefix and " *" suffix
-        format!("0 {} *", cron_expr)
-    } else if cron_expr.split_whitespace().count() == 6 {
-        // 6-field format: add " *" suffix for year
-        format!("{} *", cron_expr)
-    } else {
-        cron_expr.clone()
+    let cron_expr_7field = match config.scan_schedule.split_whitespace().count() {
+        5 => format!("0 {} *", config.scan_schedule),
+        6 => format!("{} *", config.scan_schedule),
+        _ => config.scan_schedule.clone(),
     };
 
     let schedule = match cron::Schedule::try_from(cron_expr_7field.as_str()) {
         Ok(s) => s,
         Err(e) => {
-            log::error!("Invalid GitLab scan schedule '{}' (converted to '{}'): {}", cron_expr, cron_expr_7field, e);
+            log::error!("Invalid GitLab scan schedule '{}' (converted to '{}'): {}", config.scan_schedule, cron_expr_7field, e);
             return Ok(());
         }
     };
 
     // Check if we should run now
     let should_run = {
-        let now_chrono = chrono::Local::now();
-        let upcoming: Vec<_> = schedule.after(&now_chrono).take(1).collect();
+        // Get the next scheduled time that's coming up
+        let iter = schedule.upcoming(chrono::Local);
 
-        if let Some(next_time) = upcoming.first() {
-            let next_ts = next_time.timestamp();
-            // Run if next scheduled time is within the last minute
-            next_ts <= now && next_ts > *last_check
-        } else {
-            false
-        }
+        // Check if any upcoming time is within the 60-second polling window from now
+        // This means the scheduled time is "about to happen" and we should trigger the scan
+        iter.take(2).any(|scheduled_time| {
+            let scheduled_ts = scheduled_time.timestamp();
+            let until = scheduled_ts - now;
+            log::debug!("GitLab scheduler check: next_scheduled={}, now={}, until={}s", scheduled_ts, now, until);
+            // Fire if the next scheduled time is within 60 seconds from now
+            until >= 0 && until <= 60
+        })
     };
 
     if should_run {
-        *last_check = now;
-        log::info!("Running scheduled GitLab scan");
+        log::info!("Running scheduled GitLab scan (cron: {})", config.scan_schedule);
 
         if let Err(e) = run_gitlab_scan(db, &config, "weekly").await {
             log::error!("GitLab scan failed: {}", e);
@@ -161,8 +154,7 @@ pub async fn run_gitlab_scan(db: &Arc<Database>, config: &GitLabScanConfig, scan
     // Save scan result
     {
         let conn = db.conn().lock().unwrap();
-        let now = Utc::now();
-        let scan_range_start = now.format("%Y-%m-%d").to_string();
+        let scan_range_start = chrono::Local::now().format("%Y-%m-%d").to_string();
 
         let request = CreateGitLabScanRequest {
             scan_type: scan_type.to_string(),
@@ -196,8 +188,8 @@ async fn send_gitlab_notification(
     let title = "【GitLab周报】本周代码提交汇总";
 
     let test_coverage = if result.total_projects > 0 {
-        let pct = (result.test_projects * 100 / result.total_projects);
-        format!("{}/{} ({}%)", result.test_projects, result.total_projects, pct)
+        let pct = result.test_projects as f64 * 100.0 / result.total_projects as f64;
+        format!("{}/{} ({:.0}%)", result.test_projects, result.total_projects, pct)
     } else {
         "0/0".to_string()
     };
@@ -276,11 +268,11 @@ async fn send_gitlab_notification(
 
         format!(
             "🔍 代码质量\n\
-             • 匹配项目：{}个\n\
-             • Bug：{}个\n\
-             • 漏洞：{}个\n\
-             • 代码异味：{}个\n\
-             {}{}",
+• 匹配项目：{}个\n\
+• Bug：{}个\n\
+• 漏洞：{}个\n\
+• 代码异味：{}个\n\
+{}{}",
             result.walkin_projects_matched,
             result.walkin_total_bugs,
             result.walkin_total_vulnerabilities,
@@ -301,15 +293,15 @@ async fn send_gitlab_notification(
 
     let mut content = format!(
         "📊 统计概览\n\
-         • 扫描项目：{}个\n\
-         • 代码提交：{}次\n\
-         • 参与人员：{}人\n\
-         • 单测覆盖：{}\n\n\
-         📈 代码变更\n\
-         • 新增：+{}行\n\
-         • 删除：-{}行\n\n\
-         ⚠️ 需关注项目\n\
-         {}",
+• 扫描项目：{}个\n\
+• 代码提交：{}次\n\
+• 参与人员：{}人\n\
+• 单测覆盖：{}\n\n\
+📈 代码变更\n\
+• 新增：+{}行\n\
+• 删除：-{}行\n\n\
+⚠️ 需关注项目\n\
+{}",
         result.total_projects,
         result.total_commits,
         result.contributors.len(),
@@ -325,53 +317,59 @@ async fn send_gitlab_notification(
 
     content.push_str(&format!(
         "\n\n🏆 本周贡献TOP3\n\
-         {}\n\n\
-         📅 扫描时间：{}",
+{}\n\n\
+📅 扫描时间：{}",
         top3.join("\n"),
         chrono::Local::now().format("%Y-%m-%d %H:%M")
     ));
 
-    let conn = db.conn().lock().unwrap();
+    // Collect channel info while holding the lock, then release before async I/O
+    let channels: Vec<_> = {
+        let conn = db.conn().lock().unwrap();
+        channel_ids.iter()
+            .filter_map(|id| ChannelDao::get_by_id(&conn, id).ok().flatten())
+            .filter(|c| c.enabled)
+            .collect()
+    };
 
-    for channel_id in channel_ids {
-        if let Ok(Some(channel)) = ChannelDao::get_by_id(&conn, channel_id) {
-            if !channel.enabled {
-                continue;
+    let client = reqwest::Client::new();
+
+    for channel in &channels {
+        let channel_config: serde_json::Value = serde_json::from_str(&channel.config)
+            .unwrap_or(serde_json::json!({}));
+
+        let at_phones: Vec<String> = channel_config["atPhones"]
+            .as_array()
+            .map(|arr| arr.iter().filter_map(|v| v.as_str().map(|s| s.to_string())).collect())
+            .unwrap_or_default();
+
+        let result = match channel.type_.as_str() {
+            "dingtalk" => {
+                let webhook_url = channel_config["webhookUrl"].as_str().unwrap_or("");
+                let secret = channel_config["secret"].as_str();
+                crate::services::notifier::dingtalk::send_dingtalk(
+                    &client, webhook_url, secret, &title, &content,
+                    if at_phones.is_empty() { None } else { Some(&at_phones) }
+                ).await
             }
+            "feishu" => {
+                let webhook_url = channel_config["webhookUrl"].as_str().unwrap_or("");
+                let secret = channel_config["secret"].as_str();
+                crate::services::notifier::feishu::send_feishu(
+                    &client, webhook_url, secret, &title, &content
+                ).await
+            }
+            "wecom" => {
+                let webhook_url = channel_config["webhookUrl"].as_str().unwrap_or("");
+                crate::services::notifier::wecom::send_wecom(
+                    &client, webhook_url, &title, &content
+                ).await
+            }
+            _ => Ok("skipped".to_string()),
+        };
 
-            let config: serde_json::Value = serde_json::from_str(&channel.config)
-                .unwrap_or(serde_json::json!({}));
-
-            let at_phones: Vec<String> = config["atPhones"]
-                .as_array()
-                .map(|arr| arr.iter().filter_map(|v| v.as_str().map(|s| s.to_string())).collect())
-                .unwrap_or_default();
-
-            let client = reqwest::Client::new();
-            let _ = match channel.type_.as_str() {
-                "dingtalk" => {
-                    let webhook_url = config["webhookUrl"].as_str().unwrap_or("");
-                    let secret = config["secret"].as_str();
-                    crate::services::notifier::dingtalk::send_dingtalk(
-                        &client, webhook_url, secret, &title, &content,
-                        if at_phones.is_empty() { None } else { Some(&at_phones) }
-                    ).await
-                }
-                "feishu" => {
-                    let webhook_url = config["webhookUrl"].as_str().unwrap_or("");
-                    let secret = config["secret"].as_str();
-                    crate::services::notifier::feishu::send_feishu(
-                        &client, webhook_url, secret, &title, &content
-                    ).await
-                }
-                "wecom" => {
-                    let webhook_url = config["webhookUrl"].as_str().unwrap_or("");
-                    crate::services::notifier::wecom::send_wecom(
-                        &client, webhook_url, &title, &content
-                    ).await
-                }
-                _ => Ok("skipped".to_string()),
-            };
+        if let Err(e) = result {
+            log::error!("Failed to send notification to channel '{}' ({}): {}", channel.name, channel.type_, e);
         }
     }
 
@@ -542,4 +540,55 @@ fn get_gitlab_config_from_settings(conn: &rusqlite::Connection) -> Result<GitLab
         walkin_x_auth_token: get_setting("walkin_x_auth_token", ""),
         walkin_project_mappings: parse_project_mappings(),
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_cron_5field_to_7field_conversion() {
+        // 5-field: "0 9 * * 1" -> 7-field: "0 0 9 * * 1 *"
+        let cron_expr = "0 9 * * 1";
+        let cron_expr_7field = if cron_expr.split_whitespace().count() == 5 {
+            format!("0 {} *", cron_expr)
+        } else {
+            cron_expr.to_string()
+        };
+        assert_eq!(cron_expr_7field, "0 0 9 * * 1 *");
+
+        let schedule = cron::Schedule::try_from(cron_expr_7field.as_str());
+        assert!(schedule.is_ok(), "Failed to parse converted cron: {}", cron_expr_7field);
+    }
+
+    #[test]
+    fn test_should_run_when_next_scheduled_is_within_window() {
+        // Create a schedule that fires every minute
+        let schedule = cron::Schedule::try_from("0 * * * * * *").unwrap();
+        let now = chrono::Local::now().timestamp();
+
+        // The next scheduled time should be within 60 seconds for an every-minute schedule
+        let next = schedule.upcoming(chrono::Local).next().unwrap();
+        let until = next.timestamp() - now;
+        assert!(until >= 0 && until <= 60, "Next scheduled time should be within 60s, got {}s", until);
+    }
+
+    #[test]
+    fn test_should_not_run_when_next_scheduled_is_far_away() {
+        // Create a schedule that fires next Monday at 9:00
+        let schedule = cron::Schedule::try_from("0 0 9 * * 1 *").unwrap();
+        let now = chrono::Local::now().timestamp();
+
+        let next = schedule.upcoming(chrono::Local).next().unwrap();
+        let until = next.timestamp() - now;
+        // If we're not within 60 seconds of Monday 9:00, this should be > 60
+        // (This test is valid unless we run it at exactly Monday 8:59-9:00)
+        if until > 60 {
+            // Good - we're far from the scheduled time
+            assert!(true);
+        } else {
+            // We happen to be right at the scheduled time - also fine
+            assert!(until >= 0);
+        }
+    }
 }

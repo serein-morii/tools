@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import type { GitLabScanHistory, DeveloperStat, GitLabProjectResult } from "@/types";
 import { GitCommit, Plus, Minus, ChevronDown } from "lucide-react";
 
@@ -7,6 +8,7 @@ interface TrendChartProps {
 }
 
 export function TrendChart({ history }: TrendChartProps) {
+  const { t } = useTranslation();
   const [dataCount, setDataCount] = useState<20 | 30 | 50>(() => {
     const saved = localStorage.getItem("gitlab-trend-count");
     return (parseInt(saved || "20") as 20 | 30 | 50) || 20;
@@ -35,7 +37,7 @@ export function TrendChart({ history }: TrendChartProps) {
     return (
       <div className="px-6 pb-4 flex-1">
         <div className="rounded-lg border bg-card/50 p-4 h-full flex items-center justify-center">
-          <p className="text-sm text-muted-foreground">至少需要2次扫描数据</p>
+          <p className="text-sm text-muted-foreground">{t("gitlab.chart.needMoreScans")}</p>
         </div>
       </div>
     );
@@ -86,9 +88,9 @@ export function TrendChart({ history }: TrendChartProps) {
   }).join(" ");
 
   const countOptions = [
-    { value: 20, label: "最近 20 次" },
-    { value: 30, label: "最近 30 次" },
-    { value: 50, label: "最近 50 次" },
+    { value: 20, label: t("gitlab.chart.last20") },
+    { value: 30, label: t("gitlab.chart.last30") },
+    { value: 50, label: t("gitlab.chart.last50") },
   ];
 
   return (
@@ -96,14 +98,14 @@ export function TrendChart({ history }: TrendChartProps) {
       <div className="rounded-lg border bg-card/50 p-4 h-full flex flex-col">
         {/* Header */}
         <div className="mb-3 flex items-center justify-between flex-shrink-0">
-          <h4 className="text-sm font-medium">趋势分析</h4>
+          <h4 className="text-sm font-medium">{t("gitlab.chart.trendAnalysis")}</h4>
           <div ref={menuRef} className="relative">
             <button
               type="button"
               onClick={() => setMenuOpen(!menuOpen)}
               className="flex items-center gap-1 h-7 rounded-md border border-input bg-background px-2 text-xs hover:bg-muted/50 transition-colors"
             >
-              最近 {dataCount} 次
+              {t("gitlab.chart.lastN", { count: dataCount })}
               <ChevronDown className={`h-3 w-3 transition-transform ${menuOpen ? "rotate-180" : ""}`} />
             </button>
             {menuOpen && (
@@ -200,11 +202,11 @@ export function TrendChart({ history }: TrendChartProps) {
         <div className="mt-2 flex items-center justify-center gap-6 text-xs flex-shrink-0">
           <div className="flex items-center gap-1.5">
             <span className="w-3 h-0.5 bg-primary rounded" />
-            <span className="text-muted-foreground">提交数</span>
+            <span className="text-muted-foreground">{t("gitlab.chart.commitCount")}</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-3 h-0.5 bg-muted-foreground rounded" style={{ borderStyle: "dashed" }} />
-            <span className="text-muted-foreground">增量覆盖率 %</span>
+            <span className="text-muted-foreground">{t("gitlab.chart.incrementalCoveragePercent")}</span>
           </div>
         </div>
       </div>
@@ -213,11 +215,13 @@ export function TrendChart({ history }: TrendChartProps) {
 }
 
 export function ContributorRanking({ history }: { history: GitLabScanHistory[] }) {
+  const { t } = useTranslation();
+
   if (history.length === 0) {
     return (
       <div className="px-6 pb-4 flex-1">
         <div className="rounded-lg border bg-card/50 p-4 h-full flex items-center justify-center">
-          <p className="text-sm text-muted-foreground">暂无扫描数据</p>
+          <p className="text-sm text-muted-foreground">{t("gitlab.chart.noScanData")}</p>
         </div>
       </div>
     );
@@ -230,7 +234,7 @@ export function ContributorRanking({ history }: { history: GitLabScanHistory[] }
     return (
       <div className="px-6 pb-4 flex-1">
         <div className="rounded-lg border bg-card/50 p-4 h-full flex items-center justify-center">
-          <p className="text-sm text-muted-foreground">暂无开发者数据</p>
+          <p className="text-sm text-muted-foreground">{t("gitlab.chart.noDeveloperData")}</p>
         </div>
       </div>
     );
@@ -246,18 +250,18 @@ export function ContributorRanking({ history }: { history: GitLabScanHistory[] }
   // Get max code volume for bar scaling
   const maxCodeVolume = Math.max(...devStats.map(d => d.lines_added + d.lines_removed), 1);
 
-  // Take only TOP 3
-  const top3 = devStats.slice(0, 3);
+  // Take only TOP 5
+  const top5 = devStats.slice(0, 5);
 
   return (
     <div className="px-6 pb-4 flex-1">
       <div className="rounded-lg border bg-card/50 p-4 h-full flex flex-col">
         <div className="mb-4 flex items-center justify-between flex-shrink-0">
-          <h4 className="text-sm font-medium">🏆 本周贡献TOP3</h4>
-          <span className="text-xs text-muted-foreground">按代码量排名</span>
+          <h4 className="text-sm font-medium">🏆 {t("gitlab.chart.contributionTop5")}</h4>
+          <span className="text-xs text-muted-foreground">{t("gitlab.chart.rankByCodeVolume")}</span>
         </div>
         <div className="space-y-3 flex-1">
-          {top3.map((dev, index) => {
+          {top5.map((dev, index) => {
             const codeVolume = dev.lines_added + dev.lines_removed;
             const barWidth = (codeVolume / maxCodeVolume) * 100;
             return (
@@ -269,7 +273,7 @@ export function ContributorRanking({ history }: { history: GitLabScanHistory[] }
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-sm font-medium truncate" title={dev.name}>{dev.name}</span>
                     <span className="text-xs font-semibold text-primary ml-2 flex-shrink-0">
-                      {formatNum(codeVolume)} 行代码
+                      {formatNum(codeVolume)}{t("gitlab.chart.linesOfCode")}
                     </span>
                   </div>
                   <div className="w-full bg-muted rounded-full h-2">
@@ -279,10 +283,10 @@ export function ContributorRanking({ history }: { history: GitLabScanHistory[] }
                     />
                   </div>
                   <div className="flex items-center gap-4 mt-1.5 text-xs text-muted-foreground">
-                    <span className="flex items-center gap-0.5"><GitCommit className="h-3 w-3" />{dev.commits}提交</span>
-                    <span className="flex items-center gap-0.5 text-green-600"><Plus className="h-3 w-3" />{formatNum(dev.lines_added)}</span>
+                    <span className="flex items-center gap-0.5"><GitCommit className="h-3 w-3" />{dev.commits}{t("gitlab.chart.commitsCompact")}</span>
+                    <span className="flex items-center gap-0.5 text-emerald-600"><Plus className="h-3 w-3" />{formatNum(dev.lines_added)}</span>
                     <span className="flex items-center gap-0.5 text-red-600"><Minus className="h-3 w-3" />{formatNum(dev.lines_removed)}</span>
-                    <span className="text-muted-foreground">{dev.projects.length}项目</span>
+                    <span className="text-muted-foreground">{dev.projects.length}{t("gitlab.chart.projectsCompact")}</span>
                   </div>
                 </div>
               </div>

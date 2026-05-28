@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link2, Loader2, CheckCircle, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -14,6 +15,7 @@ interface FirstTimeSetupModalProps {
 }
 
 export function FirstTimeSetupModal({ onComplete, onSkip }: FirstTimeSetupModalProps) {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState<GitLabConfig>(defaultGitLabConfig);
   const [showToken, setShowToken] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<"idle" | "testing" | "success" | "failed">("idle");
@@ -27,9 +29,9 @@ export function FirstTimeSetupModal({ onComplete, onSkip }: FirstTimeSetupModalP
       const result = await testConnection.mutateAsync(formData);
       setConnectionStatus(result ? "success" : "failed");
       if (result) {
-        toast.success("连接成功");
+        toast.success(t("gitlab.setup.testSuccess"));
       } else {
-        toast.error("连接失败：服务器返回失败状态");
+        toast.error(t("gitlab.setup.testFailedServer"));
       }
     } catch (error: unknown) {
       console.error("Test connection error:", error);
@@ -39,14 +41,14 @@ export function FirstTimeSetupModal({ onComplete, onSkip }: FirstTimeSetupModalP
         : typeof error === 'object' && error !== null && 'message' in error
           ? String((error as { message?: string }).message)
           : String(error);
-      toast.error("连接失败: " + errorMessage);
+      toast.error(t("gitlab.setup.testFailedPrefix") + errorMessage);
     }
   };
 
   const handleSave = async () => {
     try {
       await saveConfig.mutateAsync(formData);
-      toast.success("配置已保存");
+      toast.success(t("gitlab.setup.saveSuccess"));
       onComplete();
     } catch (error: unknown) {
       const errorMessage = error instanceof Error
@@ -54,7 +56,7 @@ export function FirstTimeSetupModal({ onComplete, onSkip }: FirstTimeSetupModalP
         : typeof error === 'object' && error !== null && 'message' in error
           ? String((error as { message?: string }).message)
           : String(error);
-      toast.error("保存失败: " + errorMessage);
+      toast.error(t("gitlab.setup.saveFailed") + errorMessage);
     }
   };
 
@@ -64,16 +66,16 @@ export function FirstTimeSetupModal({ onComplete, onSkip }: FirstTimeSetupModalP
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Link2 className="h-5 w-5" />
-            GitLab 扫描功能设置
+            {t("gitlab.setup.title")}
           </CardTitle>
           <CardDescription>
-            首次使用需要配置 GitLab 连接
+            {t("gitlab.setup.description")}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Step 1: Server */}
           <div className="space-y-2">
-            <label className="text-sm font-medium">Step 1: GitLab 服务器</label>
+            <label className="text-sm font-medium">{t("gitlab.setup.step1Label")}</label>
             <Input
               placeholder="http://code.jms.com"
               value={formData.url}
@@ -83,21 +85,21 @@ export function FirstTimeSetupModal({ onComplete, onSkip }: FirstTimeSetupModalP
 
           {/* Step 2: Auth */}
           <div className="space-y-2">
-            <label className="text-sm font-medium">Step 2: 认证方式</label>
+            <label className="text-sm font-medium">{t("gitlab.setup.step2Label")}</label>
             <div className="flex gap-2">
               <Button
                 variant={formData.auth_type === "token" ? "default" : "outline"}
                 size="sm"
                 onClick={() => setFormData({ ...formData, auth_type: "token" })}
               >
-                Private Token (推荐)
+                {t("gitlab.setup.tokenRecommended")}
               </Button>
               <Button
                 variant={formData.auth_type === "password" ? "default" : "outline"}
                 size="sm"
                 onClick={() => setFormData({ ...formData, auth_type: "password" })}
               >
-                账号密码
+                {t("gitlab.setup.usernamePassword")}
               </Button>
             </div>
 
@@ -105,31 +107,31 @@ export function FirstTimeSetupModal({ onComplete, onSkip }: FirstTimeSetupModalP
               <div className="flex gap-2 mt-2">
                 <Input
                   type={showToken ? "text" : "password"}
-                  placeholder="输入GitLab Private Token"
+                  placeholder={t("gitlab.setup.inputTokenPlaceholder")}
                   value={formData.token || ""}
                   onChange={(e) => setFormData({ ...formData, token: e.target.value })}
                 />
                 <Button variant="outline" size="sm" onClick={() => setShowToken(!showToken)}>
-                  {showToken ? "隐藏" : "显示"}
+                  {showToken ? t("common.hide") : t("common.show")}
                 </Button>
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-2 mt-2">
                 <Input
-                  placeholder="用户名"
+                  placeholder={t("gitlab.setup.username")}
                   value={formData.username || ""}
                   onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                 />
                 <Input
                   type="password"
-                  placeholder="密码"
+                  placeholder={t("gitlab.setup.password")}
                   value={formData.password || ""}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 />
               </div>
             )}
             <p className="text-xs text-muted-foreground">
-              💡 在 GitLab 设置 → Access Tokens 中生成
+              💡 {t("gitlab.setup.tokenHint")}
             </p>
           </div>
 
@@ -139,16 +141,16 @@ export function FirstTimeSetupModal({ onComplete, onSkip }: FirstTimeSetupModalP
               {connectionStatus === "testing" ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : null}
-              测试连接
+              {t("gitlab.setup.testConnection")}
             </Button>
             {connectionStatus === "success" && (
-              <span className="flex items-center gap-1 text-sm text-green-600">
-                <CheckCircle className="h-4 w-4" /> 连接成功
+              <span className="flex items-center gap-1 text-sm text-emerald-600">
+                <CheckCircle className="h-4 w-4" /> {t("gitlab.setup.testSuccess")}
               </span>
             )}
             {connectionStatus === "failed" && (
-              <span className="flex items-center gap-1 text-sm text-red-600">
-                <XCircle className="h-4 w-4" /> 连接失败
+              <span className="flex items-center gap-1 text-sm text-destructive">
+                <XCircle className="h-4 w-4" /> {t("gitlab.setup.testFailed")}
               </span>
             )}
           </div>
@@ -156,11 +158,11 @@ export function FirstTimeSetupModal({ onComplete, onSkip }: FirstTimeSetupModalP
           {/* Actions */}
           <div className="flex justify-between pt-4 border-t">
             <Button variant="ghost" onClick={onSkip}>
-              跳过
+              {t("common.skip")}
             </Button>
             <Button onClick={handleSave} disabled={saveConfig.isPending || connectionStatus !== "success"}>
               {saveConfig.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              完成配置
+              {t("gitlab.setup.completeSetup")}
             </Button>
           </div>
         </CardContent>

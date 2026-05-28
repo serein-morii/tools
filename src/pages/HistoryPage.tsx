@@ -79,8 +79,8 @@ export function HistoryPage() {
           title={t("history.success")}
           value={stats.sent}
           icon={CheckCircle2}
-          color="text-green-600"
-          bg="bg-green-50 dark:bg-green-950/30"
+          color="text-emerald-600"
+          bg="bg-emerald-50 dark:bg-emerald-950/30"
           active={statusFilter === "sent"}
           onClick={() => setStatusFilter("sent")}
         />
@@ -88,7 +88,7 @@ export function HistoryPage() {
           title={t("history.failed")}
           value={stats.failed}
           icon={AlertCircle}
-          color="text-red-600"
+          color="text-destructive"
           bg="bg-red-50 dark:bg-red-950/30"
           active={statusFilter === "failed"}
           onClick={() => setStatusFilter("failed")}

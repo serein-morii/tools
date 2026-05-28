@@ -1,8 +1,8 @@
 import { useState, useMemo } from "react";
-import { Calendar, Clock, ChevronRight, X, GitCompare, GitCommit, Plus, Minus, FolderGit2, User, Bug, ShieldAlert, Zap, BarChart3 } from "lucide-react";
+import { Calendar, Clock, ChevronRight, X, GitCompare, GitCommit, Plus, Minus, FolderGit2, User, Bug, ShieldAlert, Zap, BarChart3, GitMerge, ExternalLink, Activity, CheckCircle2, XCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useGitLabScanHistory } from "@/lib/query/gitlabQueries";
+import { useGitLabScanHistory, useGitLabConfig } from "@/lib/query/gitlabQueries";
 import type { GitLabScanHistory, GitLabProjectResult, DeveloperStat } from "@/types";
 
 function formatTimestamp(ts: number): string {
@@ -66,10 +66,30 @@ function getWalkinAggregates(projects: GitLabProjectResult[]) {
   };
 }
 
-function ScanDetailDialog({ item, open, onClose }: {
+function PipelineStatusBadge({ status }: { status: string }) {
+  const config: Record<string, { icon: typeof CheckCircle2; color: string; label: string }> = {
+    success: { icon: CheckCircle2, color: "text-emerald-600", label: "成功" },
+    failed: { icon: XCircle, color: "text-destructive", label: "失败" },
+    running: { icon: Clock, color: "text-blue-500", label: "运行中" },
+    pending: { icon: Clock, color: "text-amber-500", label: "等待中" },
+    canceled: { icon: XCircle, color: "text-muted-foreground", label: "已取消" },
+    skipped: { icon: XCircle, color: "text-muted-foreground", label: "已跳过" },
+  };
+  const c = config[status] || { icon: Clock, color: "text-muted-foreground", label: status };
+  const Icon = c.icon;
+  return (
+    <span className={`inline-flex items-center gap-1 text-[10px] font-medium ${c.color}`}>
+      <Icon className="h-2.5 w-2.5" />
+      {c.label}
+    </span>
+  );
+}
+
+function ScanDetailDialog({ item, open, onClose, gitlabUrl }: {
   item: GitLabScanHistory | null;
   open: boolean;
   onClose: () => void;
+  gitlabUrl?: string;
 }) {
   if (!item || !open) return null;
 
@@ -122,6 +142,54 @@ function ScanDetailDialog({ item, open, onClose }: {
             </div>
           </div>
 
+          {/* Scan Range */}
+          {item.scan_range_start && item.scan_range_end && (
+            <div className="text-xs text-muted-foreground">
+              扫描范围: {item.scan_range_start} ~ {item.scan_range_end}
+            </div>
+          )}
+
+          {/* Pipeline Stats */}
+          {item.pipeline_total > 0 && (
+            <div className="rounded-lg border bg-muted/30 p-4">
+              <h4 className="font-medium mb-3 flex items-center gap-2">
+                <Activity className="h-4 w-4" />
+                流水线统计
+              </h4>
+              <div className="grid grid-cols-4 gap-4">
+                <div className="text-center">
+                  <div className="text-2xl font-bold">{item.pipeline_total}</div>
+                  <div className="text-xs text-muted-foreground">总计</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-emerald-600">{item.pipeline_success}</div>
+                  <div className="text-xs text-emerald-600">成功</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-destructive">{item.pipeline_failed}</div>
+                  <div className="text-xs text-destructive">失败</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-amber-600">{item.pending_mrs}</div>
+                  <div className="text-xs text-amber-600">待合并MR</div>
+                </div>
+              </div>
+              {/* Pipeline success rate bar */}
+              <div className="mt-3">
+                <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
+                  <span>成功率</span>
+                  <span>{item.pipeline_total > 0 ? Math.round((item.pipeline_success / item.pipeline_total) * 100) : 0}%</span>
+                </div>
+                <div className="w-full bg-muted rounded-full h-2">
+                  <div
+                    className="h-2 rounded-full bg-emerald-500"
+                    style={{ width: `${item.pipeline_total > 0 ? (item.pipeline_success / item.pipeline_total) * 100 : 0}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Walkin 代码质量 */}
           {walkin.matched > 0 && (
             <div className="rounded-lg border bg-muted/30 p-4">
@@ -167,8 +235,8 @@ function ScanDetailDialog({ item, open, onClose }: {
                 <span>{item.total_commits} 次提交</span>
               </div>
               <div className="flex items-center gap-2">
-                <Plus className="h-4 w-4 text-green-600" />
-                <span className="text-green-600">+{item.total_lines_added.toLocaleString()} 行</span>
+                <Plus className="h-4 w-4 text-emerald-600" />
+                <span className="text-emerald-600">+{item.total_lines_added.toLocaleString()} 行</span>
               </div>
               <div className="flex items-center gap-2">
                 <Minus className="h-4 w-4 text-red-600" />
@@ -194,8 +262,17 @@ function ScanDetailDialog({ item, open, onClose }: {
                       </div>
                       <div className="flex items-center gap-4 text-xs text-muted-foreground mt-1">
                         <span className="flex items-center gap-1"><GitCommit className="h-3 w-3" />{dev.commits}</span>
-                        <span className="flex items-center gap-1 text-green-600"><Plus className="h-3 w-3" />{dev.lines_added}</span>
+                        <span className="flex items-center gap-1 text-emerald-600"><Plus className="h-3 w-3" />{dev.lines_added}</span>
                         <span className="flex items-center gap-1 text-red-600"><Minus className="h-3 w-3" />{dev.lines_removed}</span>
+                        {dev.mrs_created > 0 && (
+                          <span className="flex items-center gap-1"><GitMerge className="h-3 w-3" />{dev.mrs_created} MR</span>
+                        )}
+                        {dev.mrs_pipeline_success > 0 && (
+                          <span className="flex items-center gap-1 text-emerald-600"><CheckCircle2 className="h-3 w-3" />{dev.mrs_pipeline_success}</span>
+                        )}
+                        {dev.mrs_pipeline_failed > 0 && (
+                          <span className="flex items-center gap-1 text-destructive"><XCircle className="h-3 w-3" />{dev.mrs_pipeline_failed}</span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -225,26 +302,103 @@ function ScanDetailDialog({ item, open, onClose }: {
           {/* 项目详情 */}
           <div className="rounded-lg border bg-muted/30 p-4">
             <h4 className="font-medium mb-3">项目列表 ({sortedProjects.length})</h4>
-            <div className="space-y-2 max-h-60 overflow-y-auto">
+            <div className="space-y-2 max-h-80 overflow-y-auto">
               {sortedProjects.map((p) => (
-                <div key={p.project_id} className="flex items-center justify-between text-sm py-1 border-b last:border-0">
-                  <div className="flex items-center gap-2">
-                    <FolderGit2 className="h-4 w-4 text-muted-foreground" />
-                    <span>{p.project_name.split("/").pop()}</span>
-                    {p.has_test ? (
-                      <span className="text-xs">有单测</span>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">无单测</span>
-                    )}
+                <div key={p.project_id} className="rounded-lg border bg-background/50 p-3 text-sm">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <FolderGit2 className="h-4 w-4 text-muted-foreground" />
+                      {gitlabUrl ? (
+                        <a
+                          href={`${gitlabUrl}/${p.project_name}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-medium hover:text-primary hover:underline"
+                        >
+                          {p.project_name.split("/").pop()}
+                        </a>
+                      ) : (
+                        <span className="font-medium">{p.project_name.split("/").pop()}</span>
+                      )}
+                      {p.has_test ? (
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-500/10 text-emerald-600">有单测</span>
+                      ) : (
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-muted text-muted-foreground">无单测</span>
+                      )}
+                      {p.latest_pipeline_status && (
+                        <PipelineStatusBadge status={p.latest_pipeline_status} />
+                      )}
+                    </div>
+                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                      <span>{p.commits} 提交</span>
+                      <span className="text-emerald-600">+{p.lines_added}</span>
+                      <span className="text-destructive">-{p.lines_removed}</span>
+                    </div>
+                  </div>
+
+                  {/* Quality ratings & coverage */}
+                  <div className="flex items-center gap-2 flex-wrap mb-2">
                     {p.walkin_metrics?.coverage != null && (
-                      <span className="text-xs text-blue-600">覆盖 {p.walkin_metrics.coverage.toFixed(1)}%</span>
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-500/10 text-blue-600">全量 {p.walkin_metrics.coverage.toFixed(1)}%</span>
+                    )}
+                    {p.walkin_metrics?.new_coverage != null && (
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-primary/10 text-primary">增量 {p.walkin_metrics.new_coverage.toFixed(1)}%</span>
+                    )}
+                    {p.walkin_metrics?.reliability_rating && (
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-500/10 text-emerald-600">可靠性 {p.walkin_metrics.reliability_rating.replace(".0", "")}</span>
+                    )}
+                    {p.walkin_metrics?.security_rating && (
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-500/10 text-emerald-600">安全 {p.walkin_metrics.security_rating.replace(".0", "")}</span>
+                    )}
+                    {p.walkin_metrics?.maintainability_rating && (
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-500/10 text-emerald-600">可维护 {p.walkin_metrics.maintainability_rating.replace(".0", "")}</span>
                     )}
                   </div>
-                  <div className="flex items-center gap-4 text-muted-foreground">
-                    <span>{p.commits} 提交</span>
-                    <span className="text-green-600">+{p.lines_added}</span>
-                    <span className="text-red-600">-{p.lines_removed}</span>
-                  </div>
+
+                  {/* Incremental quality issues */}
+                  {p.walkin_metrics && (p.walkin_metrics.new_bugs > 0 || p.walkin_metrics.new_vulnerabilities > 0 || p.walkin_metrics.new_code_smells > 0) && (
+                    <div className="flex items-center gap-3 text-xs mb-2">
+                      {p.walkin_metrics.new_bugs > 0 && (
+                        <span className="flex items-center gap-1 text-destructive"><Bug className="h-3 w-3" />{p.walkin_metrics.new_bugs} 新Bug</span>
+                      )}
+                      {p.walkin_metrics.new_vulnerabilities > 0 && (
+                        <span className="flex items-center gap-1 text-amber-600"><ShieldAlert className="h-3 w-3" />{p.walkin_metrics.new_vulnerabilities} 新漏洞</span>
+                      )}
+                      {p.walkin_metrics.new_code_smells > 0 && (
+                        <span className="flex items-center gap-1 text-muted-foreground"><Zap className="h-3 w-3" />{p.walkin_metrics.new_code_smells} 新异味</span>
+                      )}
+                    </div>
+                  )}
+
+                  {/* MR details */}
+                  {p.mr_details && p.mr_details.length > 0 && (
+                    <div className="border-t pt-2 mt-1">
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1.5">
+                        <GitMerge className="h-3 w-3" /> MR ({p.mr_details.length})
+                        {p.pending_mrs > 0 && (
+                          <span className="px-1 py-0.5 rounded text-[10px] bg-amber-500/10 text-amber-600">{p.pending_mrs} 待合并</span>
+                        )}
+                      </div>
+                      <div className="space-y-1">
+                        {p.mr_details.map((mr) => (
+                          <div key={mr.iid} className="flex items-center justify-between text-xs py-0.5">
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              <span className="text-muted-foreground">!{mr.iid}</span>
+                              <span className="truncate">{mr.title}</span>
+                            </div>
+                            <div className="flex items-center gap-1.5 shrink-0 ml-2 text-muted-foreground">
+                              <span>{mr.author}</span>
+                              {mr.web_url && (
+                                <a href={mr.web_url} target="_blank" rel="noopener noreferrer" className="hover:text-foreground">
+                                  <ExternalLink className="h-2.5 w-2.5" />
+                                </a>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -325,7 +479,7 @@ function HistoryCard({ item, selected, onToggleSelect, onClick }: {
         <div className="mt-4 grid grid-cols-2 gap-4 border-t pt-4 text-sm">
           <div>
             <span className="text-muted-foreground">代码变更: </span>
-            <span className="text-green-600">+{item.total_lines_added.toLocaleString()}</span>
+            <span className="text-emerald-600">+{item.total_lines_added.toLocaleString()}</span>
             <span className="mx-1">/</span>
             <span className="text-red-600">-{item.total_lines_removed.toLocaleString()}</span>
             <span className="text-muted-foreground"> 行</span>
@@ -401,7 +555,7 @@ function CompareView({ left, right, onClose }: {
 
   const diff = (a: number, b: number) => {
     const d = a - b;
-    if (d > 0) return <span className="text-green-600">+{d}</span>;
+    if (d > 0) return <span className="text-emerald-600">+{d}</span>;
     if (d < 0) return <span className="text-red-600">{d}</span>;
     return <span className="text-muted-foreground">-</span>;
   };
@@ -410,7 +564,7 @@ function CompareView({ left, right, onClose }: {
     if (a == null || b == null) return <span className="text-muted-foreground">-</span>;
     const d = a - b;
     if (Math.abs(d) < 0.01) return <span className="text-muted-foreground">-</span>;
-    if (d > 0) return <span className="text-green-600">+{d.toFixed(2)}%</span>;
+    if (d > 0) return <span className="text-emerald-600">+{d.toFixed(2)}%</span>;
     return <span className="text-red-600">{d.toFixed(2)}%</span>;
   };
 
@@ -539,8 +693,30 @@ function CompareView({ left, right, onClose }: {
 
 export function GitLabHistoryPage() {
   const { data: history, isLoading } = useGitLabScanHistory(20);
+  const { data: config } = useGitLabConfig();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [detailItem, setDetailItem] = useState<GitLabScanHistory | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [typeFilter, setTypeFilter] = useState<"all" | "weekly" | "manual">("all");
+
+  // Filter history based on search and type
+  const filteredHistory = useMemo(() => {
+    if (!history) return [];
+    return history.filter(item => {
+      // Type filter
+      if (typeFilter !== "all" && item.scan_type !== typeFilter) return false;
+      // Search filter - search in contributors and project names
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase();
+        const contributors: string[] = JSON.parse(item.contributors || "[]");
+        const projects: GitLabProjectResult[] = JSON.parse(item.summary || "[]");
+        const matchContributor = contributors.some(c => c.toLowerCase().includes(query));
+        const matchProject = projects.some(p => p.project_name.toLowerCase().includes(query));
+        if (!matchContributor && !matchProject) return false;
+      }
+      return true;
+    });
+  }, [history, searchQuery, typeFilter]);
 
   const toggleSelect = (id: string) => {
     setSelectedIds(prev =>
@@ -554,7 +730,7 @@ export function GitLabHistoryPage() {
 
   const clearSelection = () => setSelectedIds([]);
 
-  const selectedHistory = history?.filter(h => selectedIds.includes(h.id)) || [];
+  const selectedHistory = filteredHistory.filter(h => selectedIds.includes(h.id));
   const canCompare = selectedHistory.length === 2;
 
   if (isLoading) {
@@ -582,7 +758,10 @@ export function GitLabHistoryPage() {
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h3 className="text-lg font-semibold">扫描历史</h3>
-          <p className="text-sm text-muted-foreground">共 {history.length} 条记录</p>
+          <p className="text-sm text-muted-foreground">
+            共 {history.length} 条记录
+            {filteredHistory.length !== history.length && ` (筛选 ${filteredHistory.length})`}
+          </p>
         </div>
         {selectedIds.length > 0 && (
           <div className="flex items-center gap-2">
@@ -594,6 +773,40 @@ export function GitLabHistoryPage() {
         )}
       </div>
 
+      {/* Search and Filter */}
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <input
+          type="text"
+          placeholder="搜索项目或贡献者..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="rounded-lg border bg-background px-3 py-1.5 text-sm w-48 shadow-sm"
+        />
+        <div className="inline-flex gap-1 rounded-lg bg-muted p-1">
+          <button
+            type="button"
+            onClick={() => setTypeFilter("all")}
+            className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${typeFilter === "all" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            全部
+          </button>
+          <button
+            type="button"
+            onClick={() => setTypeFilter("weekly")}
+            className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${typeFilter === "weekly" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            定时扫描
+          </button>
+          <button
+            type="button"
+            onClick={() => setTypeFilter("manual")}
+            className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${typeFilter === "manual" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            手动扫描
+          </button>
+        </div>
+      </div>
+
       {canCompare && (
         <CompareView
           left={selectedHistory[0]}
@@ -603,7 +816,7 @@ export function GitLabHistoryPage() {
       )}
 
       <div className="space-y-4">
-        {history.map((item) => (
+        {filteredHistory.map((item) => (
           <HistoryCard
             key={item.id}
             item={item}
@@ -612,12 +825,19 @@ export function GitLabHistoryPage() {
             onClick={() => setDetailItem(item)}
           />
         ))}
+        {filteredHistory.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+            <Clock className="h-12 w-12 mb-4" />
+            <p>暂无匹配的扫描记录</p>
+          </div>
+        )}
       </div>
 
       <ScanDetailDialog
         item={detailItem}
         open={!!detailItem}
         onClose={() => setDetailItem(null)}
+        gitlabUrl={config?.url}
       />
     </div>
   );

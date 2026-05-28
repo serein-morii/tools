@@ -1,6 +1,7 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 import { ChevronDown } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export interface SelectOption {
   value: string;
@@ -20,10 +21,12 @@ export function CustomSelect({
   value,
   onChange,
   options,
-  placeholder = "请选择",
+  placeholder,
   className,
   size = "sm",
 }: CustomSelectProps) {
+  const { t } = useTranslation();
+  const resolvedPlaceholder = placeholder ?? t("common.pleaseSelect");
   const [isOpen, setIsOpen] = React.useState(false);
   const ref = React.useRef<HTMLDivElement>(null);
 
@@ -45,7 +48,7 @@ export function CustomSelect({
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "flex items-center justify-between gap-1 rounded-md border border-input bg-background px-2 text-sm ring-offset-background transition-colors",
+          "flex items-center justify-between gap-1 rounded-md border border-input bg-background px-2 text-sm shadow-sm ring-offset-background transition-colors",
           "hover:bg-muted/50 focus:outline-none focus:ring-1 focus:ring-ring",
           size === "sm" ? "h-7 py-0.5 text-xs" : "h-9 py-1.5",
           isOpen && "ring-1 ring-ring bg-muted/50",
@@ -53,7 +56,7 @@ export function CustomSelect({
         )}
       >
         <span className={cn(!selectedOption && "text-muted-foreground")}>
-          {selectedOption?.label || placeholder}
+          {selectedOption?.label || resolvedPlaceholder}
         </span>
         <ChevronDown
           className={cn(

@@ -101,12 +101,12 @@ export function TaskReminderPage() {
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder={t("task.searchPlaceholder")}
-            className="pl-10 h-10 bg-card"
+            className="pl-10 h-9 bg-card"
           />
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <div className="flex rounded-lg border bg-card p-1">
+          <div className="flex rounded-xl border bg-card p-1">
             {filterOptions.map((option) => (
               <button
                 key={option.value}

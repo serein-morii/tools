@@ -1,14 +1,16 @@
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export function NotesPage() {
+  const { t } = useTranslation();
   return (
     <div className="p-6">
       <Card>
         <CardHeader>
-          <CardTitle>笔记</CardTitle>
+          <CardTitle>{t("notes.title")}</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground">笔记模块入口已预留，后续会承载快捷记录和提醒联动。</p>
+          <p className="text-sm text-muted-foreground">{t("notes.description")}</p>
         </CardContent>
       </Card>
     </div>

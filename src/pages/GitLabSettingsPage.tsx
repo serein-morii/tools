@@ -513,7 +513,7 @@ export function GitLabSettingsPage() {
               }}
             />
             {validationErrors.url && (
-              <p className="text-sm text-red-500 flex items-center gap-1">
+              <p className="text-sm text-destructive flex items-center gap-1">
                 <AlertCircle className="h-3 w-3" /> {validationErrors.url}
               </p>
             )}
@@ -539,12 +539,12 @@ export function GitLabSettingsPage() {
               测试连接
             </Button>
             {connectionStatus === "success" && (
-              <span className="flex items-center gap-1 text-sm text-green-600">
+              <span className="flex items-center gap-1 text-sm text-emerald-600">
                 <CheckCircle className="h-4 w-4" /> 连接成功
               </span>
             )}
             {connectionStatus === "failed" && (
-              <span className="flex items-center gap-1 text-sm text-red-600">
+              <span className="flex items-center gap-1 text-sm text-destructive">
                 <XCircle className="h-4 w-4" /> 连接失败
               </span>
             )}
@@ -594,7 +594,7 @@ export function GitLabSettingsPage() {
                   className="flex items-center gap-1 rounded-full bg-muted px-3 py-1 text-sm"
                 >
                   {project}
-                  <X className="h-3 w-3 cursor-pointer hover:text-red-500" onClick={() => removeProject(project)} />
+                  <X className="h-3 w-3 cursor-pointer hover:text-destructive" onClick={() => removeProject(project)} />
                 </span>
               ))}
             </div>
@@ -628,7 +628,7 @@ export function GitLabSettingsPage() {
                   className="flex items-center gap-1 rounded-full bg-muted px-3 py-1 text-sm"
                 >
                   {keyword}
-                  <X className="h-3 w-3 cursor-pointer hover:text-red-500" onClick={() => removeKeyword(keyword)} />
+                  <X className="h-3 w-3 cursor-pointer hover:text-destructive" onClick={() => removeKeyword(keyword)} />
                 </span>
               ))}
             </div>
@@ -868,9 +868,9 @@ export function GitLabSettingsPage() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     {isLoggedIn ? (
-                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      <CheckCircle className="h-4 w-4 text-emerald-500" />
                     ) : (
-                      <XCircle className="h-4 w-4 text-red-500" />
+                      <XCircle className="h-4 w-4 text-destructive" />
                     )}
                     <span className="text-sm font-medium">
                       {isLoggedIn ? `已登录: ${userName || "未知用户"}` : "未登录"}
@@ -1017,7 +1017,7 @@ export function GitLabSettingsPage() {
                         className="flex-1"
                       />
                       <X
-                        className="h-4 w-4 cursor-pointer hover:text-red-500 shrink-0"
+                        className="h-4 w-4 cursor-pointer hover:text-destructive shrink-0"
                         onClick={() => {
                           setFormData({
                             ...formData,

@@ -1,12 +1,11 @@
 import { useState, useMemo, useEffect, useCallback, Fragment } from "react";
-import { RefreshCw, Download, BarChart3, Users, GitCommit, TrendingUp, TrendingDown, MinusCircle, Inbox, GitBranch, ArrowUpDown, ArrowUp, ArrowDown, Copy, HelpCircle, ShieldAlert, Bug, Zap, Loader2 } from "lucide-react";
+import { RefreshCw, BarChart3, Users, GitCommit, TrendingUp, TrendingDown, MinusCircle, Inbox, GitBranch, ArrowUpDown, ArrowUp, ArrowDown, HelpCircle, ShieldAlert, Bug, Zap, Loader2, GitMerge, ExternalLink, Shield, CheckCircle2, XCircle, Clock3, AlertTriangle, Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useGitLabConfigured, useGitLabScanHistory, useTriggerGitLabScan, useGitLabConfig } from "@/lib/query/gitlabQueries";
 import { FirstTimeSetupModal } from "@/components/modules/gitlab/FirstTimeSetupModal";
 import { TrendChart, ContributorRanking } from "@/components/modules/gitlab/TrendChart";
 import { ScanProgressModal } from "@/components/modules/gitlab/ScanProgressModal";
-import { generateWeeklyReport, downloadReport } from "@/components/modules/gitlab/reportGenerator";
 import { useWalkinAuth } from "@/components/modules/gitlab/WalkinAuthManager";
 import { gitlabApi } from "@/lib/api/gitlab";
 import { toast } from "sonner";
@@ -99,7 +98,7 @@ function SummaryCards({
       {cards.map((card) => (
         <Card key={card.label} className="bg-card/50">
           <CardContent className="flex items-center gap-4 p-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted">
               <card.icon className="h-5 w-5 text-muted-foreground" />
             </div>
             <div className="flex-1">
@@ -126,7 +125,38 @@ function SummaryCards({
   );
 }
 
-function ProjectTable({ projects }: { projects: GitLabProjectResult[] }) {
+function RatingBadge({ label, rating }: { label: string; rating: string }) {
+  const numMap: Record<string, number> = { "1.0": 5, "2.0": 4, "3.0": 3, "4.0": 2, "5.0": 1, "A": 5, "B": 4, "C": 3, "D": 2, "E": 1 };
+  const num = numMap[rating] ?? 0;
+  const color = num >= 4 ? "bg-emerald-500/10 text-emerald-600" : num >= 3 ? "bg-amber-500/10 text-amber-600" : "bg-destructive/10 text-destructive";
+  const displayLabel = rating.replace(".0", "");
+  return (
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${color}`}>
+      {label}: {displayLabel}
+    </span>
+  );
+}
+
+function PipelineStatusBadge({ status }: { status: string }) {
+  const config: Record<string, { icon: typeof CheckCircle2; color: string; label: string }> = {
+    success: { icon: CheckCircle2, color: "text-emerald-600", label: "成功" },
+    failed: { icon: XCircle, color: "text-destructive", label: "失败" },
+    running: { icon: Loader2, color: "text-blue-500", label: "运行中" },
+    pending: { icon: Clock3, color: "text-amber-500", label: "等待中" },
+    canceled: { icon: MinusCircle, color: "text-muted-foreground", label: "已取消" },
+    skipped: { icon: MinusCircle, color: "text-muted-foreground", label: "已跳过" },
+  };
+  const c = config[status] || { icon: Clock3, color: "text-muted-foreground", label: status };
+  const Icon = c.icon;
+  return (
+    <span className={`inline-flex items-center gap-1 text-xs font-medium ${c.color}`}>
+      <Icon className={`h-3 w-3 ${status === "running" ? "animate-spin" : ""}`} />
+      {c.label}
+    </span>
+  );
+}
+
+function ProjectTable({ projects, gitlabUrl }: { projects: GitLabProjectResult[]; gitlabUrl?: string }) {
   const [search, setSearch] = useState("");
   const [testFilter, setTestFilter] = useState<string>("all");
   const [walkinFilter, setWalkinFilter] = useState<string>("all");
@@ -197,6 +227,12 @@ function ProjectTable({ projects }: { projects: GitLabProjectResult[] }) {
         case "lines_removed":
           cmp = a.lines_removed - b.lines_removed;
           break;
+        case "coverage": {
+          const aCov = getMaxNewCoverage(a) ?? -1;
+          const bCov = getMaxNewCoverage(b) ?? -1;
+          cmp = aCov - bCov;
+          break;
+        }
         default:
           cmp = 0;
       }
@@ -314,7 +350,17 @@ function ProjectTable({ projects }: { projects: GitLabProjectResult[] }) {
               </th>
               <th className="px-3 py-2 text-center font-medium">单测</th>
               <th className="px-3 py-2 text-center font-medium">Walkin</th>
-              {hasWalkinData && <th className="px-3 py-2 text-center font-medium">增量覆盖率</th>}
+              {hasWalkinData && (
+                <th
+                  className="px-3 py-2 text-center font-medium cursor-pointer hover:bg-muted/80 select-none"
+                  onClick={() => toggleSort("coverage")}
+                >
+                  <div className="flex items-center justify-center gap-1">
+                    <SortIcon field="coverage" />
+                    增量覆盖率
+                  </div>
+                </th>
+              )}
               <th className="px-3 py-2 text-left font-medium">贡献者</th>
             </tr>
           </thead>
@@ -332,10 +378,25 @@ function ProjectTable({ projects }: { projects: GitLabProjectResult[] }) {
                         ▶
                       </span>
                     </td>
-                    <td className="px-3 py-2 font-medium">{project.project_name.split("/").pop()}</td>
+                    <td className="px-3 py-2 font-medium">
+                      {gitlabUrl ? (
+                        <a
+                          href={`${gitlabUrl}/${project.project_name}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="hover:text-primary hover:underline inline-flex items-center gap-1"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {project.project_name.split("/").pop()}
+                          <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-100" />
+                        </a>
+                      ) : (
+                        project.project_name.split("/").pop()
+                      )}
+                    </td>
                     <td className="px-3 py-2 text-right">{project.commits}</td>
                     <td className="px-3 py-2 text-right">
-                      <span className="text-green-600">+{formatNumber(project.lines_added)}</span>
+                      <span className="text-emerald-600">+{formatNumber(project.lines_added)}</span>
                       <span className="text-red-600 ml-1">-{formatNumber(project.lines_removed)}</span>
                     </td>
                     <td className="px-3 py-2 text-center">
@@ -547,6 +608,106 @@ function ProjectTable({ projects }: { projects: GitLabProjectResult[] }) {
                                 </li>
                               ))}
                             </ul>
+                          )}
+
+                          {/* Quality Ratings */}
+                          {project.walkin_metrics && (project.walkin_metrics.reliability_rating || project.walkin_metrics.security_rating || project.walkin_metrics.maintainability_rating) && (
+                            <div className="border-t pt-2">
+                              <div className="text-xs text-muted-foreground mb-2 flex items-center gap-1.5">
+                                <Shield className="h-3 w-3" /> 质量评级
+                              </div>
+                              <div className="flex items-center gap-3">
+                                {project.walkin_metrics.reliability_rating && (
+                                  <RatingBadge label="可靠性" rating={project.walkin_metrics.reliability_rating} />
+                                )}
+                                {project.walkin_metrics.security_rating && (
+                                  <RatingBadge label="安全性" rating={project.walkin_metrics.security_rating} />
+                                )}
+                                {project.walkin_metrics.maintainability_rating && (
+                                  <RatingBadge label="可维护性" rating={project.walkin_metrics.maintainability_rating} />
+                                )}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Incremental Quality Issues */}
+                          {project.walkin_metrics && (project.walkin_metrics.new_bugs > 0 || project.walkin_metrics.new_vulnerabilities > 0 || project.walkin_metrics.new_code_smells > 0) && (
+                            <div className="border-t pt-2">
+                              <div className="text-xs text-muted-foreground mb-2 flex items-center gap-1.5">
+                                <AlertTriangle className="h-3 w-3" /> 增量问题
+                              </div>
+                              <div className="flex items-center gap-3 text-xs">
+                                {project.walkin_metrics.new_bugs > 0 && (
+                                  <span className="flex items-center gap-1 text-destructive">
+                                    <Bug className="h-3 w-3" /> {project.walkin_metrics.new_bugs} 新Bug
+                                  </span>
+                                )}
+                                {project.walkin_metrics.new_vulnerabilities > 0 && (
+                                  <span className="flex items-center gap-1 text-amber-600">
+                                    <ShieldAlert className="h-3 w-3" /> {project.walkin_metrics.new_vulnerabilities} 新漏洞
+                                  </span>
+                                )}
+                                {project.walkin_metrics.new_code_smells > 0 && (
+                                  <span className="flex items-center gap-1 text-muted-foreground">
+                                    <Zap className="h-3 w-3" /> {project.walkin_metrics.new_code_smells} 新异味
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Pipeline Status */}
+                          {project.latest_pipeline_status && (
+                            <div className="border-t pt-2">
+                              <div className="text-xs text-muted-foreground mb-1 flex items-center gap-1.5">
+                                <Activity className="h-3 w-3" /> 最新流水线
+                              </div>
+                              <PipelineStatusBadge status={project.latest_pipeline_status} />
+                            </div>
+                          )}
+
+                          {/* MR Details */}
+                          {project.mr_details && project.mr_details.length > 0 && (
+                            <div className="border-t pt-2">
+                              <div className="text-xs text-muted-foreground mb-2 flex items-center gap-1.5">
+                                <GitMerge className="h-3 w-3" /> 合并请求 ({project.mr_details.length})
+                                {project.pending_mrs > 0 && (
+                                  <span className="ml-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-500/10 text-amber-600">
+                                    {project.pending_mrs} 待合并
+                                  </span>
+                                )}
+                              </div>
+                              <div className="space-y-1.5 max-h-48 overflow-y-auto">
+                                {project.mr_details.map((mr) => (
+                                  <div key={mr.iid} className="flex items-center justify-between rounded bg-muted/30 px-2.5 py-1.5 text-xs">
+                                    <div className="flex items-center gap-2 min-w-0">
+                                      <span className="text-muted-foreground shrink-0">!{mr.iid}</span>
+                                      <span className="font-medium truncate">{mr.title}</span>
+                                      <span className="text-muted-foreground shrink-0">
+                                        {mr.source_branch} → {mr.target_branch}
+                                      </span>
+                                    </div>
+                                    <div className="flex items-center gap-2 shrink-0 ml-2">
+                                      {mr.pipeline_status && <PipelineStatusBadge status={mr.pipeline_status} />}
+                                      <span className="text-muted-foreground">{mr.author}</span>
+                                      <span className="text-muted-foreground">{new Date(mr.created_at).toLocaleDateString("zh-CN", { month: "numeric", day: "numeric" })}</span>
+                                      {mr.web_url && (
+                                        <a href={mr.web_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground">
+                                          <ExternalLink className="h-3 w-3" />
+                                        </a>
+                                      )}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Last Commit */}
+                          {project.last_commit_at && (
+                            <div className="border-t pt-2 text-xs text-muted-foreground">
+                              最后提交: {new Date(project.last_commit_at).toLocaleString("zh-CN")}
+                            </div>
                           )}
                         </div>
                       </td>
@@ -776,7 +937,7 @@ function UnitBoardCard({
             </div>
           )}
           {error && (
-            <p className="text-sm text-red-500">加载失败: {error}</p>
+            <p className="text-sm text-destructive">加载失败: {error}</p>
           )}
           {data && !loading && (
             <div className="space-y-3">
@@ -819,19 +980,19 @@ function UnitBoardCard({
                   <div className="grid grid-cols-3 gap-2">
                     {data.yallValue != null && (
                       <div className="text-center">
-                        <div className="text-lg font-bold text-green-600">{data.yallValue.toFixed(2)}%</div>
+                        <div className="text-lg font-bold text-emerald-600">{data.yallValue.toFixed(2)}%</div>
                         <div className="text-xs text-muted-foreground">综合</div>
                       </div>
                     )}
                     {data.yallLineValue != null && (
                       <div className="text-center">
-                        <div className="text-lg font-bold text-green-600">{data.yallLineValue.toFixed(2)}%</div>
+                        <div className="text-lg font-bold text-emerald-600">{data.yallLineValue.toFixed(2)}%</div>
                         <div className="text-xs text-muted-foreground">行</div>
                       </div>
                     )}
                     {data.yallBranchValue != null && (
                       <div className="text-center">
-                        <div className="text-lg font-bold text-green-600">{data.yallBranchValue.toFixed(2)}%</div>
+                        <div className="text-lg font-bold text-emerald-600">{data.yallBranchValue.toFixed(2)}%</div>
                         <div className="text-xs text-muted-foreground">条件</div>
                       </div>
                     )}
@@ -907,31 +1068,6 @@ export function GitLabOverviewPage() {
   };
 
   const nextScanTime = getNextScanTime();
-
-  const handleExport = () => {
-    if (!selectedHistory) {
-      toast.error("暂无扫描数据可导出");
-      return;
-    }
-    const report = generateWeeklyReport(selectedHistory, unitBoardData);
-    const date = new Date(selectedHistory.scan_at).toISOString().split("T")[0];
-    downloadReport(report, `gitlab-weekly-report-${date}.md`);
-    toast.success("报告已导出");
-  };
-
-  const handleCopyReport = async () => {
-    if (!selectedHistory) {
-      toast.error("暂无扫描数据可复制");
-      return;
-    }
-    const report = generateWeeklyReport(selectedHistory, unitBoardData);
-    try {
-      await navigator.clipboard.writeText(report);
-      toast.success("报告已复制到剪贴板");
-    } catch {
-      toast.error("复制失败");
-    }
-  };
 
   const handleScan = async () => {
     setShowProgressModal(true);
@@ -1010,14 +1146,6 @@ export function GitLabOverviewPage() {
             )}
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={handleCopyReport} disabled={!selectedHistory}>
-              <Copy className="mr-1.5 h-3.5 w-3.5" />
-              复制
-            </Button>
-            <Button variant="outline" size="sm" onClick={handleExport} disabled={!selectedHistory}>
-              <Download className="mr-1.5 h-3.5 w-3.5" />
-              导出
-            </Button>
             <Button size="sm" onClick={handleScan} disabled={triggerScan.isPending}>
               <RefreshCw className={`mr-1.5 h-3.5 w-3.5 ${triggerScan.isPending ? "animate-spin" : ""}`} />
               扫描
@@ -1051,7 +1179,7 @@ export function GitLabOverviewPage() {
 
           {/* Project Table */}
           <div className="border-t">
-            <ProjectTable projects={projects} />
+            <ProjectTable projects={projects} gitlabUrl={config?.url} />
           </div>
         </>
       )}

@@ -213,7 +213,7 @@ export function SettingsPage() {
 
             {autoLaunch && (
               <ToggleRow
-                icon={<EyeOff className="h-4 w-4 text-green-500" />}
+                icon={<EyeOff className="h-4 w-4 text-emerald-500" />}
                 title={t("settings.silentStartup")}
                 description={t("settings.silentStartupDescription")}
                 checked={silentStartup}
@@ -278,7 +278,7 @@ export function SettingsPage() {
         <Card className="overflow-hidden">
           <CardHeader className="bg-muted/30 border-b">
             <div className="flex items-center gap-2">
-              <Database className="h-4 w-4 text-green-500" />
+              <Database className="h-4 w-4 text-emerald-500" />
               <CardTitle className="text-base">{t("settings.dataManagement")}</CardTitle>
             </div>
           </CardHeader>
@@ -293,7 +293,7 @@ export function SettingsPage() {
                 {t("settings.importData")}
               </Button>
             </div>
-            {backupMessage && <p className="text-xs text-green-600 bg-green-50 dark:bg-green-950/30 p-2 rounded">{backupMessage}</p>}
+            {backupMessage && <p className="text-xs text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30 p-2 rounded">{backupMessage}</p>}
             {backupError && <p className="text-xs text-destructive bg-destructive/10 p-2 rounded">{backupError}</p>}
           </CardContent>
         </Card>
