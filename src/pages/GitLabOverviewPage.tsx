@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useCallback, Fragment } from "react";
-import { RefreshCw, Download, BarChart3, Users, GitCommit, GitPullRequest, TrendingUp, TrendingDown, MinusCircle, ExternalLink, Inbox, GitBranch, Clock, User, Filter, ArrowUpDown, ArrowUp, ArrowDown, Copy, FolderGit2, HelpCircle, ShieldAlert, Bug, Zap, Loader2 } from "lucide-react";
+import { RefreshCw, Download, BarChart3, Users, GitCommit, TrendingUp, TrendingDown, MinusCircle, Inbox, GitBranch, ArrowUpDown, ArrowUp, ArrowDown, Copy, HelpCircle, ShieldAlert, Bug, Zap, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useGitLabConfigured, useGitLabScanHistory, useTriggerGitLabScan, useGitLabConfig } from "@/lib/query/gitlabQueries";
@@ -11,8 +11,8 @@ import { useWalkinAuth } from "@/components/modules/gitlab/WalkinAuthManager";
 import { gitlabApi } from "@/lib/api/gitlab";
 import { toast } from "sonner";
 import { CustomSelect } from "@/components/ui/custom-select";
-import { formatTimestamp, formatRelativeTime, formatNumber } from "@/lib/gitlab/format";
-import type { GitLabScanHistory, GitLabProjectResult, MrDetail, UnitBoardData } from "@/types";
+import { formatTimestamp, formatNumber } from "@/lib/gitlab/format";
+import type { GitLabScanHistory, GitLabProjectResult, UnitBoardData } from "@/types";
 
 function TrendIndicator({ current, previous }: { current: number; previous?: number }) {
   if (previous === undefined) return null;
@@ -128,13 +128,6 @@ function SummaryCards({ current, previous }: { current?: GitLabScanHistory; prev
       previousValue: previousCoverages.allCoverage,
       tooltip: "Walkin 代码全量覆盖率平均值",
     },
-    {
-      icon: GitPullRequest,
-      label: "待审核MR",
-      value: current?.pending_mrs ?? 0,
-      previousValue: previous?.pending_mrs,
-      invertTrend: true,
-    },
   ];
 
   return (
@@ -165,137 +158,6 @@ function SummaryCards({ current, previous }: { current?: GitLabScanHistory; prev
           </CardContent>
         </Card>
       ))}
-    </div>
-  );
-}
-
-function MrKanban({ projects }: { projects: GitLabProjectResult[] }) {
-  const [authorFilter, setAuthorFilter] = useState<string>("all");
-  const [timeFilter, setTimeFilter] = useState<string>("all");
-
-  const allMrs = useMemo(() => {
-    const result: { project: GitLabProjectResult; mr: MrDetail }[] = [];
-    for (const project of projects) {
-      for (const mr of project.mr_details || []) {
-        result.push({ project, mr });
-      }
-    }
-    return result;
-  }, [projects]);
-
-  // Get unique authors for filter
-  const uniqueAuthors = useMemo(() => {
-    const authors = new Set<string>();
-    allMrs.forEach(({ mr }) => authors.add(mr.author));
-    return Array.from(authors).sort();
-  }, [allMrs]);
-
-  // Filter MRs
-  const filteredMrs = useMemo(() => {
-    return allMrs.filter(({ mr }) => {
-      // Author filter
-      if (authorFilter !== "all" && mr.author !== authorFilter) return false;
-
-      // Time filter
-      if (timeFilter !== "all") {
-        const mrDate = new Date(mr.created_at).getTime();
-        const now = Date.now();
-        const dayMs = 24 * 60 * 60 * 1000;
-        if (timeFilter === "today" && mrDate < now - dayMs) return false;
-        if (timeFilter === "week" && mrDate < now - 7 * dayMs) return false;
-        if (timeFilter === "month" && mrDate < now - 30 * dayMs) return false;
-      }
-
-      return true;
-    });
-  }, [allMrs, authorFilter, timeFilter]);
-
-  if (allMrs.length === 0) {
-    return null;
-  }
-
-  return (
-    <div className="p-6 pt-0">
-      <Card className="bg-card/50">
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between mb-4">
-            <h4 className="font-medium flex items-center gap-2">
-              <GitPullRequest className="h-4 w-4" />
-              MR 看板
-            </h4>
-            <span className="text-sm text-muted-foreground">共 {filteredMrs.length} 个待处理</span>
-          </div>
-
-          {/* Filters */}
-          <div className="flex items-center gap-3 mb-4 flex-wrap">
-            <div className="flex items-center gap-1.5">
-              <Filter className="h-3.5 w-3.5 text-muted-foreground" />
-              <CustomSelect
-                value={authorFilter}
-                onChange={setAuthorFilter}
-                options={[
-                  { value: "all", label: "作者" },
-                  ...uniqueAuthors.map((author) => ({ value: author, label: author })),
-                ]}
-                className="w-28"
-              />
-            </div>
-            <CustomSelect
-              value={timeFilter}
-              onChange={setTimeFilter}
-              options={[
-                { value: "all", label: "时间" },
-                { value: "today", label: "今天" },
-                { value: "week", label: "本周" },
-                { value: "month", label: "本月" },
-              ]}
-              className="w-24"
-            />
-          </div>
-
-          {/* MR list with scroll */}
-          <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2">
-            {filteredMrs.map(({ project, mr }) => (
-              <a
-                key={`${project.project_id}-${mr.iid}`}
-                href={mr.web_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-3 rounded-lg border bg-muted/30 p-3 hover:bg-muted/50 transition-colors cursor-pointer"
-              >
-                <GitPullRequest className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{mr.title}</p>
-                  <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      <FolderGit2 className="h-3 w-3" />
-                      {project.project_name.split("/").pop()}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <GitBranch className="h-3 w-3" />
-                      {mr.source_branch} → {mr.target_branch}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <User className="h-3 w-3" />
-                      {mr.author}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Clock className="h-3 w-3" />
-                      {formatRelativeTime(mr.created_at)}
-                    </span>
-                  </div>
-                </div>
-                <ExternalLink className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-              </a>
-            ))}
-            {filteredMrs.length === 0 && (
-              <div className="text-center py-6 text-muted-foreground text-sm">
-                无符合条件的 MR
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }
@@ -1191,9 +1053,6 @@ export function GitLabOverviewPage() {
           <div className="border-t">
             <ProjectTable projects={projects} />
           </div>
-
-          {/* MR Kanban */}
-          <MrKanban projects={projects} />
         </>
       )}
     </div>
