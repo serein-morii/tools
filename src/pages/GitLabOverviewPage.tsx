@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useCallback, Fragment } from "react";
-import { RefreshCw, Download, BarChart3, Users, GitCommit, CheckCircle, Plus, GitPullRequest, TrendingUp, TrendingDown, MinusCircle, ExternalLink, Inbox, GitBranch, Clock, User, Filter, ArrowUpDown, ArrowUp, ArrowDown, Copy, FolderGit2, HelpCircle, ShieldAlert, Bug, Zap, Loader2 } from "lucide-react";
+import { RefreshCw, Download, BarChart3, Users, GitCommit, GitPullRequest, TrendingUp, TrendingDown, MinusCircle, ExternalLink, Inbox, GitBranch, Clock, User, Filter, ArrowUpDown, ArrowUp, ArrowDown, Copy, FolderGit2, HelpCircle, ShieldAlert, Bug, Zap, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useGitLabConfigured, useGitLabScanHistory, useTriggerGitLabScan, useGitLabConfig } from "@/lib/query/gitlabQueries";
@@ -48,12 +48,52 @@ function SummaryCards({ current, previous }: { current?: GitLabScanHistory; prev
     [previous],
   );
 
-  const currentCoverage = current && current.total_projects > 0
-    ? Math.round((current.test_projects / current.total_projects) * 100)
-    : 0;
-  const previousCoverage = previous && previous.total_projects > 0
-    ? Math.round((previous.test_projects / previous.total_projects) * 100)
-    : undefined;
+  // Calculate coverage from walkin_metrics in summary
+  const currentCoverages = useMemo(() => {
+    if (!current?.summary) return { newCoverage: null, allCoverage: null };
+    const projects: GitLabProjectResult[] = JSON.parse(current.summary || "[]");
+    let newCoverageSum = 0;
+    let allCoverageSum = 0;
+    let count = 0;
+    for (const p of projects) {
+      if (p.walkin_metrics) {
+        if (p.walkin_metrics.new_coverage != null) {
+          newCoverageSum += p.walkin_metrics.new_coverage;
+        }
+        if (p.walkin_metrics.coverage != null) {
+          allCoverageSum += p.walkin_metrics.coverage;
+        }
+        count++;
+      }
+    }
+    return {
+      newCoverage: count > 0 ? newCoverageSum / count : null,
+      allCoverage: count > 0 ? allCoverageSum / count : null,
+    };
+  }, [current]);
+
+  const previousCoverages = useMemo(() => {
+    if (!previous?.summary) return { newCoverage: null, allCoverage: null };
+    const projects: GitLabProjectResult[] = JSON.parse(previous.summary || "[]");
+    let newCoverageSum = 0;
+    let allCoverageSum = 0;
+    let count = 0;
+    for (const p of projects) {
+      if (p.walkin_metrics) {
+        if (p.walkin_metrics.new_coverage != null) {
+          newCoverageSum += p.walkin_metrics.new_coverage;
+        }
+        if (p.walkin_metrics.coverage != null) {
+          allCoverageSum += p.walkin_metrics.coverage;
+        }
+        count++;
+      }
+    }
+    return {
+      newCoverage: count > 0 ? newCoverageSum / count : null,
+      allCoverage: count > 0 ? allCoverageSum / count : null,
+    };
+  }, [previous]);
 
   const cards = [
     {
@@ -75,18 +115,18 @@ function SummaryCards({ current, previous }: { current?: GitLabScanHistory; prev
       previousValue: previousContributors,
     },
     {
-      icon: CheckCircle,
-      label: "单测覆盖应用",
-      value: current ? `${current.test_projects}/${current.total_projects}` : "0/0",
-      secondaryValue: currentCoverage ? `${currentCoverage}%` : undefined,
-      previousValue: previousCoverage,
-      tooltip: "改动了代码且有单测用例的应用覆盖率",
+      icon: TrendingUp,
+      label: "增量覆盖率",
+      value: currentCoverages.newCoverage != null ? `${currentCoverages.newCoverage.toFixed(1)}%` : "-",
+      previousValue: previousCoverages.newCoverage,
+      tooltip: "Walkin 代码增量覆盖率平均值",
     },
     {
-      icon: Plus,
-      label: "新增代码",
-      value: formatNumber(current?.total_lines_added ?? 0),
-      previousValue: previous?.total_lines_added,
+      icon: BarChart3,
+      label: "全量覆盖率",
+      value: currentCoverages.allCoverage != null ? `${currentCoverages.allCoverage.toFixed(1)}%` : "-",
+      previousValue: previousCoverages.allCoverage,
+      tooltip: "Walkin 代码全量覆盖率平均值",
     },
     {
       icon: GitPullRequest,
@@ -108,9 +148,6 @@ function SummaryCards({ current, previous }: { current?: GitLabScanHistory; prev
             <div className="flex-1">
               <div className="flex items-baseline gap-2">
                 <p className="text-2xl font-bold">{card.value}</p>
-                {card.secondaryValue && (
-                  <span className="text-sm text-muted-foreground">({card.secondaryValue})</span>
-                )}
               </div>
               <div className="flex items-center gap-2">
                 <p className="text-sm text-muted-foreground">{card.label}</p>
@@ -120,8 +157,8 @@ function SummaryCards({ current, previous }: { current?: GitLabScanHistory; prev
                   </span>
                 )}
                 <TrendIndicator
-                  current={card.invertTrend ? -(card.value as number) : (card.value as number)}
-                  previous={card.previousValue !== undefined ? (card.invertTrend ? -card.previousValue : card.previousValue) : undefined}
+                  current={typeof card.value === 'string' ? parseFloat(card.value) || 0 : card.value}
+                  previous={card.previousValue}
                 />
               </div>
             </div>
