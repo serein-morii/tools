@@ -708,7 +708,14 @@ impl WalkinClient {
             return Err(ToolsError::Http(format!("Walkin unit-board error: {}", api_response.message.unwrap_or_default())));
         }
 
-        // 返回最后一条数据（最新的）
-        Ok(api_response.data.and_then(|mut d| d.pop()))
+        // 返回增量覆盖率（综合覆盖率 ynewValue）最大的那条记录
+        Ok(api_response.data.and_then(|mut d| {
+            d.sort_by(|a, b| {
+                let a_val = a.ynewValue.unwrap_or(0.0);
+                let b_val = b.ynewValue.unwrap_or(0.0);
+                b_val.partial_cmp(&a_val).unwrap_or(std::cmp::Ordering::Equal)
+            });
+            d.into_iter().next()
+        }))
     }
 }
