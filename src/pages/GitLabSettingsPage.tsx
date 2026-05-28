@@ -583,10 +583,14 @@ export function GitLabSettingsPage() {
       <Card className="mb-6">
         <CardHeader>
           <CardTitle>通知推送配置</CardTitle>
+          <CardDescription>扫描完成后推送通知到指定渠道</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <label className="text-sm font-medium">推送渠道</label>
+            <p className="text-xs text-muted-foreground">
+              请到 <span className="font-medium">任务提醒 - 渠道</span> 中配置通知渠道
+            </p>
             <div className="flex flex-wrap gap-2">
               {channels?.map((channel) => (
                 <Button
