@@ -707,23 +707,35 @@ function UnitBoardCard({ config }: { config: import("@/types").GitLabConfig | un
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const canFetch = config?.walkin_enabled && config?.walkin_url && config?.walkin_dept_id && config?.walkin_dept_name && isLoggedIn;
+  // Derive all conditions separately for proper dependency tracking
+  const walkinEnabled = config?.walkin_enabled;
+  const walkinUrl = config?.walkin_url;
+  const walkinDeptId = config?.walkin_dept_id;
+  const walkinDeptName = config?.walkin_dept_name;
+  const csrfToken = config?.walkin_csrf_token;
+  const projectHeader = config?.walkin_project_header;
+  const workspaceName = config?.walkin_workspace_name;
+  const xAuthToken = config?.walkin_x_auth_token;
+
+  const canFetch = walkinEnabled && walkinUrl && walkinDeptId && walkinDeptName && isLoggedIn;
 
   useEffect(() => {
-    if (!canFetch) return;
+    if (!canFetch || !csrfToken || !xAuthToken) {
+      return;
+    }
     let cancelled = false;
     setLoading(true);
     setError(null);
     gitlabApi.walkinFetchUnitBoard(
-      config!.walkin_url,
+      walkinUrl!,
       {
-        csrf_token: config!.walkin_csrf_token,
-        project: config!.walkin_project_header,
-        workspace: config!.walkin_workspace_name,
-        x_auth_token: config!.walkin_x_auth_token,
+        csrf_token: csrfToken,
+        project: projectHeader || "",
+        workspace: workspaceName || "",
+        x_auth_token: xAuthToken,
       },
-      config!.walkin_dept_id,
-      config!.walkin_dept_name,
+      walkinDeptId!,
+      walkinDeptName!,
     ).then((result) => {
       if (!cancelled) setData(result);
     }).catch((e) => {
@@ -732,9 +744,9 @@ function UnitBoardCard({ config }: { config: import("@/types").GitLabConfig | un
       if (!cancelled) setLoading(false);
     });
     return () => { cancelled = true; };
-  }, [canFetch, config?.walkin_url, config?.walkin_csrf_token, config?.walkin_x_auth_token, config?.walkin_dept_id]);
+  }, [canFetch, walkinUrl, csrfToken, xAuthToken, walkinDeptId, walkinDeptName, projectHeader, workspaceName, isLoggedIn]);
 
-  if (!config?.walkin_enabled || !config?.walkin_dept_id || !config?.walkin_dept_name) return null;
+  if (!walkinEnabled || !walkinDeptId || !walkinDeptName) return null;
 
   return (
     <div className="p-6 pt-0">
@@ -745,19 +757,19 @@ function UnitBoardCard({ config }: { config: import("@/types").GitLabConfig | un
               <BarChart3 className="h-4 w-4" />
               团队覆盖率看板
             </h4>
-            {canFetch && (
+            {canFetch && csrfToken && xAuthToken && (
               <Button variant="ghost" size="sm" onClick={() => {
                 setLoading(true);
                 gitlabApi.walkinFetchUnitBoard(
-                  config!.walkin_url,
+                  walkinUrl!,
                   {
-                    csrf_token: config!.walkin_csrf_token,
-                    project: config!.walkin_project_header,
-                    workspace: config!.walkin_workspace_name,
-                    x_auth_token: config!.walkin_x_auth_token,
+                    csrf_token: csrfToken,
+                    project: projectHeader || "",
+                    workspace: workspaceName || "",
+                    x_auth_token: xAuthToken,
                   },
-                  config!.walkin_dept_id,
-                  config!.walkin_dept_name,
+                  walkinDeptId!,
+                  walkinDeptName!,
                 ).then(setData).catch((e) => setError(e instanceof Error ? e.message : String(e))).finally(() => setLoading(false));
               }}>
                 <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
@@ -767,7 +779,7 @@ function UnitBoardCard({ config }: { config: import("@/types").GitLabConfig | un
           {!isLoggedIn && (
             <p className="text-sm text-muted-foreground">请先在配置页面登录 Walkin</p>
           )}
-          {isLoggedIn && (!config.walkin_dept_id || !config.walkin_dept_name) && (
+          {isLoggedIn && (!walkinDeptId || !walkinDeptName) && (
             <p className="text-sm text-muted-foreground">请先配置部门 ID 和部门名称</p>
           )}
           {loading && (
