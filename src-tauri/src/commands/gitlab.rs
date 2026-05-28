@@ -246,9 +246,27 @@ pub fn save_gitlab_config(db: State<'_, Arc<Database>>, config: GitLabConfig) ->
 
 #[tauri::command]
 pub async fn test_gitlab_connection(config: GitLabConfig) -> Result<bool> {
+    // Get the first selected token for testing
+    let token = if !config.selected_token_ids.is_empty() {
+        // Use the first selected token
+        let first_id = &config.selected_token_ids[0];
+        config.token_profiles
+            .iter()
+            .find(|p| &p.id == first_id)
+            .map(|p| p.token.clone())
+            .unwrap_or_default()
+    } else if let Some(t) = &config.token {
+        // Fallback to legacy token field
+        t.clone()
+    } else if !config.token_profiles.is_empty() {
+        // Fallback to first token in profiles
+        config.token_profiles[0].token.clone()
+    } else {
+        String::new()
+    };
+
     let auth = match config.auth_type.as_str() {
         "token" => {
-            let token = config.token.clone().unwrap_or_default();
             if token.is_empty() {
                 return Err(ToolsError::Http("Token is required".to_string()));
             }
