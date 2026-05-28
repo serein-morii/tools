@@ -127,11 +127,15 @@ export function WalkinAuthProvider({ config, onAuthUpdate, children }: WalkinAut
   const handleCaptchaLogin = async () => {
     const currentConfig = configRef.current;
     const credentials = loginCredentialsRef.current;
+    if (!currentConfig?.walkin_url) {
+      toast.error("配置未加载");
+      return;
+    }
     // Get LDAP credentials from profiles
-    const ldapProfile = currentConfig?.ldap_profiles.find(p => p.id === currentConfig?.selected_ldap_id);
+    const ldapProfile = currentConfig.ldap_profiles?.find(p => p.id === currentConfig.selected_ldap_id);
     const username = credentials?.username || ldapProfile?.username || "";
     const password = credentials?.password || ldapProfile?.password || "";
-    if (!captcha || !currentConfig?.walkin_url || !username || !password) {
+    if (!captcha || !username || !password) {
       toast.error("请输入验证码");
       return;
     }
