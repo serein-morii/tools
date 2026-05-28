@@ -127,6 +127,9 @@ impl ScanResult {
             walkin_by_name.entry(wp.project_name.clone()).or_default().push(wp);
         }
 
+        log::info!("Walkin projects received: {}, GitLab projects: {}", walkin_projects.len(), self.projects.len());
+        log::debug!("Walkin project names: {:?}", walkin_by_name.keys().collect::<Vec<_>>());
+
         for project in &mut self.projects {
             let short_name = project.project_name.split('/').last().unwrap_or(&project.project_name);
             // 1. Check custom mappings
@@ -136,7 +139,10 @@ impl ScanResult {
                 // 2. Match by last segment of GitLab path
                 .unwrap_or(short_name);
 
+            log::debug!("Matching GitLab '{}' -> Walkin '{}'", project.project_name, walkin_name);
+
             if let Some(entries) = walkin_by_name.get(walkin_name) {
+                log::info!("Found Walkin match for '{}': {} entries", walkin_name, entries.len());
                 // Build per-branch metrics
                 let mut by_branch: HashMap<String, WalkinMetrics> = HashMap::new();
                 for entry in entries {
@@ -155,6 +161,8 @@ impl ScanResult {
                     project.walkin_metrics_by_branch = Some(by_branch);
                 }
                 project.walkin_metrics = main_metrics;
+            } else {
+                log::debug!("No Walkin match for '{}'", walkin_name);
             }
         }
 

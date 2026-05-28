@@ -262,46 +262,57 @@ pub async fn trigger_gitlab_scan(
     }).await?;
 
     // Fetch Walkin metrics if enabled
-    if config.walkin_enabled && !config.walkin_url.is_empty() {
-        let _ = app.emit("gitlab-scan-progress", &ScanProgress {
-            current: 0,
-            total: 1,
-            project_name: "加载 Walkin 代码质量数据...".to_string(),
-            commits_scanned: 0,
-            commits_total: 0,
-            phase: Some("walkin".to_string()),
-        });
+    log::info!("Walkin config: enabled={}, url={}, has_csrf={}, has_x_auth={}",
+        config.walkin_enabled, !config.walkin_url.is_empty(),
+        !config.walkin_csrf_token.is_empty(), !config.walkin_x_auth_token.is_empty());
 
-        let walkin_auth = WalkinAuth {
-            csrf_token: config.walkin_csrf_token.clone(),
-            project: config.walkin_project_header.clone(),
-            workspace: config.walkin_workspace_name.clone(),
-            x_auth_token: config.walkin_x_auth_token.clone(),
-        };
-        match WalkinClient::new(&config.walkin_url, walkin_auth, config.walkin_dept_name.clone(), config.walkin_workspace_name.clone()) {
-            Ok(walkin_client) => {
-                match walkin_client.fetch_project_metrics().await {
-                    Ok(walkin_data) => {
-                        result.merge_walkin_metrics(&walkin_data, &config.walkin_project_mappings);
-                    }
-                    Err(e) => {
-                        log::warn!("Failed to fetch Walkin metrics: {}", e);
+    if config.walkin_enabled && !config.walkin_url.is_empty() {
+        if config.walkin_csrf_token.is_empty() || config.walkin_x_auth_token.is_empty() {
+            log::warn!("Walkin enabled but missing auth tokens (csrf or x_auth_token)");
+        } else {
+            let _ = app.emit("gitlab-scan-progress", &ScanProgress {
+                current: 0,
+                total: 1,
+                project_name: "加载 Walkin 代码质量数据...".to_string(),
+                commits_scanned: 0,
+                commits_total: 0,
+                phase: Some("walkin".to_string()),
+            });
+
+            let walkin_auth = WalkinAuth {
+                csrf_token: config.walkin_csrf_token.clone(),
+                project: config.walkin_project_header.clone(),
+                workspace: config.walkin_workspace_name.clone(),
+                x_auth_token: config.walkin_x_auth_token.clone(),
+            };
+            match WalkinClient::new(&config.walkin_url, walkin_auth, config.walkin_dept_name.clone(), config.walkin_workspace_name.clone()) {
+                Ok(walkin_client) => {
+                    match walkin_client.fetch_project_metrics().await {
+                        Ok(walkin_data) => {
+                            log::info!("Fetched {} Walkin projects", walkin_data.len());
+                            result.merge_walkin_metrics(&walkin_data, &config.walkin_project_mappings);
+                        }
+                        Err(e) => {
+                            log::warn!("Failed to fetch Walkin metrics: {}", e);
+                        }
                     }
                 }
+                Err(e) => {
+                    log::warn!("Failed to create Walkin client: {}", e);
+                }
             }
-            Err(e) => {
-                log::warn!("Failed to create Walkin client: {}", e);
-            }
-        }
 
-        let _ = app.emit("gitlab-scan-progress", &ScanProgress {
-            current: 1,
-            total: 1,
-            project_name: "Walkin 数据加载完成".to_string(),
-            commits_scanned: 0,
-            commits_total: 0,
-            phase: Some("walkin".to_string()),
-        });
+            let _ = app.emit("gitlab-scan-progress", &ScanProgress {
+                current: 1,
+                total: 1,
+                project_name: "Walkin 数据加载完成".to_string(),
+                commits_scanned: 0,
+                commits_total: 0,
+                phase: Some("walkin".to_string()),
+            });
+        }
+    } else {
+        log::info!("Walkin not enabled or URL empty, skipping Walkin metrics fetch");
     }
 
     // Emit scan complete event

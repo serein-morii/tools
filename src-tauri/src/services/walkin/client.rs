@@ -540,6 +540,8 @@ impl WalkinClient {
         let start_date = start.format("%Y-%m-%d 00:00:00").to_string();
         let end_date = now.format("%Y-%m-%d 23:59:59").to_string();
 
+        log::info!("Fetching Walkin project metrics from {} to {}", start_date, end_date);
+
         let mut all_projects = Vec::new();
         let mut page = 0u32;
         let page_size_val = 500u32;
@@ -586,6 +588,7 @@ impl WalkinClient {
             };
 
             let count = data.listObject.len();
+            log::info!("Walkin API returned {} projects on page {}", count, page);
             all_projects.extend(data.listObject);
 
             // Stop if we got fewer than pageSize items (last page)
@@ -598,6 +601,11 @@ impl WalkinClient {
             if page >= 10 {
                 break;
             }
+        }
+
+        log::info!("Total Walkin projects fetched: {}", all_projects.len());
+        if !all_projects.is_empty() {
+            log::debug!("First few Walkin project names: {:?}", all_projects.iter().take(5).map(|p| &p.project_name).collect::<Vec<_>>());
         }
 
         Ok(all_projects)
@@ -659,6 +667,10 @@ impl WalkinClient {
         let start_date = format!("{}-01-01 08:00:00", now.format("%Y"));
         let end_date = now.format("%Y-%m-%d %H:%M:%S").to_string();
 
+        log::info!("Fetching unit-board: workspace={}, deptName={}, deptId={}, start={}, end={}",
+            self.workspace_name, self.dept_name, dept_id, start_date, end_date);
+
+        // 尝试不带 appGroupFlag 参数
         let response = self.http_client
             .get(&url)
             .query(&[
@@ -667,7 +679,6 @@ impl WalkinClient {
                 ("deptId", &dept_id.to_string()),
                 ("startDateFrom", &start_date),
                 ("startDateTo", &end_date),
-                ("appGroupFlag", &"按周期".to_string()),
             ])
             .header("CSRF-TOKEN", &self.auth.csrf_token)
             .header("PROJECT", &self.auth.project)
@@ -684,8 +695,13 @@ impl WalkinClient {
             return Err(ToolsError::Http(format!("Walkin unit-board error {}: {}", status, body)));
         }
 
-        let api_response: UnitBoardResponse = response.json().await
-            .map_err(|e| ToolsError::Http(format!("Failed to parse unit-board response: {}", e)))?;
+        let body_text = response.text().await
+            .map_err(|e| ToolsError::Http(format!("Failed to read unit-board response: {}", e)))?;
+
+        log::info!("Unit-board raw response: {}", body_text);
+
+        let api_response: UnitBoardResponse = serde_json::from_str(&body_text)
+            .map_err(|e| ToolsError::Http(format!("Failed to parse unit-board response: {} - body: {}", e, body_text)))?;
 
         if !api_response.success {
             return Err(ToolsError::Http(format!("Walkin unit-board error: {}", api_response.message.unwrap_or_default())));
