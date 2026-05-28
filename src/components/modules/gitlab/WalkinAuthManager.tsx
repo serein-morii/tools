@@ -10,7 +10,7 @@ interface WalkinAuthContextType {
   isLoggedIn: boolean;
   userName: string | null;
   checkLogin: () => Promise<boolean>;
-  startAutoLogin: (credentials?: { username: string; password: string }) => Promise<void>;
+  startAutoLogin: (credentials?: { username: string; password: string }, configOverride?: Partial<GitLabConfig>) => Promise<void>;
 }
 
 const WalkinAuthContext = createContext<WalkinAuthContextType>({
@@ -65,20 +65,27 @@ export function WalkinAuthProvider({ config, onAuthUpdate, children }: WalkinAut
     }
   }, [config]);
 
-  const startAutoLogin = useCallback(async (credentials?: { username: string; password: string }) => {
+  const startAutoLogin = useCallback(async (
+    credentials?: { username: string; password: string },
+    configOverride?: Partial<GitLabConfig>,
+  ) => {
+    // Merge current config with override
     const currentConfig = configRef.current;
-    if (!currentConfig) {
-      toast.error("配置未加载，请稍后再试");
-      return;
-    }
-    // Get LDAP credentials from profiles or provided credentials
-    const ldapProfile = currentConfig.ldap_profiles.find(p => p.id === currentConfig.selected_ldap_id);
-    const username = credentials?.username || ldapProfile?.username || "";
-    const password = credentials?.password || ldapProfile?.password || "";
-    if (!currentConfig.walkin_url) {
+    const effectiveConfig = {
+      ...currentConfig,
+      ...configOverride,
+      ldap_profiles: configOverride?.ldap_profiles || currentConfig?.ldap_profiles || [],
+      selected_ldap_id: configOverride?.selected_ldap_id || currentConfig?.selected_ldap_id || "",
+    } as GitLabConfig;
+
+    if (!effectiveConfig.walkin_url) {
       toast.error("请先配置 Walkin 地址");
       return;
     }
+    // Get LDAP credentials from profiles or provided credentials
+    const ldapProfile = effectiveConfig.ldap_profiles.find(p => p.id === effectiveConfig.selected_ldap_id);
+    const username = credentials?.username || ldapProfile?.username || "";
+    const password = credentials?.password || ldapProfile?.password || "";
     if (!username || !password) {
       toast.error("请先配置 LDAP 用户名和密码");
       return;
@@ -87,13 +94,13 @@ export function WalkinAuthProvider({ config, onAuthUpdate, children }: WalkinAut
     setIsAutoLoggingIn(true);
     loginCredentialsRef.current = { username, password };
     try {
-      const result = await gitlabApi.walkinAutoLogin(currentConfig.walkin_url, username, password);
+      const result = await gitlabApi.walkinAutoLogin(effectiveConfig.walkin_url, username, password);
 
       if (result.success && result.csrf_token && result.x_auth_token) {
         onAuthUpdate({
           csrf_token: result.csrf_token,
-          project: result.project || currentConfig.walkin_project_header,
-          workspace: result.workspace || currentConfig.walkin_workspace_name,
+          project: result.project || effectiveConfig.walkin_project_header,
+          workspace: result.workspace || effectiveConfig.walkin_workspace_name,
           x_auth_token: result.x_auth_token,
         });
         setIsLoggedIn(true);

@@ -864,11 +864,21 @@ export function GitLabSettingsPage() {
                             toast.error("请先选择 LDAP 配置并填写用户名和密码");
                             return;
                           }
+                          if (!formData.walkin_url) {
+                            toast.error("请先填写 Walkin 地址");
+                            return;
+                          }
                           try {
                             toast.info("正在保存配置...");
                             await saveConfig.mutateAsync(formData);
-                            toast.info("配置已保存，正在登录...");
-                            await startAutoLogin(ldap);
+                            // 传入最新配置覆盖，不依赖 config ref
+                            await startAutoLogin(ldap, {
+                              walkin_url: formData.walkin_url,
+                              walkin_project_header: formData.walkin_project_header,
+                              walkin_workspace_name: formData.walkin_workspace_name,
+                              ldap_profiles: formData.ldap_profiles,
+                              selected_ldap_id: formData.selected_ldap_id,
+                            });
                           } catch (e) {
                             const msg = e instanceof Error ? e.message : String(e);
                             toast.error("操作失败: " + msg);
