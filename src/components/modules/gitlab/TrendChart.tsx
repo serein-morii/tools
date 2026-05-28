@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect, useRef } from "react";
-import type { GitLabScanHistory, DeveloperStat } from "@/types";
+import type { GitLabScanHistory, DeveloperStat, GitLabProjectResult } from "@/types";
 import { GitCommit, Plus, Minus, ArrowUpDown, ChevronDown } from "lucide-react";
 
 interface TrendChartProps {
@@ -45,6 +45,24 @@ export function TrendChart({ history }: TrendChartProps) {
   const maxCommits = Math.max(...scans.map(s => s.total_commits), 1);
   const maxCoverage = 100;
 
+  // Calculate incremental coverage from walkin_metrics in summary
+  const getNewCoverage = (scan: GitLabScanHistory): number | null => {
+    try {
+      const projects: GitLabProjectResult[] = JSON.parse(scan.summary || "[]");
+      let sum = 0;
+      let count = 0;
+      for (const p of projects) {
+        if (p.walkin_metrics?.new_coverage != null) {
+          sum += p.walkin_metrics.new_coverage;
+          count++;
+        }
+      }
+      return count > 0 ? sum / count : null;
+    } catch {
+      return null;
+    }
+  };
+
   // Chart dimensions
   const chartWidth = scans.length * 30;
   const chartHeight = 200;
@@ -59,9 +77,9 @@ export function TrendChart({ history }: TrendChartProps) {
     return `${x},${y}`;
   }).join(" ");
 
-  // Generate SVG path for coverage
+  // Generate SVG path for coverage (incremental coverage from walkin_metrics)
   const coveragePoints = scans.map((s, i) => {
-    const coverage = s.total_projects > 0 ? (s.test_projects / s.total_projects) * 100 : 0;
+    const coverage = getNewCoverage(s) ?? 0;
     const x = padding.left + (i / (scans.length - 1)) * innerWidth;
     const y = padding.top + innerHeight - (coverage / maxCoverage) * innerHeight;
     return `${x},${y}`;
@@ -157,7 +175,7 @@ export function TrendChart({ history }: TrendChartProps) {
 
             {/* Coverage dots */}
             {scans.map((s, i) => {
-              const coverage = s.total_projects > 0 ? (s.test_projects / s.total_projects) * 100 : 0;
+              const coverage = getNewCoverage(s) ?? 0;
               const x = padding.left + (i / (scans.length - 1)) * innerWidth;
               const y = padding.top + innerHeight - (coverage / maxCoverage) * innerHeight;
               return (
@@ -186,7 +204,7 @@ export function TrendChart({ history }: TrendChartProps) {
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-3 h-0.5 bg-muted-foreground rounded" style={{ borderStyle: "dashed" }} />
-            <span className="text-muted-foreground">覆盖率 %</span>
+            <span className="text-muted-foreground">增量覆盖率 %</span>
           </div>
         </div>
       </div>
