@@ -21,6 +21,67 @@ function isValidUrl(url: string): boolean {
   }
 }
 
+// Parse cron expression to human readable format
+function parseCronToHuman(cron: string): string {
+  const parts = cron.trim().split(/\s+/);
+  if (parts.length !== 5) return "无效表达式";
+
+  const [min, hour, day, month, weekday] = parts;
+
+  // Every N minutes
+  if (min.startsWith("*/") && hour === "*" && day === "*" && month === "*" && weekday === "*") {
+    const interval = min.replace("*/", "");
+    return `每 ${interval} 分钟`;
+  }
+
+  // Every N hours
+  if (min === "0" && hour.startsWith("*/") && day === "*" && month === "*" && weekday === "*") {
+    const interval = hour.replace("*/", "");
+    return `每 ${interval} 小时`;
+  }
+
+  // Specific time
+  const timeStr = `${hour === "*" ? "每小时" : `${hour}时`}${min === "*" ? "" : `${min}分`}`;
+
+  // Weekday
+  const weekdayMap: Record<string, string> = {
+    "0": "周日",
+    "1": "周一",
+    "2": "周二",
+    "3": "周三",
+    "4": "周四",
+    "5": "周五",
+    "6": "周六",
+    "*": "每天",
+    "1-5": "工作日",
+    "0,6": "周末",
+  };
+
+  // Multiple weekdays
+  if (weekday.includes(",") && !weekdayMap[weekday]) {
+    const days = weekday.split(",").map(d => weekdayMap[d] || d).join(", ");
+    return `${timeStr} (${days})`;
+  }
+
+  // Multiple hours
+  if (hour.includes(",") && day === "*" && month === "*") {
+    const hours = hour.split(",").map(h => `${h}:00`).join(", ");
+    return `${weekdayMap[weekday] || "每天"} ${hours}`;
+  }
+
+  const weekdayStr = weekdayMap[weekday] || weekday;
+
+  // Daily
+  if (day === "*" && month === "*") {
+    if (weekday === "*") {
+      return `每天 ${hour}:${min.padStart(2, "0")}`;
+    }
+    return `${weekdayStr} ${hour}:${min.padStart(2, "0")}`;
+  }
+
+  return `${timeStr} ${weekdayStr}`;
+}
+
 export function GitLabSettingsPage() {
   const { data: config, isLoading } = useGitLabConfig();
   const { data: channels } = useChannels();
@@ -344,18 +405,49 @@ export function GitLabSettingsPage() {
       {/* 定时扫描配置 */}
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle>定时扫描配置</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Clock className="h-5 w-5" />
+            定时扫描配置
+          </CardTitle>
+          <CardDescription>配置自动扫描和 Walkin 数据刷新的时间</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* 快捷选择 */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium">快捷选择</label>
+            <div className="flex flex-wrap gap-2">
+              {[
+                { cron: "0 9 * * 1", label: "每周一 09:00" },
+                { cron: "0 9 * * 1-5", label: "工作日 09:00" },
+                { cron: "0 9,18 * * 1-5", label: "工作日 09:00, 18:00" },
+                { cron: "0 9 * * *", label: "每天 09:00" },
+                { cron: "0 9,12,18 * * *", label: "每天 09:00, 12:00, 18:00" },
+                { cron: "0 */2 * * *", label: "每 2 小时" },
+                { cron: "0 */4 * * *", label: "每 4 小时" },
+                { cron: "0 */6 * * *", label: "每 6 小时" },
+                { cron: "*/30 * * * *", label: "每 30 分钟" },
+              ].map((option) => (
+                <Button
+                  key={option.cron}
+                  variant={formData.scan_schedule === option.cron ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setFormData({ ...formData, scan_schedule: option.cron })}
+                >
+                  {option.label}
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          {/* 自定义时间 */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Cron表达式</label>
+              <label className="text-sm font-medium">Cron 表达式</label>
               <Input
                 placeholder="0 9 * * 1"
                 value={formData.scan_schedule}
                 onChange={(e) => setFormData({ ...formData, scan_schedule: e.target.value })}
               />
-              <p className="text-xs text-muted-foreground">每周一 09:00</p>
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">扫描范围</label>
@@ -378,6 +470,91 @@ export function GitLabSettingsPage() {
             </div>
           </div>
 
+          {/* 自定义时间选择器 */}
+          <div className="border rounded-lg p-3 bg-muted/30">
+            <div className="flex items-center gap-2 mb-2">
+              <Clock className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-medium">自定义时间</span>
+            </div>
+            <div className="grid grid-cols-4 gap-2">
+              <div className="space-y-1">
+                <label className="text-xs text-muted-foreground">分钟</label>
+                <Input
+                  type="number"
+                  min={0}
+                  max={59}
+                  placeholder="0"
+                  value={(() => {
+                    const parts = formData.scan_schedule.split(" ");
+                    return parts[0] === "*" ? "" : parts[0]?.replace("*/", "") || "0";
+                  })()}
+                  onChange={(e) => {
+                    const parts = formData.scan_schedule.split(" ");
+                    parts[0] = e.target.value || "0";
+                    setFormData({ ...formData, scan_schedule: parts.join(" ") });
+                  }}
+                  className="h-8"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs text-muted-foreground">小时</label>
+                <Input
+                  type="number"
+                  min={0}
+                  max={23}
+                  placeholder="9"
+                  value={(() => {
+                    const parts = formData.scan_schedule.split(" ");
+                    return parts[1] === "*" ? "" : parts[1] || "9";
+                  })()}
+                  onChange={(e) => {
+                    const parts = formData.scan_schedule.split(" ");
+                    parts[1] = e.target.value || "9";
+                    setFormData({ ...formData, scan_schedule: parts.join(" ") });
+                  }}
+                  className="h-8"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs text-muted-foreground">日</label>
+                <Input
+                  type="text"
+                  placeholder="*"
+                  value={(() => {
+                    const parts = formData.scan_schedule.split(" ");
+                    return parts[2] || "*";
+                  })()}
+                  onChange={(e) => {
+                    const parts = formData.scan_schedule.split(" ");
+                    parts[2] = e.target.value || "*";
+                    setFormData({ ...formData, scan_schedule: parts.join(" ") });
+                  }}
+                  className="h-8"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs text-muted-foreground">星期</label>
+                <Input
+                  type="text"
+                  placeholder="*"
+                  value={(() => {
+                    const parts = formData.scan_schedule.split(" ");
+                    return parts[4] || "*";
+                  })()}
+                  onChange={(e) => {
+                    const parts = formData.scan_schedule.split(" ");
+                    parts[4] = e.target.value || "*";
+                    setFormData({ ...formData, scan_schedule: parts.join(" ") });
+                  }}
+                  className="h-8"
+                />
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              格式: 分钟 小时 日 月 星期 (例: 0 9 * * 1 = 每周一 09:00)
+            </p>
+          </div>
+
           {formData.scan_range_type === "days" && (
             <div className="space-y-2">
               <label className="text-sm font-medium">天数</label>
@@ -391,6 +568,14 @@ export function GitLabSettingsPage() {
               />
             </div>
           )}
+
+          {/* 当前配置预览 */}
+          <div className="text-xs text-muted-foreground flex items-center gap-2">
+            <span className="font-medium">当前配置:</span>
+            <code className="bg-muted px-2 py-0.5 rounded">{formData.scan_schedule}</code>
+            <span>=</span>
+            <span>{parseCronToHuman(formData.scan_schedule)}</span>
+          </div>
         </CardContent>
       </Card>
 
