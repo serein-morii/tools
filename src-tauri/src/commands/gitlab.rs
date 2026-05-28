@@ -246,45 +246,58 @@ pub fn save_gitlab_config(db: State<'_, Arc<Database>>, config: GitLabConfig) ->
 
 #[tauri::command]
 pub async fn test_gitlab_connection(config: GitLabConfig) -> Result<bool> {
-    // Get the first selected token for testing
-    let token = if !config.selected_token_ids.is_empty() {
-        // Use the first selected token
-        let first_id = &config.selected_token_ids[0];
-        config.token_profiles
-            .iter()
-            .find(|p| &p.id == first_id)
-            .map(|p| p.token.clone())
-            .unwrap_or_default()
-    } else if let Some(t) = &config.token {
-        // Fallback to legacy token field
-        t.clone()
-    } else if !config.token_profiles.is_empty() {
-        // Fallback to first token in profiles
-        config.token_profiles[0].token.clone()
+    // Get selected tokens
+    let selected_ids = if config.selected_token_ids.is_empty() {
+        config.token_profiles.iter().map(|p| p.id.clone()).collect::<Vec<_>>()
     } else {
-        String::new()
+        config.selected_token_ids.clone()
     };
 
-    let auth = match config.auth_type.as_str() {
-        "token" => {
-            if token.is_empty() {
-                return Err(ToolsError::Http("Token is required".to_string()));
-            }
-            GitLabAuth::Token(token)
-        }
-        "password" => {
-            let username = config.username.clone().unwrap_or_default();
-            let password = config.password.clone().unwrap_or_default();
-            if username.is_empty() || password.is_empty() {
-                return Err(ToolsError::Http("Username and password are required".to_string()));
-            }
-            GitLabAuth::Password { username, password }
-        }
-        _ => return Err(ToolsError::Http("Invalid auth type".to_string())),
-    };
+    let selected_tokens: Vec<(&TokenProfile, &str)> = config.token_profiles
+        .iter()
+        .filter(|p| selected_ids.contains(&p.id))
+        .map(|p| (p, p.label.as_str()))
+        .collect();
 
-    let client = GitLabClient::new(&config.url, auth)?;
-    client.test_connection().await
+    if selected_tokens.is_empty() {
+        return Err(ToolsError::Http("No token selected".to_string()));
+    }
+
+    let url = config.url.clone();
+    let mut all_success = true;
+    let mut results = Vec::new();
+
+    for (profile, label) in &selected_tokens {
+        let auth = GitLabAuth::Token(profile.token.clone());
+        match GitLabClient::new(&url, auth) {
+            Ok(client) => {
+                match client.test_connection().await {
+                    Ok(true) => {
+                        results.push(format!("✓ {} 连接成功", label));
+                    }
+                    Ok(false) => {
+                        all_success = false;
+                        results.push(format!("✗ {} 连接失败", label));
+                    }
+                    Err(e) => {
+                        all_success = false;
+                        results.push(format!("✗ {} 连接失败: {}", label, e));
+                    }
+                }
+            }
+            Err(e) => {
+                all_success = false;
+                results.push(format!("✗ {} 客户端创建失败: {}", label, e));
+            }
+        }
+    }
+
+    if all_success {
+        log::info!("All token tests passed: {}", results.join(", "));
+        Ok(true)
+    } else {
+        Err(ToolsError::Http(results.join("\n")))
+    }
 }
 
 #[tauri::command]
