@@ -38,7 +38,15 @@ function TrendIndicator({ current, previous }: { current: number; previous?: num
   );
 }
 
-function SummaryCards({ current, previous }: { current?: GitLabScanHistory; previous?: GitLabScanHistory }) {
+function SummaryCards({
+  current,
+  previous,
+  unitBoardData
+}: {
+  current?: GitLabScanHistory;
+  previous?: GitLabScanHistory;
+  unitBoardData?: UnitBoardData | null;
+}) {
   const currentContributors = useMemo(
     () => current ? JSON.parse(current.contributors || "[]").length : 0,
     [current],
@@ -48,52 +56,9 @@ function SummaryCards({ current, previous }: { current?: GitLabScanHistory; prev
     [previous],
   );
 
-  // Calculate coverage from walkin_metrics in summary
-  const currentCoverages = useMemo(() => {
-    if (!current?.summary) return { newCoverage: null, allCoverage: null };
-    const projects: GitLabProjectResult[] = JSON.parse(current.summary || "[]");
-    let newCoverageSum = 0;
-    let allCoverageSum = 0;
-    let count = 0;
-    for (const p of projects) {
-      if (p.walkin_metrics) {
-        if (p.walkin_metrics.new_coverage != null) {
-          newCoverageSum += p.walkin_metrics.new_coverage;
-        }
-        if (p.walkin_metrics.coverage != null) {
-          allCoverageSum += p.walkin_metrics.coverage;
-        }
-        count++;
-      }
-    }
-    return {
-      newCoverage: count > 0 ? newCoverageSum / count : null,
-      allCoverage: count > 0 ? allCoverageSum / count : null,
-    };
-  }, [current]);
-
-  const previousCoverages = useMemo(() => {
-    if (!previous?.summary) return { newCoverage: null, allCoverage: null };
-    const projects: GitLabProjectResult[] = JSON.parse(previous.summary || "[]");
-    let newCoverageSum = 0;
-    let allCoverageSum = 0;
-    let count = 0;
-    for (const p of projects) {
-      if (p.walkin_metrics) {
-        if (p.walkin_metrics.new_coverage != null) {
-          newCoverageSum += p.walkin_metrics.new_coverage;
-        }
-        if (p.walkin_metrics.coverage != null) {
-          allCoverageSum += p.walkin_metrics.coverage;
-        }
-        count++;
-      }
-    }
-    return {
-      newCoverage: count > 0 ? newCoverageSum / count : null,
-      allCoverage: count > 0 ? allCoverageSum / count : null,
-    };
-  }, [previous]);
+  // Use unit board data for coverage (ynewValue = incremental, yallValue = full)
+  const currentNewCoverage = unitBoardData?.ynewValue ?? null;
+  const currentAllCoverage = unitBoardData?.yallValue ?? null;
 
   const cards = [
     {
@@ -117,16 +82,14 @@ function SummaryCards({ current, previous }: { current?: GitLabScanHistory; prev
     {
       icon: TrendingUp,
       label: "增量覆盖率",
-      value: currentCoverages.newCoverage != null ? `${currentCoverages.newCoverage.toFixed(1)}%` : "-",
-      previousValue: previousCoverages.newCoverage,
-      tooltip: "Walkin 代码增量覆盖率平均值",
+      value: currentNewCoverage != null ? `${currentNewCoverage.toFixed(1)}%` : "-",
+      tooltip: "团队覆盖率看板最新数据",
     },
     {
       icon: BarChart3,
       label: "全量覆盖率",
-      value: currentCoverages.allCoverage != null ? `${currentCoverages.allCoverage.toFixed(1)}%` : "-",
-      previousValue: previousCoverages.allCoverage,
-      tooltip: "Walkin 代码全量覆盖率平均值",
+      value: currentAllCoverage != null ? `${currentAllCoverage.toFixed(1)}%` : "-",
+      tooltip: "团队覆盖率看板最新数据",
     },
   ];
 
@@ -605,7 +568,13 @@ function ProjectTable({ projects }: { projects: GitLabProjectResult[] }) {
   );
 }
 
-function UnitBoardCard({ config }: { config: import("@/types").GitLabConfig | undefined }) {
+function UnitBoardCard({
+  config,
+  onDataChange
+}: {
+  config: import("@/types").GitLabConfig | undefined;
+  onDataChange?: (data: UnitBoardData | null) => void;
+}) {
   const { isLoggedIn } = useWalkinAuth();
   const [data, setData] = useState<UnitBoardData | null>(null);
   const [loading, setLoading] = useState(false);
@@ -721,12 +690,14 @@ function UnitBoardCard({ config }: { config: import("@/types").GitLabConfig | un
       );
       setData(result);
       setLastUpdate(new Date());
+      onDataChange?.(result);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
+      onDataChange?.(null);
     } finally {
       setLoading(false);
     }
-  }, [canFetch, csrfToken, xAuthToken, walkinUrl, walkinDeptId, walkinDeptName, projectHeader, workspaceName]);
+  }, [canFetch, csrfToken, xAuthToken, walkinUrl, walkinDeptId, walkinDeptName, projectHeader, workspaceName, onDataChange]);
 
   // Initial fetch
   useEffect(() => {
@@ -881,6 +852,7 @@ export function GitLabOverviewPage() {
   const [showSetupModal, setShowSetupModal] = useState(false);
   const [showProgressModal, setShowProgressModal] = useState(false);
   const [selectedScanIndex, setSelectedScanIndex] = useState<number>(0);
+  const [unitBoardData, setUnitBoardData] = useState<UnitBoardData | null>(null);
   const { data: isConfigured, refetch } = useGitLabConfigured();
   const { data: config } = useGitLabConfig();
   const { data: history, refetch: refetchHistory } = useGitLabScanHistory(10);
@@ -904,6 +876,11 @@ export function GitLabOverviewPage() {
     }
     return latest > 0 ? latest : null;
   }, [projects]);
+
+  // Handle unit board data change
+  const handleUnitBoardDataChange = useCallback((data: UnitBoardData | null) => {
+    setUnitBoardData(data);
+  }, []);
 
   // Calculate next scan time from cron
   const getNextScanTime = () => {
@@ -1049,7 +1026,7 @@ export function GitLabOverviewPage() {
       </div>
 
       {/* Summary Cards */}
-      <SummaryCards current={selectedHistory} previous={previousHistory} />
+      <SummaryCards current={selectedHistory} previous={previousHistory} unitBoardData={unitBoardData} />
 
       {/* Empty State */}
       {!selectedHistory && (
@@ -1069,7 +1046,7 @@ export function GitLabOverviewPage() {
           </div>
 
           {/* Walkin Team Coverage Board */}
-          <UnitBoardCard config={config} />
+          <UnitBoardCard config={config} onDataChange={handleUnitBoardDataChange} />
 
           {/* Project Table */}
           <div className="border-t">
