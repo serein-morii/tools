@@ -1,0 +1,24 @@
+src/pages/GitLabOverviewPage.tsx
+  s_3fa5cef6ec2946::t_4492fb35191ddc 41-49,59-61,85-86,91-92,884
+  s_3fa5cef6ec2946::t_aead2ba4f3196c 1029
+  s_3fa5cef6ec2946::t_f8a71d9544be3f 1049
+  s_3fa5cef6ec2946::t_994a126dc12354 693,696,700
+  s_3fa5cef6ec2946::t_c18f7d64a5aeb8 571-577
+  s_3fa5cef6ec2946::t_cd77b69de14c81 855,880-883
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "1993037db876160dcb23375c4a32297314aa42c1",
+  "prompts": {},
+  "sessions": {
+    "s_3fa5cef6ec2946": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3186f0ff-6f40-4f0b-9cb6-c68899340ddc",
+        "model": "astron-code-latest"
+      },
+      "human_author": "pengchenghui <pengchenghui@jtexpress.com>"
+    }
+  }
+}
