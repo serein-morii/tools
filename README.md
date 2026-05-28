@@ -1,8 +1,13 @@
 # Tools
 
-一个跨平台桌面提醒工具，基于 Tauri v2 + React 19 构建。
+一个跨平台桌面工具集，基于 Tauri v2 + React 19 构建，集成任务提醒、GitLab 代码扫描、专注计时、快捷笔记等功能。
 
 ## 功能特性
+
+### 📊 概览面板
+- 三大模块状态一览：提醒任务、通知渠道、GitLab 代码扫描
+- 可展开查看详情：任务列表、渠道分类、流水线统计、贡献排名、质量评级
+- 全局刷新按钮
 
 ### 📋 任务提醒
 - 支持多种 Cron 表达式格式（标准、特殊日期、高级）
@@ -19,6 +24,28 @@
 - **钉钉**: 群机器人 Webhook（支持 @ 指定用户）
 - 支持自定义服务器地址
 - 一键测试通知发送
+
+### 🔍 GitLab 代码扫描
+- 多 Token 支持，可同时使用多个 GitLab 账号
+- 项目过滤：包含/排除模式，支持通配符
+- 单测检测：自动识别测试提交
+- 定时扫描：可配置 Cron 表达式自动扫描
+- **概览面板**：
+  - 趋势分析图表（提交数 + 增量覆盖率）
+  - 本周贡献 TOP5 排名（按代码量）
+  - 团队覆盖率看板（Walkin 集成）
+  - 项目列表：可排序、可筛选、可展开查看详情
+  - 项目详情：MR 列表、流水线状态、质量评级（可靠性/安全性/可维护性）、增量问题
+  - 项目名称可点击跳转 GitLab 仓库
+- **历史记录**：
+  - 扫描历史列表，支持搜索和类型筛选
+  - 两次扫描对比视图
+  - 扫描详情弹窗：流水线统计、开发者 MR 贡献、项目详情
+- **Walkin 集成**：
+  - LDAP 自动登录，验证码自动识别
+  - 代码质量数据：Bug、漏洞、异味、重复率
+  - 增量/全量覆盖率（综合、行、条件）
+  - 质量评级：可靠性、安全性、可维护性
 
 ### 📝 消息模板
 - 可复用的消息模板
@@ -53,8 +80,8 @@
 
 - **前端**: React 19 + TypeScript + TailwindCSS + shadcn/ui
 - **后端**: Rust + Tauri v2 + SQLite
-- **状态管理**: TanStack Query + Zustand
-- **国际化**: i18next
+- **状态管理**: TanStack Query
+- **国际化**: react-i18next（4 语言：中/英/日/韩）
 
 ## 安装
 
@@ -68,7 +95,7 @@
 
 ```bash
 # 克隆项目
-git clone https://github.com/pengchenghui/tools.git
+git clone https://github.com/serein-morii/tools.git
 cd tools
 
 # 安装依赖
@@ -89,19 +116,27 @@ npm run tauri build
 
 ```
 tools/
-├── src/                    # React 前端代码
-│   ├── components/         # UI 组件
-│   ├── pages/              # 页面组件
-│   ├── lib/                # 工具函数和 API
-│   ├── i18n/               # 国际化配置
-│   └── types/              # TypeScript 类型定义
-├── src-tauri/              # Rust 后端代码
+├── src/                        # React 前端代码
+│   ├── components/
+│   │   ├── modules/
+│   │   │   ├── gitlab/         # GitLab 模块组件
+│   │   │   └── reminder/       # 提醒模块组件
+│   │   ├── layout/             # 布局组件（侧边栏等）
+│   │   └── ui/                 # 通用 UI 组件
+│   ├── pages/                  # 页面组件
+│   ├── lib/
+│   │   ├── api/                # API 调用
+│   │   ├── query/              # TanStack Query hooks
+│   │   └── gitlab/             # GitLab 工具函数
+│   ├── i18n/locales/           # 国际化翻译文件
+│   └── types/                  # TypeScript 类型定义
+├── src-tauri/                  # Rust 后端代码
 │   ├── src/
-│   │   ├── commands/       # Tauri 命令
-│   │   ├── database/       # SQLite 数据访问层
-│   │   ├── services/       # 业务服务
-│   │   └── error.rs        # 错误处理
-│   └── capabilities/       # Tauri 权限配置
+│   │   ├── commands/           # Tauri 命令
+│   │   ├── database/           # SQLite 数据访问层
+│   │   ├── services/           # 业务服务（调度器等）
+│   │   └── error.rs            # 错误处理
+│   └── capabilities/           # Tauri 权限配置
 └── package.json
 ```
 
