@@ -35,6 +35,8 @@ export const defaultGitLabConfig: GitLabConfig = {
   scan_range_days: 7,
   walkin_enabled: true,
   walkin_url: "http://walkin.jms.com",
+  walkin_username: "",
+  walkin_password: "",
   walkin_dept_name: "产品架构",
   walkin_dept_id: "a0a768d7-9e8d-448c-9b79-926d84f51ea1",
   walkin_workspace_name: "产品架构&PMO",

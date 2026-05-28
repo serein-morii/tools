@@ -348,6 +348,8 @@ export interface GitLabConfig {
   scan_range_days?: number;
   walkin_enabled: boolean;
   walkin_url: string;
+  walkin_username: string;
+  walkin_password: string;
   walkin_dept_name: string;
   walkin_dept_id: string;
   walkin_workspace_name: string;
