@@ -1,0 +1,19 @@
+src-tauri/src/services/walkin/client.rs
+  s_3fa5cef6ec2946::t_ec1beb53d8cb72 711-719
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "2bc69665a95c59bf7f274c15071bdc80c6893b8e",
+  "prompts": {},
+  "sessions": {
+    "s_3fa5cef6ec2946": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3186f0ff-6f40-4f0b-9cb6-c68899340ddc",
+        "model": "astron-code-latest"
+      },
+      "human_author": "pengchenghui <pengchenghui@jtexpress.com>"
+    }
+  }
+}
