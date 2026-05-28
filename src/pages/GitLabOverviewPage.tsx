@@ -251,6 +251,25 @@ function ProjectTable({ projects }: { projects: GitLabProjectResult[] }) {
     }
   };
 
+  // Get max incremental coverage from all branches
+  const getMaxNewCoverage = (project: GitLabProjectResult): number | null => {
+    const branches = project.walkin_metrics_by_branch;
+    if (branches && Object.keys(branches).length > 0) {
+      // Multiple branches: get max new_coverage
+      let maxCoverage: number | null = null;
+      for (const metrics of Object.values(branches)) {
+        if (metrics.new_coverage != null) {
+          if (maxCoverage === null || metrics.new_coverage > maxCoverage) {
+            maxCoverage = metrics.new_coverage;
+          }
+        }
+      }
+      return maxCoverage;
+    }
+    // Single branch or no branch: use walkin_metrics
+    return project.walkin_metrics?.new_coverage ?? null;
+  };
+
   const SortIcon = ({ field }: { field: string }) => {
     if (sortBy !== field) return <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground/50" />;
     return sortOrder === "asc"
@@ -331,7 +350,7 @@ function ProjectTable({ projects }: { projects: GitLabProjectResult[] }) {
               </th>
               <th className="px-3 py-2 text-center font-medium">单测</th>
               <th className="px-3 py-2 text-center font-medium">Walkin</th>
-              {hasWalkinData && <th className="px-3 py-2 text-center font-medium">覆盖率</th>}
+              {hasWalkinData && <th className="px-3 py-2 text-center font-medium">增量覆盖率</th>}
               <th className="px-3 py-2 text-left font-medium">贡献者</th>
             </tr>
           </thead>
@@ -363,11 +382,14 @@ function ProjectTable({ projects }: { projects: GitLabProjectResult[] }) {
                     </td>
                     {hasWalkinData && (
                       <td className="px-3 py-2 text-center">
-                        {project.walkin_metrics?.coverage != null ? (
-                          <span className="text-sm font-medium">{project.walkin_metrics.coverage.toFixed(1)}%</span>
-                        ) : (
-                          <span className="text-muted-foreground">-</span>
-                        )}
+                        {(() => {
+                          const coverage = getMaxNewCoverage(project);
+                          return coverage != null ? (
+                            <span className="text-sm font-medium">{coverage.toFixed(1)}%</span>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          );
+                        })()}
                       </td>
                     )}
                     <td className="px-3 py-2 text-muted-foreground text-xs">
