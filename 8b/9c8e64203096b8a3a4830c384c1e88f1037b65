@@ -1,0 +1,20 @@
+src-tauri/src/services/gitlab/scanner.rs
+  s_3fa5cef6ec2946::t_d6380516fc4506 173-178,180-185,187-192,195
+  s_3fa5cef6ec2946::t_8f9cb31b7eb17d 131-139,143-144,147-172,179,186
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "8b9c8e64203096b8a3a4830c384c1e88f1037b65",
+  "prompts": {},
+  "sessions": {
+    "s_3fa5cef6ec2946": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3186f0ff-6f40-4f0b-9cb6-c68899340ddc",
+        "model": "astron-code-latest"
+      },
+      "human_author": "pengchenghui <pengchenghui@jtexpress.com>"
+    }
+  }
+}
