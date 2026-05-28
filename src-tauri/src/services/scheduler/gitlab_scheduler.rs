@@ -2,6 +2,7 @@ use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
 use chrono::Utc;
+use serde::{Serialize, Deserialize};
 use crate::database::Database;
 use crate::database::dao::{settings::SettingsDao, gitlab_scan::{GitLabScanDao, CreateGitLabScanRequest}, channel::ChannelDao};
 use crate::services::gitlab::{GitLabClient, GitLabScanner, ScanConfig, scanner::{FilterMode, ScanRange}};
@@ -40,12 +41,25 @@ async fn run_gitlab_scheduler_cycle(db: &Arc<Database>, last_check: &mut i64) ->
         return Ok(());
     }
 
-    // Parse cron schedule
+    // Parse cron schedule - convert 5-field to 7-field format if needed
     let cron_expr = config.scan_schedule.clone();
-    let schedule = match cron::Schedule::try_from(cron_expr.as_str()) {
+    // Rust cron crate expects 7 fields: sec min hour day month weekday year
+    // Standard 5-field format: min hour day month weekday
+    // We need to add seconds (0) and year (*) prefix/suffix
+    let cron_expr_7field = if cron_expr.split_whitespace().count() == 5 {
+        // Convert 5-field to 7-field: add "0 " prefix and " *" suffix
+        format!("0 {} *", cron_expr)
+    } else if cron_expr.split_whitespace().count() == 6 {
+        // 6-field format: add " *" suffix for year
+        format!("{} *", cron_expr)
+    } else {
+        cron_expr.clone()
+    };
+
+    let schedule = match cron::Schedule::try_from(cron_expr_7field.as_str()) {
         Ok(s) => s,
         Err(e) => {
-            log::error!("Invalid GitLab scan schedule '{}': {}", cron_expr, e);
+            log::error!("Invalid GitLab scan schedule '{}' (converted to '{}'): {}", cron_expr, cron_expr_7field, e);
             return Ok(());
         }
     };
@@ -77,18 +91,17 @@ async fn run_gitlab_scheduler_cycle(db: &Arc<Database>, last_check: &mut i64) ->
 }
 
 pub async fn run_gitlab_scan(db: &Arc<Database>, config: &GitLabScanConfig, scan_type: &str) -> Result<()> {
-    // Create GitLab client
+    // Create GitLab client - use selected token from profiles
     let auth = match config.auth_type.as_str() {
         "token" => {
-            let token = config.token.clone().unwrap_or_default();
+            let token = config.get_selected_token().unwrap_or_default();
             if token.is_empty() {
                 return Err(crate::error::ToolsError::Http("GitLab token not configured".to_string()));
             }
             GitLabAuth::Token(token)
         }
         "password" => {
-            let username = config.username.clone().unwrap_or_default();
-            let password = config.password.clone().unwrap_or_default();
+            let (username, password) = config.get_selected_ldap().unwrap_or_default();
             if username.is_empty() || password.is_empty() {
                 return Err(crate::error::ToolsError::Http("GitLab username/password not configured".to_string()));
             }
@@ -210,18 +223,70 @@ async fn send_gitlab_notification(
 
     // Format Walkin quality section
     let walkin_section = if result.walkin_projects_matched > 0 {
+        let coverage_info = match (result.walkin_max_new_coverage, result.walkin_max_coverage) {
+            (Some(new_cov), Some(all_cov)) => format!(
+                "• 增量覆盖率：{:.2}%\n             • 全量覆盖率：{:.2}%",
+                new_cov, all_cov
+            ),
+            (Some(new_cov), None) => format!("• 增量覆盖率：{:.2}%", new_cov),
+            (None, Some(all_cov)) => format!("• 全量覆盖率：{:.2}%", all_cov),
+            (None, None) => String::new(),
+        };
+
+        // Find projects with low incremental coverage (< 50%)
+        let low_coverage_projects: Vec<(String, Option<f64>)> = result.projects
+            .iter()
+            .filter_map(|p| {
+                // Get max new_coverage from all branches
+                let new_coverage = if let Some(ref branches) = p.walkin_metrics_by_branch {
+                    let mut max_cov: Option<f64> = None;
+                    for m in branches.values() {
+                        if let Some(cov) = m.new_coverage {
+                            max_cov = Some(max_cov.map_or(cov, |max| max.max(cov)));
+                        }
+                    }
+                    max_cov
+                } else {
+                    p.walkin_metrics.as_ref().and_then(|m| m.new_coverage)
+                };
+
+                // Only include if has Walkin data and coverage < 50%
+                if new_coverage.is_some() && new_coverage.unwrap() < 50.0 {
+                    let name = p.project_name.split('/').last().unwrap_or(&p.project_name);
+                    Some((name.to_string(), new_coverage))
+                } else {
+                    None
+                }
+            })
+            .collect();
+
+        let low_coverage_section = if low_coverage_projects.is_empty() {
+            String::new()
+        } else {
+            let items: Vec<String> = low_coverage_projects.iter()
+                .map(|(name, cov)| {
+                    match cov {
+                        Some(c) => format!("  • {}：{:.1}%", name, c),
+                        None => format!("  • {}：N/A", name),
+                    }
+                })
+                .collect();
+            format!("\n\n⚠️ 增量覆盖率低于50%的项目：\n{}", items.join("\n"))
+        };
+
         format!(
             "🔍 代码质量\n\
              • 匹配项目：{}个\n\
              • Bug：{}个\n\
              • 漏洞：{}个\n\
              • 代码异味：{}个\n\
-             • 平均覆盖率：{}%",
+             {}{}",
             result.walkin_projects_matched,
             result.walkin_total_bugs,
             result.walkin_total_vulnerabilities,
             result.walkin_total_code_smells,
-            result.walkin_avg_coverage.map_or("N/A".to_string(), |c| format!("{:.1}", c))
+            coverage_info,
+            low_coverage_section
         )
     } else {
         String::new()
@@ -313,11 +378,32 @@ async fn send_gitlab_notification(
     Ok(())
 }
 
+// Token profile for multi-token support
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TokenProfile {
+    pub id: String,
+    pub token: String,
+    pub label: String,
+}
+
+// LDAP profile for multi-ldap support
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LdapProfile {
+    pub id: String,
+    pub username: String,
+    pub password: String,
+    pub label: String,
+}
 
 #[derive(Debug, Clone)]
 pub struct GitLabScanConfig {
     pub url: String,
     pub auth_type: String,
+    pub selected_token_id: Option<String>,
+    pub token_profiles: Vec<TokenProfile>,
+    pub selected_ldap_id: Option<String>,
+    pub ldap_profiles: Vec<LdapProfile>,
+    // Legacy fields for backward compatibility
     pub token: Option<String>,
     pub username: Option<String>,
     pub password: Option<String>,
@@ -337,6 +423,30 @@ pub struct GitLabScanConfig {
     pub walkin_project_header: String,
     pub walkin_x_auth_token: String,
     pub walkin_project_mappings: Vec<ProjectMapping>,
+}
+
+impl GitLabScanConfig {
+    /// Get the selected token from profiles, fallback to legacy token
+    pub fn get_selected_token(&self) -> Option<String> {
+        if let Some(id) = &self.selected_token_id {
+            self.token_profiles.iter()
+                .find(|p| &p.id == id)
+                .map(|p| p.token.clone())
+        } else {
+            self.token.clone()
+        }
+    }
+
+    /// Get the selected LDAP credentials from profiles
+    pub fn get_selected_ldap(&self) -> Option<(String, String)> {
+        if let Some(id) = &self.selected_ldap_id {
+            self.ldap_profiles.iter()
+                .find(|p| &p.id == id)
+                .map(|p| (p.username.clone(), p.password.clone()))
+        } else {
+            None
+        }
+    }
 }
 
 fn get_gitlab_config_from_settings(conn: &rusqlite::Connection) -> Result<GitLabScanConfig> {
@@ -370,9 +480,48 @@ fn get_gitlab_config_from_settings(conn: &rusqlite::Connection) -> Result<GitLab
             .unwrap_or_default()
     };
 
+    let parse_token_profiles = || -> Vec<TokenProfile> {
+        settings.iter()
+            .find(|s| s.key == "token_profiles")
+            .and_then(|s| serde_json::from_str(&s.value).ok())
+            .unwrap_or_else(|| {
+                // Default token profiles
+                vec![
+                    TokenProfile { id: "token-1".to_string(), token: "yTeXMdEjKoKqvG8ay8VQ".to_string(), label: "孙强".to_string() },
+                    TokenProfile { id: "token-2".to_string(), token: "Kf8mydzuhw2xDwmhsmM4".to_string(), label: "海兵".to_string() },
+                ]
+            })
+    };
+
+    let parse_ldap_profiles = || -> Vec<LdapProfile> {
+        settings.iter()
+            .find(|s| s.key == "ldap_profiles")
+            .and_then(|s| serde_json::from_str(&s.value).ok())
+            .unwrap_or_else(|| {
+                // Default LDAP profiles
+                vec![
+                    LdapProfile {
+                        id: "ldap-1".to_string(),
+                        username: "RZIK2v1KpNwUBXbpUq6Y/q//pPyfduF0wI66SBF1t3eHTTRekeAvJki8Yhs0C66rtQINbJ8K7a77VYFe7WiBqQ6QOesNt2rN+xb3SWI7/0/KdcI1JJ4wjgiULKxjCVO99TBV0lW9pPzT9wPOb5/AmK5aiZthNxGrBRmzsyGIcMk=".to_string(),
+                        password: "X7ONsfMYenLAdZua6Fj+9l1ZdptEPNHM1l+nMZ8RL+X9vUZyfsxyf+/0zLYCeQhsnAyf3D863PGBqcgXBMBrUI/MRH/VLo44rmrGHZ5WL9kQNSk492t5CqSkeBcU8JeLTF4exYxsYLq4JLDlnYQMZfBC02U+3lwmaaICKxXk4ag=".to_string(),
+                        label: "承辉".to_string(),
+                    },
+                ]
+            })
+    };
+
+    let token_profiles = parse_token_profiles();
+    let ldap_profiles = parse_ldap_profiles();
+    let selected_token_id = get_setting_opt("selected_token_id").or_else(|| token_profiles.first().map(|p| p.id.clone()));
+    let selected_ldap_id = get_setting_opt("selected_ldap_id").or_else(|| ldap_profiles.first().map(|p| p.id.clone()));
+
     Ok(GitLabScanConfig {
-        url: get_setting("gitlab_url", ""),
+        url: get_setting("gitlab_url", "http://code.jms.com"),
         auth_type: get_setting("gitlab_auth_type", "token"),
+        selected_token_id,
+        token_profiles,
+        selected_ldap_id,
+        ldap_profiles,
         token: get_setting_opt("gitlab_token"),
         username: get_setting_opt("gitlab_username"),
         password: get_setting_opt("gitlab_password"),
@@ -383,11 +532,11 @@ fn get_gitlab_config_from_settings(conn: &rusqlite::Connection) -> Result<GitLab
         scan_channels: parse_json_array("gitlab_scan_channels", vec![]),
         scan_range_type: get_setting("gitlab_scan_range_type", "week"),
         scan_range_days: get_setting("gitlab_scan_range_days", "7").parse().ok(),
-        walkin_enabled: get_setting("walkin_enabled", "false") == "true",
-        walkin_url: get_setting("walkin_url", ""),
-        walkin_dept_name: get_setting("walkin_dept_name", ""),
-        walkin_dept_id: get_setting("walkin_dept_id", ""),
-        walkin_workspace_name: get_setting("walkin_workspace_name", ""),
+        walkin_enabled: get_setting("walkin_enabled", "true") == "true",
+        walkin_url: get_setting("walkin_url", "http://walkin.jms.com"),
+        walkin_dept_name: get_setting("walkin_dept_name", "产品架构"),
+        walkin_dept_id: get_setting("walkin_dept_id", "a0a768d7-9e8d-448c-9b79-926d84f51ea1"),
+        walkin_workspace_name: get_setting("walkin_workspace_name", "产品架构&PMO"),
         walkin_csrf_token: get_setting("walkin_csrf_token", ""),
         walkin_project_header: get_setting("walkin_project_header", ""),
         walkin_x_auth_token: get_setting("walkin_x_auth_token", ""),

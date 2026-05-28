@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link2, CheckCircle, XCircle, Loader2, Plus, X, AlertCircle, Shield, Clock, RefreshCw } from "lucide-react";
+import { Link2, CheckCircle, XCircle, Loader2, Plus, X, AlertCircle, Shield, Clock, RefreshCw, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,9 +8,13 @@ import { useChannels } from "@/lib/query/channelQueries";
 import { toast } from "sonner";
 import { useWalkinAuth } from "@/components/modules/gitlab/WalkinAuthManager";
 import { defaultGitLabConfig } from "@/lib/gitlab/defaults";
-import type { GitLabConfig } from "@/types";
+import type { GitLabConfig, TokenProfile, LdapProfile } from "@/types";
 
 const defaultConfig = defaultGitLabConfig;
+
+function generateId(): string {
+  return `id-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+}
 
 function isValidUrl(url: string): boolean {
   try {
@@ -82,6 +86,181 @@ function parseCronToHuman(cron: string): string {
   return `${timeStr} ${weekdayStr}`;
 }
 
+// Token Profile Editor Component
+function TokenProfileEditor({
+  profiles,
+  selectedId,
+  onSelect,
+  onUpdate,
+  onAdd,
+  onDelete,
+  showToken,
+  setShowToken,
+}: {
+  profiles: TokenProfile[];
+  selectedId?: string;
+  onSelect: (id: string) => void;
+  onUpdate: (profiles: TokenProfile[]) => void;
+  onAdd: () => void;
+  onDelete: (id: string) => void;
+  showToken: boolean;
+  setShowToken: (show: boolean) => void;
+}) {
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <label className="text-sm font-medium">Token 配置（可选择、可新增、可修改）</label>
+        <Button variant="outline" size="sm" onClick={onAdd}>
+          <Plus className="h-3.5 w-3.5 mr-1" /> 新增
+        </Button>
+      </div>
+
+      {/* Profile Selection */}
+      <div className="flex flex-wrap gap-2">
+        {profiles.map((profile) => (
+          <Button
+            key={profile.id}
+            variant={selectedId === profile.id ? "default" : "outline"}
+            size="sm"
+            onClick={() => onSelect(profile.id)}
+          >
+            {profile.label || `Token ${profile.id.slice(0, 8)}`}
+          </Button>
+        ))}
+      </div>
+
+      {/* Selected Profile Details */}
+      {selectedId && (
+        <div className="border rounded-lg p-3 bg-muted/30 space-y-2">
+          {profiles.filter(p => p.id === selectedId).map((profile) => (
+            <div key={profile.id} className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Input
+                  placeholder="备注/标签"
+                  value={profile.label}
+                  onChange={(e) => {
+                    onUpdate(profiles.map(p => p.id === profile.id ? { ...p, label: e.target.value } : p));
+                  }}
+                  className="flex-1"
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowToken(!showToken)}
+                >
+                  {showToken ? "隐藏" : "显示"}
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => onDelete(profile.id)}
+                  disabled={profiles.length <= 1}
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+              <Input
+                type={showToken ? "text" : "password"}
+                placeholder="输入 GitLab Private Token"
+                value={profile.token}
+                onChange={(e) => {
+                  onUpdate(profiles.map(p => p.id === profile.id ? { ...p, token: e.target.value } : p));
+                }}
+              />
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// LDAP Profile Editor Component
+function LdapProfileEditor({
+  profiles,
+  selectedId,
+  onSelect,
+  onUpdate,
+  onAdd,
+  onDelete,
+}: {
+  profiles: LdapProfile[];
+  selectedId?: string;
+  onSelect: (id: string) => void;
+  onUpdate: (profiles: LdapProfile[]) => void;
+  onAdd: () => void;
+  onDelete: (id: string) => void;
+}) {
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <label className="text-sm font-medium">LDAP 配置（可选择、可新增、可修改）</label>
+        <Button variant="outline" size="sm" onClick={onAdd}>
+          <Plus className="h-3.5 w-3.5 mr-1" /> 新增
+        </Button>
+      </div>
+
+      {/* Profile Selection */}
+      <div className="flex flex-wrap gap-2">
+        {profiles.map((profile) => (
+          <Button
+            key={profile.id}
+            variant={selectedId === profile.id ? "default" : "outline"}
+            size="sm"
+            onClick={() => onSelect(profile.id)}
+          >
+            {profile.label || `LDAP ${profile.id.slice(0, 8)}`}
+          </Button>
+        ))}
+      </div>
+
+      {/* Selected Profile Details */}
+      {selectedId && (
+        <div className="border rounded-lg p-3 bg-muted/30 space-y-2">
+          {profiles.filter(p => p.id === selectedId).map((profile) => (
+            <div key={profile.id} className="space-y-2">
+              <Input
+                placeholder="备注/标签"
+                value={profile.label}
+                onChange={(e) => {
+                  onUpdate(profiles.map(p => p.id === profile.id ? { ...p, label: e.target.value } : p));
+                }}
+              />
+              <div className="grid grid-cols-2 gap-2">
+                <Input
+                  placeholder="LDAP 用户名（加密）"
+                  value={profile.username}
+                  onChange={(e) => {
+                    onUpdate(profiles.map(p => p.id === profile.id ? { ...p, username: e.target.value } : p));
+                  }}
+                />
+                <Input
+                  type="password"
+                  placeholder="LDAP 密码（加密）"
+                  value={profile.password}
+                  onChange={(e) => {
+                    onUpdate(profiles.map(p => p.id === profile.id ? { ...p, password: e.target.value } : p));
+                  }}
+                />
+              </div>
+              <div className="flex justify-end">
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => onDelete(profile.id)}
+                  disabled={profiles.length <= 1}
+                >
+                  <Trash2 className="h-3.5 w-3.5 mr-1" /> 删除
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function GitLabSettingsPage() {
   const { data: config, isLoading } = useGitLabConfig();
   const { data: channels } = useChannels();
@@ -93,7 +272,7 @@ export function GitLabSettingsPage() {
   const [connectionStatus, setConnectionStatus] = useState<"idle" | "testing" | "success" | "failed">("idle");
   const [newProject, setNewProject] = useState("");
   const [newKeyword, setNewKeyword] = useState("");
-  const [validationErrors, setValidationErrors] = useState<{ url?: string; token?: string }>({});
+  const [validationErrors, setValidationErrors] = useState<{ url?: string }>({});
   const { isLoggedIn, userName, checkLogin, startAutoLogin } = useWalkinAuth();
   const [isCheckingLogin, setIsCheckingLogin] = useState(false);
 
@@ -105,7 +284,23 @@ export function GitLabSettingsPage() {
 
   useEffect(() => {
     if (config) {
-      setFormData(config);
+      // Ensure backward compatibility - if old config has single token/ldap but no profiles, migrate
+      const migratedConfig = { ...config };
+      if (!config.token_profiles || config.token_profiles.length === 0) {
+        if (config.token) {
+          migratedConfig.token_profiles = [{ id: "token-legacy", token: config.token, label: "默认" }];
+        } else {
+          migratedConfig.token_profiles = defaultConfig.token_profiles;
+        }
+      }
+      if (!config.ldap_profiles || config.ldap_profiles.length === 0) {
+        // No ldap profiles in old config - use default
+        migratedConfig.ldap_profiles = defaultConfig.ldap_profiles;
+      }
+      if (!config.selected_token_id && migratedConfig.token_profiles.length > 0) {
+        migratedConfig.selected_token_id = migratedConfig.token_profiles[0].id;
+      }
+      setFormData(migratedConfig);
     }
   }, [config]);
 
@@ -116,7 +311,7 @@ export function GitLabSettingsPage() {
   };
 
   const validateForm = (): boolean => {
-    const errors: { url?: string; token?: string } = {};
+    const errors: { url?: string } = {};
 
     if (!formData.url) {
       errors.url = "服务器地址不能为空";
@@ -124,16 +319,14 @@ export function GitLabSettingsPage() {
       errors.url = "请输入有效的URL地址（如 http://code.jms.com）";
     }
 
-    if (formData.auth_type === "token" && !formData.token) {
-      errors.token = "Token不能为空";
-    }
-
-    if (formData.auth_type === "password" && (!formData.username || !formData.password)) {
-      errors.token = "用户名和密码不能为空";
-    }
-
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
+  };
+
+  // Get selected token from profiles
+  const getSelectedToken = (): string | undefined => {
+    const profile = formData.token_profiles.find(p => p.id === formData.selected_token_id);
+    return profile?.token;
   };
 
   const handleTest = async () => {
@@ -142,7 +335,12 @@ export function GitLabSettingsPage() {
     }
     setConnectionStatus("testing");
     try {
-      const result = await testConnection.mutateAsync(formData);
+      // Use selected token for testing
+      const testData = {
+        ...formData,
+        token: getSelectedToken(),
+      };
+      const result = await testConnection.mutateAsync(testData);
       setConnectionStatus(result ? "success" : "failed");
       if (result) {
         toast.success("连接成功");
@@ -192,6 +390,60 @@ export function GitLabSettingsPage() {
     setFormData({ ...formData, test_keywords: formData.test_keywords.filter((k) => k !== keyword) });
   };
 
+  // Token profile handlers
+  const addTokenProfile = () => {
+    const newProfile: TokenProfile = { id: generateId(), token: "", label: "" };
+    setFormData({
+      ...formData,
+      token_profiles: [...formData.token_profiles, newProfile],
+      selected_token_id: newProfile.id,
+    });
+  };
+
+  const deleteTokenProfile = (id: string) => {
+    const updated = formData.token_profiles.filter(p => p.id !== id);
+    const newSelectedId = formData.selected_token_id === id ? updated[0]?.id : formData.selected_token_id;
+    setFormData({
+      ...formData,
+      token_profiles: updated,
+      selected_token_id: newSelectedId,
+    });
+  };
+
+  const updateTokenProfiles = (profiles: TokenProfile[]) => {
+    setFormData({ ...formData, token_profiles: profiles });
+  };
+
+  // LDAP profile handlers (for Walkin)
+  const addLdapProfile = () => {
+    const newProfile: LdapProfile = { id: generateId(), username: "", password: "", label: "" };
+    setFormData({
+      ...formData,
+      ldap_profiles: [...formData.ldap_profiles, newProfile],
+      selected_ldap_id: newProfile.id,
+    });
+  };
+
+  const deleteLdapProfile = (id: string) => {
+    const updated = formData.ldap_profiles.filter(p => p.id !== id);
+    const newSelectedId = formData.selected_ldap_id === id ? updated[0]?.id : formData.selected_ldap_id;
+    setFormData({
+      ...formData,
+      ldap_profiles: updated,
+      selected_ldap_id: newSelectedId,
+    });
+  };
+
+  const updateLdapProfiles = (profiles: LdapProfile[]) => {
+    setFormData({ ...formData, ldap_profiles: profiles });
+  };
+
+  // Get selected LDAP credentials
+  const getSelectedLdap = (): { username: string; password: string } | undefined => {
+    const profile = formData.ldap_profiles.find(p => p.id === formData.selected_ldap_id);
+    return profile ? { username: profile.username, password: profile.password } : undefined;
+  };
+
   if (isLoading) {
     return (
       <div className="flex h-[400px] items-center justify-center">
@@ -209,7 +461,7 @@ export function GitLabSettingsPage() {
             <Link2 className="h-5 w-5" />
             GitLab 连接配置
           </CardTitle>
-          <CardDescription>配置 GitLab 服务器连接信息</CardDescription>
+          <CardDescription>配置 GitLab 服务器连接信息，支持多套 Token 凭据</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
@@ -229,62 +481,17 @@ export function GitLabSettingsPage() {
             )}
           </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium">认证方式</label>
-            <div className="flex gap-4">
-              <Button
-                variant={formData.auth_type === "token" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setFormData({ ...formData, auth_type: "token" })}
-              >
-                Token
-              </Button>
-              <Button
-                variant={formData.auth_type === "password" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setFormData({ ...formData, auth_type: "password" })}
-              >
-                账号密码
-              </Button>
-            </div>
-          </div>
-
-          {formData.auth_type === "token" ? (
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Private Token</label>
-              <div className="flex gap-2">
-                <Input
-                  type={showToken ? "text" : "password"}
-                  placeholder="输入GitLab Private Token"
-                  value={formData.token || ""}
-                  onChange={(e) => setFormData({ ...formData, token: e.target.value })}
-                />
-                <Button variant="outline" size="sm" onClick={() => setShowToken(!showToken)}>
-                  {showToken ? "隐藏" : "显示"}
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">用户名</label>
-                <Input
-                  placeholder="输入用户名"
-                  value={formData.username || ""}
-                  onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">密码</label>
-                <Input
-                  type="password"
-                  placeholder="输入密码"
-                  value={formData.password || ""}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                />
-              </div>
-            </div>
-          )}
+          {/* Token Profiles */}
+          <TokenProfileEditor
+            profiles={formData.token_profiles}
+            selectedId={formData.selected_token_id}
+            onSelect={(id) => setFormData({ ...formData, selected_token_id: id })}
+            onUpdate={updateTokenProfiles}
+            onAdd={addTokenProfile}
+            onDelete={deleteTokenProfile}
+            showToken={showToken}
+            setShowToken={setShowToken}
+          />
 
           <div className="flex items-center gap-4">
             <Button variant="outline" onClick={handleTest} disabled={connectionStatus === "testing" || !formData.url}>
@@ -470,91 +677,6 @@ export function GitLabSettingsPage() {
             </div>
           </div>
 
-          {/* 自定义时间选择器 */}
-          <div className="border rounded-lg p-3 bg-muted/30">
-            <div className="flex items-center gap-2 mb-2">
-              <Clock className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-medium">自定义时间</span>
-            </div>
-            <div className="grid grid-cols-4 gap-2">
-              <div className="space-y-1">
-                <label className="text-xs text-muted-foreground">分钟</label>
-                <Input
-                  type="number"
-                  min={0}
-                  max={59}
-                  placeholder="0"
-                  value={(() => {
-                    const parts = formData.scan_schedule.split(" ");
-                    return parts[0] === "*" ? "" : parts[0]?.replace("*/", "") || "0";
-                  })()}
-                  onChange={(e) => {
-                    const parts = formData.scan_schedule.split(" ");
-                    parts[0] = e.target.value || "0";
-                    setFormData({ ...formData, scan_schedule: parts.join(" ") });
-                  }}
-                  className="h-8"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs text-muted-foreground">小时</label>
-                <Input
-                  type="number"
-                  min={0}
-                  max={23}
-                  placeholder="9"
-                  value={(() => {
-                    const parts = formData.scan_schedule.split(" ");
-                    return parts[1] === "*" ? "" : parts[1] || "9";
-                  })()}
-                  onChange={(e) => {
-                    const parts = formData.scan_schedule.split(" ");
-                    parts[1] = e.target.value || "9";
-                    setFormData({ ...formData, scan_schedule: parts.join(" ") });
-                  }}
-                  className="h-8"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs text-muted-foreground">日</label>
-                <Input
-                  type="text"
-                  placeholder="*"
-                  value={(() => {
-                    const parts = formData.scan_schedule.split(" ");
-                    return parts[2] || "*";
-                  })()}
-                  onChange={(e) => {
-                    const parts = formData.scan_schedule.split(" ");
-                    parts[2] = e.target.value || "*";
-                    setFormData({ ...formData, scan_schedule: parts.join(" ") });
-                  }}
-                  className="h-8"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs text-muted-foreground">星期</label>
-                <Input
-                  type="text"
-                  placeholder="*"
-                  value={(() => {
-                    const parts = formData.scan_schedule.split(" ");
-                    return parts[4] || "*";
-                  })()}
-                  onChange={(e) => {
-                    const parts = formData.scan_schedule.split(" ");
-                    parts[4] = e.target.value || "*";
-                    setFormData({ ...formData, scan_schedule: parts.join(" ") });
-                  }}
-                  className="h-8"
-                />
-              </div>
-            </div>
-            <p className="text-xs text-muted-foreground mt-2">
-              格式: 分钟 小时 日 月 星期 (例: 0 9 * * 1 = 每周一 09:00)
-            </p>
-          </div>
-
           {formData.scan_range_type === "days" && (
             <div className="space-y-2">
               <label className="text-sm font-medium">天数</label>
@@ -658,7 +780,7 @@ export function GitLabSettingsPage() {
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Walkin 地址</label>
                   <Input
-                    placeholder="https://walkin.example.com"
+                    placeholder="http://walkin.jms.com"
                     value={formData.walkin_url}
                     onChange={(e) => setFormData({ ...formData, walkin_url: e.target.value })}
                   />
@@ -666,7 +788,7 @@ export function GitLabSettingsPage() {
                 <div className="space-y-2">
                   <label className="text-sm font-medium">部门名称</label>
                   <Input
-                    placeholder="输入部门名称"
+                    placeholder="产品架构"
                     value={formData.walkin_dept_name}
                     onChange={(e) => setFormData({ ...formData, walkin_dept_name: e.target.value })}
                   />
@@ -677,7 +799,7 @@ export function GitLabSettingsPage() {
                 <div className="space-y-2">
                   <label className="text-sm font-medium">部门 ID</label>
                   <Input
-                    placeholder="输入部门 ID（用于团队覆盖率看板）"
+                    placeholder="a0a768d7-9e8d-448c-9b79-926d84f51ea1"
                     value={formData.walkin_dept_id}
                     onChange={(e) => setFormData({ ...formData, walkin_dept_id: e.target.value })}
                   />
@@ -686,32 +808,22 @@ export function GitLabSettingsPage() {
                 <div className="space-y-2">
                   <label className="text-sm font-medium">工作空间名称</label>
                   <Input
-                    placeholder="输入工作空间名称"
+                    placeholder="产品架构&PMO"
                     value={formData.walkin_workspace_name}
                     onChange={(e) => setFormData({ ...formData, walkin_workspace_name: e.target.value })}
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">LDAP 用户名</label>
-                  <Input
-                    placeholder="输入 LDAP 用户名"
-                    value={formData.walkin_username}
-                    onChange={(e) => setFormData({ ...formData, walkin_username: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">LDAP 密码</label>
-                  <Input
-                    type="password"
-                    placeholder="输入 LDAP 密码"
-                    value={formData.walkin_password}
-                    onChange={(e) => setFormData({ ...formData, walkin_password: e.target.value })}
-                  />
-                </div>
-              </div>
+              {/* LDAP Profiles for Walkin */}
+              <LdapProfileEditor
+                profiles={formData.ldap_profiles}
+                selectedId={formData.selected_ldap_id}
+                onSelect={(id) => setFormData({ ...formData, selected_ldap_id: id })}
+                onUpdate={updateLdapProfiles}
+                onAdd={addLdapProfile}
+                onDelete={deleteLdapProfile}
+              />
 
               {/* 登录状态 */}
               <div className="border rounded-lg p-3 bg-muted/30">
@@ -747,15 +859,16 @@ export function GitLabSettingsPage() {
                       <Button
                         size="sm"
                         onClick={async () => {
-                          // 先保存配置，再触发登录
+                          const ldap = getSelectedLdap();
+                          if (!ldap?.username || !ldap?.password) {
+                            toast.error("请先选择 LDAP 配置并填写用户名和密码");
+                            return;
+                          }
                           try {
                             toast.info("正在保存配置...");
                             await saveConfig.mutateAsync(formData);
                             toast.info("配置已保存，正在登录...");
-                            await startAutoLogin({
-                              username: formData.walkin_username,
-                              password: formData.walkin_password,
-                            });
+                            await startAutoLogin(ldap);
                           } catch (e) {
                             const msg = e instanceof Error ? e.message : String(e);
                             toast.error("操作失败: " + msg);
@@ -789,7 +902,7 @@ export function GitLabSettingsPage() {
                     </Button>
                   </div>
                 </div>
-                {formData.walkin_csrf_token && (
+                {formData.walkin_x_auth_token && (
                   <div className="mt-2 text-xs text-muted-foreground">
                     Token: {formData.walkin_x_auth_token.slice(0, 8)}...{formData.walkin_x_auth_token.slice(-8)}
                   </div>
@@ -824,11 +937,6 @@ export function GitLabSettingsPage() {
                     </Button>
                   ))}
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  {loginCheckInterval > 0
-                    ? `每 ${loginCheckInterval >= 60 ? `${loginCheckInterval / 60} 小时` : `${loginCheckInterval} 分钟`} 自动检测一次登录状态`
-                    : "不会自动检测登录状态"}
-                </p>
               </div>
 
               <div className="space-y-2">
@@ -897,7 +1005,7 @@ export function GitLabSettingsPage() {
       {/* Save Button */}
       <div className="flex justify-end gap-4">
         <Button variant="outline" onClick={() => setFormData(defaultConfig)}>
-          重置默认
+          还原默认
         </Button>
         <Button onClick={handleSave} disabled={saveConfig.isPending}>
           {saveConfig.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

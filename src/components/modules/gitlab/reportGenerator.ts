@@ -1,13 +1,9 @@
-import type { GitLabScanHistory, GitLabProjectResult } from "@/types";
+import type { GitLabScanHistory, GitLabProjectResult, UnitBoardData } from "@/types";
 
-export function generateWeeklyReport(history: GitLabScanHistory): string {
+export function generateWeeklyReport(history: GitLabScanHistory, unitBoardData?: UnitBoardData | null): string {
   const projects: GitLabProjectResult[] = JSON.parse(history.summary || "[]");
   const contributors: string[] = JSON.parse(history.contributors || "[]");
   const scanDate = new Date(history.scan_at).toLocaleDateString("zh-CN");
-
-  const testCoverage = history.total_projects > 0
-    ? Math.round((history.test_projects / history.total_projects) * 100)
-    : 0;
 
   const noTestProjects = projects.filter((p) => !p.has_test);
 
@@ -43,6 +39,10 @@ export function generateWeeklyReport(history: GitLabScanHistory): string {
       .slice(0, 5);
   }
 
+  // Coverage from unit board (latest value)
+  const newCoverage = unitBoardData?.ynewValue;
+  const allCoverage = unitBoardData?.yallValue;
+
   let report = `# 本周代码提交报告
 
 > 扫描时间：${scanDate}
@@ -55,7 +55,8 @@ export function generateWeeklyReport(history: GitLabScanHistory): string {
 | 变更项目 | ${history.total_projects} 个 |
 | 代码提交 | ${history.total_commits} 次 |
 | 参与人员 | ${contributors.length} 人 |
-| 单测覆盖 | ${testCoverage}% (${history.test_projects}/${history.total_projects}) |
+| 增量覆盖率 | ${newCoverage != null ? newCoverage.toFixed(2) + "%" : "-"} |
+| 全量覆盖率 | ${allCoverage != null ? allCoverage.toFixed(2) + "%" : "-"} |
 
 ## 📈 代码变更
 

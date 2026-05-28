@@ -45,7 +45,10 @@ pub struct ScanResult {
     pub walkin_total_bugs: i64,
     pub walkin_total_vulnerabilities: i64,
     pub walkin_total_code_smells: i64,
-    pub walkin_avg_coverage: Option<f64>,
+    /// Max full coverage (coverage) across all projects
+    pub walkin_max_coverage: Option<f64>,
+    /// Max incremental coverage (new_coverage) across all projects
+    pub walkin_max_new_coverage: Option<f64>,
     pub walkin_projects_matched: i32,
 }
 
@@ -200,24 +203,45 @@ impl ScanResult {
         let mut total_bugs = 0i64;
         let mut total_vulnerabilities = 0i64;
         let mut total_code_smells = 0i64;
-        let mut coverage_sum = 0.0;
-        let mut coverage_count = 0i32;
+        let mut max_coverage: Option<f64> = None;
+        let mut max_new_coverage: Option<f64> = None;
+        let mut matched_count = 0i32;
         for project in &self.projects {
             if let Some(ref m) = project.walkin_metrics {
                 total_bugs += m.bugs;
                 total_vulnerabilities += m.vulnerabilities;
                 total_code_smells += m.code_smells;
+                matched_count += 1;
+
+                // Track max coverage (full)
                 if let Some(cov) = m.coverage {
-                    coverage_sum += cov;
-                    coverage_count += 1;
+                    max_coverage = Some(max_coverage.map_or(cov, |max| max.max(cov)));
+                }
+
+                // Track max new coverage (incremental)
+                if let Some(cov) = m.new_coverage {
+                    max_new_coverage = Some(max_new_coverage.map_or(cov, |max| max.max(cov)));
+                }
+
+                // Also check branch-specific metrics
+                if let Some(ref branches) = project.walkin_metrics_by_branch {
+                    for branch_metrics in branches.values() {
+                        if let Some(cov) = branch_metrics.coverage {
+                            max_coverage = Some(max_coverage.map_or(cov, |max| max.max(cov)));
+                        }
+                        if let Some(cov) = branch_metrics.new_coverage {
+                            max_new_coverage = Some(max_new_coverage.map_or(cov, |max| max.max(cov)));
+                        }
+                    }
                 }
             }
         }
         self.walkin_total_bugs = total_bugs;
         self.walkin_total_vulnerabilities = total_vulnerabilities;
         self.walkin_total_code_smells = total_code_smells;
-        self.walkin_avg_coverage = if coverage_count > 0 { Some(coverage_sum / coverage_count as f64) } else { None };
-        self.walkin_projects_matched = coverage_count;
+        self.walkin_max_coverage = max_coverage;
+        self.walkin_max_new_coverage = max_new_coverage;
+        self.walkin_projects_matched = matched_count;
     }
 }
 
@@ -361,7 +385,8 @@ impl GitLabScanner {
             walkin_total_bugs: 0,
             walkin_total_vulnerabilities: 0,
             walkin_total_code_smells: 0,
-            walkin_avg_coverage: None,
+            walkin_max_coverage: None,
+            walkin_max_new_coverage: None,
             walkin_projects_matched: 0,
         })
     }

@@ -366,18 +366,70 @@ pub async fn trigger_gitlab_scan(
 
         // Format Walkin quality section
         let walkin_section = if result.walkin_projects_matched > 0 {
+            let coverage_info = match (result.walkin_max_new_coverage, result.walkin_max_coverage) {
+                (Some(new_cov), Some(all_cov)) => format!(
+                    "• 增量覆盖率：{:.2}%\n                 • 全量覆盖率：{:.2}%",
+                    new_cov, all_cov
+                ),
+                (Some(new_cov), None) => format!("• 增量覆盖率：{:.2}%", new_cov),
+                (None, Some(all_cov)) => format!("• 全量覆盖率：{:.2}%", all_cov),
+                (None, None) => String::new(),
+            };
+
+            // Find projects with low incremental coverage (< 50%)
+            let low_coverage_projects: Vec<(String, Option<f64>)> = result.projects
+                .iter()
+                .filter_map(|p| {
+                    // Get max new_coverage from all branches
+                    let new_coverage = if let Some(ref branches) = p.walkin_metrics_by_branch {
+                        let mut max_cov: Option<f64> = None;
+                        for m in branches.values() {
+                            if let Some(cov) = m.new_coverage {
+                                max_cov = Some(max_cov.map_or(cov, |max| max.max(cov)));
+                            }
+                        }
+                        max_cov
+                    } else {
+                        p.walkin_metrics.as_ref().and_then(|m| m.new_coverage)
+                    };
+
+                    // Only include if has Walkin data and coverage < 50%
+                    if new_coverage.is_some() && new_coverage.unwrap() < 50.0 {
+                        let name = p.project_name.split('/').last().unwrap_or(&p.project_name);
+                        Some((name.to_string(), new_coverage))
+                    } else {
+                        None
+                    }
+                })
+                .collect();
+
+            let low_coverage_section = if low_coverage_projects.is_empty() {
+                String::new()
+            } else {
+                let items: Vec<String> = low_coverage_projects.iter()
+                    .map(|(name, cov)| {
+                        match cov {
+                            Some(c) => format!("  • {}：{:.1}%", name, c),
+                            None => format!("  • {}：N/A", name),
+                        }
+                    })
+                    .collect();
+                format!("\n\n⚠️ 增量覆盖率低于50%的项目：\n{}", items.join("\n"))
+            };
+
             format!(
                 "🔍 代码质量\n\
                  • 匹配项目：{}个\n\
                  • Bug：{}个\n\
                  • 漏洞：{}个\n\
                  • 代码异味：{}个\n\
-                 • 平均覆盖率：{}%",
+                 {}{}",
                 result.walkin_projects_matched,
                 result.walkin_total_bugs,
                 result.walkin_total_vulnerabilities,
                 result.walkin_total_code_smells,
-                result.walkin_avg_coverage.map_or("N/A".to_string(), |c| format!("{:.1}", c))
+                coverage_info,
+                low_coverage_section
             )
         } else {
             String::new()

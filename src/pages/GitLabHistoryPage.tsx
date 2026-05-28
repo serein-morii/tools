@@ -9,14 +9,13 @@ function formatTimestamp(ts: number): string {
   return new Date(ts).toLocaleString("zh-CN");
 }
 
-function computeWalkinAggregates(projects: GitLabProjectResult[]) {
+// Get walkin aggregates - coverage uses max value, others use sum
+function getWalkinAggregates(projects: GitLabProjectResult[]) {
   let totalBugs = 0;
   let totalVulnerabilities = 0;
   let totalCodeSmells = 0;
-  let coverageSum = 0;
-  let coverageCount = 0;
-  let newCoverageSum = 0;
-  let newCoverageCount = 0;
+  let maxNewCoverage: number | null = null;
+  let maxAllCoverage: number | null = null;
   let matched = 0;
 
   for (const p of projects) {
@@ -25,13 +24,34 @@ function computeWalkinAggregates(projects: GitLabProjectResult[]) {
       totalBugs += p.walkin_metrics.bugs;
       totalVulnerabilities += p.walkin_metrics.vulnerabilities;
       totalCodeSmells += p.walkin_metrics.code_smells;
-      if (p.walkin_metrics.coverage != null) {
-        coverageSum += p.walkin_metrics.coverage;
-        coverageCount++;
-      }
-      if (p.walkin_metrics.new_coverage != null) {
-        newCoverageSum += p.walkin_metrics.new_coverage;
-        newCoverageCount++;
+
+      // Check all branches for max coverage
+      const branches = p.walkin_metrics_by_branch;
+      if (branches && Object.keys(branches).length > 0) {
+        for (const metrics of Object.values(branches)) {
+          if (metrics.new_coverage != null) {
+            if (maxNewCoverage === null || metrics.new_coverage > maxNewCoverage) {
+              maxNewCoverage = metrics.new_coverage;
+            }
+          }
+          if (metrics.coverage != null) {
+            if (maxAllCoverage === null || metrics.coverage > maxAllCoverage) {
+              maxAllCoverage = metrics.coverage;
+            }
+          }
+        }
+      } else {
+        // Single branch
+        if (p.walkin_metrics.new_coverage != null) {
+          if (maxNewCoverage === null || p.walkin_metrics.new_coverage > maxNewCoverage) {
+            maxNewCoverage = p.walkin_metrics.new_coverage;
+          }
+        }
+        if (p.walkin_metrics.coverage != null) {
+          if (maxAllCoverage === null || p.walkin_metrics.coverage > maxAllCoverage) {
+            maxAllCoverage = p.walkin_metrics.coverage;
+          }
+        }
       }
     }
   }
@@ -41,8 +61,8 @@ function computeWalkinAggregates(projects: GitLabProjectResult[]) {
     totalBugs,
     totalVulnerabilities,
     totalCodeSmells,
-    avgCoverage: coverageCount > 0 ? coverageSum / coverageCount : null,
-    avgNewCoverage: newCoverageCount > 0 ? newCoverageSum / newCoverageCount : null,
+    maxNewCoverage,
+    maxAllCoverage,
   };
 }
 
@@ -63,7 +83,7 @@ function ScanDetailDialog({ item, open, onClose }: {
   const coverage = item.total_projects > 0 ? Math.round((item.test_projects / item.total_projects) * 100) : 0;
   const sortedProjects = [...projects].sort((a, b) => b.commits - a.commits);
   const noTestProjects = sortedProjects.filter(p => !p.has_test);
-  const walkin = computeWalkinAggregates(projects);
+  const walkin = getWalkinAggregates(projects);
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={onClose}>
@@ -122,16 +142,16 @@ function ScanDetailDialog({ item, open, onClose }: {
                   <span className="text-muted-foreground">异味</span>
                   <div className="font-medium">{walkin.totalCodeSmells}</div>
                 </div>
-                {walkin.avgCoverage != null && (
+                {walkin.maxAllCoverage != null && (
                   <div>
                     <span className="text-muted-foreground">全量覆盖率</span>
-                    <div className="font-medium">{walkin.avgCoverage.toFixed(1)}%</div>
+                    <div className="font-medium">{walkin.maxAllCoverage.toFixed(2)}%</div>
                   </div>
                 )}
-                {walkin.avgNewCoverage != null && (
+                {walkin.maxNewCoverage != null && (
                   <div>
                     <span className="text-muted-foreground">增量覆盖率</span>
-                    <div className="font-medium">{walkin.avgNewCoverage.toFixed(1)}%</div>
+                    <div className="font-medium">{walkin.maxNewCoverage.toFixed(2)}%</div>
                   </div>
                 )}
               </div>
@@ -265,7 +285,7 @@ function HistoryCard({ item, selected, onToggleSelect, onClick }: {
 
   const noTestProjects = useMemo(() => projects.filter((p) => !p.has_test), [projects]);
   const coverage = item.total_projects > 0 ? Math.round((item.test_projects / item.total_projects) * 100) : 0;
-  const walkin = useMemo(() => computeWalkinAggregates(projects), [projects]);
+  const walkin = useMemo(() => getWalkinAggregates(projects), [projects]);
 
   return (
     <Card
@@ -329,11 +349,11 @@ function HistoryCard({ item, selected, onToggleSelect, onClick }: {
               <span className="flex items-center gap-1">
                 <Zap className="h-3 w-3" /> 异味 {walkin.totalCodeSmells}
               </span>
-              {walkin.avgCoverage != null && (
-                <span>全量覆盖 {walkin.avgCoverage.toFixed(1)}%</span>
+              {walkin.maxAllCoverage != null && (
+                <span>全量覆盖 {walkin.maxAllCoverage.toFixed(2)}%</span>
               )}
-              {walkin.avgNewCoverage != null && (
-                <span>增量覆盖 {walkin.avgNewCoverage.toFixed(1)}%</span>
+              {walkin.maxNewCoverage != null && (
+                <span>增量覆盖 {walkin.maxNewCoverage.toFixed(2)}%</span>
               )}
             </div>
           </div>
@@ -376,8 +396,8 @@ function CompareView({ left, right, onClose }: {
   const leftCoverage = left.total_projects > 0 ? Math.round((left.test_projects / left.total_projects) * 100) : 0;
   const rightCoverage = right.total_projects > 0 ? Math.round((right.test_projects / right.total_projects) * 100) : 0;
 
-  const leftWalkin = useMemo(() => computeWalkinAggregates(leftProjects), [leftProjects]);
-  const rightWalkin = useMemo(() => computeWalkinAggregates(rightProjects), [rightProjects]);
+  const leftWalkin = useMemo(() => getWalkinAggregates(leftProjects), [leftProjects]);
+  const rightWalkin = useMemo(() => getWalkinAggregates(rightProjects), [rightProjects]);
 
   const diff = (a: number, b: number) => {
     const d = a - b;
@@ -390,8 +410,8 @@ function CompareView({ left, right, onClose }: {
     if (a == null || b == null) return <span className="text-muted-foreground">-</span>;
     const d = a - b;
     if (Math.abs(d) < 0.01) return <span className="text-muted-foreground">-</span>;
-    if (d > 0) return <span className="text-green-600">+{d.toFixed(1)}%</span>;
-    return <span className="text-red-600">{d.toFixed(1)}%</span>;
+    if (d > 0) return <span className="text-green-600">+{d.toFixed(2)}%</span>;
+    return <span className="text-red-600">{d.toFixed(2)}%</span>;
   };
 
   // Find new test projects
@@ -480,17 +500,17 @@ function CompareView({ left, right, onClose }: {
               </div>
 
               <div className="text-muted-foreground">全量覆盖率</div>
-              <div className="text-center">{rightWalkin.avgCoverage != null ? `${rightWalkin.avgCoverage.toFixed(1)}%` : "-"}</div>
+              <div className="text-center">{rightWalkin.maxAllCoverage != null ? `${rightWalkin.maxAllCoverage.toFixed(2)}%` : "-"}</div>
               <div className="text-center">
-                {leftWalkin.avgCoverage != null ? `${leftWalkin.avgCoverage.toFixed(1)}%` : "-"}
-                <span className="ml-2">{diffPercent(leftWalkin.avgCoverage, rightWalkin.avgCoverage)}</span>
+                {leftWalkin.maxAllCoverage != null ? `${leftWalkin.maxAllCoverage.toFixed(2)}%` : "-"}
+                <span className="ml-2">{diffPercent(leftWalkin.maxAllCoverage, rightWalkin.maxAllCoverage)}</span>
               </div>
 
               <div className="text-muted-foreground">增量覆盖率</div>
-              <div className="text-center">{rightWalkin.avgNewCoverage != null ? `${rightWalkin.avgNewCoverage.toFixed(1)}%` : "-"}</div>
+              <div className="text-center">{rightWalkin.maxNewCoverage != null ? `${rightWalkin.maxNewCoverage.toFixed(2)}%` : "-"}</div>
               <div className="text-center">
-                {leftWalkin.avgNewCoverage != null ? `${leftWalkin.avgNewCoverage.toFixed(1)}%` : "-"}
-                <span className="ml-2">{diffPercent(leftWalkin.avgNewCoverage, rightWalkin.avgNewCoverage)}</span>
+                {leftWalkin.maxNewCoverage != null ? `${leftWalkin.maxNewCoverage.toFixed(2)}%` : "-"}
+                <span className="ml-2">{diffPercent(leftWalkin.maxNewCoverage, rightWalkin.maxNewCoverage)}</span>
               </div>
             </>
           )}

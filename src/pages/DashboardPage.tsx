@@ -2,11 +2,14 @@ import { useTasks } from "@/lib/query/taskQueries";
 import { useChannels } from "@/lib/query/channelQueries";
 import { useTemplates } from "@/lib/query/templateQueries";
 import { useReminderHistory } from "@/lib/query/reminderQueries";
-import { useGitLabScanHistory, useGitLabConfigured } from "@/lib/query/gitlabQueries";
+import { useGitLabScanHistory, useGitLabConfigured, useGitLabConfig } from "@/lib/query/gitlabQueries";
+import { gitlabApi } from "@/lib/api/gitlab";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Bell, Radio, CheckCircle2, AlertCircle, Clock3, GitBranch, GitCommit, Users, BarChart3 } from "lucide-react";
+import { Bell, Radio, CheckCircle2, AlertCircle, Clock3, GitBranch, GitCommit, Users, BarChart3, TrendingUp } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import type { UnitBoardData } from "@/types";
 
 export function DashboardPage() {
   const { data: tasks, isLoading: tasksLoading, error: tasksError } = useTasks();
@@ -15,7 +18,37 @@ export function DashboardPage() {
   const { data: history, isLoading: historyLoading, error: historyError } = useReminderHistory();
   const { data: gitlabHistory, isLoading: gitlabLoading } = useGitLabScanHistory(5);
   const { data: gitlabConfigured } = useGitLabConfigured();
+  const { data: gitlabConfig } = useGitLabConfig();
   const { t } = useTranslation();
+  const [unitBoardData, setUnitBoardData] = useState<UnitBoardData | null>(null);
+
+  // Fetch unit board data for coverage
+  useEffect(() => {
+    const fetchUnitBoard = async () => {
+      if (!gitlabConfig?.walkin_enabled || !gitlabConfig?.walkin_url ||
+          !gitlabConfig?.walkin_dept_id || !gitlabConfig?.walkin_dept_name ||
+          !gitlabConfig?.walkin_csrf_token || !gitlabConfig?.walkin_x_auth_token) {
+        return;
+      }
+      try {
+        const result = await gitlabApi.walkinFetchUnitBoard(
+          gitlabConfig.walkin_url,
+          {
+            csrf_token: gitlabConfig.walkin_csrf_token,
+            project: gitlabConfig.walkin_project_header || "",
+            workspace: gitlabConfig.walkin_workspace_name || "",
+            x_auth_token: gitlabConfig.walkin_x_auth_token,
+          },
+          gitlabConfig.walkin_dept_id,
+          gitlabConfig.walkin_dept_name,
+        );
+        setUnitBoardData(result);
+      } catch (e) {
+        console.error("Failed to fetch unit board:", e);
+      }
+    };
+    fetchUnitBoard();
+  }, [gitlabConfig]);
 
   const isLoading = tasksLoading || channelsLoading || templatesLoading || historyLoading || gitlabLoading;
   const error = tasksError || channelsError || historyError;
@@ -58,10 +91,11 @@ export function DashboardPage() {
   const gitlabProjects = latestScan?.total_projects || 0;
   const gitlabCommits = latestScan?.total_commits || 0;
   const gitlabContributors = latestScan ? JSON.parse(latestScan.contributors || "[]").length : 0;
-  const gitlabCoverage = latestScan && latestScan.total_projects > 0
-    ? Math.round((latestScan.test_projects / latestScan.total_projects) * 100)
-    : 0;
   const noTestProjects = latestScan ? latestScan.total_projects - latestScan.test_projects : 0;
+
+  // Coverage from unit board (latest value, not average)
+  const newCoverage = unitBoardData?.ynewValue;
+  const allCoverage = unitBoardData?.yallValue;
 
   // Upcoming tasks (next 7 days)
   const now = Date.now();
@@ -194,9 +228,24 @@ export function DashboardPage() {
               <MiniStat icon={GitBranch} label="变更项目" value={gitlabProjects} />
               <MiniStat icon={GitCommit} label="提交次数" value={gitlabCommits} />
               <MiniStat icon={Users} label="参与人数" value={gitlabContributors} />
-              <MiniStat icon={CheckCircle2} label="单测覆盖" value={`${gitlabCoverage}%`} />
-              <MiniStat icon={AlertCircle} label="无单测项目" value={noTestProjects} />
+              <MiniStat
+                icon={TrendingUp}
+                label="增量覆盖率"
+                value={newCoverage != null ? `${newCoverage.toFixed(2)}%` : "-"}
+              />
+              <MiniStat
+                icon={BarChart3}
+                label="全量覆盖率"
+                value={allCoverage != null ? `${allCoverage.toFixed(2)}%` : "-"}
+              />
             </div>
+            {noTestProjects > 0 && (
+              <div className="mt-3 pt-3 border-t">
+                <span className="text-xs text-muted-foreground">
+                  无单测项目: <span className="font-medium text-foreground">{noTestProjects}</span>
+                </span>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}

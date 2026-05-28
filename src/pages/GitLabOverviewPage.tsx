@@ -14,20 +14,21 @@ import { CustomSelect } from "@/components/ui/custom-select";
 import { formatTimestamp, formatNumber } from "@/lib/gitlab/format";
 import type { GitLabScanHistory, GitLabProjectResult, UnitBoardData } from "@/types";
 
-function TrendIndicator({ current, previous }: { current: number; previous?: number }) {
+function TrendIndicator({ current, previous, isPercent = false }: { current: number; previous?: number; isPercent?: boolean }) {
   if (previous === undefined) return null;
   const diff = current - previous;
+  const formatValue = (v: number) => isPercent ? v.toFixed(2) : v;
   if (diff > 0) {
     return (
       <span className="flex items-center gap-0.5 text-xs text-muted-foreground">
-        <TrendingUp className="h-3 w-3" />+{diff}
+        <TrendingUp className="h-3 w-3" />+{formatValue(diff)}
       </span>
     );
   }
   if (diff < 0) {
     return (
       <span className="flex items-center gap-0.5 text-xs text-muted-foreground">
-        <TrendingDown className="h-3 w-3" />{diff}
+        <TrendingDown className="h-3 w-3" />{formatValue(diff)}
       </span>
     );
   }
@@ -82,13 +83,13 @@ function SummaryCards({
     {
       icon: TrendingUp,
       label: "增量覆盖率",
-      value: currentNewCoverage != null ? `${currentNewCoverage.toFixed(1)}%` : "-",
+      value: currentNewCoverage != null ? `${currentNewCoverage.toFixed(2)}%` : "-",
       tooltip: "团队覆盖率看板最新数据",
     },
     {
       icon: BarChart3,
       label: "全量覆盖率",
-      value: currentAllCoverage != null ? `${currentAllCoverage.toFixed(1)}%` : "-",
+      value: currentAllCoverage != null ? `${currentAllCoverage.toFixed(2)}%` : "-",
       tooltip: "团队覆盖率看板最新数据",
     },
   ];
@@ -794,19 +795,19 @@ function UnitBoardCard({
                   <div className="grid grid-cols-3 gap-2">
                     {data.ynewValue != null && (
                       <div className="text-center">
-                        <div className="text-lg font-bold text-primary">{data.ynewValue.toFixed(1)}%</div>
+                        <div className="text-lg font-bold text-primary">{data.ynewValue.toFixed(2)}%</div>
                         <div className="text-xs text-muted-foreground">综合</div>
                       </div>
                     )}
                     {data.ynewLineValue != null && (
                       <div className="text-center">
-                        <div className="text-lg font-bold text-primary">{data.ynewLineValue.toFixed(1)}%</div>
+                        <div className="text-lg font-bold text-primary">{data.ynewLineValue.toFixed(2)}%</div>
                         <div className="text-xs text-muted-foreground">行</div>
                       </div>
                     )}
                     {data.ynewBranchValue != null && (
                       <div className="text-center">
-                        <div className="text-lg font-bold text-primary">{data.ynewBranchValue.toFixed(1)}%</div>
+                        <div className="text-lg font-bold text-primary">{data.ynewBranchValue.toFixed(2)}%</div>
                         <div className="text-xs text-muted-foreground">条件</div>
                       </div>
                     )}
@@ -818,19 +819,19 @@ function UnitBoardCard({
                   <div className="grid grid-cols-3 gap-2">
                     {data.yallValue != null && (
                       <div className="text-center">
-                        <div className="text-lg font-bold text-green-600">{data.yallValue.toFixed(1)}%</div>
+                        <div className="text-lg font-bold text-green-600">{data.yallValue.toFixed(2)}%</div>
                         <div className="text-xs text-muted-foreground">综合</div>
                       </div>
                     )}
                     {data.yallLineValue != null && (
                       <div className="text-center">
-                        <div className="text-lg font-bold text-green-600">{data.yallLineValue.toFixed(1)}%</div>
+                        <div className="text-lg font-bold text-green-600">{data.yallLineValue.toFixed(2)}%</div>
                         <div className="text-xs text-muted-foreground">行</div>
                       </div>
                     )}
                     {data.yallBranchValue != null && (
                       <div className="text-center">
-                        <div className="text-lg font-bold text-green-600">{data.yallBranchValue.toFixed(1)}%</div>
+                        <div className="text-lg font-bold text-green-600">{data.yallBranchValue.toFixed(2)}%</div>
                         <div className="text-xs text-muted-foreground">条件</div>
                       </div>
                     )}
@@ -912,7 +913,7 @@ export function GitLabOverviewPage() {
       toast.error("暂无扫描数据可导出");
       return;
     }
-    const report = generateWeeklyReport(selectedHistory);
+    const report = generateWeeklyReport(selectedHistory, unitBoardData);
     const date = new Date(selectedHistory.scan_at).toISOString().split("T")[0];
     downloadReport(report, `gitlab-weekly-report-${date}.md`);
     toast.success("报告已导出");
@@ -923,7 +924,7 @@ export function GitLabOverviewPage() {
       toast.error("暂无扫描数据可复制");
       return;
     }
-    const report = generateWeeklyReport(selectedHistory);
+    const report = generateWeeklyReport(selectedHistory, unitBoardData);
     try {
       await navigator.clipboard.writeText(report);
       toast.success("报告已复制到剪贴板");

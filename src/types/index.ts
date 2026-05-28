@@ -308,9 +308,33 @@ export interface UpdateNoteRequest {
 }
 
 // GitLab types
+
+// Token profile for multi-token support
+export interface TokenProfile {
+  id: string;
+  token: string;
+  label: string; // 备注/标签
+}
+
+// LDAP profile for multi-ldap support
+export interface LdapProfile {
+  id: string;
+  username: string;
+  password: string;
+  label: string; // 备注/标签
+}
+
 export interface GitLabConfig {
   url: string;
   auth_type: "token" | "password";
+  // Selected profile IDs
+  selected_token_id?: string;
+  selected_ldap_id?: string;
+  // Token profiles (multiple tokens)
+  token_profiles: TokenProfile[];
+  // LDAP profiles (multiple LDAP credentials)
+  ldap_profiles: LdapProfile[];
+  // Legacy fields for backward compatibility
   token?: string;
   username?: string;
   password?: string;
@@ -323,8 +347,6 @@ export interface GitLabConfig {
   scan_range_days?: number;
   walkin_enabled: boolean;
   walkin_url: string;
-  walkin_username: string;
-  walkin_password: string;
   walkin_dept_name: string;
   walkin_dept_id: string;
   walkin_workspace_name: string;

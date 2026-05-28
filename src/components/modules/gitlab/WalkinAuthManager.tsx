@@ -71,14 +71,16 @@ export function WalkinAuthProvider({ config, onAuthUpdate, children }: WalkinAut
       toast.error("配置未加载，请稍后再试");
       return;
     }
-    const username = credentials?.username || currentConfig.walkin_username;
-    const password = credentials?.password || currentConfig.walkin_password;
+    // Get LDAP credentials from profiles or provided credentials
+    const ldapProfile = currentConfig.ldap_profiles.find(p => p.id === currentConfig.selected_ldap_id);
+    const username = credentials?.username || ldapProfile?.username || "";
+    const password = credentials?.password || ldapProfile?.password || "";
     if (!currentConfig.walkin_url) {
       toast.error("请先配置 Walkin 地址");
       return;
     }
     if (!username || !password) {
-      toast.error("请先配置 Walkin 用户名和密码");
+      toast.error("请先配置 LDAP 用户名和密码");
       return;
     }
 
@@ -118,8 +120,10 @@ export function WalkinAuthProvider({ config, onAuthUpdate, children }: WalkinAut
   const handleCaptchaLogin = async () => {
     const currentConfig = configRef.current;
     const credentials = loginCredentialsRef.current;
-    const username = credentials?.username || currentConfig?.walkin_username;
-    const password = credentials?.password || currentConfig?.walkin_password;
+    // Get LDAP credentials from profiles
+    const ldapProfile = currentConfig?.ldap_profiles.find(p => p.id === currentConfig?.selected_ldap_id);
+    const username = credentials?.username || ldapProfile?.username || "";
+    const password = credentials?.password || ldapProfile?.password || "";
     if (!captcha || !currentConfig?.walkin_url || !username || !password) {
       toast.error("请输入验证码");
       return;
