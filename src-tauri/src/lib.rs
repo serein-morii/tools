@@ -109,11 +109,13 @@ pub fn run() {
             // Build tray menu
             let show_item = MenuItem::with_id(app, "show", "显示窗口", true, None::<&str>)?;
             let new_task_item = MenuItem::with_id(app, "new_task", "新建任务", true, None::<&str>)?;
+            let scan_item = MenuItem::with_id(app, "scan", "扫描代码", true, None::<&str>)?;
             let quit_item = MenuItem::with_id(app, "quit", "退出", true, None::<&str>)?;
             let menu = MenuBuilder::new(app)
                 .item(&show_item)
                 .separator()
                 .item(&new_task_item)
+                .item(&scan_item)
                 .separator()
                 .item(&quit_item)
                 .build()?;
@@ -134,6 +136,13 @@ pub fn run() {
                             window.show().unwrap();
                             window.set_focus().unwrap();
                             let _ = window.emit("tray-action", "new-task");
+                        }
+                    }
+                    "scan" => {
+                        if let Some(window) = app.get_webview_window("main") {
+                            window.show().unwrap();
+                            window.set_focus().unwrap();
+                            let _ = window.emit("tray-action", "scan");
                         }
                     }
                     "quit" => {

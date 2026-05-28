@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useCallback, Fragment } from "react";
+import { useTranslation } from "react-i18next";
 import { RefreshCw, BarChart3, Users, GitCommit, TrendingUp, TrendingDown, MinusCircle, Inbox, GitBranch, ArrowUpDown, ArrowUp, ArrowDown, HelpCircle, ShieldAlert, Bug, Zap, Loader2, GitMerge, ExternalLink, Shield, CheckCircle2, XCircle, Clock3, AlertTriangle, Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -47,6 +48,7 @@ function SummaryCards({
   previous?: GitLabScanHistory;
   unitBoardData?: UnitBoardData | null;
 }) {
+  const { t } = useTranslation();
   const currentContributors = useMemo(
     () => current ? JSON.parse(current.contributors || "[]").length : 0,
     [current],
@@ -63,33 +65,33 @@ function SummaryCards({
   const cards = [
     {
       icon: BarChart3,
-      label: "变更项目",
+      label: t("gitlab.overview.changedProjects"),
       value: current?.total_projects ?? 0,
       previousValue: previous?.total_projects,
     },
     {
       icon: GitCommit,
-      label: "提交总数",
+      label: t("gitlab.overview.totalCommits"),
       value: current?.total_commits ?? 0,
       previousValue: previous?.total_commits,
     },
     {
       icon: Users,
-      label: "参与人数",
+      label: t("gitlab.overview.contributors"),
       value: currentContributors,
       previousValue: previousContributors,
     },
     {
       icon: TrendingUp,
-      label: "增量覆盖率",
+      label: t("gitlab.overview.incrementalCoverage"),
       value: currentNewCoverage != null ? `${currentNewCoverage.toFixed(2)}%` : "-",
-      tooltip: "团队覆盖率看板最新数据",
+      tooltip: t("gitlab.overview.coverageTooltip"),
     },
     {
       icon: BarChart3,
-      label: "全量覆盖率",
+      label: t("gitlab.overview.fullCoverage"),
       value: currentAllCoverage != null ? `${currentAllCoverage.toFixed(2)}%` : "-",
-      tooltip: "团队覆盖率看板最新数据",
+      tooltip: t("gitlab.overview.coverageTooltip"),
     },
   ];
 
@@ -138,13 +140,14 @@ function RatingBadge({ label, rating }: { label: string; rating: string }) {
 }
 
 function PipelineStatusBadge({ status }: { status: string }) {
+  const { t } = useTranslation();
   const config: Record<string, { icon: typeof CheckCircle2; color: string; label: string }> = {
-    success: { icon: CheckCircle2, color: "text-emerald-600", label: "成功" },
-    failed: { icon: XCircle, color: "text-destructive", label: "失败" },
-    running: { icon: Loader2, color: "text-blue-500", label: "运行中" },
-    pending: { icon: Clock3, color: "text-amber-500", label: "等待中" },
-    canceled: { icon: MinusCircle, color: "text-muted-foreground", label: "已取消" },
-    skipped: { icon: MinusCircle, color: "text-muted-foreground", label: "已跳过" },
+    success: { icon: CheckCircle2, color: "text-emerald-600", label: t("gitlab.history.pipelineSuccess") },
+    failed: { icon: XCircle, color: "text-destructive", label: t("gitlab.history.pipelineFailed") },
+    running: { icon: Loader2, color: "text-blue-500", label: t("gitlab.history.pipelineRunning") },
+    pending: { icon: Clock3, color: "text-amber-500", label: t("gitlab.history.pipelinePending") },
+    canceled: { icon: MinusCircle, color: "text-muted-foreground", label: t("gitlab.history.pipelineCanceled") },
+    skipped: { icon: MinusCircle, color: "text-muted-foreground", label: t("gitlab.history.pipelineSkipped") },
   };
   const c = config[status] || { icon: Clock3, color: "text-muted-foreground", label: status };
   const Icon = c.icon;
@@ -157,6 +160,7 @@ function PipelineStatusBadge({ status }: { status: string }) {
 }
 
 function ProjectTable({ projects, gitlabUrl }: { projects: GitLabProjectResult[]; gitlabUrl?: string }) {
+  const { t, i18n } = useTranslation();
   const [search, setSearch] = useState("");
   const [testFilter, setTestFilter] = useState<string>("all");
   const [walkinFilter, setWalkinFilter] = useState<string>("all");
@@ -283,7 +287,7 @@ function ProjectTable({ projects, gitlabUrl }: { projects: GitLabProjectResult[]
       <div className="mb-3 flex flex-wrap items-center gap-2">
         <input
           type="text"
-          placeholder="搜索..."
+          placeholder={t("common.search")}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="rounded border bg-background px-2.5 py-1 text-sm w-32"
@@ -292,9 +296,9 @@ function ProjectTable({ projects, gitlabUrl }: { projects: GitLabProjectResult[]
           value={testFilter}
           onChange={setTestFilter}
           options={[
-            { value: "all", label: "单测" },
-            { value: "has_test", label: "有" },
-            { value: "no_test", label: "无" },
+            { value: "all", label: t("gitlab.overview.unitTest") },
+            { value: "has_test", label: t("gitlab.overview.hasTest") || "✓" },
+            { value: "no_test", label: t("gitlab.overview.noTest") || "✗" },
           ]}
           className="w-16"
         />
@@ -303,8 +307,8 @@ function ProjectTable({ projects, gitlabUrl }: { projects: GitLabProjectResult[]
           onChange={setWalkinFilter}
           options={[
             { value: "all", label: "Walkin" },
-            { value: "has_walkin", label: "有" },
-            { value: "no_walkin", label: "无" },
+            { value: "has_walkin", label: "✓" },
+            { value: "no_walkin", label: "✗" },
           ]}
           className="w-20"
         />
@@ -312,7 +316,7 @@ function ProjectTable({ projects, gitlabUrl }: { projects: GitLabProjectResult[]
           value={contributorFilter}
           onChange={setContributorFilter}
           options={[
-            { value: "all", label: "贡献者" },
+            { value: "all", label: t("gitlab.overview.contributorsFilter") },
             ...allContributors.map((c) => ({ value: c, label: c })),
           ]}
           className="w-24"
@@ -329,14 +333,14 @@ function ProjectTable({ projects, gitlabUrl }: { projects: GitLabProjectResult[]
           <thead className="bg-muted/50">
             <tr>
               <th className="w-8"></th>
-              <th className="px-3 py-2 text-left font-medium">项目</th>
+              <th className="px-3 py-2 text-left font-medium">{t("gitlab.overview.project")}</th>
               <th
                 className="px-3 py-2 text-right font-medium cursor-pointer hover:bg-muted/80 select-none"
                 onClick={() => toggleSort("commits")}
               >
                 <div className="flex items-center justify-end gap-1">
                   <SortIcon field="commits" />
-                  提交
+                  {t("gitlab.overview.commits")}
                 </div>
               </th>
               <th
@@ -348,7 +352,7 @@ function ProjectTable({ projects, gitlabUrl }: { projects: GitLabProjectResult[]
                   +/-
                 </div>
               </th>
-              <th className="px-3 py-2 text-center font-medium">单测</th>
+              <th className="px-3 py-2 text-center font-medium">{t("gitlab.overview.unitTest")}</th>
               <th className="px-3 py-2 text-center font-medium">Walkin</th>
               {hasWalkinData && (
                 <th
@@ -357,11 +361,11 @@ function ProjectTable({ projects, gitlabUrl }: { projects: GitLabProjectResult[]
                 >
                   <div className="flex items-center justify-center gap-1">
                     <SortIcon field="coverage" />
-                    增量覆盖率
+                    {t("gitlab.overview.incrementalCoverage")}
                   </div>
                 </th>
               )}
-              <th className="px-3 py-2 text-left font-medium">贡献者</th>
+              <th className="px-3 py-2 text-left font-medium">{t("gitlab.overview.contributorsFilter")}</th>
             </tr>
           </thead>
           <tbody className="divide-y">
@@ -443,7 +447,7 @@ function ProjectTable({ projects, gitlabUrl }: { projects: GitLabProjectResult[]
                                 <div className="flex items-center gap-4 text-xs">
                                   <div className="flex items-center gap-2">
                                     <GitBranch className="h-3.5 w-3.5 text-muted-foreground" />
-                                    <span className="text-muted-foreground">分支:</span>
+                                    <span className="text-muted-foreground">{t("gitlab.overview.branch")}</span>
                                     <CustomSelect
                                       value={selectedBranch || currentMetrics.branch || "master"}
                                       onChange={(v) => setSelectedBranches(prev => ({ ...prev, [project.project_id]: v }))}
@@ -453,7 +457,7 @@ function ProjectTable({ projects, gitlabUrl }: { projects: GitLabProjectResult[]
                                   </div>
                                   {currentMetrics.analysis_date && (
                                     <span className="text-muted-foreground">
-                                      分析: {new Date(currentMetrics.analysis_date).toLocaleString("zh-CN")}
+                                      {t("gitlab.overview.analysis")}{new Date(currentMetrics.analysis_date).toLocaleString(i18n.language)}
                                     </span>
                                   )}
                                 </div>
@@ -461,12 +465,12 @@ function ProjectTable({ projects, gitlabUrl }: { projects: GitLabProjectResult[]
                                 <div className="flex items-center gap-4 text-xs">
                                   <div className="flex items-center gap-2">
                                     <GitBranch className="h-3.5 w-3.5 text-muted-foreground" />
-                                    <span className="text-muted-foreground">分支:</span>
+                                    <span className="text-muted-foreground">{t("gitlab.overview.branch")}</span>
                                     <span className="font-medium">{currentMetrics.branch || "master"}</span>
                                   </div>
                                   {currentMetrics.analysis_date && (
                                     <span className="text-muted-foreground">
-                                      分析: {new Date(currentMetrics.analysis_date).toLocaleString("zh-CN")}
+                                      {t("gitlab.overview.analysis")}{new Date(currentMetrics.analysis_date).toLocaleString(i18n.language)}
                                     </span>
                                   )}
                                 </div>
@@ -481,59 +485,58 @@ function ProjectTable({ projects, gitlabUrl }: { projects: GitLabProjectResult[]
                                 </span>
                                 <span className="flex items-center gap-1 text-xs">
                                   <ShieldAlert className="h-3.5 w-3.5 text-muted-foreground" />
-                                  <span className="text-muted-foreground">漏洞</span>
+                                  <span className="text-muted-foreground">{t("gitlab.overview.vulnerabilities")}</span>
                                   <span className="font-medium">{currentMetrics.vulnerabilities}</span>
                                 </span>
                                 <span className="flex items-center gap-1 text-xs">
                                   <Zap className="h-3.5 w-3.5 text-muted-foreground" />
-                                  <span className="text-muted-foreground">异味</span>
+                                  <span className="text-muted-foreground">{t("gitlab.overview.codeSmells")}</span>
                                   <span className="font-medium">{currentMetrics.code_smells}</span>
                                 </span>
                                 {currentMetrics.duplicated_lines_density != null && (
                                   <span className="text-xs">
-                                    <span className="text-muted-foreground">重复率 </span>
+                                    <span className="text-muted-foreground">{t("gitlab.overview.duplicatedRate")}</span>
                                     <span className="font-medium">{currentMetrics.duplicated_lines_density.toFixed(1)}%</span>
                                   </span>
                                 )}
                               </div>
 
-                              {/* 增量覆盖率 */}
                               <div className="border-t pt-2">
-                                <div className="text-xs text-muted-foreground mb-1">【增量】覆盖率</div>
+                                <div className="text-xs text-muted-foreground mb-1">{t("gitlab.overview.incrementalCoverageSection")}</div>
                                 <div className="grid grid-cols-3 gap-2 text-xs">
                                   {currentMetrics.new_coverage != null && (
                                     <div>
-                                      <span className="text-muted-foreground">综合覆盖率</span>
+                                      <span className="text-muted-foreground">{t("gitlab.overview.overallCoverage")}</span>
                                       <span className="ml-1 font-medium">{currentMetrics.new_coverage.toFixed(2)}%</span>
                                     </div>
                                   )}
                                   {currentMetrics.new_line_coverage != null && (
                                     <div>
-                                      <span className="text-muted-foreground">行覆盖率</span>
+                                      <span className="text-muted-foreground">{t("gitlab.overview.lineCoverage")}</span>
                                       <span className="ml-1 font-medium">{currentMetrics.new_line_coverage.toFixed(2)}%</span>
                                     </div>
                                   )}
                                   {currentMetrics.new_condition_coverage != null && (
                                     <div>
-                                      <span className="text-muted-foreground">条件覆盖率</span>
+                                      <span className="text-muted-foreground">{t("gitlab.overview.conditionCoverage")}</span>
                                       <span className="ml-1 font-medium">{currentMetrics.new_condition_coverage.toFixed(2)}%</span>
                                     </div>
                                   )}
                                   {currentMetrics.new_lines_to_cover != null && (
                                     <div>
-                                      <span className="text-muted-foreground">代码行</span>
+                                      <span className="text-muted-foreground">{t("gitlab.overview.codeLines")}</span>
                                       <span className="ml-1 font-medium">{currentMetrics.new_lines_to_cover}</span>
                                     </div>
                                   )}
                                   {currentMetrics.new_line_cover != null && currentMetrics.new_lines_to_cover != null && (
                                     <div>
-                                      <span className="text-muted-foreground">已覆盖</span>
+                                      <span className="text-muted-foreground">{t("gitlab.overview.covered")}</span>
                                       <span className="ml-1 font-medium">{currentMetrics.new_line_cover}/{currentMetrics.new_lines_to_cover}</span>
                                     </div>
                                   )}
                                   {currentMetrics.new_condition_to_cover != null && (
                                     <div>
-                                      <span className="text-muted-foreground">条件数</span>
+                                      <span className="text-muted-foreground">{t("gitlab.overview.conditions")}</span>
                                       <span className="ml-1 font-medium">
                                         {currentMetrics.new_condition_to_cover - (currentMetrics.new_un_condition_to_cover || 0)}/{currentMetrics.new_condition_to_cover}
                                       </span>
@@ -542,43 +545,42 @@ function ProjectTable({ projects, gitlabUrl }: { projects: GitLabProjectResult[]
                                 </div>
                               </div>
 
-                              {/* 全量覆盖率 */}
                               <div className="border-t pt-2">
-                                <div className="text-xs text-muted-foreground mb-1">【全量】覆盖率</div>
+                                <div className="text-xs text-muted-foreground mb-1">{t("gitlab.overview.fullCoverageSection")}</div>
                                 <div className="grid grid-cols-3 gap-2 text-xs">
                                   {currentMetrics.coverage != null && (
                                     <div>
-                                      <span className="text-muted-foreground">综合覆盖率</span>
+                                      <span className="text-muted-foreground">{t("gitlab.overview.overallCoverage")}</span>
                                       <span className="ml-1 font-medium">{currentMetrics.coverage.toFixed(2)}%</span>
                                     </div>
                                   )}
                                   {currentMetrics.line_coverage != null && (
                                     <div>
-                                      <span className="text-muted-foreground">行覆盖率</span>
+                                      <span className="text-muted-foreground">{t("gitlab.overview.lineCoverage")}</span>
                                       <span className="ml-1 font-medium">{currentMetrics.line_coverage.toFixed(2)}%</span>
                                     </div>
                                   )}
                                   {currentMetrics.branch_coverage != null && (
                                     <div>
-                                      <span className="text-muted-foreground">条件覆盖率</span>
+                                      <span className="text-muted-foreground">{t("gitlab.overview.conditionCoverage")}</span>
                                       <span className="ml-1 font-medium">{currentMetrics.branch_coverage.toFixed(2)}%</span>
                                     </div>
                                   )}
                                   {currentMetrics.lines_to_cover != null && (
                                     <div>
-                                      <span className="text-muted-foreground">代码行数</span>
+                                      <span className="text-muted-foreground">{t("gitlab.overview.codeLineCount")}</span>
                                       <span className="ml-1 font-medium">{currentMetrics.lines_to_cover}</span>
                                     </div>
                                   )}
                                   {currentMetrics.lines_to_cover != null && currentMetrics.line_coverage != null && (
                                     <div>
-                                      <span className="text-muted-foreground">已覆盖</span>
+                                      <span className="text-muted-foreground">{t("gitlab.overview.covered")}</span>
                                       <span className="ml-1 font-medium">{Math.round(currentMetrics.lines_to_cover * currentMetrics.line_coverage / 100)}</span>
                                     </div>
                                   )}
                                   {currentMetrics.conditions_to_cover != null && (
                                     <div>
-                                      <span className="text-muted-foreground">条件数</span>
+                                      <span className="text-muted-foreground">{t("gitlab.overview.conditions")}</span>
                                       <span className="ml-1 font-medium">
                                         {currentMetrics.conditions_to_cover - (currentMetrics.uncovered_conditions || 0)}/{currentMetrics.conditions_to_cover}
                                       </span>
@@ -590,7 +592,7 @@ function ProjectTable({ projects, gitlabUrl }: { projects: GitLabProjectResult[]
                             );
                           })()}
                           <div className="text-muted-foreground mb-1 border-t pt-2">
-                            {project.has_test ? "单测提交记录" : "本周未发现单测提交"}
+                            {project.has_test ? t("gitlab.overview.testCommitRecords") : t("gitlab.overview.noTestCommits")}
                           </div>
                           {project.has_test && project.test_commits.length > 0 && (
                             <ul className="space-y-1">
@@ -603,7 +605,7 @@ function ProjectTable({ projects, gitlabUrl }: { projects: GitLabProjectResult[]
                                   <div className="text-xs text-muted-foreground shrink-0">
                                     <span>{commit.author}</span>
                                     <span className="mx-2">·</span>
-                                    <span>{new Date(commit.created_at).toLocaleDateString("zh-CN")}</span>
+                                    <span>{new Date(commit.created_at).toLocaleDateString(i18n.language)}</span>
                                   </div>
                                 </li>
                               ))}
@@ -614,17 +616,17 @@ function ProjectTable({ projects, gitlabUrl }: { projects: GitLabProjectResult[]
                           {project.walkin_metrics && (project.walkin_metrics.reliability_rating || project.walkin_metrics.security_rating || project.walkin_metrics.maintainability_rating) && (
                             <div className="border-t pt-2">
                               <div className="text-xs text-muted-foreground mb-2 flex items-center gap-1.5">
-                                <Shield className="h-3 w-3" /> 质量评级
+                                <Shield className="h-3 w-3" /> {t("gitlab.overview.qualityRatings")}
                               </div>
                               <div className="flex items-center gap-3">
                                 {project.walkin_metrics.reliability_rating && (
-                                  <RatingBadge label="可靠性" rating={project.walkin_metrics.reliability_rating} />
+                                  <RatingBadge label={t("gitlab.overview.reliability")} rating={project.walkin_metrics.reliability_rating} />
                                 )}
                                 {project.walkin_metrics.security_rating && (
-                                  <RatingBadge label="安全性" rating={project.walkin_metrics.security_rating} />
+                                  <RatingBadge label={t("gitlab.overview.security")} rating={project.walkin_metrics.security_rating} />
                                 )}
                                 {project.walkin_metrics.maintainability_rating && (
-                                  <RatingBadge label="可维护性" rating={project.walkin_metrics.maintainability_rating} />
+                                  <RatingBadge label={t("gitlab.overview.maintainability")} rating={project.walkin_metrics.maintainability_rating} />
                                 )}
                               </div>
                             </div>
@@ -634,22 +636,22 @@ function ProjectTable({ projects, gitlabUrl }: { projects: GitLabProjectResult[]
                           {project.walkin_metrics && (project.walkin_metrics.new_bugs > 0 || project.walkin_metrics.new_vulnerabilities > 0 || project.walkin_metrics.new_code_smells > 0) && (
                             <div className="border-t pt-2">
                               <div className="text-xs text-muted-foreground mb-2 flex items-center gap-1.5">
-                                <AlertTriangle className="h-3 w-3" /> 增量问题
+                                <AlertTriangle className="h-3 w-3" /> {t("gitlab.overview.incrementalIssues")}
                               </div>
                               <div className="flex items-center gap-3 text-xs">
                                 {project.walkin_metrics.new_bugs > 0 && (
                                   <span className="flex items-center gap-1 text-destructive">
-                                    <Bug className="h-3 w-3" /> {project.walkin_metrics.new_bugs} 新Bug
+                                    <Bug className="h-3 w-3" /> {project.walkin_metrics.new_bugs} {t("gitlab.overview.newBugs")}
                                   </span>
                                 )}
                                 {project.walkin_metrics.new_vulnerabilities > 0 && (
                                   <span className="flex items-center gap-1 text-amber-600">
-                                    <ShieldAlert className="h-3 w-3" /> {project.walkin_metrics.new_vulnerabilities} 新漏洞
+                                    <ShieldAlert className="h-3 w-3" /> {project.walkin_metrics.new_vulnerabilities} {t("gitlab.overview.newVulnerabilities")}
                                   </span>
                                 )}
                                 {project.walkin_metrics.new_code_smells > 0 && (
                                   <span className="flex items-center gap-1 text-muted-foreground">
-                                    <Zap className="h-3 w-3" /> {project.walkin_metrics.new_code_smells} 新异味
+                                    <Zap className="h-3 w-3" /> {project.walkin_metrics.new_code_smells} {t("gitlab.overview.newCodeSmells")}
                                   </span>
                                 )}
                               </div>
@@ -660,7 +662,7 @@ function ProjectTable({ projects, gitlabUrl }: { projects: GitLabProjectResult[]
                           {project.latest_pipeline_status && (
                             <div className="border-t pt-2">
                               <div className="text-xs text-muted-foreground mb-1 flex items-center gap-1.5">
-                                <Activity className="h-3 w-3" /> 最新流水线
+                                <Activity className="h-3 w-3" /> {t("gitlab.overview.latestPipeline")}
                               </div>
                               <PipelineStatusBadge status={project.latest_pipeline_status} />
                             </div>
@@ -670,10 +672,10 @@ function ProjectTable({ projects, gitlabUrl }: { projects: GitLabProjectResult[]
                           {project.mr_details && project.mr_details.length > 0 && (
                             <div className="border-t pt-2">
                               <div className="text-xs text-muted-foreground mb-2 flex items-center gap-1.5">
-                                <GitMerge className="h-3 w-3" /> 合并请求 ({project.mr_details.length})
+                                <GitMerge className="h-3 w-3" /> {t("gitlab.overview.mergeRequests")} ({project.mr_details.length})
                                 {project.pending_mrs > 0 && (
                                   <span className="ml-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-500/10 text-amber-600">
-                                    {project.pending_mrs} 待合并
+                                    {project.pending_mrs} {t("gitlab.overview.pendingMerge")}
                                   </span>
                                 )}
                               </div>
@@ -690,7 +692,7 @@ function ProjectTable({ projects, gitlabUrl }: { projects: GitLabProjectResult[]
                                     <div className="flex items-center gap-2 shrink-0 ml-2">
                                       {mr.pipeline_status && <PipelineStatusBadge status={mr.pipeline_status} />}
                                       <span className="text-muted-foreground">{mr.author}</span>
-                                      <span className="text-muted-foreground">{new Date(mr.created_at).toLocaleDateString("zh-CN", { month: "numeric", day: "numeric" })}</span>
+                                      <span className="text-muted-foreground">{new Date(mr.created_at).toLocaleDateString(i18n.language, { month: "numeric", day: "numeric" })}</span>
                                       {mr.web_url && (
                                         <a href={mr.web_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground">
                                           <ExternalLink className="h-3 w-3" />
@@ -706,7 +708,7 @@ function ProjectTable({ projects, gitlabUrl }: { projects: GitLabProjectResult[]
                           {/* Last Commit */}
                           {project.last_commit_at && (
                             <div className="border-t pt-2 text-xs text-muted-foreground">
-                              最后提交: {new Date(project.last_commit_at).toLocaleString("zh-CN")}
+                              {t("gitlab.overview.lastCommit")} {new Date(project.last_commit_at).toLocaleString(i18n.language)}
                             </div>
                           )}
                         </div>
@@ -719,7 +721,7 @@ function ProjectTable({ projects, gitlabUrl }: { projects: GitLabProjectResult[]
             {filtered.length === 0 && (
               <tr>
                 <td colSpan={hasWalkinData ? 8 : 7} className="px-4 py-8 text-center text-muted-foreground">
-                  暂无符合条件的项目
+                  {t("gitlab.overview.noMatchingProjects")}
                 </td>
               </tr>
             )}
@@ -737,6 +739,7 @@ function UnitBoardCard({
   config: import("@/types").GitLabConfig | undefined;
   onDataChange?: (data: UnitBoardData | null) => void;
 }) {
+  const { t } = useTranslation();
   const { isLoggedIn } = useWalkinAuth();
   const [data, setData] = useState<UnitBoardData | null>(null);
   const [loading, setLoading] = useState(false);
@@ -904,17 +907,17 @@ function UnitBoardCard({
           <div className="flex items-center justify-between mb-3">
             <h4 className="font-medium flex items-center gap-2">
               <BarChart3 className="h-4 w-4" />
-              团队覆盖率看板
+              {t("gitlab.overview.teamCoverageBoard")}
             </h4>
             <div className="flex items-center gap-2">
               {lastUpdate && (
                 <span className="text-xs text-muted-foreground">
-                  更新于 {lastUpdate.toLocaleTimeString()}
+                  {t("gitlab.overview.updatedAt")}{lastUpdate.toLocaleTimeString()}
                 </span>
               )}
               {nextRefreshTime && (
                 <span className="text-xs text-muted-foreground hidden sm:inline">
-                  下次 {nextRefreshTime.toLocaleTimeString()}
+                  {t("gitlab.overview.nextRefresh")}{nextRefreshTime.toLocaleTimeString()}
                 </span>
               )}
               {canFetch && csrfToken && xAuthToken && (
@@ -925,75 +928,73 @@ function UnitBoardCard({
             </div>
           </div>
           {!isLoggedIn && (
-            <p className="text-sm text-muted-foreground">请先在配置页面登录 Walkin</p>
+            <p className="text-sm text-muted-foreground">{t("gitlab.overview.loginWalkinFirst")}</p>
           )}
           {isLoggedIn && (!walkinDeptId || !walkinDeptName) && (
-            <p className="text-sm text-muted-foreground">请先配置部门 ID 和部门名称</p>
+            <p className="text-sm text-muted-foreground">{t("gitlab.overview.configureDeptFirst")}</p>
           )}
           {loading && (
             <div className="flex items-center gap-2 py-4">
               <Loader2 className="h-4 w-4 animate-spin" />
-              <span className="text-sm text-muted-foreground">加载中...</span>
+              <span className="text-sm text-muted-foreground">{t("gitlab.overview.loading")}</span>
             </div>
           )}
           {error && (
-            <p className="text-sm text-destructive">加载失败: {error}</p>
+            <p className="text-sm text-destructive">{t("gitlab.overview.loadFailed")}{error}</p>
           )}
           {data && !loading && (
             <div className="space-y-3">
               {data.xvalue && (
                 <p className="text-xs text-muted-foreground">
-                  周期: {data.xvalue}
+                  {t("gitlab.overview.period")}{data.xvalue}
                   {data.startDateFrom && data.startDateTo && (
                     <span> ({data.startDateFrom} ~ {data.startDateTo})</span>
                   )}
                 </p>
               )}
               <div className="grid grid-cols-2 gap-4">
-                {/* 增量覆盖率 */}
                 <div className="space-y-2">
-                  <div className="text-xs font-medium text-muted-foreground">增量覆盖率</div>
+                  <div className="text-xs font-medium text-muted-foreground">{t("gitlab.overview.incrementalCoverage")}</div>
                   <div className="grid grid-cols-3 gap-2">
                     {data.ynewValue != null && (
                       <div className="text-center">
                         <div className="text-lg font-bold text-primary">{data.ynewValue.toFixed(2)}%</div>
-                        <div className="text-xs text-muted-foreground">综合</div>
+                        <div className="text-xs text-muted-foreground">{t("gitlab.overview.overall")}</div>
                       </div>
                     )}
                     {data.ynewLineValue != null && (
                       <div className="text-center">
                         <div className="text-lg font-bold text-primary">{data.ynewLineValue.toFixed(2)}%</div>
-                        <div className="text-xs text-muted-foreground">行</div>
+                        <div className="text-xs text-muted-foreground">{t("gitlab.overview.line")}</div>
                       </div>
                     )}
                     {data.ynewBranchValue != null && (
                       <div className="text-center">
                         <div className="text-lg font-bold text-primary">{data.ynewBranchValue.toFixed(2)}%</div>
-                        <div className="text-xs text-muted-foreground">条件</div>
+                        <div className="text-xs text-muted-foreground">{t("gitlab.overview.condition")}</div>
                       </div>
                     )}
                   </div>
                 </div>
-                {/* 全量覆盖率 */}
                 <div className="space-y-2">
-                  <div className="text-xs font-medium text-muted-foreground">全量覆盖率</div>
+                  <div className="text-xs font-medium text-muted-foreground">{t("gitlab.overview.fullCoverage")}</div>
                   <div className="grid grid-cols-3 gap-2">
                     {data.yallValue != null && (
                       <div className="text-center">
                         <div className="text-lg font-bold text-emerald-600">{data.yallValue.toFixed(2)}%</div>
-                        <div className="text-xs text-muted-foreground">综合</div>
+                        <div className="text-xs text-muted-foreground">{t("gitlab.overview.overall")}</div>
                       </div>
                     )}
                     {data.yallLineValue != null && (
                       <div className="text-center">
                         <div className="text-lg font-bold text-emerald-600">{data.yallLineValue.toFixed(2)}%</div>
-                        <div className="text-xs text-muted-foreground">行</div>
+                        <div className="text-xs text-muted-foreground">{t("gitlab.overview.line")}</div>
                       </div>
                     )}
                     {data.yallBranchValue != null && (
                       <div className="text-center">
                         <div className="text-lg font-bold text-emerald-600">{data.yallBranchValue.toFixed(2)}%</div>
-                        <div className="text-xs text-muted-foreground">条件</div>
+                        <div className="text-xs text-muted-foreground">{t("gitlab.overview.condition")}</div>
                       </div>
                     )}
                   </div>
@@ -1002,7 +1003,7 @@ function UnitBoardCard({
             </div>
           )}
           {!data && !loading && !error && isLoggedIn && (
-            <p className="text-sm text-muted-foreground">暂无数据</p>
+            <p className="text-sm text-muted-foreground">{t("common.noData")}</p>
           )}
         </CardContent>
       </Card>
@@ -1011,6 +1012,7 @@ function UnitBoardCard({
 }
 
 export function GitLabOverviewPage() {
+  const { t, i18n } = useTranslation();
   const [showSetupModal, setShowSetupModal] = useState(false);
   const [showProgressModal, setShowProgressModal] = useState(false);
   const [selectedScanIndex, setSelectedScanIndex] = useState<number>(0);
@@ -1083,9 +1085,20 @@ export function GitLabOverviewPage() {
         : typeof error === 'object' && error !== null && 'message' in error
           ? String((error as { message?: string }).message)
           : String(error);
-      toast.error("扫描失败: " + errorMessage);
+      toast.error(t("gitlab.overview.scanFailed") + errorMessage);
     }
   };
+
+  // Listen for tray scan shortcut
+  useEffect(() => {
+    const handler = () => {
+      if (isConfigured) {
+        handleScan();
+      }
+    };
+    window.addEventListener("tray-scan", handler);
+    return () => window.removeEventListener("tray-scan", handler);
+  }, [isConfigured]);
 
   if (isConfigured === false) {
     return (
@@ -1101,8 +1114,8 @@ export function GitLabOverviewPage() {
         )}
         <div className="flex h-[400px] items-center justify-center">
           <div className="text-center">
-            <p className="text-muted-foreground mb-4">请先配置 GitLab 连接</p>
-            <Button onClick={() => setShowSetupModal(true)}>配置 GitLab</Button>
+            <p className="text-muted-foreground mb-4">{t("gitlab.overview.configureGitLabFirst")}</p>
+            <Button onClick={() => setShowSetupModal(true)}>{t("gitlab.overview.configureGitLab")}</Button>
           </div>
         </div>
       </>
@@ -1126,13 +1139,13 @@ export function GitLabOverviewPage() {
                 onChange={(v) => setSelectedScanIndex(parseInt(v))}
                 options={history.map((scan, idx) => ({
                   value: idx.toString(),
-                  label: new Date(scan.scan_at).toLocaleDateString("zh-CN"),
+                  label: new Date(scan.scan_at).toLocaleDateString(i18n.language),
                 }))}
                 className="w-32"
               />
             )}
             <span className="text-sm text-muted-foreground">
-              {selectedHistory ? formatTimestamp(selectedHistory.scan_at) : "暂无记录"}
+              {selectedHistory ? formatTimestamp(selectedHistory.scan_at) : t("gitlab.overview.noRecords")}
             </span>
             {latestWalkinDate && (
               <span className="text-sm text-muted-foreground">
@@ -1141,14 +1154,14 @@ export function GitLabOverviewPage() {
             )}
             {nextScanTime && (
               <span className="text-sm text-muted-foreground">
-                下次: {nextScanTime.toLocaleDateString("zh-CN")}
+                {t("gitlab.overview.nextScan")}{nextScanTime.toLocaleDateString(i18n.language)}
               </span>
             )}
           </div>
           <div className="flex gap-2">
             <Button size="sm" onClick={handleScan} disabled={triggerScan.isPending}>
               <RefreshCw className={`mr-1.5 h-3.5 w-3.5 ${triggerScan.isPending ? "animate-spin" : ""}`} />
-              扫描
+              {t("gitlab.overview.scan")}
             </Button>
           </div>
         </div>
@@ -1161,8 +1174,8 @@ export function GitLabOverviewPage() {
       {!selectedHistory && (
         <div className="flex flex-col items-center justify-center py-12 px-6">
           <Inbox className="h-16 w-16 text-muted-foreground mb-4" />
-          <p className="text-lg font-medium mb-2">暂无扫描数据</p>
-          <p className="text-sm text-muted-foreground mb-4">点击"立即扫描"开始第一次扫描</p>
+          <p className="text-lg font-medium mb-2">{t("gitlab.overview.noScanData")}</p>
+          <p className="text-sm text-muted-foreground mb-4">{t("gitlab.overview.clickToScan")}</p>
         </div>
       )}
 

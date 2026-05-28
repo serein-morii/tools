@@ -28,6 +28,10 @@ function TrayEventListener() {
           navigate("/reminder/tasks");
           window.dispatchEvent(new CustomEvent("tray-new-task"));
           break;
+        case "scan":
+          navigate("/gitlab/overview");
+          window.dispatchEvent(new CustomEvent("tray-scan"));
+          break;
       }
     });
 

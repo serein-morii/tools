@@ -1,12 +1,13 @@
 import { useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { Calendar, Clock, ChevronRight, X, GitCompare, GitCommit, Plus, Minus, FolderGit2, User, Bug, ShieldAlert, Zap, BarChart3, GitMerge, ExternalLink, Activity, CheckCircle2, XCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useGitLabScanHistory, useGitLabConfig } from "@/lib/query/gitlabQueries";
 import type { GitLabScanHistory, GitLabProjectResult, DeveloperStat } from "@/types";
 
-function formatTimestamp(ts: number): string {
-  return new Date(ts).toLocaleString("zh-CN");
+function formatTimestamp(ts: number, locale?: string): string {
+  return new Date(ts).toLocaleString(locale || undefined);
 }
 
 // Get walkin aggregates - coverage uses max value, others use sum
@@ -67,13 +68,14 @@ function getWalkinAggregates(projects: GitLabProjectResult[]) {
 }
 
 function PipelineStatusBadge({ status }: { status: string }) {
+  const { t } = useTranslation();
   const config: Record<string, { icon: typeof CheckCircle2; color: string; label: string }> = {
-    success: { icon: CheckCircle2, color: "text-emerald-600", label: "成功" },
-    failed: { icon: XCircle, color: "text-destructive", label: "失败" },
-    running: { icon: Clock, color: "text-blue-500", label: "运行中" },
-    pending: { icon: Clock, color: "text-amber-500", label: "等待中" },
-    canceled: { icon: XCircle, color: "text-muted-foreground", label: "已取消" },
-    skipped: { icon: XCircle, color: "text-muted-foreground", label: "已跳过" },
+    success: { icon: CheckCircle2, color: "text-emerald-600", label: t("gitlab.history.pipelineSuccess") },
+    failed: { icon: XCircle, color: "text-destructive", label: t("gitlab.history.pipelineFailed") },
+    running: { icon: Clock, color: "text-blue-500", label: t("gitlab.history.pipelineRunning") },
+    pending: { icon: Clock, color: "text-amber-500", label: t("gitlab.history.pipelinePending") },
+    canceled: { icon: XCircle, color: "text-muted-foreground", label: t("gitlab.history.pipelineCanceled") },
+    skipped: { icon: XCircle, color: "text-muted-foreground", label: t("gitlab.history.pipelineSkipped") },
   };
   const c = config[status] || { icon: Clock, color: "text-muted-foreground", label: status };
   const Icon = c.icon;
@@ -91,6 +93,7 @@ function ScanDetailDialog({ item, open, onClose, gitlabUrl }: {
   onClose: () => void;
   gitlabUrl?: string;
 }) {
+  const { t, i18n } = useTranslation();
   if (!item || !open) return null;
 
   const projects: GitLabProjectResult[] = JSON.parse(item.summary || "[]");
@@ -114,7 +117,7 @@ function ScanDetailDialog({ item, open, onClose, gitlabUrl }: {
         <div className="flex items-center justify-between p-4 border-b">
           <h3 className="font-semibold flex items-center gap-2">
             <Calendar className="h-5 w-5" />
-            扫描详情
+            {t("gitlab.history.scanDetail")}
           </h3>
           <Button variant="ghost" size="sm" onClick={onClose}>
             <X className="h-4 w-4" />
@@ -122,62 +125,58 @@ function ScanDetailDialog({ item, open, onClose, gitlabUrl }: {
         </div>
 
         <div className="p-4 space-y-6">
-          {/* 基本信息 */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="rounded-lg border bg-muted/30 p-3">
-              <div className="text-sm text-muted-foreground">扫描时间</div>
-              <div className="font-medium">{formatTimestamp(item.scan_at)}</div>
+              <div className="text-sm text-muted-foreground">{t("gitlab.history.scanTime")}</div>
+              <div className="font-medium">{formatTimestamp(item.scan_at, i18n.language)}</div>
             </div>
             <div className="rounded-lg border bg-muted/30 p-3">
-              <div className="text-sm text-muted-foreground">扫描类型</div>
-              <div className="font-medium">{item.scan_type === "weekly" ? "定时扫描" : "手动扫描"}</div>
+              <div className="text-sm text-muted-foreground">{t("gitlab.history.scanType")}</div>
+              <div className="font-medium">{item.scan_type === "weekly" ? t("gitlab.history.scheduledScan") : t("gitlab.history.manualScan")}</div>
             </div>
             <div className="rounded-lg border bg-muted/30 p-3">
-              <div className="text-sm text-muted-foreground">变更项目</div>
-              <div className="font-medium">{item.total_projects} 个</div>
+              <div className="text-sm text-muted-foreground">{t("gitlab.history.changedProjects")}</div>
+              <div className="font-medium">{item.total_projects}{t("gitlab.history.countUnit")}</div>
             </div>
             <div className="rounded-lg border bg-muted/30 p-3">
-              <div className="text-sm text-muted-foreground">单测覆盖</div>
+              <div className="text-sm text-muted-foreground">{t("gitlab.history.testCoverage")}</div>
               <div className="font-medium">{coverage}% ({item.test_projects}/{item.total_projects})</div>
             </div>
           </div>
 
-          {/* Scan Range */}
           {item.scan_range_start && item.scan_range_end && (
             <div className="text-xs text-muted-foreground">
-              扫描范围: {item.scan_range_start} ~ {item.scan_range_end}
+              {t("gitlab.history.scanRange")} {item.scan_range_start} ~ {item.scan_range_end}
             </div>
           )}
 
-          {/* Pipeline Stats */}
           {item.pipeline_total > 0 && (
             <div className="rounded-lg border bg-muted/30 p-4">
               <h4 className="font-medium mb-3 flex items-center gap-2">
                 <Activity className="h-4 w-4" />
-                流水线统计
+                {t("gitlab.history.pipelineStats")}
               </h4>
               <div className="grid grid-cols-4 gap-4">
                 <div className="text-center">
                   <div className="text-2xl font-bold">{item.pipeline_total}</div>
-                  <div className="text-xs text-muted-foreground">总计</div>
+                  <div className="text-xs text-muted-foreground">{t("gitlab.history.total")}</div>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-emerald-600">{item.pipeline_success}</div>
-                  <div className="text-xs text-emerald-600">成功</div>
+                  <div className="text-xs text-emerald-600">{t("gitlab.history.success")}</div>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-destructive">{item.pipeline_failed}</div>
-                  <div className="text-xs text-destructive">失败</div>
+                  <div className="text-xs text-destructive">{t("gitlab.history.failed")}</div>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-amber-600">{item.pending_mrs}</div>
-                  <div className="text-xs text-amber-600">待合并MR</div>
+                  <div className="text-xs text-amber-600">{t("gitlab.history.pendingMRs")}</div>
                 </div>
               </div>
-              {/* Pipeline success rate bar */}
               <div className="mt-3">
                 <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
-                  <span>成功率</span>
+                  <span>{t("gitlab.history.successRate")}</span>
                   <span>{item.pipeline_total > 0 ? Math.round((item.pipeline_success / item.pipeline_total) * 100) : 0}%</span>
                 </div>
                 <div className="w-full bg-muted rounded-full h-2">
@@ -190,12 +189,11 @@ function ScanDetailDialog({ item, open, onClose, gitlabUrl }: {
             </div>
           )}
 
-          {/* Walkin 代码质量 */}
           {walkin.matched > 0 && (
             <div className="rounded-lg border bg-muted/30 p-4">
               <h4 className="font-medium mb-3 flex items-center gap-2">
                 <BarChart3 className="h-4 w-4" />
-                Walkin 代码质量 ({walkin.matched} 个项目有数据)
+                {t("gitlab.history.walkinQuality", { count: walkin.matched })}
               </h4>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                 <div>
@@ -203,22 +201,22 @@ function ScanDetailDialog({ item, open, onClose, gitlabUrl }: {
                   <div className="font-medium">{walkin.totalBugs}</div>
                 </div>
                 <div>
-                  <span className="text-muted-foreground">漏洞</span>
+                  <span className="text-muted-foreground">{t("gitlab.history.vulnerabilities")}</span>
                   <div className="font-medium">{walkin.totalVulnerabilities}</div>
                 </div>
                 <div>
-                  <span className="text-muted-foreground">异味</span>
+                  <span className="text-muted-foreground">{t("gitlab.history.codeSmells")}</span>
                   <div className="font-medium">{walkin.totalCodeSmells}</div>
                 </div>
                 {walkin.maxAllCoverage != null && (
                   <div>
-                    <span className="text-muted-foreground">全量覆盖率</span>
+                    <span className="text-muted-foreground">{t("gitlab.history.fullCoverage")}</span>
                     <div className="font-medium">{walkin.maxAllCoverage.toFixed(2)}%</div>
                   </div>
                 )}
                 {walkin.maxNewCoverage != null && (
                   <div>
-                    <span className="text-muted-foreground">增量覆盖率</span>
+                    <span className="text-muted-foreground">{t("gitlab.history.incrementalCoverage")}</span>
                     <div className="font-medium">{walkin.maxNewCoverage.toFixed(2)}%</div>
                   </div>
                 )}
@@ -226,29 +224,27 @@ function ScanDetailDialog({ item, open, onClose, gitlabUrl }: {
             </div>
           )}
 
-          {/* 代码变更统计 */}
           <div className="rounded-lg border bg-muted/30 p-4">
-            <h4 className="font-medium mb-3">代码变更</h4>
+            <h4 className="font-medium mb-3">{t("gitlab.history.codeChanges")}</h4>
             <div className="flex items-center gap-6">
               <div className="flex items-center gap-2">
                 <GitCommit className="h-4 w-4 text-muted-foreground" />
-                <span>{item.total_commits} 次提交</span>
+                <span>{item.total_commits}{t("gitlab.history.commitsSuffix")}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Plus className="h-4 w-4 text-emerald-600" />
-                <span className="text-emerald-600">+{item.total_lines_added.toLocaleString()} 行</span>
+                <span className="text-emerald-600">+{item.total_lines_added.toLocaleString()}{t("gitlab.history.linesSuffix")}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Minus className="h-4 w-4 text-red-600" />
-                <span className="text-red-600">-{item.total_lines_removed.toLocaleString()} 行</span>
+                <span className="text-red-600">-{item.total_lines_removed.toLocaleString()}{t("gitlab.history.linesSuffix")}</span>
               </div>
             </div>
           </div>
 
-          {/* 开发者贡献排行 */}
           {devStats.length > 0 && (
             <div className="rounded-lg border bg-muted/30 p-4">
-              <h4 className="font-medium mb-3">开发者贡献 TOP5</h4>
+              <h4 className="font-medium mb-3">{t("gitlab.history.devContributionTop5")}</h4>
               <div className="space-y-2">
                 {devStats.slice(0, 5).map((dev, idx) => (
                   <div key={dev.name} className="flex items-center gap-3">
@@ -258,7 +254,7 @@ function ScanDetailDialog({ item, open, onClose, gitlabUrl }: {
                     <div className="flex-1">
                       <div className="flex items-center justify-between">
                         <span className="font-medium">{dev.name}</span>
-                        <span className="text-sm text-muted-foreground">{dev.projects.length} 个项目</span>
+                        <span className="text-sm text-muted-foreground">{dev.projects.length}{t("gitlab.history.projectsSuffix")}</span>
                       </div>
                       <div className="flex items-center gap-4 text-xs text-muted-foreground mt-1">
                         <span className="flex items-center gap-1"><GitCommit className="h-3 w-3" />{dev.commits}</span>
@@ -281,10 +277,9 @@ function ScanDetailDialog({ item, open, onClose, gitlabUrl }: {
             </div>
           )}
 
-          {/* 无单测项目 */}
           {noTestProjects.length > 0 && (
             <div className="rounded-lg border bg-muted/30 p-4">
-              <h4 className="font-medium mb-3">无单测项目 ({noTestProjects.length})</h4>
+              <h4 className="font-medium mb-3">{t("gitlab.history.noTestProjects", { count: noTestProjects.length })}</h4>
               <div className="space-y-2">
                 {noTestProjects.map((p) => (
                   <div key={p.project_id} className="flex items-center justify-between text-sm">
@@ -292,16 +287,15 @@ function ScanDetailDialog({ item, open, onClose, gitlabUrl }: {
                       <FolderGit2 className="h-4 w-4 text-muted-foreground" />
                       <span>{p.project_name.split("/").pop()}</span>
                     </div>
-                    <span className="text-muted-foreground">{p.commits} 次提交</span>
+                    <span className="text-muted-foreground">{p.commits}{t("gitlab.history.commitsUnit")}</span>
                   </div>
                 ))}
               </div>
             </div>
           )}
 
-          {/* 项目详情 */}
           <div className="rounded-lg border bg-muted/30 p-4">
-            <h4 className="font-medium mb-3">项目列表 ({sortedProjects.length})</h4>
+            <h4 className="font-medium mb-3">{t("gitlab.history.projectList", { count: sortedProjects.length })}</h4>
             <div className="space-y-2 max-h-80 overflow-y-auto">
               {sortedProjects.map((p) => (
                 <div key={p.project_id} className="rounded-lg border bg-background/50 p-3 text-sm">
@@ -321,62 +315,59 @@ function ScanDetailDialog({ item, open, onClose, gitlabUrl }: {
                         <span className="font-medium">{p.project_name.split("/").pop()}</span>
                       )}
                       {p.has_test ? (
-                        <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-500/10 text-emerald-600">有单测</span>
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-500/10 text-emerald-600">{t("gitlab.history.hasTest")}</span>
                       ) : (
-                        <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-muted text-muted-foreground">无单测</span>
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-muted text-muted-foreground">{t("gitlab.history.noTest")}</span>
                       )}
                       {p.latest_pipeline_status && (
                         <PipelineStatusBadge status={p.latest_pipeline_status} />
                       )}
                     </div>
                     <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                      <span>{p.commits} 提交</span>
+                      <span>{p.commits} {t("gitlab.overview.commits")}</span>
                       <span className="text-emerald-600">+{p.lines_added}</span>
                       <span className="text-destructive">-{p.lines_removed}</span>
                     </div>
                   </div>
 
-                  {/* Quality ratings & coverage */}
                   <div className="flex items-center gap-2 flex-wrap mb-2">
                     {p.walkin_metrics?.coverage != null && (
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-500/10 text-blue-600">全量 {p.walkin_metrics.coverage.toFixed(1)}%</span>
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-500/10 text-blue-600">{t("gitlab.history.fullCoverageShort")} {p.walkin_metrics.coverage.toFixed(1)}%</span>
                     )}
                     {p.walkin_metrics?.new_coverage != null && (
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-primary/10 text-primary">增量 {p.walkin_metrics.new_coverage.toFixed(1)}%</span>
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-primary/10 text-primary">{t("gitlab.history.incrementalShort")} {p.walkin_metrics.new_coverage.toFixed(1)}%</span>
                     )}
                     {p.walkin_metrics?.reliability_rating && (
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-500/10 text-emerald-600">可靠性 {p.walkin_metrics.reliability_rating.replace(".0", "")}</span>
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-500/10 text-emerald-600">{t("gitlab.history.reliabilityShort")} {p.walkin_metrics.reliability_rating.replace(".0", "")}</span>
                     )}
                     {p.walkin_metrics?.security_rating && (
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-500/10 text-emerald-600">安全 {p.walkin_metrics.security_rating.replace(".0", "")}</span>
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-500/10 text-emerald-600">{t("gitlab.history.securityShort")} {p.walkin_metrics.security_rating.replace(".0", "")}</span>
                     )}
                     {p.walkin_metrics?.maintainability_rating && (
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-500/10 text-emerald-600">可维护 {p.walkin_metrics.maintainability_rating.replace(".0", "")}</span>
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-500/10 text-emerald-600">{t("gitlab.history.maintainabilityShort")} {p.walkin_metrics.maintainability_rating.replace(".0", "")}</span>
                     )}
                   </div>
 
-                  {/* Incremental quality issues */}
                   {p.walkin_metrics && (p.walkin_metrics.new_bugs > 0 || p.walkin_metrics.new_vulnerabilities > 0 || p.walkin_metrics.new_code_smells > 0) && (
                     <div className="flex items-center gap-3 text-xs mb-2">
                       {p.walkin_metrics.new_bugs > 0 && (
-                        <span className="flex items-center gap-1 text-destructive"><Bug className="h-3 w-3" />{p.walkin_metrics.new_bugs} 新Bug</span>
+                        <span className="flex items-center gap-1 text-destructive"><Bug className="h-3 w-3" />{p.walkin_metrics.new_bugs} {t("gitlab.history.newBugs")}</span>
                       )}
                       {p.walkin_metrics.new_vulnerabilities > 0 && (
-                        <span className="flex items-center gap-1 text-amber-600"><ShieldAlert className="h-3 w-3" />{p.walkin_metrics.new_vulnerabilities} 新漏洞</span>
+                        <span className="flex items-center gap-1 text-amber-600"><ShieldAlert className="h-3 w-3" />{p.walkin_metrics.new_vulnerabilities} {t("gitlab.history.newVulnerabilities")}</span>
                       )}
                       {p.walkin_metrics.new_code_smells > 0 && (
-                        <span className="flex items-center gap-1 text-muted-foreground"><Zap className="h-3 w-3" />{p.walkin_metrics.new_code_smells} 新异味</span>
+                        <span className="flex items-center gap-1 text-muted-foreground"><Zap className="h-3 w-3" />{p.walkin_metrics.new_code_smells} {t("gitlab.history.newCodeSmells")}</span>
                       )}
                     </div>
                   )}
 
-                  {/* MR details */}
                   {p.mr_details && p.mr_details.length > 0 && (
                     <div className="border-t pt-2 mt-1">
                       <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1.5">
-                        <GitMerge className="h-3 w-3" /> MR ({p.mr_details.length})
+                        <GitMerge className="h-3 w-3" /> {t("gitlab.history.mergeRequests")} ({p.mr_details.length})
                         {p.pending_mrs > 0 && (
-                          <span className="px-1 py-0.5 rounded text-[10px] bg-amber-500/10 text-amber-600">{p.pending_mrs} 待合并</span>
+                          <span className="px-1 py-0.5 rounded text-[10px] bg-amber-500/10 text-amber-600">{p.pending_mrs} {t("gitlab.history.pendingMerge")}</span>
                         )}
                       </div>
                       <div className="space-y-1">
@@ -404,9 +395,8 @@ function ScanDetailDialog({ item, open, onClose, gitlabUrl }: {
             </div>
           </div>
 
-          {/* 参与人员 */}
           <div className="rounded-lg border bg-muted/30 p-4">
-            <h4 className="font-medium mb-3">参与人员 ({contributors.length})</h4>
+            <h4 className="font-medium mb-3">{t("gitlab.history.participants", { count: contributors.length })}</h4>
             <div className="flex flex-wrap gap-2">
               {contributors.map((name) => (
                 <span key={name} className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-sm">
@@ -428,6 +418,7 @@ function HistoryCard({ item, selected, onToggleSelect, onClick }: {
   onToggleSelect: () => void;
   onClick: () => void;
 }) {
+  const { t, i18n } = useTranslation();
   const projects: GitLabProjectResult[] = useMemo(
     () => JSON.parse(item.summary || "[]"),
     [item.summary],
@@ -461,15 +452,15 @@ function HistoryCard({ item, selected, onToggleSelect, onClick }: {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-medium">{formatTimestamp(item.scan_at)}</span>
+                <span className="font-medium">{formatTimestamp(item.scan_at, i18n.language)}</span>
                 <span className="rounded-full bg-muted px-2 py-0.5 text-xs">
-                  {item.scan_type === "weekly" ? "定时扫描" : "手动扫描"}
+                  {item.scan_type === "weekly" ? t("gitlab.history.scheduledScan") : t("gitlab.history.manualScan")}
                 </span>
               </div>
               <div className="mt-1 flex items-center gap-4 text-sm text-muted-foreground">
-                <span>项目: {item.total_projects}</span>
-                <span>提交: {item.total_commits}</span>
-                <span>单测覆盖: {coverage}% ({item.test_projects}/{item.total_projects})</span>
+                <span>{t("gitlab.history.projects")}{item.total_projects}</span>
+                <span>{t("gitlab.history.commits")}{item.total_commits}</span>
+                <span>{t("gitlab.history.testCoverageLabel")}{coverage}% ({item.test_projects}/{item.total_projects})</span>
               </div>
             </div>
           </div>
@@ -478,19 +469,18 @@ function HistoryCard({ item, selected, onToggleSelect, onClick }: {
 
         <div className="mt-4 grid grid-cols-2 gap-4 border-t pt-4 text-sm">
           <div>
-            <span className="text-muted-foreground">代码变更: </span>
+            <span className="text-muted-foreground">{t("gitlab.history.codeChangesLabel")}</span>
             <span className="text-emerald-600">+{item.total_lines_added.toLocaleString()}</span>
             <span className="mx-1">/</span>
             <span className="text-red-600">-{item.total_lines_removed.toLocaleString()}</span>
-            <span className="text-muted-foreground"> 行</span>
+            <span className="text-muted-foreground"> {t("gitlab.history.linesSuffix")}</span>
           </div>
           <div>
-            <span className="text-muted-foreground">参与人员: </span>
+            <span className="text-muted-foreground">{t("gitlab.history.participantsLabel")}</span>
             <span>{contributors.slice(0, 5).join(", ")}{contributors.length > 5 ? "..." : ""}</span>
           </div>
         </div>
 
-        {/* Walkin quality summary */}
         {walkin.matched > 0 && (
           <div className="mt-3 border-t pt-3">
             <div className="flex items-center gap-4 text-xs text-muted-foreground">
@@ -498,16 +488,16 @@ function HistoryCard({ item, selected, onToggleSelect, onClick }: {
                 <Bug className="h-3 w-3" /> Bug {walkin.totalBugs}
               </span>
               <span className="flex items-center gap-1">
-                <ShieldAlert className="h-3 w-3" /> 漏洞 {walkin.totalVulnerabilities}
+                <ShieldAlert className="h-3 w-3" /> {t("gitlab.history.vulnerabilities")} {walkin.totalVulnerabilities}
               </span>
               <span className="flex items-center gap-1">
-                <Zap className="h-3 w-3" /> 异味 {walkin.totalCodeSmells}
+                <Zap className="h-3 w-3" /> {t("gitlab.history.codeSmells")} {walkin.totalCodeSmells}
               </span>
               {walkin.maxAllCoverage != null && (
-                <span>全量覆盖 {walkin.maxAllCoverage.toFixed(2)}%</span>
+                <span>{t("gitlab.history.fullCoverageShort")} {walkin.maxAllCoverage.toFixed(2)}%</span>
               )}
               {walkin.maxNewCoverage != null && (
-                <span>增量覆盖 {walkin.maxNewCoverage.toFixed(2)}%</span>
+                <span>{t("gitlab.history.incrementalShort")} {walkin.maxNewCoverage.toFixed(2)}%</span>
               )}
             </div>
           </div>
@@ -515,7 +505,7 @@ function HistoryCard({ item, selected, onToggleSelect, onClick }: {
 
         {noTestProjects.length > 0 && (
           <div className="mt-3 border-t pt-3">
-            <p className="text-sm text-muted-foreground mb-2">无单测项目:</p>
+            <p className="text-sm text-muted-foreground mb-2">{t("gitlab.history.noTestProjectsLabel")}</p>
             <div className="flex flex-wrap gap-2">
               {noTestProjects.slice(0, 5).map((p) => (
                 <span key={p.project_id} className="rounded bg-muted px-2 py-0.5 text-xs text-muted-foreground">
@@ -523,7 +513,7 @@ function HistoryCard({ item, selected, onToggleSelect, onClick }: {
                 </span>
               ))}
               {noTestProjects.length > 5 && (
-                <span className="text-xs text-muted-foreground">+{noTestProjects.length - 5}个</span>
+                <span className="text-xs text-muted-foreground">{t("gitlab.history.moreProjects", { count: noTestProjects.length - 5 })}</span>
               )}
             </div>
           </div>
@@ -538,6 +528,7 @@ function CompareView({ left, right, onClose }: {
   right: GitLabScanHistory;
   onClose: () => void;
 }) {
+  const { t, i18n } = useTranslation();
   const leftProjects: GitLabProjectResult[] = useMemo(
     () => JSON.parse(left.summary || "[]"),
     [left.summary],
@@ -580,7 +571,7 @@ function CompareView({ left, right, onClose }: {
         <div className="flex items-center justify-between mb-4">
           <h4 className="font-semibold flex items-center gap-2">
             <GitCompare className="h-5 w-5" />
-            扫描对比
+            {t("gitlab.history.scanComparison")}
           </h4>
           <Button variant="ghost" size="sm" onClick={onClose}>
             <X className="h-4 w-4" />
@@ -589,48 +580,47 @@ function CompareView({ left, right, onClose }: {
 
         <div className="grid grid-cols-3 gap-4 text-sm">
           <div className="text-muted-foreground"></div>
-          <div className="text-center font-medium">{formatTimestamp(right.scan_at)}</div>
-          <div className="text-center font-medium">{formatTimestamp(left.scan_at)}</div>
+          <div className="text-center font-medium">{formatTimestamp(right.scan_at, i18n.language)}</div>
+          <div className="text-center font-medium">{formatTimestamp(left.scan_at, i18n.language)}</div>
 
-          <div className="text-muted-foreground">项目数</div>
+          <div className="text-muted-foreground">{t("gitlab.history.projectCount")}</div>
           <div className="text-center">{right.total_projects}</div>
           <div className="text-center">
             {left.total_projects}
             <span className="ml-2">{diff(left.total_projects, right.total_projects)}</span>
           </div>
 
-          <div className="text-muted-foreground">提交数</div>
+          <div className="text-muted-foreground">{t("gitlab.history.commitCount")}</div>
           <div className="text-center">{right.total_commits}</div>
           <div className="text-center">
             {left.total_commits}
             <span className="ml-2">{diff(left.total_commits, right.total_commits)}</span>
           </div>
 
-          <div className="text-muted-foreground">单测覆盖率</div>
+          <div className="text-muted-foreground">{t("gitlab.history.testCoverageRate")}</div>
           <div className="text-center">{rightCoverage}% ({right.test_projects}/{right.total_projects})</div>
           <div className="text-center">
             {leftCoverage}% ({left.test_projects}/{left.total_projects})
             <span className="ml-2">{diffPercent(leftCoverage, rightCoverage)}</span>
           </div>
 
-          <div className="text-muted-foreground">新增代码</div>
+          <div className="text-muted-foreground">{t("gitlab.history.addedCode")}</div>
           <div className="text-center">+{right.total_lines_added.toLocaleString()}</div>
           <div className="text-center">
             +{left.total_lines_added.toLocaleString()}
             <span className="ml-2">{diff(left.total_lines_added, right.total_lines_added)}</span>
           </div>
 
-          <div className="text-muted-foreground">删除代码</div>
+          <div className="text-muted-foreground">{t("gitlab.history.removedCode")}</div>
           <div className="text-center">-{right.total_lines_removed.toLocaleString()}</div>
           <div className="text-center">
             -{left.total_lines_removed.toLocaleString()}
             <span className="ml-2 text-red-600">{diff(left.total_lines_removed, right.total_lines_removed)}</span>
           </div>
 
-          {/* Walkin comparison */}
           {(leftWalkin.matched > 0 || rightWalkin.matched > 0) && (
             <>
-              <div className="col-span-3 border-t pt-2 mt-2 text-xs font-medium text-muted-foreground">Walkin 代码质量</div>
+              <div className="col-span-3 border-t pt-2 mt-2 text-xs font-medium text-muted-foreground">{t("gitlab.history.walkinCodeQuality")}</div>
 
               <div className="text-muted-foreground">Bug</div>
               <div className="text-center">{rightWalkin.totalBugs}</div>
@@ -639,28 +629,28 @@ function CompareView({ left, right, onClose }: {
                 <span className="ml-2">{diff(leftWalkin.totalBugs, rightWalkin.totalBugs)}</span>
               </div>
 
-              <div className="text-muted-foreground">漏洞</div>
+              <div className="text-muted-foreground">{t("gitlab.history.vulnerabilities")}</div>
               <div className="text-center">{rightWalkin.totalVulnerabilities}</div>
               <div className="text-center">
                 {leftWalkin.totalVulnerabilities}
                 <span className="ml-2">{diff(leftWalkin.totalVulnerabilities, rightWalkin.totalVulnerabilities)}</span>
               </div>
 
-              <div className="text-muted-foreground">异味</div>
+              <div className="text-muted-foreground">{t("gitlab.history.codeSmells")}</div>
               <div className="text-center">{rightWalkin.totalCodeSmells}</div>
               <div className="text-center">
                 {leftWalkin.totalCodeSmells}
                 <span className="ml-2">{diff(leftWalkin.totalCodeSmells, rightWalkin.totalCodeSmells)}</span>
               </div>
 
-              <div className="text-muted-foreground">全量覆盖率</div>
+              <div className="text-muted-foreground">{t("gitlab.history.fullCoverage")}</div>
               <div className="text-center">{rightWalkin.maxAllCoverage != null ? `${rightWalkin.maxAllCoverage.toFixed(2)}%` : "-"}</div>
               <div className="text-center">
                 {leftWalkin.maxAllCoverage != null ? `${leftWalkin.maxAllCoverage.toFixed(2)}%` : "-"}
                 <span className="ml-2">{diffPercent(leftWalkin.maxAllCoverage, rightWalkin.maxAllCoverage)}</span>
               </div>
 
-              <div className="text-muted-foreground">增量覆盖率</div>
+              <div className="text-muted-foreground">{t("gitlab.history.incrementalCoverage")}</div>
               <div className="text-center">{rightWalkin.maxNewCoverage != null ? `${rightWalkin.maxNewCoverage.toFixed(2)}%` : "-"}</div>
               <div className="text-center">
                 {leftWalkin.maxNewCoverage != null ? `${leftWalkin.maxNewCoverage.toFixed(2)}%` : "-"}
@@ -674,13 +664,13 @@ function CompareView({ left, right, onClose }: {
           <div className="mt-4 border-t pt-4 text-sm">
             {newTestProjects.length > 0 && (
               <div className="mb-2">
-                <span className="text-muted-foreground">新增单测项目: </span>
+                <span className="text-muted-foreground">{t("gitlab.history.newTestProjects")}</span>
                 <span>{newTestProjects.map(p => p.split("/").pop()).join(", ")}</span>
               </div>
             )}
             {lostTestProjects.length > 0 && (
               <div>
-                <span className="text-muted-foreground">未补单测项目: </span>
+                <span className="text-muted-foreground">{t("gitlab.history.missingTestProjects")}</span>
                 <span>{lostTestProjects.map(p => p.split("/").pop()).join(", ")}</span>
               </div>
             )}
@@ -692,6 +682,7 @@ function CompareView({ left, right, onClose }: {
 }
 
 export function GitLabHistoryPage() {
+  const { t } = useTranslation();
   const { data: history, isLoading } = useGitLabScanHistory(20);
   const { data: config } = useGitLabConfig();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -736,7 +727,7 @@ export function GitLabHistoryPage() {
   if (isLoading) {
     return (
       <div className="flex h-[400px] items-center justify-center">
-        <p className="text-muted-foreground">加载中...</p>
+        <p className="text-muted-foreground">{t("common.loading")}</p>
       </div>
     );
   }
@@ -746,8 +737,8 @@ export function GitLabHistoryPage() {
       <div className="flex h-[400px] items-center justify-center">
         <div className="text-center">
           <Clock className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-          <p className="text-muted-foreground">暂无扫描历史</p>
-          <p className="text-sm text-muted-foreground mt-1">点击"立即扫描"开始第一次扫描</p>
+          <p className="text-muted-foreground">{t("gitlab.history.noHistory")}</p>
+          <p className="text-sm text-muted-foreground mt-1">{t("gitlab.history.clickToScan")}</p>
         </div>
       </div>
     );
@@ -757,27 +748,27 @@ export function GitLabHistoryPage() {
     <div className="p-6">
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold">扫描历史</h3>
+          <h3 className="text-lg font-semibold">{t("gitlab.history.title")}</h3>
           <p className="text-sm text-muted-foreground">
-            共 {history.length} 条记录
-            {filteredHistory.length !== history.length && ` (筛选 ${filteredHistory.length})`}
+            {filteredHistory.length !== history.length
+              ? t("gitlab.history.totalRecordsFiltered", { total: history.length, filtered: filteredHistory.length })
+              : t("gitlab.history.totalRecords", { count: history.length })}
           </p>
         </div>
         {selectedIds.length > 0 && (
           <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">已选择 {selectedIds.length}/2</span>
+            <span className="text-sm text-muted-foreground">{t("gitlab.history.selected", { current: selectedIds.length })}</span>
             <Button variant="outline" size="sm" onClick={clearSelection}>
-              清除选择
+              {t("gitlab.history.clearSelection")}
             </Button>
           </div>
         )}
       </div>
 
-      {/* Search and Filter */}
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <input
           type="text"
-          placeholder="搜索项目或贡献者..."
+          placeholder={t("gitlab.history.searchPlaceholder")}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="rounded-lg border bg-background px-3 py-1.5 text-sm w-48 shadow-sm"
@@ -788,21 +779,21 @@ export function GitLabHistoryPage() {
             onClick={() => setTypeFilter("all")}
             className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${typeFilter === "all" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
           >
-            全部
+            {t("gitlab.history.all")}
           </button>
           <button
             type="button"
             onClick={() => setTypeFilter("weekly")}
             className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${typeFilter === "weekly" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
           >
-            定时扫描
+            {t("gitlab.history.scheduledScan")}
           </button>
           <button
             type="button"
             onClick={() => setTypeFilter("manual")}
             className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${typeFilter === "manual" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
           >
-            手动扫描
+            {t("gitlab.history.manualScan")}
           </button>
         </div>
       </div>
@@ -828,7 +819,7 @@ export function GitLabHistoryPage() {
         {filteredHistory.length === 0 && (
           <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
             <Clock className="h-12 w-12 mb-4" />
-            <p>暂无匹配的扫描记录</p>
+            <p>{t("gitlab.history.noMatchingRecords")}</p>
           </div>
         )}
       </div>
