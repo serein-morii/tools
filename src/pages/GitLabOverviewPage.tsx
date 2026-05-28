@@ -55,30 +55,6 @@ function SummaryCards({ current, previous }: { current?: GitLabScanHistory; prev
     ? Math.round((previous.test_projects / previous.total_projects) * 100)
     : undefined;
 
-  // Compute Walkin aggregates from projects
-  const walkinAggregates = useMemo(() => {
-    if (!current) return null;
-    const projects: GitLabProjectResult[] = JSON.parse(current.summary || "[]");
-    let newCoverageSum = 0;
-    let allCoverageSum = 0;
-    let newCoverageCount = 0;
-    let allCoverageCount = 0;
-    for (const p of projects) {
-      if (p.walkin_metrics?.new_coverage != null) {
-        newCoverageSum += p.walkin_metrics.new_coverage;
-        newCoverageCount++;
-      }
-      if (p.walkin_metrics?.coverage != null) {
-        allCoverageSum += p.walkin_metrics.coverage;
-        allCoverageCount++;
-      }
-    }
-    return {
-      newCoverageAvg: newCoverageCount > 0 ? newCoverageSum / newCoverageCount : null,
-      allCoverageAvg: allCoverageCount > 0 ? allCoverageSum / allCoverageCount : null,
-    };
-  }, [current]);
-
   const cards = [
     {
       icon: BarChart3,
@@ -119,18 +95,6 @@ function SummaryCards({ current, previous }: { current?: GitLabScanHistory; prev
       previousValue: previous?.pending_mrs,
       invertTrend: true,
     },
-    ...(walkinAggregates?.newCoverageAvg != null ? [{
-      icon: TrendingUp as React.ComponentType<{ className?: string }>,
-      label: "增量覆盖率",
-      value: `${walkinAggregates.newCoverageAvg.toFixed(1)}%`,
-      previousValue: undefined as number | undefined,
-    }] : []),
-    ...(walkinAggregates?.allCoverageAvg != null ? [{
-      icon: BarChart3,
-      label: "全量覆盖率",
-      value: `${walkinAggregates.allCoverageAvg.toFixed(1)}%`,
-      previousValue: undefined as number | undefined,
-    }] : []),
   ];
 
   return (
@@ -302,6 +266,7 @@ function MrKanban({ projects }: { projects: GitLabProjectResult[] }) {
 function ProjectTable({ projects }: { projects: GitLabProjectResult[] }) {
   const [search, setSearch] = useState("");
   const [testFilter, setTestFilter] = useState<string>("all");
+  const [walkinFilter, setWalkinFilter] = useState<string>("all");
   const [contributorFilter, setContributorFilter] = useState<string>("all");
   const [expandedProject, setExpandedProject] = useState<number | null>(null);
   const [selectedBranches, setSelectedBranches] = useState<Record<number, string>>({});
@@ -343,6 +308,10 @@ function ProjectTable({ projects }: { projects: GitLabProjectResult[] }) {
       if (testFilter === "has_test" && !p.has_test) return false;
       if (testFilter === "no_test" && p.has_test) return false;
 
+      // Walkin filter
+      if (walkinFilter === "has_walkin" && !p.walkin_metrics) return false;
+      if (walkinFilter === "no_walkin" && p.walkin_metrics) return false;
+
       // Contributor filter
       if (contributorFilter !== "all" && !p.contributors.includes(contributorFilter)) return false;
 
@@ -372,7 +341,7 @@ function ProjectTable({ projects }: { projects: GitLabProjectResult[] }) {
     });
 
     return result;
-  }, [projects, search, testFilter, contributorFilter, sortBy, sortOrder]);
+  }, [projects, search, testFilter, walkinFilter, contributorFilter, sortBy, sortOrder]);
 
   const toggleSort = (field: string) => {
     if (sortBy === field) {
@@ -410,6 +379,16 @@ function ProjectTable({ projects }: { projects: GitLabProjectResult[] }) {
             { value: "no_test", label: "无" },
           ]}
           className="w-16"
+        />
+        <CustomSelect
+          value={walkinFilter}
+          onChange={setWalkinFilter}
+          options={[
+            { value: "all", label: "Walkin" },
+            { value: "has_walkin", label: "有" },
+            { value: "no_walkin", label: "无" },
+          ]}
+          className="w-20"
         />
         <CustomSelect
           value={contributorFilter}
@@ -452,6 +431,7 @@ function ProjectTable({ projects }: { projects: GitLabProjectResult[] }) {
                 </div>
               </th>
               <th className="px-3 py-2 text-center font-medium">单测</th>
+              <th className="px-3 py-2 text-center font-medium">Walkin</th>
               {hasWalkinData && <th className="px-3 py-2 text-center font-medium">覆盖率</th>}
               <th className="px-3 py-2 text-left font-medium">贡献者</th>
             </tr>
@@ -479,6 +459,9 @@ function ProjectTable({ projects }: { projects: GitLabProjectResult[] }) {
                     <td className="px-3 py-2 text-center">
                       {project.has_test ? "✓" : <span className="text-muted-foreground">✗</span>}
                     </td>
+                    <td className="px-3 py-2 text-center">
+                      {project.walkin_metrics ? "✓" : <span className="text-muted-foreground">✗</span>}
+                    </td>
                     {hasWalkinData && (
                       <td className="px-3 py-2 text-center">
                         {project.walkin_metrics?.coverage != null ? (
@@ -495,7 +478,7 @@ function ProjectTable({ projects }: { projects: GitLabProjectResult[] }) {
                   </tr>
                   {isExpanded && (
                     <tr key={`${project.project_id}-detail`} className="bg-muted/20">
-                      <td colSpan={hasWalkinData ? 7 : 6} className="px-3 py-2 pl-10">
+                      <td colSpan={hasWalkinData ? 8 : 7} className="px-3 py-2 pl-10">
                         <div className="text-sm space-y-3">
                           {/* Walkin quality metrics */}
                           {project.walkin_metrics && (() => {
@@ -689,7 +672,7 @@ function ProjectTable({ projects }: { projects: GitLabProjectResult[] }) {
             })}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={hasWalkinData ? 7 : 6} className="px-4 py-8 text-center text-muted-foreground">
+                <td colSpan={hasWalkinData ? 8 : 7} className="px-4 py-8 text-center text-muted-foreground">
                   暂无符合条件的项目
                 </td>
               </tr>
