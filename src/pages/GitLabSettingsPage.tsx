@@ -314,6 +314,11 @@ export function GitLabSettingsPage() {
       if (!config.ldap_profiles || config.ldap_profiles.length === 0) {
         // No ldap profiles in old config - use default
         migratedConfig.ldap_profiles = defaultConfig.ldap_profiles;
+        migratedConfig.selected_ldap_id = defaultConfig.selected_ldap_id;
+      }
+      // Ensure selected_ldap_id is set
+      if (!migratedConfig.selected_ldap_id && migratedConfig.ldap_profiles.length > 0) {
+        migratedConfig.selected_ldap_id = migratedConfig.ldap_profiles[0].id;
       }
       setFormData(migratedConfig);
     }

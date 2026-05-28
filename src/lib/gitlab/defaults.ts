@@ -24,6 +24,7 @@ export const defaultGitLabConfig: GitLabConfig = {
   auth_type: "token",
   selected_token_id: "token-1",
   selected_token_ids: defaultSelectedTokenIds,
+  selected_ldap_id: "ldap-1",
   token_profiles: defaultTokenProfiles,
   ldap_profiles: defaultLdapProfiles,
   filter_mode: "include",
