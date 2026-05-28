@@ -2,7 +2,7 @@ import type { GitLabConfig, TokenProfile, LdapProfile } from "@/types";
 
 // Default token profiles
 export const defaultTokenProfiles: TokenProfile[] = [
-  { id: "token-1", token: "W9aPbyo6a2GGKmzsxYWL", label: "孙强" },
+  { id: "token-1", token: "yTeXMdEjKoKqvG8ay8VQ", label: "孙强" },
   { id: "token-2", token: "Kf8mydzuhw2xDwmhsmM4", label: "海兵" },
 ];
 
