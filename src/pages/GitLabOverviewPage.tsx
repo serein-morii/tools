@@ -60,22 +60,22 @@ function SummaryCards({ current, previous }: { current?: GitLabScanHistory; prev
     if (!current) return null;
     const projects: GitLabProjectResult[] = JSON.parse(current.summary || "[]");
     let newCoverageSum = 0;
-    let lineCoverageSum = 0;
+    let allCoverageSum = 0;
     let newCoverageCount = 0;
-    let lineCoverageCount = 0;
+    let allCoverageCount = 0;
     for (const p of projects) {
       if (p.walkin_metrics?.new_coverage != null) {
         newCoverageSum += p.walkin_metrics.new_coverage;
         newCoverageCount++;
       }
-      if (p.walkin_metrics?.line_coverage != null) {
-        lineCoverageSum += p.walkin_metrics.line_coverage;
-        lineCoverageCount++;
+      if (p.walkin_metrics?.coverage != null) {
+        allCoverageSum += p.walkin_metrics.coverage;
+        allCoverageCount++;
       }
     }
     return {
       newCoverageAvg: newCoverageCount > 0 ? newCoverageSum / newCoverageCount : null,
-      lineCoverageAvg: lineCoverageCount > 0 ? lineCoverageSum / lineCoverageCount : null,
+      allCoverageAvg: allCoverageCount > 0 ? allCoverageSum / allCoverageCount : null,
     };
   }, [current]);
 
@@ -125,10 +125,10 @@ function SummaryCards({ current, previous }: { current?: GitLabScanHistory; prev
       value: `${walkinAggregates.newCoverageAvg.toFixed(1)}%`,
       previousValue: undefined as number | undefined,
     }] : []),
-    ...(walkinAggregates?.lineCoverageAvg != null ? [{
+    ...(walkinAggregates?.allCoverageAvg != null ? [{
       icon: BarChart3,
-      label: "行覆盖率",
-      value: `${walkinAggregates.lineCoverageAvg.toFixed(1)}%`,
+      label: "全量覆盖率",
+      value: `${walkinAggregates.allCoverageAvg.toFixed(1)}%`,
       previousValue: undefined as number | undefined,
     }] : []),
   ];

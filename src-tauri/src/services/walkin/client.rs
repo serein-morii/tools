@@ -670,15 +670,16 @@ impl WalkinClient {
         log::info!("Fetching unit-board: workspace={}, deptName={}, deptId={}, start={}, end={}",
             self.workspace_name, self.dept_name, dept_id, start_date, end_date);
 
-        // 尝试不带 appGroupFlag 参数
+        let app_group_flag = "按周期".to_string();
         let response = self.http_client
             .get(&url)
             .query(&[
+                ("deptId", &dept_id.to_string()),
                 ("workspaceName", &self.workspace_name),
                 ("deptName", &self.dept_name),
-                ("deptId", &dept_id.to_string()),
                 ("startDateFrom", &start_date),
                 ("startDateTo", &end_date),
+                ("appGroupFlag", &app_group_flag),
             ])
             .header("CSRF-TOKEN", &self.auth.csrf_token)
             .header("PROJECT", &self.auth.project)
