@@ -128,41 +128,71 @@ impl ScanResult {
         }
 
         log::info!("Walkin projects received: {}, GitLab projects: {}", walkin_projects.len(), self.projects.len());
-        log::debug!("Walkin project names: {:?}", walkin_by_name.keys().collect::<Vec<_>>());
+        if !walkin_projects.is_empty() {
+            log::info!("Walkin project names: {:?}", walkin_projects.iter().map(|p| &p.project_name).take(10).collect::<Vec<_>>());
+        }
+        if !self.projects.is_empty() {
+            log::info!("GitLab project names: {:?}", self.projects.iter().map(|p| &p.project_name).take(10).collect::<Vec<_>>());
+        }
+
+        // Collect all walkin project names for flexible matching
+        let walkin_names: Vec<&str> = walkin_by_name.keys().map(|s| s.as_str()).collect();
 
         for project in &mut self.projects {
             let short_name = project.project_name.split('/').last().unwrap_or(&project.project_name);
-            // 1. Check custom mappings
+
+            // 1. Check custom mappings first
             let walkin_name = mappings.iter()
                 .find(|m| project.project_name.contains(&m.gitlab_project))
-                .map(|m| m.walkin_project.as_str())
-                // 2. Match by last segment of GitLab path
-                .unwrap_or(short_name);
+                .map(|m| m.walkin_project.as_str());
 
-            log::debug!("Matching GitLab '{}' -> Walkin '{}'", project.project_name, walkin_name);
-
-            if let Some(entries) = walkin_by_name.get(walkin_name) {
-                log::info!("Found Walkin match for '{}': {} entries", walkin_name, entries.len());
-                // Build per-branch metrics
-                let mut by_branch: HashMap<String, WalkinMetrics> = HashMap::new();
-                for entry in entries {
-                    let branch = entry.branch.clone().unwrap_or_else(|| "master".to_string());
-                    by_branch.insert(branch, WalkinMetrics::from((*entry).clone()));
-                }
-
-                // Pick the "main" metrics: prefer master/main, otherwise latest by analysis_date
-                let main_metrics = entries.iter()
-                    .filter(|e| matches!(e.branch.as_deref(), Some("master") | Some("main")))
-                    .max_by_key(|e| e.analysis_date.unwrap_or(0))
-                    .or_else(|| entries.iter().max_by_key(|e| e.analysis_date.unwrap_or(0)))
-                    .map(|e| WalkinMetrics::from((*e).clone()));
-
-                if by_branch.len() > 1 {
-                    project.walkin_metrics_by_branch = Some(by_branch);
-                }
-                project.walkin_metrics = main_metrics;
+            let matched_name = if let Some(name) = walkin_name {
+                // Use custom mapping
+                Some(name.to_string())
+            } else if walkin_by_name.contains_key(short_name) {
+                // Exact match with short name
+                Some(short_name.to_string())
+            } else if let Some(name) = walkin_names.iter().find(|n| n.eq_ignore_ascii_case(short_name)) {
+                // Case-insensitive match
+                Some((*name).to_string())
+            } else if let Some(name) = walkin_names.iter().find(|n| n.contains(short_name)) {
+                // Walkin name contains GitLab short name
+                Some((*name).to_string())
+            } else if let Some(name) = walkin_names.iter().find(|n| short_name.contains(**n)) {
+                // GitLab short name contains Walkin name
+                Some((*name).to_string())
             } else {
-                log::debug!("No Walkin match for '{}'", walkin_name);
+                None
+            };
+
+            log::debug!("Matching GitLab '{}' (short: '{}') -> Walkin '{:?}'", project.project_name, short_name, matched_name);
+
+            if let Some(name) = matched_name {
+                if let Some(entries) = walkin_by_name.get(&name) {
+                    log::info!("Found Walkin match for '{}': {} entries", name, entries.len());
+                    // Build per-branch metrics
+                    let mut by_branch: HashMap<String, WalkinMetrics> = HashMap::new();
+                    for entry in entries {
+                        let branch = entry.branch.clone().unwrap_or_else(|| "master".to_string());
+                        by_branch.insert(branch, WalkinMetrics::from((*entry).clone()));
+                    }
+
+                    // Pick the "main" metrics: prefer master/main, otherwise latest by analysis_date
+                    let main_metrics = entries.iter()
+                        .filter(|e| matches!(e.branch.as_deref(), Some("master") | Some("main")))
+                        .max_by_key(|e| e.analysis_date.unwrap_or(0))
+                        .or_else(|| entries.iter().max_by_key(|e| e.analysis_date.unwrap_or(0)))
+                        .map(|e| WalkinMetrics::from((*e).clone()));
+
+                    if by_branch.len() > 1 {
+                        project.walkin_metrics_by_branch = Some(by_branch);
+                    }
+                    project.walkin_metrics = main_metrics;
+                } else {
+                    log::warn!("Walkin name '{}' matched but not found in lookup", name);
+                }
+            } else {
+                log::debug!("No Walkin match for GitLab '{}'", project.project_name);
             }
         }
 
