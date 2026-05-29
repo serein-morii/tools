@@ -1,0 +1,21 @@
+src-tauri/src/services/scheduler/gitlab_scheduler.rs
+  s_3fa5cef6ec2946::t_3f002ced2b69cc 492,505,522-528
+  s_3fa5cef6ec2946::t_1714a1df0cc34d 41,45-46,74
+  s_3fa5cef6ec2946::t_2dd1889bd8375d 14,18
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "0b24ff2cc6bf56e6e291e2907e65f43810ec9315",
+  "prompts": {},
+  "sessions": {
+    "s_3fa5cef6ec2946": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3186f0ff-6f40-4f0b-9cb6-c68899340ddc",
+        "model": "astron-code-latest"
+      },
+      "human_author": "pengchenghui <pengchenghui@jtexpress.com>"
+    }
+  }
+}
