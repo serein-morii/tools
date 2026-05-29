@@ -11,9 +11,11 @@ use crate::services::walkin::{WalkinClient, WalkinAuth, ProjectMapping};
 use crate::error::Result;
 
 pub fn start_gitlab_scheduler(db: Arc<Database>) {
+    log::info!("Starting GitLab scheduler thread");
     thread::spawn(move || {
         let rt = tokio::runtime::Runtime::new().unwrap();
         rt.block_on(async {
+            log::info!("GitLab scheduler loop started, checking every 60 seconds");
             loop {
                 tokio::time::sleep(Duration::from_secs(60)).await;
 
@@ -36,8 +38,11 @@ async fn run_gitlab_scheduler_cycle(db: &Arc<Database>) -> Result<()> {
 
     // Check if GitLab is configured
     if config.url.is_empty() {
+        log::debug!("GitLab URL not configured, skipping scheduler cycle");
         return Ok(());
     }
+
+    log::info!("GitLab scheduler cycle running, schedule: {}", config.scan_schedule);
 
     // Rust cron crate expects 7 fields: sec min hour day month weekday year
     // Standard 5-field format: min hour day month weekday
@@ -66,7 +71,7 @@ async fn run_gitlab_scheduler_cycle(db: &Arc<Database>) -> Result<()> {
         iter.take(2).any(|scheduled_time| {
             let scheduled_ts = scheduled_time.timestamp();
             let until = scheduled_ts - now;
-            log::debug!("GitLab scheduler check: next_scheduled={}, now={}, until={}s", scheduled_ts, now, until);
+            log::info!("GitLab scheduler check: next_scheduled={}, now={}, until={}s", scheduled_ts, now, until);
             // Fire if the next scheduled time is within 60 seconds from now
             until >= 0 && until <= 60
         })
@@ -126,8 +131,9 @@ pub async fn run_gitlab_scan(db: &Arc<Database>, config: &GitLabScanConfig, scan
     let scanner = GitLabScanner::new(client, scan_config);
     let mut result = scanner.scan(scan_type).await?;
 
-    // Fetch Walkin metrics if enabled
-    if config.walkin_enabled && !config.walkin_url.is_empty() {
+    // Fetch Walkin metrics if enabled and properly configured with auth tokens
+    if config.walkin_enabled && !config.walkin_url.is_empty()
+        && !config.walkin_csrf_token.is_empty() && !config.walkin_x_auth_token.is_empty() {
         let walkin_auth = WalkinAuth {
             csrf_token: config.walkin_csrf_token.clone(),
             project: config.walkin_project_header.clone(),
@@ -138,6 +144,7 @@ pub async fn run_gitlab_scan(db: &Arc<Database>, config: &GitLabScanConfig, scan
             Ok(walkin_client) => {
                 match walkin_client.fetch_project_metrics().await {
                     Ok(walkin_data) => {
+                        log::info!("Walkin data fetched successfully: {} projects", walkin_data.len());
                         result.merge_walkin_metrics(&walkin_data, &config.walkin_project_mappings);
                     }
                     Err(e) => {
@@ -149,6 +156,8 @@ pub async fn run_gitlab_scan(db: &Arc<Database>, config: &GitLabScanConfig, scan
                 log::warn!("Failed to create Walkin client: {}", e);
             }
         }
+    } else if config.walkin_enabled && (!config.walkin_csrf_token.is_empty() || !config.walkin_x_auth_token.is_empty()) {
+        log::warn!("Walkin enabled but missing auth tokens - please login first in the settings page");
     }
 
     // Save scan result
@@ -480,7 +489,7 @@ fn get_gitlab_config_from_settings(conn: &rusqlite::Connection) -> Result<GitLab
 
     let parse_token_profiles = || -> Vec<TokenProfile> {
         settings.iter()
-            .find(|s| s.key == "token_profiles")
+            .find(|s| s.key == "gitlab_token_profiles")
             .and_then(|s| serde_json::from_str(&s.value).ok())
             .unwrap_or_else(|| {
                 // Default token profiles
@@ -493,7 +502,7 @@ fn get_gitlab_config_from_settings(conn: &rusqlite::Connection) -> Result<GitLab
 
     let parse_ldap_profiles = || -> Vec<LdapProfile> {
         settings.iter()
-            .find(|s| s.key == "ldap_profiles")
+            .find(|s| s.key == "gitlab_ldap_profiles")
             .and_then(|s| serde_json::from_str(&s.value).ok())
             .unwrap_or_else(|| {
                 // Default LDAP profiles
@@ -510,8 +519,13 @@ fn get_gitlab_config_from_settings(conn: &rusqlite::Connection) -> Result<GitLab
 
     let token_profiles = parse_token_profiles();
     let ldap_profiles = parse_ldap_profiles();
-    let selected_token_id = get_setting_opt("selected_token_id").or_else(|| token_profiles.first().map(|p| p.id.clone()));
-    let selected_ldap_id = get_setting_opt("selected_ldap_id").or_else(|| ldap_profiles.first().map(|p| p.id.clone()));
+    let selected_token_id = get_setting_opt("gitlab_selected_token_id")
+        .or_else(|| settings.iter().find(|s| s.key == "gitlab_selected_token_ids").and_then(|s| {
+            let ids: Vec<String> = serde_json::from_str(&s.value).ok()?;
+            ids.first().cloned()
+        }))
+        .or_else(|| token_profiles.first().map(|p| p.id.clone()));
+    let selected_ldap_id = get_setting_opt("gitlab_selected_ldap_id").or_else(|| ldap_profiles.first().map(|p| p.id.clone()));
 
     Ok(GitLabScanConfig {
         url: get_setting("gitlab_url", "http://code.jms.com"),
