@@ -532,11 +532,11 @@
       "captchaAiTitle": "AI Captcha Recognition",
       "captchaAiDescription": "Use AI vision model to auto-recognize Walkin login captcha for higher accuracy",
       "captchaAiUrl": "API URL",
-      "captchaAiUrlPlaceholder": "https://api.deepseek.com",
+      "captchaAiUrlPlaceholder": "https://dashscope.aliyuncs.com/compatible-mode/v1",
       "captchaAiKey": "API Key",
       "captchaAiModel": "Model Name",
-      "captchaAiModelPlaceholder": "deepseek-chat",
-      "captchaAiHint": "Requires a vision model that supports image input. OpenAI-compatible: OpenAI (gpt-4o-mini), DeepSeek (deepseek-chat), Qwen (qwen-vl-plus), Ollama, etc."
+      "captchaAiModelPlaceholder": "qwen-vl-plus",
+      "captchaAiHint": "Requires a vision model supporting image input. Recommended: Qwen qwen-vl-plus, OpenAI gpt-4o-mini. Note: DeepSeek does not support images"
     },
     "overview": {
       "changedProjects": "Changed Projects",

@@ -532,11 +532,11 @@
       "captchaAiTitle": "AI 验证码识别",
       "captchaAiDescription": "使用 AI 视觉模型自动识别 Walkin 登录验证码，大幅提升识别准确率",
       "captchaAiUrl": "API 地址",
-      "captchaAiUrlPlaceholder": "https://api.deepseek.com",
+      "captchaAiUrlPlaceholder": "https://dashscope.aliyuncs.com/compatible-mode/v1",
       "captchaAiKey": "API Key",
       "captchaAiModel": "模型名称",
-      "captchaAiModelPlaceholder": "deepseek-chat",
-      "captchaAiHint": "需要支持图片输入的视觉模型。OpenAI 兼容格式：OpenAI (gpt-4o-mini)、DeepSeek (deepseek-chat)、通义千问 (qwen-vl-plus)、Ollama 等"
+      "captchaAiModelPlaceholder": "qwen-vl-plus",
+      "captchaAiHint": "需要支持图片输入的视觉模型。推荐：通义千问 qwen-vl-plus、OpenAI gpt-4o-mini。注意：DeepSeek 不支持图片输入"
     },
     "overview": {
       "changedProjects": "变更项目",

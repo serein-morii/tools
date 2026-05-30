@@ -505,11 +505,11 @@
       "captchaAiTitle": "AI 認証コード認識",
       "captchaAiDescription": "AIビジョンモデルでWalkinログイン認証コードを自動認識し、精度を大幅に向上",
       "captchaAiUrl": "API URL",
-      "captchaAiUrlPlaceholder": "https://api.deepseek.com",
+      "captchaAiUrlPlaceholder": "https://dashscope.aliyuncs.com/compatible-mode/v1",
       "captchaAiKey": "API Key",
       "captchaAiModel": "モデル名",
-      "captchaAiModelPlaceholder": "deepseek-chat",
-      "captchaAiHint": "画像入力対応のビジョンモデルが必要。OpenAI互換：OpenAI (gpt-4o-mini)、DeepSeek (deepseek-chat)、通義千問 (qwen-vl-plus)、Ollamaなど"
+      "captchaAiModelPlaceholder": "qwen-vl-plus",
+      "captchaAiHint": "画像入力対応のビジョンモデルが必要。推奨：通義千問 qwen-vl-plus、OpenAI gpt-4o-mini。注意：DeepSeekは画像非対応"
     },
     "overview": {
       "changedProjects": "変更プロジェクト",
