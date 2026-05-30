@@ -96,7 +96,7 @@ impl Default for GitLabConfig {
             walkin_project_mappings: vec![],
             captcha_ai_url: String::new(),
             captcha_ai_key: String::new(),
-            captcha_ai_model: "gpt-4o-mini".to_string(),
+            captcha_ai_model: "deepseek-chat".to_string(),
         }
     }
 }
@@ -186,7 +186,7 @@ fn get_gitlab_config_from_settings(conn: &rusqlite::Connection) -> Result<GitLab
         walkin_project_mappings: parse_project_mappings(),
         captcha_ai_url: get_setting("captcha_ai_url", ""),
         captcha_ai_key: get_setting("captcha_ai_key", ""),
-        captcha_ai_model: get_setting("captcha_ai_model", "gpt-4o-mini"),
+        captcha_ai_model: get_setting("captcha_ai_model", "deepseek-chat"),
     })
 }
 

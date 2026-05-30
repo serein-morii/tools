@@ -532,11 +532,11 @@
       "captchaAiTitle": "AI Captcha Recognition",
       "captchaAiDescription": "Use AI vision model to auto-recognize Walkin login captcha for higher accuracy",
       "captchaAiUrl": "API URL",
-      "captchaAiUrlPlaceholder": "https://api.openai.com",
+      "captchaAiUrlPlaceholder": "https://api.deepseek.com",
       "captchaAiKey": "API Key",
       "captchaAiModel": "Model Name",
-      "captchaAiModelPlaceholder": "gpt-4o-mini",
-      "captchaAiHint": "Supports OpenAI-compatible APIs (OpenAI, Ollama, etc.)"
+      "captchaAiModelPlaceholder": "deepseek-chat",
+      "captchaAiHint": "Requires a vision model that supports image input. OpenAI-compatible: OpenAI (gpt-4o-mini), DeepSeek (deepseek-chat), Qwen (qwen-vl-plus), Ollama, etc."
     },
     "overview": {
       "changedProjects": "Changed Projects",
