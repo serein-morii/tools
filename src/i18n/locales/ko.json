@@ -531,11 +531,11 @@
       "captchaAiTitle": "AI 캡차 인식",
       "captchaAiDescription": "AI 비전 모델로 Walkin 로그인 캡차를 자동 인식하여 정확도 대폭 향상",
       "captchaAiUrl": "API URL",
-      "captchaAiUrlPlaceholder": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+      "captchaAiUrlPlaceholder": "https://api.deepseek.com",
       "captchaAiKey": "API Key",
       "captchaAiModel": "모델 이름",
-      "captchaAiModelPlaceholder": "qwen-vl-plus",
-      "captchaAiHint": "이미지 입력을 지원하는 비전 모델이 필요합니다. 권장: Qwen qwen-vl-plus, OpenAI gpt-4o-mini. 참고: DeepSeek는 이미지 미지원"
+      "captchaAiModelPlaceholder": "deepseek-chat",
+      "captchaAiHint": "OpenAI 호환 API 지원. 비전 모델은 이미지를 직접 인식하고, 텍스트 전용 모델은 초기 OCR 결과를 보정합니다"
     },
     "overview": {
       "changedProjects": "변경 프로젝트",

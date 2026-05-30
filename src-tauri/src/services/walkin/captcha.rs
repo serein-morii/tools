@@ -314,28 +314,40 @@ pub fn denoise(binary: &GrayImage) -> GrayImage {
 pub async fn recognize_captcha_with_ai(
     image_base64: &str,
     config: &AiCaptchaConfig,
+    heuristic_result: Option<&str>,
 ) -> Option<String> {
     let url = format!("{}/v1/chat/completions", config.api_url.trim_end_matches('/'));
 
-    let data_url = format!("data:image/png;base64,{}", image_base64);
+    // If we have a heuristic result, send it as text description instead of image
+    let prompt = if let Some(heuristic) = heuristic_result {
+        format!(
+            "A captcha image was analyzed by a basic OCR system and got: '{}'. \
+            Based on common captcha patterns, what is the most likely correct text? \
+            Return ONLY the corrected characters, nothing else.",
+            heuristic
+        )
+    } else {
+        "This is a captcha image. Read the text characters in the image and return ONLY the characters, nothing else.".to_string()
+    };
+
+    let content = if heuristic_result.is_some() {
+        // Text-only mode
+        serde_json::json!([{"type": "text", "text": prompt}])
+    } else {
+        // Image mode
+        let data_url = format!("data:image/png;base64,{}", image_base64);
+        serde_json::json!([
+            {"type": "text", "text": prompt},
+            {"type": "image_url", "image_url": {"url": data_url}}
+        ])
+    };
 
     let body = serde_json::json!({
         "model": config.model,
         "messages": [
             {
                 "role": "user",
-                "content": [
-                    {
-                        "type": "text",
-                        "text": "This is a captcha image. Read the text characters in the image and return ONLY the characters, nothing else. No explanation, no punctuation, just the raw text."
-                    },
-                    {
-                        "type": "image_url",
-                        "image_url": {
-                            "url": data_url
-                        }
-                    }
-                ]
+                "content": content
             }
         ],
         "max_tokens": 20,

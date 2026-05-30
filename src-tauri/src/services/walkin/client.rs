@@ -158,10 +158,17 @@ pub async fn auto_login(
             Err(_) => continue,
         };
 
-        // Try AI recognition first if configured
+        // Try heuristic recognition first
+        let heuristic_result = recognize_captcha(&captcha_image_bytes);
+
+        // Try AI recognition if configured
         let mut recognized: Option<String> = None;
         if let Some(ref ai) = ai_config {
-            recognized = recognize_captcha_with_ai(&captcha_data.image_base64, ai).await;
+            recognized = recognize_captcha_with_ai(
+                &captcha_data.image_base64,
+                ai,
+                heuristic_result.as_deref(),
+            ).await;
         }
 
         // Fall back to heuristic recognition
@@ -170,7 +177,7 @@ pub async fn auto_login(
                 log::info!("AI captcha recognized (attempt {}): {}", attempt + 1, text);
                 text
             }
-            None => match recognize_captcha(&captcha_image_bytes) {
+            None => match heuristic_result {
                 Some(text) if text.len() >= 3 => {
                     log::info!("Heuristic captcha recognized (attempt {}): {}", attempt + 1, text);
                     text
