@@ -527,7 +527,15 @@
       "walkinProjectName": "Walkin 프로젝트명",
       "addMapping": "매핑 추가",
       "resetDefaults": "기본값 복원",
-      "saveConfig": "설정 저장"
+      "saveConfig": "설정 저장",
+      "captchaAiTitle": "AI 캡차 인식",
+      "captchaAiDescription": "AI 비전 모델로 Walkin 로그인 캡차를 자동 인식하여 정확도 대폭 향상",
+      "captchaAiUrl": "API URL",
+      "captchaAiUrlPlaceholder": "https://api.openai.com",
+      "captchaAiKey": "API Key",
+      "captchaAiModel": "모델 이름",
+      "captchaAiModelPlaceholder": "gpt-4o-mini",
+      "captchaAiHint": "OpenAI 호환 API 지원 (OpenAI, Ollama 등)"
     },
     "overview": {
       "changedProjects": "변경 프로젝트",

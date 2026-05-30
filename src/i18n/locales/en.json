@@ -528,7 +528,15 @@
       "walkinProjectName": "Walkin project name",
       "addMapping": "Add Mapping",
       "resetDefaults": "Reset Defaults",
-      "saveConfig": "Save Configuration"
+      "saveConfig": "Save Configuration",
+      "captchaAiTitle": "AI Captcha Recognition",
+      "captchaAiDescription": "Use AI vision model to auto-recognize Walkin login captcha for higher accuracy",
+      "captchaAiUrl": "API URL",
+      "captchaAiUrlPlaceholder": "https://api.openai.com",
+      "captchaAiKey": "API Key",
+      "captchaAiModel": "Model Name",
+      "captchaAiModelPlaceholder": "gpt-4o-mini",
+      "captchaAiHint": "Supports OpenAI-compatible APIs (OpenAI, Ollama, etc.)"
     },
     "overview": {
       "changedProjects": "Changed Projects",

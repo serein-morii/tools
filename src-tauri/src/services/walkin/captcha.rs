@@ -1,4 +1,12 @@
 use image::{GrayImage, Luma};
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AiCaptchaConfig {
+    pub api_url: String,
+    pub api_key: String,
+    pub model: String,
+}
 
 /// Try to recognize text from a captcha image using basic image processing.
 /// Returns the recognized text if successful, or None if the image is too noisy.
@@ -299,4 +307,76 @@ pub fn denoise(binary: &GrayImage) -> GrayImage {
     }
 
     out
+}
+
+/// Recognize captcha text using an AI vision API (OpenAI-compatible format).
+/// Sends the captcha image as base64 and returns the recognized text.
+pub async fn recognize_captcha_with_ai(
+    image_base64: &str,
+    config: &AiCaptchaConfig,
+) -> Option<String> {
+    let url = format!("{}/v1/chat/completions", config.api_url.trim_end_matches('/'));
+
+    let data_url = format!("data:image/png;base64,{}", image_base64);
+
+    let body = serde_json::json!({
+        "model": config.model,
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": "This is a captcha image. Read the text characters in the image and return ONLY the characters, nothing else. No explanation, no punctuation, just the raw text."
+                    },
+                    {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": data_url
+                        }
+                    }
+                ]
+            }
+        ],
+        "max_tokens": 20,
+        "temperature": 0
+    });
+
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(15))
+        .build()
+        .ok()?;
+
+    let response = client
+        .post(&url)
+        .header("Authorization", format!("Bearer {}", config.api_key))
+        .header("Content-Type", "application/json")
+        .json(&body)
+        .send()
+        .await
+        .ok()?;
+
+    if !response.status().is_success() {
+        let status = response.status();
+        let body = response.text().await.unwrap_or_default();
+        log::warn!("AI captcha API error {}: {}", status, body);
+        return None;
+    }
+
+    let resp: serde_json::Value = response.json().await.ok()?;
+    let text = resp["choices"][0]["message"]["content"]
+        .as_str()?
+        .trim()
+        .to_string();
+
+    // Clean: keep only alphanumeric characters
+    let cleaned: String = text.chars().filter(|c| c.is_alphanumeric()).collect();
+
+    if cleaned.len() >= 3 {
+        log::info!("AI captcha recognized: {}", cleaned);
+        Some(cleaned.to_uppercase())
+    } else {
+        log::warn!("AI captcha returned too short: '{}'", text);
+        None
+    }
 }

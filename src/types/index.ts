@@ -357,6 +357,9 @@ export interface GitLabConfig {
   walkin_project_header: string;
   walkin_x_auth_token: string;
   walkin_project_mappings: ProjectMapping[];
+  captcha_ai_url: string;
+  captcha_ai_key: string;
+  captcha_ai_model: string;
 }
 
 export interface MrDetail {

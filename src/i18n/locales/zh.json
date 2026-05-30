@@ -528,7 +528,15 @@
       "walkinProjectName": "Walkin 项目名",
       "addMapping": "添加映射",
       "resetDefaults": "恢复默认",
-      "saveConfig": "保存配置"
+      "saveConfig": "保存配置",
+      "captchaAiTitle": "AI 验证码识别",
+      "captchaAiDescription": "使用 AI 视觉模型自动识别 Walkin 登录验证码，大幅提升识别准确率",
+      "captchaAiUrl": "API 地址",
+      "captchaAiUrlPlaceholder": "https://api.openai.com",
+      "captchaAiKey": "API Key",
+      "captchaAiModel": "模型名称",
+      "captchaAiModelPlaceholder": "gpt-4o-mini",
+      "captchaAiHint": "支持 OpenAI 兼容格式的 API（OpenAI、Ollama、通义千问等）"
     },
     "overview": {
       "changedProjects": "变更项目",
