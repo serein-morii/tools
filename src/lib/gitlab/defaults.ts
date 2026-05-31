@@ -45,7 +45,4 @@ export const defaultGitLabConfig: GitLabConfig = {
   walkin_project_header: "",
   walkin_x_auth_token: "",
   walkin_project_mappings: [],
-  captcha_ai_url: "",
-  captcha_ai_key: "",
-  captcha_ai_model: "deepseek-chat",
 };

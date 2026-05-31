@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import { useTranslation } from "react-i18next";
-import { Link2, CheckCircle, XCircle, Loader2, Plus, X, AlertCircle, Shield, Clock, RefreshCw, Trash2, Zap } from "lucide-react";
+import { Link2, CheckCircle, XCircle, Loader2, Plus, X, AlertCircle, Shield, Clock, RefreshCw, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -271,7 +270,6 @@ function LdapProfileEditor({
 }
 
 export function GitLabSettingsPage() {
-  const { t } = useTranslation();
   const { data: config, isLoading } = useGitLabConfig();
   const { data: channels } = useChannels();
   const saveConfig = useSaveGitLabConfig();
@@ -1049,45 +1047,6 @@ export function GitLabSettingsPage() {
               </div>
             </>
           )}
-        </CardContent>
-      </Card>
-
-      {/* AI Captcha Recognition */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Zap className="h-5 w-5" />
-            {t("gitlab.settings.captchaAiTitle")}
-          </CardTitle>
-          <CardDescription>{t("gitlab.settings.captchaAiDescription")}</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium">{t("gitlab.settings.captchaAiUrl")}</label>
-            <Input
-              placeholder={t("gitlab.settings.captchaAiUrlPlaceholder")}
-              value={formData.captcha_ai_url}
-              onChange={(e) => setFormData({ ...formData, captcha_ai_url: e.target.value })}
-            />
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium">{t("gitlab.settings.captchaAiKey")}</label>
-            <Input
-              type="password"
-              placeholder="sk-..."
-              value={formData.captcha_ai_key}
-              onChange={(e) => setFormData({ ...formData, captcha_ai_key: e.target.value })}
-            />
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium">{t("gitlab.settings.captchaAiModel")}</label>
-            <Input
-              placeholder={t("gitlab.settings.captchaAiModelPlaceholder")}
-              value={formData.captcha_ai_model}
-              onChange={(e) => setFormData({ ...formData, captcha_ai_model: e.target.value })}
-            />
-          </div>
-          <p className="text-xs text-muted-foreground">💡 {t("gitlab.settings.captchaAiHint")}</p>
         </CardContent>
       </Card>
 

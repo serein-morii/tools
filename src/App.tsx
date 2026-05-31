@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { ReminderLayout } from "@/components/modules/reminder/ReminderLayout";
 import { GitLabLayout } from "@/components/modules/gitlab/GitLabLayout";
+import { WalkinAuthProvider } from "@/components/modules/gitlab/WalkinAuthManager";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const DashboardPage = lazy(() => import("@/pages/DashboardPage").then((m) => ({ default: m.DashboardPage })));
@@ -20,6 +21,7 @@ const GitLabSettingsPage = lazy(() => import("@/pages/GitLabSettingsPage").then(
 function App() {
   return (
     <ErrorBoundary>
+      <WalkinAuthProvider>
       <Suspense
         fallback={
           <div className="flex h-screen items-center justify-center">
@@ -49,6 +51,7 @@ function App() {
           </Route>
         </Routes>
       </Suspense>
+      </WalkinAuthProvider>
     </ErrorBoundary>
   );
 }

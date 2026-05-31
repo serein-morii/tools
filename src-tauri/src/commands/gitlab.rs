@@ -56,9 +56,6 @@ pub struct GitLabConfig {
     pub walkin_project_header: String,
     pub walkin_x_auth_token: String,
     pub walkin_project_mappings: Vec<ProjectMapping>,
-    pub captcha_ai_url: String,
-    pub captcha_ai_key: String,
-    pub captcha_ai_model: String,
 }
 
 impl Default for GitLabConfig {
@@ -94,9 +91,6 @@ impl Default for GitLabConfig {
             walkin_project_header: String::new(),
             walkin_x_auth_token: String::new(),
             walkin_project_mappings: vec![],
-            captcha_ai_url: String::new(),
-            captcha_ai_key: String::new(),
-            captcha_ai_model: "deepseek-chat".to_string(),
         }
     }
 }
@@ -184,9 +178,6 @@ fn get_gitlab_config_from_settings(conn: &rusqlite::Connection) -> Result<GitLab
         walkin_project_header: get_setting("walkin_project_header", ""),
         walkin_x_auth_token: get_setting("walkin_x_auth_token", ""),
         walkin_project_mappings: parse_project_mappings(),
-        captcha_ai_url: get_setting("captcha_ai_url", ""),
-        captcha_ai_key: get_setting("captcha_ai_key", ""),
-        captcha_ai_model: get_setting("captcha_ai_model", "deepseek-chat"),
     })
 }
 
@@ -237,9 +228,6 @@ fn save_gitlab_config_to_settings(conn: &rusqlite::Connection, config: &GitLabCo
     SettingsDao::upsert(conn, "walkin_project_header", &config.walkin_project_header)?;
     SettingsDao::upsert(conn, "walkin_x_auth_token", &config.walkin_x_auth_token)?;
     SettingsDao::upsert(conn, "walkin_project_mappings", &serde_json::to_string(&config.walkin_project_mappings).unwrap_or_else(|_| "[]".to_string()))?;
-    SettingsDao::upsert(conn, "captcha_ai_url", &config.captcha_ai_url)?;
-    SettingsDao::upsert(conn, "captcha_ai_key", &config.captcha_ai_key)?;
-    SettingsDao::upsert(conn, "captcha_ai_model", &config.captcha_ai_model)?;
 
     Ok(())
 }
@@ -703,26 +691,11 @@ pub fn get_gitlab_configured(db: State<'_, Arc<Database>>) -> Result<bool> {
 
 #[tauri::command]
 pub async fn walkin_auto_login(
-    db: State<'_, Arc<Database>>,
     url: String,
     username: String,
     password: String,
 ) -> Result<AutoLoginResult> {
-    // Load AI captcha config from settings
-    let ai_config = {
-        let conn = db.conn().lock().unwrap();
-        let settings = crate::database::dao::settings::SettingsDao::get_all(&conn)?;
-        let get = |key: &str| settings.iter().find(|s| s.key == key).map(|s| s.value.clone()).unwrap_or_default();
-        let api_url = get("captcha_ai_url");
-        let api_key = get("captcha_ai_key");
-        let model = get("captcha_ai_model");
-        if !api_url.is_empty() && !api_key.is_empty() {
-            Some(crate::services::walkin::AiCaptchaConfig { api_url, api_key, model })
-        } else {
-            None
-        }
-    };
-    Ok(auto_login(&url, &username, &password, ai_config).await)
+    Ok(auto_login(&url, &username, &password).await)
 }
 
 #[tauri::command]

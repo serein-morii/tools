@@ -528,15 +528,7 @@
       "walkinProjectName": "Walkin 项目名",
       "addMapping": "添加映射",
       "resetDefaults": "恢复默认",
-      "saveConfig": "保存配置",
-      "captchaAiTitle": "AI 验证码识别",
-      "captchaAiDescription": "使用 AI 视觉模型自动识别 Walkin 登录验证码，大幅提升识别准确率",
-      "captchaAiUrl": "API 地址",
-      "captchaAiUrlPlaceholder": "https://api.deepseek.com",
-      "captchaAiKey": "API Key",
-      "captchaAiModel": "模型名称",
-      "captchaAiModelPlaceholder": "deepseek-chat",
-      "captchaAiHint": "支持任意 OpenAI 兼容 API。有图片能力的模型会直接识别图片，无图片能力的模型会根据初步 OCR 结果修正"
+      "saveConfig": "保存配置"
     },
     "overview": {
       "changedProjects": "变更项目",

@@ -528,15 +528,7 @@
       "walkinProjectName": "Walkin project name",
       "addMapping": "Add Mapping",
       "resetDefaults": "Reset Defaults",
-      "saveConfig": "Save Configuration",
-      "captchaAiTitle": "AI Captcha Recognition",
-      "captchaAiDescription": "Use AI vision model to auto-recognize Walkin login captcha for higher accuracy",
-      "captchaAiUrl": "API URL",
-      "captchaAiUrlPlaceholder": "https://api.deepseek.com",
-      "captchaAiKey": "API Key",
-      "captchaAiModel": "Model Name",
-      "captchaAiModelPlaceholder": "deepseek-chat",
-      "captchaAiHint": "Supports any OpenAI-compatible API. Vision models recognize images directly; text-only models correct based on initial OCR results"
+      "saveConfig": "Save Configuration"
     },
     "overview": {
       "changedProjects": "Changed Projects",

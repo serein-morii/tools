@@ -124,9 +124,8 @@ pub async fn auto_login(
     base_url: &str,
     username: &str,
     password: &str,
-    ai_config: Option<super::captcha::AiCaptchaConfig>,
 ) -> AutoLoginResult {
-    use super::captcha::{recognize_captcha, recognize_captcha_with_ai};
+    use super::captcha::recognize_captcha;
 
     let max_attempts = 3u32;
 
@@ -149,7 +148,7 @@ pub async fn auto_login(
             }
         };
 
-        // Try to recognize captcha — AI first, then heuristic
+        // Try to recognize captcha with heuristic OCR
         let captcha_image_bytes = match base64::Engine::decode(
             &base64::engine::general_purpose::STANDARD,
             &captcha_data.image_base64,
@@ -158,48 +157,28 @@ pub async fn auto_login(
             Err(_) => continue,
         };
 
-        // Try heuristic recognition first
-        let heuristic_result = recognize_captcha(&captcha_image_bytes);
-
-        // Try AI recognition if configured
-        let mut recognized: Option<String> = None;
-        if let Some(ref ai) = ai_config {
-            recognized = recognize_captcha_with_ai(
-                &captcha_data.image_base64,
-                ai,
-                heuristic_result.as_deref(),
-            ).await;
-        }
-
-        // Fall back to heuristic recognition
-        let recognized = match recognized {
-            Some(text) => {
-                log::info!("AI captcha recognized (attempt {}): {}", attempt + 1, text);
+        let recognized = match recognize_captcha(&captcha_image_bytes) {
+            Some(text) if text.len() >= 3 => {
+                log::info!("Heuristic captcha recognized (attempt {}): {}", attempt + 1, text);
                 text
             }
-            None => match heuristic_result {
-                Some(text) if text.len() >= 3 => {
-                    log::info!("Heuristic captcha recognized (attempt {}): {}", attempt + 1, text);
-                    text
+            _ => {
+                log::debug!("Could not recognize captcha on attempt {}", attempt + 1);
+                if attempt == max_attempts - 1 {
+                    return AutoLoginResult {
+                        success: false,
+                        csrf_token: None,
+                        project: None,
+                        workspace: None,
+                        x_auth_token: None,
+                        needs_manual_captcha: true,
+                        captcha_image: Some(captcha_data.image_base64),
+                        captcha_uuid: Some(captcha_data.uuid),
+                        message: Some("验证码自动识别失败，请手动输入".to_string()),
+                    };
                 }
-                _ => {
-                    log::debug!("Could not recognize captcha on attempt {}", attempt + 1);
-                    if attempt == max_attempts - 1 {
-                        return AutoLoginResult {
-                            success: false,
-                            csrf_token: None,
-                            project: None,
-                            workspace: None,
-                            x_auth_token: None,
-                            needs_manual_captcha: true,
-                            captcha_image: Some(captcha_data.image_base64),
-                            captcha_uuid: Some(captcha_data.uuid),
-                            message: Some("验证码自动识别失败，请手动输入".to_string()),
-                        };
-                    }
-                    continue;
-                }
-            },
+                continue;
+            }
         };
 
         // Attempt login with recognized captcha

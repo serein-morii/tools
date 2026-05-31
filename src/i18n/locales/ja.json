@@ -501,15 +501,7 @@
       "walkinProjectName": "Walkinプロジェクト名",
       "addMapping": "マッピング追加",
       "resetDefaults": "デフォルトに戻す",
-      "saveConfig": "設定保存",
-      "captchaAiTitle": "AI 認証コード認識",
-      "captchaAiDescription": "AIビジョンモデルでWalkinログイン認証コードを自動認識し、精度を大幅に向上",
-      "captchaAiUrl": "API URL",
-      "captchaAiUrlPlaceholder": "https://api.deepseek.com",
-      "captchaAiKey": "API Key",
-      "captchaAiModel": "モデル名",
-      "captchaAiModelPlaceholder": "deepseek-chat",
-      "captchaAiHint": "OpenAI互換APIに対応。ビジョンモデルは画像を直接認識し、テキストのみモデルは初期OCR結果を修正します"
+      "saveConfig": "設定保存"
     },
     "overview": {
       "changedProjects": "変更プロジェクト",

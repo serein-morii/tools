@@ -3,6 +3,7 @@ import { Loader2, KeyRound, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { gitlabApi } from "@/lib/api/gitlab";
+import { useGitLabConfig, useSaveGitLabConfig } from "@/lib/query/gitlabQueries";
 import { toast } from "sonner";
 import type { GitLabConfig } from "@/types";
 
@@ -22,13 +23,10 @@ const WalkinAuthContext = createContext<WalkinAuthContextType>({
 
 export const useWalkinAuth = () => useContext(WalkinAuthContext);
 
-interface WalkinAuthProviderProps {
-  config: GitLabConfig | null;
-  onAuthUpdate: (tokens: { csrf_token: string; project: string; workspace: string; x_auth_token: string }) => void;
-  children: ReactNode;
-}
+export function WalkinAuthProvider({ children }: { children: ReactNode }) {
+  const { data: config, refetch } = useGitLabConfig();
+  const saveConfig = useSaveGitLabConfig();
 
-export function WalkinAuthProvider({ config, onAuthUpdate, children }: WalkinAuthProviderProps) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userName, setUserName] = useState<string | null>(null);
   const [showCaptchaDialog, setShowCaptchaDialog] = useState(false);
@@ -42,19 +40,34 @@ export function WalkinAuthProvider({ config, onAuthUpdate, children }: WalkinAut
   const loginCredentialsRef = useRef<{ username: string; password: string } | null>(null);
 
   useEffect(() => {
-    configRef.current = config;
+    configRef.current = config || null;
   }, [config]);
 
+  const persistAuthTokens = useCallback((tokens: { csrf_token: string; project: string; workspace: string; x_auth_token: string }) => {
+    const currentConfig = configRef.current;
+    if (currentConfig) {
+      const updatedConfig = {
+        ...currentConfig,
+        walkin_csrf_token: tokens.csrf_token,
+        walkin_project_header: tokens.project,
+        walkin_workspace_name: tokens.workspace,
+        walkin_x_auth_token: tokens.x_auth_token,
+      };
+      saveConfig.mutateAsync(updatedConfig).then(() => refetch());
+    }
+  }, [saveConfig, refetch]);
+
   const checkLogin = useCallback(async (): Promise<boolean> => {
-    if (!config?.walkin_url || !config?.walkin_x_auth_token) {
+    const cfg = configRef.current;
+    if (!cfg?.walkin_url || !cfg?.walkin_x_auth_token) {
       return false;
     }
     try {
-      const result = await gitlabApi.walkinCheckLogin(config.walkin_url, {
-        csrf_token: config.walkin_csrf_token,
-        project: config.walkin_project_header,
-        workspace: config.walkin_workspace_name,
-        x_auth_token: config.walkin_x_auth_token,
+      const result = await gitlabApi.walkinCheckLogin(cfg.walkin_url, {
+        csrf_token: cfg.walkin_csrf_token,
+        project: cfg.walkin_project_header,
+        workspace: cfg.walkin_workspace_name,
+        x_auth_token: cfg.walkin_x_auth_token,
       });
       setIsLoggedIn(result.logged_in);
       setUserName(result.user_name || null);
@@ -63,13 +76,12 @@ export function WalkinAuthProvider({ config, onAuthUpdate, children }: WalkinAut
       setIsLoggedIn(false);
       return false;
     }
-  }, [config]);
+  }, []);
 
   const startAutoLogin = useCallback(async (
     credentials?: { username: string; password: string },
     configOverride?: Partial<GitLabConfig>,
   ) => {
-    // Merge current config with override
     const currentConfig = configRef.current;
     const effectiveConfig = {
       ...currentConfig,
@@ -82,7 +94,6 @@ export function WalkinAuthProvider({ config, onAuthUpdate, children }: WalkinAut
       toast.error("请先配置 Walkin 地址");
       return;
     }
-    // Get LDAP credentials from profiles or provided credentials
     const ldapProfile = effectiveConfig.ldap_profiles.find(p => p.id === effectiveConfig.selected_ldap_id);
     const username = credentials?.username || ldapProfile?.username || "";
     const password = credentials?.password || ldapProfile?.password || "";
@@ -97,7 +108,7 @@ export function WalkinAuthProvider({ config, onAuthUpdate, children }: WalkinAut
       const result = await gitlabApi.walkinAutoLogin(effectiveConfig.walkin_url, username, password);
 
       if (result.success && result.csrf_token && result.x_auth_token) {
-        onAuthUpdate({
+        persistAuthTokens({
           csrf_token: result.csrf_token,
           project: result.project || effectiveConfig.walkin_project_header,
           workspace: result.workspace || effectiveConfig.walkin_workspace_name,
@@ -122,7 +133,7 @@ export function WalkinAuthProvider({ config, onAuthUpdate, children }: WalkinAut
     } finally {
       setIsAutoLoggingIn(false);
     }
-  }, [onAuthUpdate]);
+  }, [persistAuthTokens]);
 
   const handleCaptchaLogin = async () => {
     const currentConfig = configRef.current;
@@ -131,7 +142,6 @@ export function WalkinAuthProvider({ config, onAuthUpdate, children }: WalkinAut
       toast.error("配置未加载");
       return;
     }
-    // Get LDAP credentials from profiles
     const ldapProfile = currentConfig.ldap_profiles?.find(p => p.id === currentConfig.selected_ldap_id);
     const username = credentials?.username || ldapProfile?.username || "";
     const password = credentials?.password || ldapProfile?.password || "";
@@ -144,7 +154,7 @@ export function WalkinAuthProvider({ config, onAuthUpdate, children }: WalkinAut
     try {
       const resp = await gitlabApi.walkinLdapLogin(currentConfig.walkin_url, username, password, captcha, captchaUuid);
       if (resp.success && resp.data?.csrfToken) {
-        onAuthUpdate({
+        persistAuthTokens({
           csrf_token: resp.data.csrfToken,
           project: currentConfig.walkin_project_header || "",
           workspace: resp.data.lastWorkspaceId || currentConfig.walkin_workspace_name || "",
@@ -188,7 +198,8 @@ export function WalkinAuthProvider({ config, onAuthUpdate, children }: WalkinAut
     }
     const intervalStr = localStorage.getItem("walkin_login_check_interval");
     const interval = intervalStr ? parseInt(intervalStr) : 0;
-    if (interval > 0 && config?.walkin_enabled && config?.walkin_x_auth_token) {
+    const cfg = configRef.current;
+    if (interval > 0 && cfg?.walkin_enabled && cfg?.walkin_x_auth_token) {
       checkLogin();
       intervalRef.current = setInterval(async () => {
         const loggedIn = await checkLogin();
