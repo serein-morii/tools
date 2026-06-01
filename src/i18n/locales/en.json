@@ -60,8 +60,8 @@
     "timer": "Timer",
     "notes": "Notes",
     "home": "Dashboard",
-    "gitlab": "Code Scan",
-    "sonar": "Test Coverage"
+    "gitlab": "Code",
+    "sonar": "Unit Test"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -434,7 +434,7 @@
     "placeholder": "Timer module placeholder. Will support countdown, Pomodoro timer, and other time tools."
   },
   "gitlab": {
-    "title": "GitLab Code Scan",
+    "title": "GitLab Code",
     "description": "Scan code commits and detect test coverage",
     "overviewLabel": "Overview",
     "historyLabel": "History",

@@ -59,7 +59,9 @@
     "reminder": "リマインダー",
     "timer": "タイマー",
     "notes": "ノート",
-    "home": "ダッシュボード"
+    "home": "ダッシュボード",
+    "gitlab": "コード",
+    "sonar": "単体テスト"
   },
   "dashboard": {
     "title": "ダッシュボード",
@@ -401,7 +403,7 @@
     "noContent": "内容なし"
   },
   "gitlab": {
-    "title": "GitLab コードスキャン",
+    "title": "GitLab コード",
     "description": "コードコミットをスキャンし、単体テストカバレッジを検出",
     "overviewLabel": "概要",
     "historyLabel": "履歴",

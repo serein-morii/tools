@@ -59,7 +59,9 @@
     "reminder": "알림",
     "timer": "타이머",
     "notes": "노트",
-    "home": "대시보드"
+    "home": "대시보드",
+    "gitlab": "코드",
+    "sonar": "단위 테스트"
   },
   "dashboard": {
     "title": "대시보드",
@@ -427,7 +429,7 @@
     "placeholder": "타이머 모듈 플레이스홀더. 카운트다운, 포모도로 타이머 등 시간 도구 지원 예정."
   },
   "gitlab": {
-    "title": "GitLab 코드 스캔",
+    "title": "GitLab 코드",
     "description": "코드 커밋 스캔 및 단위 테스트 커버리지 감지",
     "overviewLabel": "개요",
     "historyLabel": "기록",
