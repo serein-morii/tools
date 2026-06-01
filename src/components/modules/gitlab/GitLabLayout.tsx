@@ -28,23 +28,23 @@ export function GitLabLayout() {
           </div>
         </div>
 
-        {/* Tabs - pill style like cc-switch AppSwitcher */}
+        {/* Tabs */}
         <nav className="flex gap-1 px-6 pb-3">
-          <div className="inline-flex gap-1 rounded-xl bg-muted p-1">
+          <div className="inline-flex gap-1 rounded-lg bg-muted p-0.5">
             {tabs.map((tab) => (
               <NavLink
                 key={tab.to}
                 to={tab.to}
                 className={({ isActive }) =>
                   cn(
-                    "flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium transition-all duration-200",
+                    "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all",
                     isActive
                       ? "bg-background text-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground hover:bg-background/50"
+                      : "text-muted-foreground hover:text-foreground"
                   )
                 }
               >
-                <tab.icon className="h-4 w-4" />
+                <tab.icon className="h-3.5 w-3.5" />
                 {tab.label}
               </NavLink>
             ))}
