@@ -1,0 +1,74 @@
+src-tauri/src/services/walkin/mod.rs
+  s_5ee4ad3ded713f::t_bb6944ec57d5f9 4
+src-tauri/src/services/sonar/mod.rs
+  s_5ee4ad3ded713f::t_65ef91a844ff97 4-5
+src-tauri/src/services/gitlab/scanner.rs
+  s_5ee4ad3ded713f::t_2a7ddd095f62cb 6
+src-tauri/src/services/walkin/client.rs
+  s_5ee4ad3ded713f::t_85928e9688dfa1 659,661
+  s_5ee4ad3ded713f::t_cd943d2f93ca9d 456-457,459-460,462-463,465-466,468-469,471-472,476-477,479-480
+  s_5ee4ad3ded713f::t_e82361c97357fd 312-313
+  s_5ee4ad3ded713f::t_7cd4c92b8a2b39 683
+  s_5ee4ad3ded713f::t_3e73b7187ce437 785-786
+  s_5ee4ad3ded713f::t_0aad700808af90 282,285
+src-tauri/src/services/scheduler/gitlab_scheduler.rs
+  s_5ee4ad3ded713f::t_d73247f6f84af0 412
+src/config/modules.ts
+  s_5ee4ad3ded713f::t_072f0dc213dc77 16
+src/components/ui/label.tsx
+  s_5ee4ad3ded713f::t_c6be549984e0fc 7,23
+src-tauri/src/commands/gitlab.rs
+  s_5ee4ad3ded713f::t_56ca3af6013a72 534
+src/i18n/locales/zh.json
+  s_5ee4ad3ded713f::t_71df73de392f33 503
+  s_5ee4ad3ded713f::t_0f9f6e31654dd8 438
+  s_5ee4ad3ded713f::t_da5c6f57e115c4 60,64-65
+  s_5ee4ad3ded713f::t_2a3b946fefaa2f 112
+src/pages/SonarPromptPage.tsx
+  s_5ee4ad3ded713f::t_510a9c7ff473ed 640,642-644,646-662,664,667,670,672-683,685-686,692,694-725,727-728,733,736
+  s_5ee4ad3ded713f::t_634433b08a5dcf 1408
+  s_5ee4ad3ded713f::t_e9930b3b017b63 843-844,858,869,873,902,907-908,919,925
+  s_5ee4ad3ded713f::t_f82d15bca6e741 1093
+  s_5ee4ad3ded713f::t_0b3180500c0e78 1230
+  s_5ee4ad3ded713f::t_2a694f4382168c 1348
+  s_5ee4ad3ded713f::t_976ad8575a573a 942-943,949,959,965-971,973,975,978-980,983-984,988,995-1001,1006,1011,1016-1020,1022-1023
+  s_5ee4ad3ded713f::t_181fa1ddc6085a 645
+  s_5ee4ad3ded713f::t_6851a275eef423 746,755,758,764,779-784,794,808-809,811
+  s_5ee4ad3ded713f::t_da309a4922e2a0 1450
+  s_5ee4ad3ded713f::t_4bd6510611468d 1623
+  s_5ee4ad3ded713f::t_94209d406bdfdd 838
+  s_5ee4ad3ded713f::t_da7b2dc83628d9 1465
+  s_5ee4ad3ded713f::t_989c2c6ac94e38 7
+src/index.css
+  s_5ee4ad3ded713f::t_2bcdd1abf3f672 7,13,37-66,79,102-121,163-190,193-195,198-200,239-243,268
+src/components/modules/gitlab/GitLabLayout.tsx
+  s_5ee4ad3ded713f::t_fea933029293bb 24
+src/components/ui/button.tsx
+  s_5ee4ad3ded713f::t_cb27bb00992d3f 7,11,13-20,23-31,52,62
+src/components/ui/card.tsx
+  s_5ee4ad3ded713f::t_c32fd37207ebd9 4-80,83-97,99-101,103-117,119,126,136,144,148
+src-tauri/src/services/gitlab/mod.rs
+  s_5ee4ad3ded713f::t_8058b9e183c0af 5-6
+src/components/ui/input.tsx
+  s_5ee4ad3ded713f::t_2c59db65096562 13,24
+src/pages/DashboardPage.tsx
+  s_5ee4ad3ded713f::t_c195c0a18d7264 191
+src/pages/GitLabSettingsPage.tsx
+  s_5ee4ad3ded713f::t_ff213b94f64600 620
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "d42be788280fa098556aa9f1db49e8f34ce1f361",
+  "prompts": {},
+  "sessions": {
+    "s_5ee4ad3ded713f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "16bac21d-3e82-4e9d-9ed1-296b67e0c341",
+        "model": "astron-code-latest"
+      },
+      "human_author": "pengchenghui <pengchenghui@jtexpress.com>"
+    }
+  }
+}
