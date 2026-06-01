@@ -63,6 +63,7 @@ fn apply_auth(req: reqwest::RequestBuilder, auth: &WalkinAuth) -> reqwest::Reque
         .header("WORKSPACE", &auth.workspace)
         .header("X-AUTH-TOKEN", &auth.x_auth_token)
         .header("Accept", "application/json, text/plain, */*")
+        .header("Referer", "http://walkin.jms.com/")
 }
 
 /// 获取 Jenkins Report 列表
@@ -188,7 +189,7 @@ pub async fn get_source_lines(
             ("key", file_key),
             ("branch", branch),
             ("page", "1"),
-            ("size", "5000"),
+            ("size", "500"),
             ("selectPageType", "代码行"),
         ]),
         auth,
