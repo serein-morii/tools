@@ -413,7 +413,7 @@ export function SonarPromptPage() {
               <Card>
                 <CardContent className="p-5 space-y-4">
                   <div className="grid grid-cols-3 gap-3">
-                    <div className="space-y-1.5 col-span-2">
+                    <div className="space-y-1.5">
                       <Label className="text-xs">扫描项目 *</Label>
                       <SearchableSelect
                         value={selectedProjectId?.toString() || ""}
@@ -423,7 +423,7 @@ export function SonarPromptPage() {
                         emptyMessage="无匹配项目"
                       />
                     </div>
-                    <div className="space-y-1.5">
+                    <div className="space-y-1.5 col-span-2">
                       <Label className="text-xs">分支</Label>
                       <SearchableSelect
                         value={branch}
