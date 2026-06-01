@@ -144,11 +144,9 @@ export function SonarPromptPage() {
       const formattedTime = createTimeEnd.replace("T", " ") + ":00";
       const data = await sonarApi.getReports(
         config.walkin_url, auth, config.walkin_dept_id,
-        formattedTime, "", branch, 1, limit,
+        formattedTime, projectKey, branch, 1, limit,
       );
-      const filtered = data.filter(
-        (r) => r.reportType === "增量" && (!r.projectKey || r.projectKey === projectKey)
-      );
+      const filtered = data.filter((r) => r.reportType === "增量");
       setReports(filtered);
       setStep("select");
       if (filtered.length === 0) {
@@ -452,7 +450,7 @@ export function SonarPromptPage() {
                         onClick={() => handleSelectReport(r)}
                       >
                         <div className="space-y-1">
-                          <p className="text-sm font-medium">{r.commitId || r.id}</p>
+                          <p className="text-sm font-medium">{r.id}</p>
                           <p className="text-xs text-muted-foreground">
                             {r.createTime} | {r.projectKey} | {r.branch}
                           </p>
@@ -474,7 +472,7 @@ export function SonarPromptPage() {
                   <Button variant="ghost" size="sm" onClick={handleBack}>返回</Button>
                   {selectedReport && (
                     <span className="text-sm text-muted-foreground">
-                      {selectedReport.commitId || selectedReport.id} | {selectedReport.createTime}
+                      {selectedReport.id} | {selectedReport.createTime}
                     </span>
                   )}
                 </div>
