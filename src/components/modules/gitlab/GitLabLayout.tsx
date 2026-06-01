@@ -14,22 +14,17 @@ export function GitLabLayout() {
 
   return (
     <div className="min-h-full bg-background">
-      {/* Header */}
-      <div className="border-b bg-card/50 backdrop-blur-sm">
-        <div className="px-6 py-5">
+      <div className="border-b px-6 py-4">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-amber-600 shadow-md">
               <GitBranch className="h-5 w-5 text-white" />
             </div>
             <div>
               <h1 className="text-xl font-semibold tracking-tight">{t("gitlab.title", "GitLab 代码扫描")}</h1>
-              <p className="text-sm text-muted-foreground">{t("gitlab.description", "扫描代码提交，检测单测覆盖情况")}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{t("gitlab.description", "扫描代码提交，检测单测覆盖情况")}</p>
             </div>
           </div>
-        </div>
-
-        {/* Tabs */}
-        <nav className="flex gap-1 px-6 pb-3">
           <div className="inline-flex gap-1 rounded-lg bg-muted p-0.5">
             {tabs.map((tab) => (
               <NavLink
@@ -49,10 +44,9 @@ export function GitLabLayout() {
               </NavLink>
             ))}
           </div>
-        </nav>
+        </div>
       </div>
 
-      {/* Content */}
       <div className="animate-in">
         <Outlet />
       </div>
