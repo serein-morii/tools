@@ -640,11 +640,12 @@ export function SonarPromptPage() {
     <div className="flex h-full flex-col">
       {/* Header */}
       <header className="flex h-12 items-center justify-between gap-3 border-b border-border px-6">
-        <div className="flex items-center gap-2">
-          <FlaskConical className="h-4 w-4 text-primary" />
-          <h1 className="text-sm font-semibold tracking-tight">单测</h1>
-          <span className="text-muted-foreground/60">·</span>
-          <span className="text-xs text-muted-foreground">Sonar 覆盖率 → Prompt 生成</span>
+        <div>
+          <div className="flex items-center gap-2">
+            <FlaskConical className="h-4 w-4 text-primary" />
+            <h1 className="text-sm font-semibold tracking-tight">单测</h1>
+          </div>
+          <p className="text-xs text-muted-foreground mt-0.5">Sonar 覆盖率 → Prompt 生成</p>
         </div>
         <div className="inline-flex h-8 items-center rounded-lg border border-border p-0.5 text-xs">
           {tabs.map((tab) => (
