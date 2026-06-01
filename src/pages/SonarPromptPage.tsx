@@ -1,13 +1,13 @@
 import { useState, useCallback, useMemo } from "react";
 import {
-  Search, FileCode, Copy, Download, Loader2, ChevronRight, Check,
-  Trash2, RotateCcw, ClipboardCopy, History, Sparkles, BookTemplate, Clock,
-  Plus, Star, Pencil,
+  Search, FileCode, Copy, Download, Loader2, ChevronRight, ChevronLeft, Check,
+  Trash2, RotateCcw, ClipboardCopy, History, Sparkles, Clock,
+  Plus, Star, Pencil, AlertCircle, Zap, FileText, BarChart3,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { sonarApi, type SonarAuth, type SonarReport, type FileCoverage } from "@/lib/api/sonar";
@@ -27,6 +27,12 @@ function getDefaultTime() {
   return now.toISOString().slice(0, 16);
 }
 
+const tabs = [
+  { key: "generator", label: "Prompt 生成", icon: Zap },
+  { key: "template", label: "模板管理", icon: FileText },
+  { key: "history", label: "扫描历史", icon: BarChart3 },
+] as const;
+
 export function SonarPromptPage() {
   const { data: config } = useGitLabConfig();
   const { data: gitlabProjects } = useGitLabProjects();
@@ -45,7 +51,6 @@ export function SonarPromptPage() {
     () => localStorage.getItem("sonar_author") || "pengchenghui@jtexpress.com"
   );
 
-  // 根据选中的项目获取分支列表
   const { data: gitlabBranches } = useGitLabBranches(selectedProjectId);
 
   // --- 模板 ---
@@ -98,7 +103,6 @@ export function SonarPromptPage() {
     ];
   }, [gitlabBranches]);
 
-  // 项目选择变更时，提取最后一层作为 projectKey，并加载分支
   const handleProjectChange = (value: string) => {
     const project = gitlabProjects?.find((p) => p.id.toString() === value);
     if (project) {
@@ -119,7 +123,6 @@ export function SonarPromptPage() {
     };
   }, [config]);
 
-  // --- 保存表单到 localStorage ---
   const persistForm = useCallback(() => {
     localStorage.setItem("sonar_project_key", projectKey);
     localStorage.setItem("sonar_branch", branch);
@@ -198,7 +201,6 @@ export function SonarPromptPage() {
       if (coverages.length > 0) {
         const generated = await sonarApi.generatePrompt(coverages, activeTemplate?.content || "");
         setPrompt(generated);
-        // 自动保存到历史
         const record = saveRecord({
           projectKey,
           branch,
@@ -220,7 +222,6 @@ export function SonarPromptPage() {
     }
   };
 
-  // --- 复制/导出 ---
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text);
     toast.success("已复制到剪贴板");
@@ -234,10 +235,9 @@ export function SonarPromptPage() {
     a.download = "claude_code_prompt.txt";
     a.click();
     URL.revokeObjectURL(url);
-    toast.success("已导出 claude_code_prompt.txt");
+    toast.success("已导出");
   };
 
-  // --- 返回 ---
   const handleBack = () => {
     setStep("config");
     setReports([]);
@@ -268,7 +268,7 @@ export function SonarPromptPage() {
     clearHistory();
     setHistory([]);
     setShowClearConfirm(false);
-    toast.success("已清空历史");
+    toast.success("已清空");
   };
 
   // --- 模板操作 ---
@@ -330,369 +330,516 @@ export function SonarPromptPage() {
     toast.success("已恢复默认");
   };
 
-  // --- 时间格式化 ---
   const formatTime = (ts: number) => {
     return new Date(ts).toLocaleString("zh-CN", {
       month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit",
     });
   };
 
+  const formatDateTime = (s?: string) => {
+    if (!s) return "-";
+    return s.replace(/:\d{2}$/, "");
+  };
+
   return (
-    <div className="flex h-full flex-col p-6 space-y-4 overflow-auto">
-      <div>
-        <h1 className="text-2xl font-bold">代码补测</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          从 Sonar 覆盖率报告中提取未覆盖代码，生成 Claude Code 单测 Prompt
-        </p>
+    <div className="flex h-full flex-col overflow-auto">
+      {/* Header */}
+      <div className="border-b px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-bold tracking-tight">代码补测</h1>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Sonar 覆盖率分析 &rarr; 未覆盖代码提取 &rarr; Claude Code 单测 Prompt 生成
+            </p>
+          </div>
+          <div className="inline-flex gap-1 rounded-lg bg-muted p-0.5">
+            {tabs.map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={cn(
+                  "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all",
+                  activeTab === tab.key
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <tab.icon className="h-3.5 w-3.5" />
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
-      {/* Tab 导航 — pill 风格 */}
-      <nav className="flex gap-1">
-        <div className="inline-flex gap-1 rounded-xl bg-muted p-1">
-          {[
-            { key: "generator", label: "Prompt 生成", icon: Sparkles },
-            { key: "template", label: "模板编辑", icon: BookTemplate },
-            { key: "history", label: "扫描历史", icon: Clock },
-          ].map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={cn(
-                "flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium transition-all duration-200",
-                activeTab === tab.key
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground hover:bg-background/50"
-              )}
-            >
-              <tab.icon className="h-4 w-4" />
-              {tab.label}
-            </button>
-          ))}
-        </div>
-      </nav>
-
-      {/* ===== Tab 1: Prompt 生成 ===== */}
-      {activeTab === "generator" && (
-        <div className="flex-1 overflow-auto space-y-4">
-          {/* Step 1: 配置 */}
-          {step === "config" && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">扫描参数</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>扫描项目 *</Label>
-                    <SearchableSelect
-                      value={selectedProjectId?.toString() || ""}
-                      onChange={handleProjectChange}
-                      options={projectOptions}
-                      placeholder="选择项目"
-                      emptyMessage="无匹配项目"
-                    />
+      {/* Content */}
+      <div className="flex-1 p-6">
+        {/* ===== Tab 1: Prompt 生成 ===== */}
+        {activeTab === "generator" && (
+          <div className="space-y-4">
+            {/* Step indicator */}
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              {[
+                { key: "config", label: "配置参数", num: "1" },
+                { key: "select", label: "选择报告", num: "2" },
+                { key: "result", label: "生成结果", num: "3" },
+              ].map((s, i) => (
+                <div key={s.key} className="flex items-center gap-2">
+                  <div className={cn(
+                    "flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold",
+                    step === s.key
+                      ? "bg-blue-500 text-white"
+                      : ["select", "result"].indexOf(step) > ["config", "select", "result"].indexOf(s.key)
+                        ? "bg-emerald-500/15 text-emerald-600"
+                        : "bg-muted text-muted-foreground"
+                  )}>
+                    {["select", "result"].indexOf(step) > ["config", "select", "result"].indexOf(s.key)
+                      ? <Check className="h-3 w-3" />
+                      : s.num}
                   </div>
-                  <div className="space-y-2">
-                    <Label>分支</Label>
-                    <SearchableSelect
-                      value={branch}
-                      onChange={setBranch}
-                      options={branchOptions}
-                      placeholder="选择分支"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>截止时间 *</Label>
-                    <input
-                      type="datetime-local"
-                      className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                      value={createTimeEnd}
-                      onChange={(e) => setCreateTimeEnd(e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>数量限制</Label>
-                    <Input
-                      type="number"
-                      value={limit}
-                      onChange={(e) => setLimit(parseInt(e.target.value) || 7)}
-                    />
-                  </div>
-                  <div className="space-y-2 col-span-2">
-                    <Label>开发者邮箱</Label>
-                    <Input value={author} onChange={(e) => setAuthor(e.target.value)} />
-                  </div>
-                </div>
-                <Button onClick={handleFetchReports} disabled={loading}>
-                  {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Search className="h-4 w-4 mr-2" />}
-                  获取报告
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Step 2: 选择报告 */}
-          {step === "select" && (
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-base">选择扫描报告（增量）</CardTitle>
-                <Button variant="ghost" size="sm" onClick={handleBack}>返回</Button>
-              </CardHeader>
-              <CardContent>
-                {reports.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">没有符合条件的报告</p>
-                ) : (
-                  <div className="space-y-2">
-                    {reports.map((r) => (
-                      <div
-                        key={r.id}
-                        className="flex items-center justify-between rounded-lg border p-3 hover:bg-muted cursor-pointer transition-colors"
-                        onClick={() => handleSelectReport(r)}
-                      >
-                        <div className="space-y-1">
-                          <p className="text-sm font-medium">{r.id}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {r.createTime} | {r.projectKey} | {r.branch}
-                          </p>
-                        </div>
-                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Step 3: 结果 */}
-          {step === "result" && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm" onClick={handleBack}>返回</Button>
-                  {selectedReport && (
-                    <span className="text-sm text-muted-foreground">
-                      {selectedReport.id} | {selectedReport.createTime}
-                    </span>
-                  )}
-                </div>
-                {!processing && prompt && (
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={() => handleCopy(prompt)}>
-                      <Copy className="h-4 w-4 mr-1" /> 复制
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={handleExport}>
-                      <Download className="h-4 w-4 mr-1" /> 导出 txt
-                    </Button>
-                  </div>
-                )}
-              </div>
-
-              {processing && (
-                <Card>
-                  <CardContent className="flex items-center gap-3 py-6">
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                    <span className="text-sm">
-                      正在分析文件... {progress.current}/{progress.total}
-                    </span>
-                  </CardContent>
-                </Card>
-              )}
-
-              {fileCoverages.length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <FileCode className="h-4 w-4" />
-                      覆盖区域 ({fileCoverages.length} 个文件)
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2 max-h-[200px] overflow-auto">
-                      {fileCoverages.map((fc, i) => (
-                        <div key={i} className="flex items-start gap-2 text-sm">
-                          <Check className="h-4 w-4 text-green-500 mt-0.5 shrink-0" />
-                          <span className="font-mono text-xs break-all">{fc.path}</span>
-                          <span className="text-muted-foreground shrink-0">
-                            {fc.ranges.map((r) =>
-                              r.start === r.end ? `第${r.start}行` : `第${r.start}-${r.end}行`
-                            ).join("、")}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {!processing && prompt && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-base">生成的 Prompt</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <textarea
-                      className="w-full h-[400px] rounded-md border bg-muted/30 p-3 text-sm font-mono resize-y"
-                      value={prompt}
-                      onChange={(e) => setPrompt(e.target.value)}
-                    />
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ===== Tab 2: 模板编辑 ===== */}
-      {activeTab === "template" && (
-        <div className="flex-1 overflow-auto space-y-4">
-          {/* 编辑/创建表单 */}
-          {(editingTemplate || isCreating) && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">
-                  {isCreating ? "新建模板" : "编辑模板"}
-                  <span className="text-xs text-muted-foreground font-normal ml-2">
-                    可用变量：{"{file_list}"}（扫描到的文件和行号）
+                  <span className={cn(step === s.key && "text-foreground font-medium")}>
+                    {s.label}
                   </span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label>模板名称</Label>
-                  <Input
-                    value={tplName}
-                    onChange={(e) => setTplName(e.target.value)}
-                    placeholder="输入模板名称"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>模板内容</Label>
-                  <textarea
-                    className="w-full h-[300px] rounded-md border bg-muted/30 p-3 text-sm font-mono resize-y"
-                    value={tplContent}
-                    onChange={(e) => setTplContent(e.target.value)}
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <Button size="sm" onClick={handleSaveTemplate}>保存</Button>
-                  <Button variant="ghost" size="sm" onClick={handleCancelEdit}>取消</Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* 模板列表 */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-base">模板列表</CardTitle>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={handleStartCreate}>
-                  <Plus className="h-4 w-4 mr-1" /> 新建
-                </Button>
-                <Button variant="ghost" size="sm" onClick={handleResetTemplates}>
-                  <RotateCcw className="h-4 w-4 mr-1" /> 恢复默认
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {templates.map((tpl) => (
-                <div
-                  key={tpl.id}
-                  className={cn(
-                    "flex items-center justify-between rounded-lg border p-3 transition-colors",
-                    tpl.isDefault && "border-primary/50 bg-primary/5"
-                  )}
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <button
-                      onClick={() => handleSetDefault(tpl.id)}
-                      title={tpl.isDefault ? "当前默认" : "设为默认"}
-                      className="shrink-0"
-                    >
-                      <Star
-                        className={cn(
-                          "h-4 w-4 transition-colors",
-                          tpl.isDefault
-                            ? "fill-yellow-400 text-yellow-400"
-                            : "text-muted-foreground hover:text-yellow-400"
-                        )}
-                      />
-                    </button>
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium truncate">{tpl.name}</p>
-                      <p className="text-xs text-muted-foreground truncate max-w-[400px]">
-                        {tpl.content.slice(0, 80)}...
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex gap-1 shrink-0">
-                    <Button variant="ghost" size="sm" onClick={() => handleStartEdit(tpl)}>
-                      <Pencil className="h-3.5 w-3.5" />
-                    </Button>
-                    {tpl.id !== "built-in" && (
-                      <Button variant="ghost" size="sm" onClick={() => setDeleteTemplateId(tpl.id)}>
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
-                    )}
-                  </div>
+                  {i < 2 && <ChevronRight className="h-3 w-3" />}
                 </div>
               ))}
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* ===== Tab 3: 扫描历史 ===== */}
-      {activeTab === "history" && (
-        <div className="flex-1 overflow-auto space-y-3">
-          {history.length > 0 && (
-            <div className="flex justify-end">
-              <Button variant="ghost" size="sm" onClick={() => setShowClearConfirm(true)}>
-                <Trash2 className="h-4 w-4 mr-1" /> 清空全部
-              </Button>
             </div>
-          )}
 
-          {history.length === 0 ? (
-            <Card>
-              <CardContent className="py-12 text-center">
-                <History className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                <p className="text-sm text-muted-foreground">暂无扫描历史</p>
-              </CardContent>
-            </Card>
-          ) : (
-            history.map((record) => (
-              <Card key={record.id}>
-                <CardContent className="py-3 flex items-center justify-between gap-4">
-                  <div className="space-y-1 min-w-0">
-                    <p className="text-sm font-medium truncate">
-                      {record.projectKey} / {record.branch}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {formatTime(record.createdAt)} | {record.fileCount} 个文件 | {record.author}
-                    </p>
+            {/* Step 1: 配置 */}
+            {step === "config" && (
+              <Card>
+                <CardContent className="p-5 space-y-4">
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="space-y-1.5 col-span-2">
+                      <Label className="text-xs">扫描项目 *</Label>
+                      <SearchableSelect
+                        value={selectedProjectId?.toString() || ""}
+                        onChange={handleProjectChange}
+                        options={projectOptions}
+                        placeholder="搜索或选择项目"
+                        emptyMessage="无匹配项目"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">分支</Label>
+                      <SearchableSelect
+                        value={branch}
+                        onChange={setBranch}
+                        options={branchOptions}
+                        placeholder="选择分支"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">截止时间 *</Label>
+                      <input
+                        type="datetime-local"
+                        className="flex h-9 w-full rounded-md border border-input bg-background px-3 text-xs shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        value={createTimeEnd}
+                        onChange={(e) => setCreateTimeEnd(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">数量限制</Label>
+                      <Input
+                        type="number"
+                        className="h-9 text-xs"
+                        value={limit}
+                        onChange={(e) => setLimit(parseInt(e.target.value) || 7)}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">开发者邮箱</Label>
+                      <Input
+                        className="h-9 text-xs"
+                        value={author}
+                        onChange={(e) => setAuthor(e.target.value)}
+                      />
+                    </div>
                   </div>
-                  <div className="flex gap-1 shrink-0">
-                    <Button variant="ghost" size="sm" onClick={() => handleLoadFromHistory(record)}>
-                      <RotateCcw className="h-3.5 w-3.5 mr-1" /> 加载
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => handleCopy(record.prompt)}>
-                      <ClipboardCopy className="h-3.5 w-3.5 mr-1" /> 复制
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => setDeleteId(record.id)}>
-                      <Trash2 className="h-3.5 w-3.5 mr-1" /> 删除
-                    </Button>
-                  </div>
+
+                  {/* 当前配置摘要 */}
+                  {selectedProjectId && (
+                    <div className="flex items-center gap-3 rounded-lg bg-muted/50 px-3 py-2 text-xs">
+                      <span className="text-muted-foreground">目标</span>
+                      <span className="font-medium">{projectKey}</span>
+                      <span className="text-muted-foreground">/</span>
+                      <span className="font-medium">{branch}</span>
+                      <span className="text-muted-foreground">|</span>
+                      <span className="text-muted-foreground">最近 {limit} 条</span>
+                      <span className="text-muted-foreground">|</span>
+                      <span className="text-muted-foreground truncate">{author}</span>
+                    </div>
+                  )}
+
+                  <Button
+                    className="w-full h-9"
+                    onClick={handleFetchReports}
+                    disabled={loading || !selectedProjectId}
+                  >
+                    {loading ? (
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    ) : (
+                      <Search className="h-4 w-4 mr-2" />
+                    )}
+                    获取增量报告
+                  </Button>
                 </CardContent>
               </Card>
-            ))
-          )}
-        </div>
-      )}
+            )}
 
-      {/* 删除确认 */}
+            {/* Step 2: 选择报告 */}
+            {step === "select" && (
+              <Card>
+                <CardContent className="p-0">
+                  <div className="flex items-center justify-between border-b px-4 py-2.5">
+                    <div className="flex items-center gap-2">
+                      <Button variant="ghost" size="sm" className="h-7 px-2" onClick={handleBack}>
+                        <ChevronLeft className="h-3.5 w-3.5" />
+                      </Button>
+                      <span className="text-sm font-medium">选择增量报告</span>
+                      <span className="rounded-full bg-blue-500/10 px-2 py-0.5 text-xs font-medium text-blue-600">
+                        {reports.length}
+                      </span>
+                    </div>
+                    <span className="text-xs text-muted-foreground">
+                      {projectKey} / {branch}
+                    </span>
+                  </div>
+
+                  {reports.length === 0 ? (
+                    <div className="flex flex-col items-center py-12 text-muted-foreground">
+                      <AlertCircle className="h-8 w-8 mb-2" />
+                      <p className="text-sm">没有符合条件的报告</p>
+                    </div>
+                  ) : (
+                    <div className="divide-y max-h-[420px] overflow-auto">
+                      {reports.map((r) => (
+                        <button
+                          key={r.id}
+                          className="flex w-full items-center justify-between px-4 py-3 text-left transition-colors hover:bg-muted/50"
+                          onClick={() => handleSelectReport(r)}
+                        >
+                          <div className="flex items-center gap-4 min-w-0">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600">
+                              <FileCode className="h-4 w-4" />
+                            </div>
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-medium">#{r.id}</span>
+                                {r.commitId && (
+                                  <code className="rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                                    {r.commitId}
+                                  </code>
+                                )}
+                              </div>
+                              <p className="text-xs text-muted-foreground mt-0.5">
+                                {formatDateTime(r.createTime)}
+                              </p>
+                            </div>
+                          </div>
+                          <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Step 3: 结果 */}
+            {step === "result" && (
+              <div className="space-y-3">
+                {/* 顶部操作栏 */}
+                <div className="flex items-center justify-between rounded-lg border bg-card px-4 py-2.5">
+                  <div className="flex items-center gap-2">
+                    <Button variant="ghost" size="sm" className="h-7 px-2" onClick={handleBack}>
+                      <ChevronLeft className="h-3.5 w-3.5" />
+                    </Button>
+                    {selectedReport && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <span className="font-medium">#{selectedReport.id}</span>
+                        <span className="text-muted-foreground">|</span>
+                        <span className="text-muted-foreground text-xs">{formatDateTime(selectedReport.createTime)}</span>
+                      </div>
+                    )}
+                  </div>
+                  {!processing && prompt && (
+                    <div className="flex gap-1.5">
+                      <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => handleCopy(prompt)}>
+                        <Copy className="h-3 w-3 mr-1" /> 复制
+                      </Button>
+                      <Button variant="outline" size="sm" className="h-7 text-xs" onClick={handleExport}>
+                        <Download className="h-3 w-3 mr-1" /> 导出
+                      </Button>
+                    </div>
+                  )}
+                </div>
+
+                {/* 进度条 */}
+                {processing && (
+                  <Card>
+                    <CardContent className="flex items-center gap-3 p-4">
+                      <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between text-xs mb-1.5">
+                          <span className="font-medium">正在分析文件...</span>
+                          <span className="text-muted-foreground">{progress.current}/{progress.total}</span>
+                        </div>
+                        <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+                          <div
+                            className="h-full rounded-full bg-blue-500 transition-all duration-300"
+                            style={{ width: progress.total > 0 ? `${(progress.current / progress.total) * 100}%` : "0%" }}
+                          />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* 覆盖文件列表 */}
+                {fileCoverages.length > 0 && (
+                  <Card>
+                    <CardContent className="p-0">
+                      <div className="flex items-center gap-2 border-b px-4 py-2.5">
+                        <Check className="h-4 w-4 text-emerald-500" />
+                        <span className="text-sm font-medium">覆盖区域</span>
+                        <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-600">
+                          {fileCoverages.length} 个文件
+                        </span>
+                      </div>
+                      <div className="divide-y max-h-[200px] overflow-auto">
+                        {fileCoverages.map((fc, i) => (
+                          <div key={i} className="flex items-start gap-3 px-4 py-2">
+                            <FileCode className="h-3.5 w-3.5 mt-0.5 shrink-0 text-muted-foreground" />
+                            <div className="min-w-0 flex-1">
+                              <p className="text-xs font-mono truncate">{fc.path}</p>
+                              <p className="text-[11px] text-muted-foreground mt-0.5">
+                                {fc.ranges.map((r) =>
+                                  r.start === r.end ? `第${r.start}行` : `第${r.start}-${r.end}行`
+                                ).join("、")}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* 生成的 Prompt */}
+                {!processing && prompt && (
+                  <Card>
+                    <CardContent className="p-0">
+                      <div className="flex items-center justify-between border-b px-4 py-2.5">
+                        <div className="flex items-center gap-2">
+                          <Sparkles className="h-4 w-4 text-blue-500" />
+                          <span className="text-sm font-medium">生成的 Prompt</span>
+                          <span className="text-xs text-muted-foreground">
+                            {prompt.length} 字符
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[11px] text-muted-foreground">
+                            模板: {activeTemplate?.name || "默认"}
+                          </span>
+                        </div>
+                      </div>
+                      <textarea
+                        className="w-full h-[360px] bg-muted/20 p-4 text-xs font-mono leading-relaxed resize-y border-0 focus:outline-none focus:ring-0"
+                        value={prompt}
+                        onChange={(e) => setPrompt(e.target.value)}
+                      />
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ===== Tab 2: 模板管理 ===== */}
+        {activeTab === "template" && (
+          <div className="space-y-4">
+            {/* 编辑/创建表单 */}
+            {(editingTemplate || isCreating) && (
+              <Card>
+                <CardContent className="p-5 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium">
+                        {isCreating ? "新建模板" : "编辑模板"}
+                      </span>
+                      <code className="rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                        {"{file_list}"}
+                      </code>
+                    </div>
+                    <Button variant="ghost" size="sm" className="h-7 px-2" onClick={handleCancelEdit}>
+                      取消
+                    </Button>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">模板名称</Label>
+                    <Input
+                      className="h-9 text-xs"
+                      value={tplName}
+                      onChange={(e) => setTplName(e.target.value)}
+                      placeholder="输入模板名称"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">模板内容</Label>
+                    <textarea
+                      className="w-full h-[260px] rounded-md border border-input bg-muted/20 p-3 text-xs font-mono leading-relaxed resize-y focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                      value={tplContent}
+                      onChange={(e) => setTplContent(e.target.value)}
+                    />
+                  </div>
+                  <Button size="sm" className="h-8" onClick={handleSaveTemplate}>
+                    保存模板
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* 模板列表 */}
+            <Card>
+              <CardContent className="p-0">
+                <div className="flex items-center justify-between border-b px-4 py-2.5">
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm font-medium">模板列表</span>
+                    <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                      {templates.length}
+                    </span>
+                  </div>
+                  <div className="flex gap-1.5">
+                    <Button variant="outline" size="sm" className="h-7 text-xs" onClick={handleStartCreate}>
+                      <Plus className="h-3 w-3 mr-1" /> 新建
+                    </Button>
+                    <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={handleResetTemplates}>
+                      <RotateCcw className="h-3 w-3 mr-1" /> 恢复默认
+                    </Button>
+                  </div>
+                </div>
+                <div className="divide-y">
+                  {templates.map((tpl) => (
+                    <div
+                      key={tpl.id}
+                      className={cn(
+                        "flex items-center gap-3 px-4 py-3 transition-colors",
+                        tpl.isDefault && "bg-blue-500/5"
+                      )}
+                    >
+                      <button
+                        onClick={() => handleSetDefault(tpl.id)}
+                        title={tpl.isDefault ? "当前默认" : "设为默认"}
+                        className="shrink-0"
+                      >
+                        <Star
+                          className={cn(
+                            "h-4 w-4 transition-colors",
+                            tpl.isDefault
+                              ? "fill-yellow-400 text-yellow-400"
+                              : "text-muted-foreground/40 hover:text-yellow-400"
+                          )}
+                        />
+                      </button>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium">{tpl.name}</span>
+                          {tpl.isDefault && (
+                            <span className="rounded bg-blue-500/10 px-1.5 py-0.5 text-[10px] font-medium text-blue-600">
+                              默认
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-muted-foreground truncate mt-0.5 max-w-[500px]">
+                          {tpl.content.slice(0, 100)}
+                        </p>
+                      </div>
+                      <div className="flex gap-0.5 shrink-0">
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => handleStartEdit(tpl)}>
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
+                        {tpl.id !== "built-in" && (
+                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setDeleteTemplateId(tpl.id)}>
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* ===== Tab 3: 扫描历史 ===== */}
+        {activeTab === "history" && (
+          <div className="space-y-3">
+            {history.length > 0 && (
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">共 {history.length} 条记录</span>
+                <Button variant="ghost" size="sm" className="h-7 text-xs text-destructive hover:text-destructive" onClick={() => setShowClearConfirm(true)}>
+                  <Trash2 className="h-3 w-3 mr-1" /> 清空全部
+                </Button>
+              </div>
+            )}
+
+            {history.length === 0 ? (
+              <Card>
+                <CardContent className="flex flex-col items-center py-16">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-muted mb-3">
+                    <History className="h-6 w-6 text-muted-foreground" />
+                  </div>
+                  <p className="text-sm font-medium">暂无扫描历史</p>
+                  <p className="text-xs text-muted-foreground mt-1">生成 Prompt 后将自动保存</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-2">
+                {history.map((record) => (
+                  <Card key={record.id}>
+                    <CardContent className="p-0">
+                      <div className="flex items-center justify-between px-4 py-3">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted">
+                            <Clock className="h-4 w-4 text-muted-foreground" />
+                          </div>
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-medium">{record.projectKey}</span>
+                              <span className="text-muted-foreground">/</span>
+                              <span className="text-sm">{record.branch}</span>
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              {formatTime(record.createdAt)} &middot; {record.fileCount} 个文件 &middot; {record.author}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex gap-1 shrink-0">
+                          <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => handleLoadFromHistory(record)}>
+                            <RotateCcw className="h-3 w-3 mr-1" /> 加载
+                          </Button>
+                          <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => handleCopy(record.prompt)}>
+                            <ClipboardCopy className="h-3 w-3 mr-1" /> 复制
+                          </Button>
+                          <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setDeleteId(record.id)}>
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* 确认弹窗 */}
       <ConfirmDialog
         open={!!deleteId}
         onOpenChange={() => setDeleteId(null)}
@@ -701,8 +848,6 @@ export function SonarPromptPage() {
         destructive
         onConfirm={() => deleteId && handleDeleteRecord(deleteId)}
       />
-
-      {/* 清空确认 */}
       <ConfirmDialog
         open={showClearConfirm}
         onOpenChange={setShowClearConfirm}
@@ -711,8 +856,6 @@ export function SonarPromptPage() {
         destructive
         onConfirm={handleClearHistory}
       />
-
-      {/* 删除模板确认 */}
       <ConfirmDialog
         open={!!deleteTemplateId}
         onOpenChange={() => setDeleteTemplateId(null)}
