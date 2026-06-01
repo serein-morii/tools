@@ -476,6 +476,61 @@ pub struct UnitBoardResponse {
     pub data: Option<Vec<UnitBoardData>>,
 }
 
+/// selectUnitList API 响应数据项
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UnitListItem {
+    pub id: Option<i64>,
+    pub commit_id: Option<String>,
+    pub project_key: Option<String>,
+    pub project_name: Option<String>,
+    pub branch: Option<String>,
+    /// 全量覆盖率
+    pub coverage: Option<String>,
+    /// 增量覆盖率
+    pub new_coverage: Option<String>,
+    /// 全量代码行覆盖率
+    pub line_coverage: Option<String>,
+    /// 全量分支覆盖率
+    pub branch_coverage: Option<String>,
+    /// 增量代码行覆盖率
+    pub new_line_coverage: Option<String>,
+    /// 增量条件覆盖率
+    pub new_condition_coverage: Option<String>,
+    pub bugs: Option<i64>,
+    pub new_bugs: Option<i64>,
+    pub vulnerabilities: Option<i64>,
+    pub new_vulnerabilities: Option<i64>,
+    pub code_smells: Option<i64>,
+    pub new_code_smells: Option<i64>,
+    pub reliability_rating: Option<String>,
+    pub security_rating: Option<String>,
+    pub maintainability_rating: Option<String>,
+    pub tests: Option<i64>,
+    pub test_errors: Option<i64>,
+    pub test_failures: Option<i64>,
+    pub test_success_density: Option<f64>,
+    pub uncovered_lines: Option<i64>,
+    pub lines_to_cover: Option<i64>,
+    pub duplicated_lines_density: Option<String>,
+    pub analysis_date: Option<i64>,
+    pub trigger_person: Option<String>,
+    pub env_name: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UnitListResponse {
+    pub success: bool,
+    pub message: Option<String>,
+    pub data: Option<UnitListData>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UnitListData {
+    pub list_object: Option<Vec<UnitListItem>>,
+}
+
 /// is-login API 响应
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct IsLoginResponse {
@@ -659,16 +714,17 @@ impl WalkinClient {
     }
 
     /// 获取 unit-board 团队级覆盖率概览
-    pub async fn fetch_unit_board(&self, dept_id: &str) -> Result<Option<UnitBoardData>> {
+    pub async fn fetch_unit_board(&self, dept_id: &str, start_date: Option<&str>, end_date: Option<&str>) -> Result<Option<UnitBoardData>> {
         let url = format!(
             "{}/track/synSonarInfoData/unit-board",
             self.base_url
         );
 
-        // 计算日期范围（从年初到现在）
-        let now = chrono::Utc::now();
-        let start_date = format!("{}-01-01 08:00:00", now.format("%Y"));
-        let end_date = now.format("%Y-%m-%d %H:%M:%S").to_string();
+        // 使用传入的日期范围，或默认从年初到现在
+        let default_start = format!("{}-01-01 08:00:00", chrono::Utc::now().format("%Y"));
+        let default_end = chrono::Utc::now().format("%Y-%m-%d %H:%M:%S").to_string();
+        let start_date = start_date.map(|s| s.to_string()).unwrap_or(default_start);
+        let end_date = end_date.map(|s| s.to_string()).unwrap_or(default_end);
 
         log::info!("Fetching unit-board: workspace={}, deptName={}, deptId={}, start={}, end={}",
             self.workspace_name, self.dept_name, dept_id, start_date, end_date);
@@ -711,14 +767,71 @@ impl WalkinClient {
             return Err(ToolsError::Http(format!("Walkin unit-board error: {}", api_response.message.unwrap_or_default())));
         }
 
-        // 返回增量覆盖率（综合覆盖率 ynewValue）最大的那条记录
+        // 返回最新的一条记录（按周期结束日期降序）
         Ok(api_response.data.and_then(|mut d| {
             d.sort_by(|a, b| {
-                let a_val = a.ynewValue.unwrap_or(0.0);
-                let b_val = b.ynewValue.unwrap_or(0.0);
-                b_val.partial_cmp(&a_val).unwrap_or(std::cmp::Ordering::Equal)
+                let a_end = a.startDateTo.as_deref().unwrap_or("");
+                let b_end = b.startDateTo.as_deref().unwrap_or("");
+                b_end.cmp(a_end)
             });
             d.into_iter().next()
         }))
+    }
+
+    /// 获取 selectUnitList 应用级覆盖率列表
+    pub async fn fetch_unit_list(
+        &self,
+        created_at_start: &str,
+        created_at_end: &str,
+        page_num: i32,
+        page_size: i32,
+    ) -> Result<Vec<UnitListItem>> {
+        let url = format!(
+            "{}/track/synSonarInfoData/selectUnitList",
+            self.base_url
+        );
+
+        log::info!("Fetching unit-list: workspace={}, deptName={}, start={}, end={}, page={}/{}",
+            self.workspace_name, self.dept_name, created_at_start, created_at_end, page_num, page_size);
+
+        let response = self.http_client
+            .get(&url)
+            .query(&[
+                ("workspaceName", &self.workspace_name),
+                ("deptName", &self.dept_name),
+                ("createdAtStart", &created_at_start.to_string()),
+                ("createdAtEnd", &created_at_end.to_string()),
+                ("pageNum", &page_num.to_string()),
+                ("pageSize", &page_size.to_string()),
+                ("queryNewFlag", &"1".to_string()),
+            ])
+            .header("CSRF-TOKEN", &self.auth.csrf_token)
+            .header("PROJECT", &self.auth.project)
+            .header("WORKSPACE", &self.auth.workspace)
+            .header("X-AUTH-TOKEN", &self.auth.x_auth_token)
+            .header("Accept", "application/json, text/plain, */*")
+            .send()
+            .await
+            .map_err(|e| ToolsError::Http(format!("Walkin unit-list request failed: {}", e)))?;
+
+        if !response.status().is_success() {
+            let status = response.status();
+            let body = response.text().await.unwrap_or_default();
+            return Err(ToolsError::Http(format!("Walkin unit-list error {}: {}", status, body)));
+        }
+
+        let body_text = response.text().await
+            .map_err(|e| ToolsError::Http(format!("Failed to read unit-list response: {}", e)))?;
+
+        log::info!("Unit-list response: {} bytes", body_text.len());
+
+        let api_response: UnitListResponse = serde_json::from_str(&body_text)
+            .map_err(|e| ToolsError::Http(format!("Failed to parse unit-list response: {} - body: {}", e, body_text)))?;
+
+        if !api_response.success {
+            return Err(ToolsError::Http(format!("Walkin unit-list error: {}", api_response.message.unwrap_or_default())));
+        }
+
+        Ok(api_response.data.and_then(|d| d.list_object).unwrap_or_default())
     }
 }

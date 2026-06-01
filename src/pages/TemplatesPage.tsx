@@ -1,12 +1,10 @@
 import { useState } from "react";
-import { Plus, FileText } from "lucide-react";
+import { Plus, Trash2, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { TemplateEditor } from "@/components/modules/reminder/TemplateEditor";
 import { TemplateList } from "@/components/modules/reminder/TemplateList";
 import { useDeleteTemplate, useTemplates } from "@/lib/query/templateQueries";
 import { useKeyboardShortcuts } from "@/lib/useKeyboardShortcuts";
-import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 
 export function TemplatesPage() {
@@ -14,8 +12,8 @@ export function TemplatesPage() {
   const deleteTemplate = useDeleteTemplate();
   const [editorOpen, setEditorOpen] = useState(false);
   const [editingTemplateId, setEditingTemplateId] = useState<string | null>(null);
-  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [templateToDelete, setTemplateToDelete] = useState<string | null>(null);
+  const [deleteStatus, setDeleteStatus] = useState<"idle" | "success" | "error">("idle");
   const { t } = useTranslation();
 
   const handleCreate = () => {
@@ -30,19 +28,26 @@ export function TemplatesPage() {
 
   const handleDelete = (id: string) => {
     setTemplateToDelete(id);
-    setDeleteConfirmOpen(true);
   };
 
   const confirmDelete = async () => {
     if (!templateToDelete) return;
     try {
       await deleteTemplate.mutateAsync(templateToDelete);
-      toast.success(t("template.deleteSuccess"));
+      setDeleteStatus("success");
+      setTimeout(() => {
+        setDeleteStatus("idle");
+        setTemplateToDelete(null);
+      }, 1500);
     } catch {
-      toast.error(t("template.deleteFailed"));
+      setDeleteStatus("error");
+      setTimeout(() => setDeleteStatus("idle"), 1500);
     }
-    setDeleteConfirmOpen(false);
+  };
+
+  const cancelDelete = () => {
     setTemplateToDelete(null);
+    setDeleteStatus("idle");
   };
 
   useKeyboardShortcuts([
@@ -67,7 +72,7 @@ export function TemplatesPage() {
 
   if (error) {
     return (
-      <div className="p-6">
+      <div className="p-5">
         <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-sm text-destructive">
           {t("template.loadError")}
         </div>
@@ -76,22 +81,14 @@ export function TemplatesPage() {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-4">
       {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 shadow-md">
-            <FileText className="h-5 w-5 text-white" />
-          </div>
-          <div>
-            <h2 className="text-xl font-semibold">{t("template.pageTitle")}</h2>
-            <p className="text-sm text-muted-foreground">
-              {t("template.pageDescription")}
-            </p>
-          </div>
-        </div>
-        <Button onClick={handleCreate} className="gap-2 shadow-sm">
-          <Plus className="h-4 w-4" />
+      <div className="mb-3 flex items-center justify-between">
+        <p className="text-xs text-muted-foreground">
+          {t("template.pageDescription")}
+        </p>
+        <Button onClick={handleCreate} size="sm" className="gap-1.5 shadow-sm h-7 text-xs">
+          <Plus className="h-3.5 w-3.5" />
           {t("template.newTemplate")}
         </Button>
       </div>
@@ -104,15 +101,19 @@ export function TemplatesPage() {
         templateId={editingTemplateId}
       />
 
-      <ConfirmDialog
-        open={deleteConfirmOpen}
-        onOpenChange={setDeleteConfirmOpen}
-        title={t("template.deleteTitle")}
-        description={t("template.deleteDescription")}
-        confirmText={t("common.delete")}
-        onConfirm={confirmDelete}
-        destructive
-      />
+      {/* Inline delete confirmation */}
+      {templateToDelete && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-card border rounded-lg px-3 py-2 shadow-lg">
+          <span className="text-xs">{t("template.deleteConfirm")}</span>
+          <Button size="sm" variant="destructive" className="h-6 text-xs gap-1" onClick={confirmDelete}>
+            {deleteStatus === "success" ? <Check className="h-3 w-3" /> : deleteStatus === "error" ? <X className="h-3 w-3" /> : <Trash2 className="h-3 w-3" />}
+            {deleteStatus === "success" ? t("template.deleteSuccess") : deleteStatus === "error" ? t("template.deleteFailed") : t("common.delete")}
+          </Button>
+          <Button size="sm" variant="outline" className="h-6 text-xs" onClick={cancelDelete}>
+            {t("common.cancel")}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

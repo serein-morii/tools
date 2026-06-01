@@ -1,18 +1,18 @@
-import { useState, useMemo, useEffect, useCallback, Fragment } from "react";
+import { useState, useMemo, useEffect, Fragment } from "react";
 import { useTranslation } from "react-i18next";
-import { RefreshCw, BarChart3, Users, GitCommit, TrendingUp, TrendingDown, MinusCircle, Inbox, GitBranch, ArrowUpDown, ArrowUp, ArrowDown, HelpCircle, ShieldAlert, Bug, Zap, Loader2, GitMerge, ExternalLink, Shield, CheckCircle2, XCircle, Clock3, AlertTriangle, Activity } from "lucide-react";
+import { RefreshCw, BarChart3, Users, GitCommit, TrendingUp, TrendingDown, MinusCircle, Inbox, GitBranch, ArrowUpDown, ArrowUp, ArrowDown, ShieldAlert, Bug, Zap, Loader2, GitMerge, ExternalLink, Shield, CheckCircle2, XCircle, Clock3, AlertTriangle, Activity, FlaskConical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useGitLabConfigured, useGitLabScanHistory, useTriggerGitLabScan, useGitLabConfig } from "@/lib/query/gitlabQueries";
 import { FirstTimeSetupModal } from "@/components/modules/gitlab/FirstTimeSetupModal";
 import { TrendChart, ContributorRanking } from "@/components/modules/gitlab/TrendChart";
 import { ScanProgressModal } from "@/components/modules/gitlab/ScanProgressModal";
-import { useWalkinAuth } from "@/components/modules/gitlab/WalkinAuthManager";
-import { gitlabApi } from "@/lib/api/gitlab";
+import { UnitBoardCard } from "@/components/modules/gitlab/UnitBoardCard";
+import { getWeekOptions, fmtDate } from "@/components/modules/gitlab/UnitCoverageList";
 import { toast } from "sonner";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { formatTimestamp, formatNumber } from "@/lib/gitlab/format";
-import type { GitLabScanHistory, GitLabProjectResult, UnitBoardData } from "@/types";
+import type { GitLabScanHistory, GitLabProjectResult } from "@/types";
 
 function TrendIndicator({ current, previous, isPercent = false }: { current: number; previous?: number; isPercent?: boolean }) {
   if (previous === undefined) return null;
@@ -42,11 +42,9 @@ function TrendIndicator({ current, previous, isPercent = false }: { current: num
 function SummaryCards({
   current,
   previous,
-  unitBoardData
 }: {
   current?: GitLabScanHistory;
   previous?: GitLabScanHistory;
-  unitBoardData?: UnitBoardData | null;
 }) {
   const { t } = useTranslation();
   const currentContributors = useMemo(
@@ -57,10 +55,6 @@ function SummaryCards({
     () => previous ? JSON.parse(previous.contributors || "[]").length : undefined,
     [previous],
   );
-
-  // Use unit board data for coverage (ynewValue = incremental, yallValue = full)
-  const currentNewCoverage = unitBoardData?.ynewValue ?? null;
-  const currentAllCoverage = unitBoardData?.yallValue ?? null;
 
   const cards = [
     {
@@ -82,38 +76,25 @@ function SummaryCards({
       previousValue: previousContributors,
     },
     {
-      icon: TrendingUp,
-      label: t("gitlab.overview.incrementalCoverage"),
-      value: currentNewCoverage != null ? `${currentNewCoverage.toFixed(2)}%` : "-",
-      tooltip: t("gitlab.overview.coverageTooltip"),
-    },
-    {
-      icon: BarChart3,
-      label: t("gitlab.overview.fullCoverage"),
-      value: currentAllCoverage != null ? `${currentAllCoverage.toFixed(2)}%` : "-",
-      tooltip: t("gitlab.overview.coverageTooltip"),
+      icon: FlaskConical,
+      label: "单测覆盖项目",
+      value: current?.test_projects ?? 0,
+      previousValue: previous?.test_projects,
     },
   ];
 
   return (
-    <div className="grid grid-cols-3 gap-4 p-6">
+    <div className="grid grid-cols-4 gap-3 p-5">
       {cards.map((card) => (
         <Card key={card.label} className="bg-card/50">
-          <CardContent className="flex items-center gap-4 p-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted">
-              <card.icon className="h-5 w-5 text-muted-foreground" />
+          <CardContent className="flex items-center gap-3 p-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted">
+              <card.icon className="h-4 w-4 text-muted-foreground" />
             </div>
-            <div className="flex-1">
-              <div className="flex items-baseline gap-2">
-                <p className="text-2xl font-bold">{card.value}</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <p className="text-sm text-muted-foreground">{card.label}</p>
-                {'tooltip' in card && card.tooltip && (
-                  <span title={card.tooltip}>
-                    <HelpCircle className="h-3.5 w-3.5 text-muted-foreground/50 cursor-help" />
-                  </span>
-                )}
+            <div className="flex-1 min-w-0">
+              <p className="text-xl font-bold">{card.value}</p>
+              <div className="flex items-center gap-1">
+                <p className="text-xs text-muted-foreground truncate">{card.label}</p>
                 <TrendIndicator
                   current={typeof card.value === 'string' ? parseFloat(card.value) || 0 : card.value}
                   previous={card.previousValue}
@@ -732,295 +713,20 @@ function ProjectTable({ projects, gitlabUrl }: { projects: GitLabProjectResult[]
   );
 }
 
-function UnitBoardCard({
-  config,
-  onDataChange
-}: {
-  config: import("@/types").GitLabConfig | undefined;
-  onDataChange?: (data: UnitBoardData | null) => void;
-}) {
-  const { t } = useTranslation();
-  const { isLoggedIn } = useWalkinAuth();
-  const [data, setData] = useState<UnitBoardData | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
-
-  // Derive all conditions separately for proper dependency tracking
-  const walkinEnabled = config?.walkin_enabled;
-  const walkinUrl = config?.walkin_url;
-  const walkinDeptId = config?.walkin_dept_id;
-  const walkinDeptName = config?.walkin_dept_name;
-  const csrfToken = config?.walkin_csrf_token;
-  const projectHeader = config?.walkin_project_header;
-  const workspaceName = config?.walkin_workspace_name;
-  const xAuthToken = config?.walkin_x_auth_token;
-  const scanSchedule = config?.scan_schedule || "0 9 * * 1";
-
-  const canFetch = walkinEnabled && walkinUrl && walkinDeptId && walkinDeptName && isLoggedIn;
-
-  // Calculate next refresh time based on cron schedule
-  const getNextRefreshTime = useCallback((cronExpr: string): Date | null => {
-    try {
-      const parts = cronExpr.trim().split(/\s+/);
-      if (parts.length !== 5) return null;
-
-      const [min, hour, _day, , weekday] = parts;
-      const now = new Date();
-
-      // Simple parsing for common patterns
-      let targetMinute = min === "*" ? now.getMinutes() : parseInt(min.replace("*/", ""));
-      let targetHour = hour === "*" ? now.getHours() : parseInt(hour.replace("*/", ""));
-
-      // Handle interval patterns (*/N)
-      if (min.startsWith("*/")) {
-        const interval = parseInt(min.replace("*/", ""));
-        targetMinute = Math.ceil(now.getMinutes() / interval) * interval;
-        if (targetMinute >= 60) {
-          targetMinute = 0;
-          targetHour = now.getHours() + 1;
-        }
-      }
-
-      if (hour.startsWith("*/")) {
-        const interval = parseInt(hour.replace("*/", ""));
-        targetHour = Math.ceil((now.getHours() + 1) / interval) * interval;
-        if (targetHour >= 24) {
-          targetHour = 0;
-          now.setDate(now.getDate() + 1);
-        }
-      }
-
-      // Calculate next occurrence
-      let nextDate = new Date(now);
-      nextDate.setHours(targetHour, targetMinute, 0, 0);
-
-      // Check weekday constraint
-      const weekdayNums: number[] = [];
-      if (weekday === "*") {
-        // Every day
-      } else if (weekday === "1-5") {
-        weekdayNums.push(1, 2, 3, 4, 5);
-      } else if (weekday.includes(",")) {
-        weekday.split(",").forEach(d => weekdayNums.push(parseInt(d)));
-      } else {
-        weekdayNums.push(parseInt(weekday));
-      }
-
-      if (weekdayNums.length > 0) {
-        // Find next valid weekday
-        let attempts = 0;
-        while (!weekdayNums.includes(nextDate.getDay()) && attempts < 7) {
-          nextDate.setDate(nextDate.getDate() + 1);
-          attempts++;
-        }
-      }
-
-      // If the time has passed today, move to next occurrence
-      if (nextDate <= now) {
-        if (weekdayNums.length > 0) {
-          nextDate.setDate(nextDate.getDate() + 1);
-          let attempts = 0;
-          while (!weekdayNums.includes(nextDate.getDay()) && attempts < 7) {
-            nextDate.setDate(nextDate.getDate() + 1);
-            attempts++;
-          }
-        } else {
-          nextDate.setDate(nextDate.getDate() + 1);
-        }
-      }
-
-      return nextDate;
-    } catch {
-      return null;
-    }
-  }, []);
-
-  const fetchData = useCallback(async () => {
-    if (!canFetch || !csrfToken || !xAuthToken || !walkinUrl || !walkinDeptId || !walkinDeptName) return;
-
-    setLoading(true);
-    setError(null);
-    try {
-      const result = await gitlabApi.walkinFetchUnitBoard(
-        walkinUrl,
-        {
-          csrf_token: csrfToken,
-          project: projectHeader || "",
-          workspace: workspaceName || "",
-          x_auth_token: xAuthToken,
-        },
-        walkinDeptId,
-        walkinDeptName,
-      );
-      setData(result);
-      setLastUpdate(new Date());
-      onDataChange?.(result);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
-      onDataChange?.(null);
-    } finally {
-      setLoading(false);
-    }
-  }, [canFetch, csrfToken, xAuthToken, walkinUrl, walkinDeptId, walkinDeptName, projectHeader, workspaceName, onDataChange]);
-
-  // Initial fetch
-  useEffect(() => {
-    if (!canFetch || !csrfToken || !xAuthToken) {
-      return;
-    }
-    fetchData();
-  }, [canFetch, csrfToken, xAuthToken, walkinUrl, walkinDeptId, walkinDeptName, projectHeader, workspaceName, isLoggedIn, fetchData]);
-
-  // Auto refresh based on cron schedule
-  useEffect(() => {
-    if (!canFetch || !csrfToken || !xAuthToken) {
-      return;
-    }
-
-    const nextRefresh = getNextRefreshTime(scanSchedule);
-    if (!nextRefresh) return;
-
-    const now = new Date();
-    const delay = nextRefresh.getTime() - now.getTime();
-
-    if (delay <= 0) return; // Already past
-
-    console.log(`Next Walkin refresh in ${Math.round(delay / 1000 / 60)} minutes at ${nextRefresh.toLocaleTimeString()}`);
-
-    const timer = setTimeout(() => {
-      fetchData();
-    }, delay);
-
-    return () => clearTimeout(timer);
-  }, [canFetch, csrfToken, xAuthToken, scanSchedule, getNextRefreshTime, fetchData]);
-
-  if (!walkinEnabled || !walkinDeptId || !walkinDeptName) return null;
-
-  // Calculate next refresh time for display
-  const nextRefreshTime = getNextRefreshTime(scanSchedule);
-
-  return (
-    <div className="p-6 pt-0">
-      <Card className="bg-card/50">
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between mb-3">
-            <h4 className="font-medium flex items-center gap-2">
-              <BarChart3 className="h-4 w-4" />
-              {t("gitlab.overview.teamCoverageBoard")}
-            </h4>
-            <div className="flex items-center gap-2">
-              {lastUpdate && (
-                <span className="text-xs text-muted-foreground">
-                  {t("gitlab.overview.updatedAt")}{lastUpdate.toLocaleTimeString()}
-                </span>
-              )}
-              {nextRefreshTime && (
-                <span className="text-xs text-muted-foreground hidden sm:inline">
-                  {t("gitlab.overview.nextRefresh")}{nextRefreshTime.toLocaleTimeString()}
-                </span>
-              )}
-              {canFetch && csrfToken && xAuthToken && (
-                <Button variant="ghost" size="sm" onClick={() => fetchData()}>
-                  <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
-                </Button>
-              )}
-            </div>
-          </div>
-          {!isLoggedIn && (
-            <p className="text-sm text-muted-foreground">{t("gitlab.overview.loginWalkinFirst")}</p>
-          )}
-          {isLoggedIn && (!walkinDeptId || !walkinDeptName) && (
-            <p className="text-sm text-muted-foreground">{t("gitlab.overview.configureDeptFirst")}</p>
-          )}
-          {loading && (
-            <div className="flex items-center gap-2 py-4">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              <span className="text-sm text-muted-foreground">{t("gitlab.overview.loading")}</span>
-            </div>
-          )}
-          {error && (
-            <p className="text-sm text-destructive">{t("gitlab.overview.loadFailed")}{error}</p>
-          )}
-          {data && !loading && (
-            <div className="space-y-3">
-              {data.xvalue && (
-                <p className="text-xs text-muted-foreground">
-                  {t("gitlab.overview.period")}{data.xvalue}
-                  {data.startDateFrom && data.startDateTo && (
-                    <span> ({data.startDateFrom} ~ {data.startDateTo})</span>
-                  )}
-                </p>
-              )}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <div className="text-xs font-medium text-muted-foreground">{t("gitlab.overview.incrementalCoverage")}</div>
-                  <div className="grid grid-cols-3 gap-2">
-                    {data.ynewValue != null && (
-                      <div className="text-center">
-                        <div className="text-lg font-bold text-primary">{data.ynewValue.toFixed(2)}%</div>
-                        <div className="text-xs text-muted-foreground">{t("gitlab.overview.overall")}</div>
-                      </div>
-                    )}
-                    {data.ynewLineValue != null && (
-                      <div className="text-center">
-                        <div className="text-lg font-bold text-primary">{data.ynewLineValue.toFixed(2)}%</div>
-                        <div className="text-xs text-muted-foreground">{t("gitlab.overview.line")}</div>
-                      </div>
-                    )}
-                    {data.ynewBranchValue != null && (
-                      <div className="text-center">
-                        <div className="text-lg font-bold text-primary">{data.ynewBranchValue.toFixed(2)}%</div>
-                        <div className="text-xs text-muted-foreground">{t("gitlab.overview.condition")}</div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <div className="text-xs font-medium text-muted-foreground">{t("gitlab.overview.fullCoverage")}</div>
-                  <div className="grid grid-cols-3 gap-2">
-                    {data.yallValue != null && (
-                      <div className="text-center">
-                        <div className="text-lg font-bold text-emerald-600">{data.yallValue.toFixed(2)}%</div>
-                        <div className="text-xs text-muted-foreground">{t("gitlab.overview.overall")}</div>
-                      </div>
-                    )}
-                    {data.yallLineValue != null && (
-                      <div className="text-center">
-                        <div className="text-lg font-bold text-emerald-600">{data.yallLineValue.toFixed(2)}%</div>
-                        <div className="text-xs text-muted-foreground">{t("gitlab.overview.line")}</div>
-                      </div>
-                    )}
-                    {data.yallBranchValue != null && (
-                      <div className="text-center">
-                        <div className="text-lg font-bold text-emerald-600">{data.yallBranchValue.toFixed(2)}%</div>
-                        <div className="text-xs text-muted-foreground">{t("gitlab.overview.condition")}</div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-          {!data && !loading && !error && isLoggedIn && (
-            <p className="text-sm text-muted-foreground">{t("common.noData")}</p>
-          )}
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
-
 export function GitLabOverviewPage() {
   const { t, i18n } = useTranslation();
   const [showSetupModal, setShowSetupModal] = useState(false);
   const [showProgressModal, setShowProgressModal] = useState(false);
   const [selectedScanIndex, setSelectedScanIndex] = useState<number>(0);
-  const [unitBoardData, setUnitBoardData] = useState<UnitBoardData | null>(null);
   const { data: isConfigured, refetch } = useGitLabConfigured();
   const { data: config } = useGitLabConfig();
   const { data: history, refetch: refetchHistory } = useGitLabScanHistory(10);
   const triggerScan = useTriggerGitLabScan();
+
+  // 代码补测周期选择
+  const weekOptions = useMemo(() => getWeekOptions(24), []);
+  const [weekIndex, setWeekIndex] = useState(0);
+  const currentWeek = weekOptions[weekIndex];
 
   // Selected scan data (defaults to latest)
   const selectedHistory = history?.[selectedScanIndex];
@@ -1040,11 +746,6 @@ export function GitLabOverviewPage() {
     }
     return latest > 0 ? latest : null;
   }, [projects]);
-
-  // Handle unit board data change
-  const handleUnitBoardDataChange = useCallback((data: UnitBoardData | null) => {
-    setUnitBoardData(data);
-  }, []);
 
   // Calculate next scan time from cron
   const getNextScanTime = () => {
@@ -1168,7 +869,19 @@ export function GitLabOverviewPage() {
       </div>
 
       {/* Summary Cards */}
-      <SummaryCards current={selectedHistory} previous={previousHistory} unitBoardData={unitBoardData} />
+      <SummaryCards current={selectedHistory} previous={previousHistory} />
+
+      {/* 代码补测模块 */}
+      <div className="px-5 py-3">
+        <UnitBoardCard
+          config={config}
+          startDate={fmtDate(currentWeek.monday)}
+          endDate={fmtDate(currentWeek.sunday)}
+          weekOptions={weekOptions}
+          weekIndex={weekIndex}
+          onWeekIndexChange={setWeekIndex}
+        />
+      </div>
 
       {/* Empty State */}
       {!selectedHistory && (
@@ -1182,16 +895,13 @@ export function GitLabOverviewPage() {
       {selectedHistory && (
         <>
           {/* Trend Charts + Developer Ranking */}
-          <div className="border-t flex items-stretch">
+          <div className="flex items-stretch mt-4">
             <TrendChart history={history || []} />
             <ContributorRanking history={history || []} />
           </div>
 
-          {/* Walkin Team Coverage Board */}
-          <UnitBoardCard config={config} onDataChange={handleUnitBoardDataChange} />
-
           {/* Project Table */}
-          <div className="border-t">
+          <div className="mt-4">
             <ProjectTable projects={projects} gitlabUrl={config?.url} />
           </div>
         </>

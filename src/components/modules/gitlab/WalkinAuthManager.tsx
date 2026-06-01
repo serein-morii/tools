@@ -61,6 +61,7 @@ export function WalkinAuthProvider({ children }: { children: ReactNode }) {
   const checkLogin = useCallback(async (): Promise<boolean> => {
     const cfg = configRef.current;
     if (!cfg?.walkin_url || !cfg?.walkin_x_auth_token) {
+      toast.error("Walkin 未配置或 Token 为空");
       return false;
     }
     try {
@@ -72,9 +73,15 @@ export function WalkinAuthProvider({ children }: { children: ReactNode }) {
       });
       setIsLoggedIn(result.logged_in);
       setUserName(result.user_name || null);
+      if (result.logged_in) {
+        toast.success(`✓ 已登录: ${result.user_name || "未知"}`);
+      } else {
+        toast.error("✗ 未登录 Walkin");
+      }
       return result.logged_in;
     } catch {
       setIsLoggedIn(false);
+      toast.error("✗ Walkin 登录检测失败");
       return false;
     }
   }, []);

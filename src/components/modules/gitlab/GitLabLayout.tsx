@@ -14,14 +14,14 @@ export function GitLabLayout() {
 
   return (
     <div className="min-h-full bg-background">
-      <div className="border-b px-6 py-4">
+      <div className="border-b px-5 py-3">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-amber-600 shadow-md">
-              <GitBranch className="h-5 w-5 text-white" />
+          <div className="flex items-center gap-2">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-orange-500 to-amber-600">
+              <GitBranch className="h-3.5 w-3.5 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-semibold tracking-tight">{t("gitlab.title", "GitLab 代码扫描")}</h1>
+              <h1 className="text-sm font-medium">{t("gitlab.title", "GitLab 代码扫描")}</h1>
               <p className="text-xs text-muted-foreground mt-0.5">{t("gitlab.description", "扫描代码提交，检测单测覆盖情况")}</p>
             </div>
           </div>

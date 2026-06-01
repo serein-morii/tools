@@ -1,22 +1,17 @@
 import { useState, useEffect, lazy } from "react";
 import { useTranslation } from "react-i18next";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useSettings, useUpdateSetting, getSettingValue } from "@/lib/query/settingsQueries";
 import { useQueryClient } from "@tanstack/react-query";
 import { open, save } from "@tauri-apps/plugin-dialog";
 import { invoke } from "@tauri-apps/api/core";
-import { Monitor, Moon, Sun, Power, EyeOff, MonitorUp, Download, Upload, Info, Palette, Bell, Database } from "lucide-react";
+import { Monitor, Moon, Sun, Power, EyeOff, MonitorUp, Download, Upload, Info, Palette, Database } from "lucide-react";
 import { ToggleRow } from "@/components/ui/toggle-row";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/theme-provider";
 
 const LanguageSettings = lazy(() => import("@/components/settings/LanguageSettings").then((m) => ({ default: m.LanguageSettings })));
-
-const DEFAULT_SNOOZE_MINUTES = "5";
-const DEFAULT_HISTORY_RETENTION_DAYS = "30";
 
 export function SettingsPage() {
   const { t, i18n } = useTranslation();
@@ -31,8 +26,6 @@ export function SettingsPage() {
   const autoLaunch = getSettingValue(settings, "auto_launch", "false") === "true";
   const silentStartup = getSettingValue(settings, "silent_startup", "false") === "true";
   const minimizeToTray = getSettingValue(settings, "minimize_to_tray", "true") === "true";
-  const snoozeMinutes = getSettingValue(settings, "snooze_minutes", DEFAULT_SNOOZE_MINUTES);
-  const historyRetentionDays = getSettingValue(settings, "history_retention_days", DEFAULT_HISTORY_RETENTION_DAYS);
 
   useEffect(() => {
     invoke<boolean>("get_auto_launch_status")
@@ -63,14 +56,6 @@ export function SettingsPage() {
 
   const saveBoolean = (key: string, value: boolean) => {
     updateSetting.mutate({ key, value: value ? "true" : "false" });
-  };
-
-  const saveNumber = (key: string, value: string, min: number, max: number) => {
-    const parsed = Number(value);
-    if (!Number.isInteger(parsed) || parsed < min || parsed > max) {
-      return;
-    }
-    updateSetting.mutate({ key, value });
   };
 
   const handleLanguageChange = (lang: "zh" | "en" | "ja" | "ko") => {
@@ -228,49 +213,6 @@ export function SettingsPage() {
               checked={minimizeToTray}
               onCheckedChange={(value) => saveBoolean("minimize_to_tray", value)}
             />
-          </CardContent>
-        </Card>
-
-        {/* Reminder Settings */}
-        <Card className="overflow-hidden">
-          <CardHeader className="bg-muted/30 border-b">
-            <div className="flex items-center gap-2">
-              <Bell className="h-4 w-4 text-blue-500" />
-              <CardTitle className="text-base">{t("settings.reminder")}</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent className="p-4 space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="snoozeMinutes">{t("settings.snoozeMinutes")}</Label>
-                <Input
-                  id="snoozeMinutes"
-                  type="number"
-                  min={1}
-                  max={1440}
-                  value={snoozeMinutes}
-                  onChange={(event) => saveNumber("snooze_minutes", event.target.value, 1, 1440)}
-                  className="w-full"
-                  disabled={updateSetting.isPending}
-                />
-                <p className="text-xs text-muted-foreground">{t("settings.snoozeMinutesHint")}</p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="historyRetentionDays">{t("settings.historyRetentionDays")}</Label>
-                <Input
-                  id="historyRetentionDays"
-                  type="number"
-                  min={1}
-                  max={3650}
-                  value={historyRetentionDays}
-                  onChange={(event) => saveNumber("history_retention_days", event.target.value, 1, 3650)}
-                  className="w-full"
-                  disabled={updateSetting.isPending}
-                />
-                <p className="text-xs text-muted-foreground">{t("settings.historyRetentionDaysHint")}</p>
-              </div>
-            </div>
           </CardContent>
         </Card>
 

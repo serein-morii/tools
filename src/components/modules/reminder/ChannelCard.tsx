@@ -66,34 +66,34 @@ export function ChannelCard({ channel, onEdit }: ChannelCardProps) {
 
   return (
     <Card className={cn("group overflow-hidden transition-all duration-200 hover:shadow-md", !channel.enabled && "opacity-60")}>
-      <div className="p-4">
-        <div className="flex items-start gap-4">
+      <div className="p-3">
+        <div className="flex items-start gap-3">
           {/* Icon */}
           <div
             className={cn(
-              "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br text-white shadow-sm",
+              "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br text-white shadow-sm",
               channelColors[channel.type] || "from-gray-500 to-gray-600"
             )}
           >
-            <Radio className="h-5 w-5" />
+            <Radio className="h-4 w-4" />
           </div>
 
           {/* Content */}
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <h3 className="font-medium text-foreground truncate">{channel.name}</h3>
+            <div className="flex items-center gap-1.5 mb-0.5">
+              <h3 className="text-sm font-medium text-foreground truncate">{channel.name}</h3>
               <Badge variant="outline" className="text-xs">
                 {channelTypeLabels[channel.type] || channel.type}
               </Badge>
             </div>
 
             {channel.description && (
-              <p className="text-sm text-muted-foreground mb-2 line-clamp-1">
+              <p className="text-xs text-muted-foreground mb-1 line-clamp-1">
                 {channel.description}
               </p>
             )}
 
-            <div className="flex items-center gap-4 text-xs text-muted-foreground">
+            <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
               <span className="flex items-center gap-1.5">
                 {testMutation.isPending ? (
                   <Zap className="h-3 w-3 animate-pulse" />
@@ -110,7 +110,7 @@ export function ChannelCard({ channel, onEdit }: ChannelCardProps) {
           </div>
 
           {/* Actions */}
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0.5">
             <Switch
               checked={channel.enabled}
               onCheckedChange={handleToggle}
@@ -122,28 +122,28 @@ export function ChannelCard({ channel, onEdit }: ChannelCardProps) {
               onClick={handleTest}
               disabled={testMutation.isPending}
               title={t("channel.testChannel")}
-              className="opacity-0 group-hover:opacity-100 transition-opacity"
+              className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
             >
-              <Zap className="h-4 w-4" />
+              <Zap className="h-3.5 w-3.5" />
             </Button>
             <Button
               variant="ghost"
               size="icon"
               onClick={() => onEdit(channel.id)}
-              className="opacity-0 group-hover:opacity-100 transition-opacity"
+              className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
             >
-              <Pencil className="h-4 w-4" />
+              <Pencil className="h-3.5 w-3.5" />
             </Button>
             <Button
               variant="ghost"
               size="icon"
               onClick={handleDelete}
               className={cn(
-                "opacity-0 group-hover:opacity-100 transition-opacity",
+                "h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity",
                 isDeleting && "opacity-100 text-destructive hover:text-destructive"
               )}
             >
-              <Trash2 className="h-4 w-4" />
+              <Trash2 className="h-3.5 w-3.5" />
             </Button>
           </div>
         </div>

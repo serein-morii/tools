@@ -21,7 +21,7 @@ export function TemplateList({ templates, onEdit, onDelete }: TemplateListProps)
   }
 
   return (
-    <div className="grid gap-3 xl:grid-cols-2">
+    <div className="grid gap-2 xl:grid-cols-2">
       {templates.map((template) => (
         <TemplateCard
           key={template.id}

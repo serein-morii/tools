@@ -32,7 +32,7 @@ export function TaskList({ tasks, onEdit, onCreate }: TaskListProps) {
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       {tasks.map((task) => (
         <TaskCard key={task.id} task={task} onEdit={onEdit} />
       ))}

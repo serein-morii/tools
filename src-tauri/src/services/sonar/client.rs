@@ -21,6 +21,29 @@ pub struct SonarReport {
 pub struct SonarFile {
     pub key: String,
     pub path: String,
+    pub name: Option<String>,
+    pub language: Option<String>,
+    // 代码行模式字段
+    pub coverage: Option<f64>,
+    #[serde(rename = "coveredLines")]
+    pub covered_lines: Option<i32>,
+    #[serde(rename = "totalLines")]
+    pub total_lines: Option<i32>,
+    #[serde(rename = "uncoveredLines")]
+    pub uncovered_lines: Option<i32>,
+    #[serde(rename = "newCoveredLines")]
+    pub new_covered_lines: Option<i32>,
+    #[serde(rename = "newLineCoverageFormatted")]
+    pub new_line_coverage_formatted: Option<String>,
+    #[serde(rename = "fullyCovered")]
+    pub fully_covered: Option<bool>,
+    // 条件模式字段
+    #[serde(rename = "coverageConditions")]
+    pub coverage_conditions: Option<f64>,
+    #[serde(rename = "totalConditions")]
+    pub total_conditions: Option<i32>,
+    #[serde(rename = "uncoveredConditions")]
+    pub uncovered_conditions: Option<i32>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -127,6 +150,7 @@ pub async fn get_file_list(
     project_key: &str,
     branch: &str,
     report_id: &str,
+    page_type: &str,
 ) -> Result<Vec<SonarFile>> {
     let client = build_client()?;
     let url = format!(
@@ -139,7 +163,7 @@ pub async fn get_file_list(
             ("key", project_key),
             ("branch", branch),
             ("reportId", report_id),
-            ("selectPageType", "代码行"),
+            ("selectPageType", page_type),
         ]),
         auth,
     )
@@ -176,6 +200,7 @@ pub async fn get_source_lines(
     project_key: &str,
     file_key: &str,
     branch: &str,
+    page_type: &str,
 ) -> Result<Vec<SonarSourceLine>> {
     let client = build_client()?;
     let url = format!(
@@ -190,7 +215,7 @@ pub async fn get_source_lines(
             ("branch", branch),
             ("page", "1"),
             ("size", "500"),
-            ("selectPageType", "代码行"),
+            ("selectPageType", page_type),
         ]),
         auth,
     )
@@ -255,7 +280,7 @@ pub fn format_file_list(files: &[(String, Vec<MergedRange>)]) -> String {
     for (path, ranges) in files {
         let line_text: Vec<String> = ranges.iter().map(|r| r.to_display()).collect();
         blocks.push_str(&format!(
-            "\n==================================================\n\n文件：\n{}\n\nSonar重点覆盖区域：\n{}\n\n",
+            "\n==================================================\n\n文件：\n{}\n\nSonar单测未覆盖区域：\n{}\n\n",
             path,
             line_text.join("、")
         ));

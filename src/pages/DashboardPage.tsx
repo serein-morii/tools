@@ -4,8 +4,9 @@ import { useTemplates } from "@/lib/query/templateQueries";
 import { useReminderHistory } from "@/lib/query/reminderQueries";
 import { useGitLabScanHistory, useGitLabConfigured, useGitLabConfig } from "@/lib/query/gitlabQueries";
 import { gitlabApi } from "@/lib/api/gitlab";
+import { getHistory as getSonarHistory } from "@/lib/sonar/history";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Bell, Radio, CheckCircle2, AlertCircle, Clock3, GitBranch, GitCommit, Users, BarChart3, TrendingUp, ChevronDown, GitMerge, Shield, Code2, Activity, RefreshCw } from "lucide-react";
+import { Bell, Radio, CheckCircle2, AlertCircle, Clock3, GitBranch, GitCommit, Users, BarChart3, TrendingUp, ChevronDown, GitMerge, Shield, Code2, Activity, RefreshCw, FlaskConical, FileCode } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { useState, useEffect, useCallback } from "react";
@@ -26,6 +27,7 @@ export function DashboardPage() {
   const [unitBoardData, setUnitBoardData] = useState<UnitBoardData | null>(null);
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [sonarHistory] = useState(getSonarHistory());
 
   const toggleSection = (key: string) => {
     setExpandedSections(prev => ({ ...prev, [key]: !prev[key] }));
@@ -125,8 +127,8 @@ export function DashboardPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted">
-            <BarChart3 className="h-5 w-5 text-muted-foreground" />
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted">
+            <BarChart3 className="h-4 w-4 text-muted-foreground" />
           </div>
           <div>
             <h2 className="text-xl font-semibold">{t("dashboard.title")}</h2>
@@ -139,17 +141,106 @@ export function DashboardPage() {
           disabled={isRefreshing}
           className="flex items-center gap-1.5 h-8 rounded-lg px-3 text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-50"
         >
-          <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
+          <RefreshCw className={`h-3 w-3 ${isRefreshing ? "animate-spin" : ""}`} />
           {t("common.refresh", "刷新")}
         </button>
       </div>
+
+      {/* Stats Overview */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="rounded-lg border bg-card p-4">
+          <div className="flex items-center gap-2 text-muted-foreground mb-1">
+            <Bell className="h-3 w-3" />
+            <span className="text-xs">{t("dashboard.activeTasks", "活跃任务")}</span>
+          </div>
+          <div className="text-2xl font-bold">{activeTasks}</div>
+          <div className="text-xs text-muted-foreground">{t("dashboard.ofTotal", "共")} {totalTasks}</div>
+        </div>
+        <div className="rounded-lg border bg-card p-4">
+          <div className="flex items-center gap-2 text-muted-foreground mb-1">
+            <Radio className="h-3 w-3" />
+            <span className="text-xs">{t("dashboard.channels", "通知渠道")}</span>
+          </div>
+          <div className="text-2xl font-bold">{activeChannels}</div>
+          <div className="text-xs text-muted-foreground">{t("dashboard.ofTotal", "共")} {totalChannels}</div>
+        </div>
+        <div className="rounded-lg border bg-card p-4">
+          <div className="flex items-center gap-2 text-muted-foreground mb-1">
+            <CheckCircle2 className="h-3 w-3" />
+            <span className="text-xs">{t("dashboard.sendSuccess", "发送成功")}</span>
+          </div>
+          <div className="text-2xl font-bold text-emerald-600">{successCount}</div>
+          <div className="text-xs text-muted-foreground">{t("dashboard.successRate", "成功率")} {successRate}%</div>
+        </div>
+        <div className="rounded-lg border bg-card p-4">
+          <div className="flex items-center gap-2 text-muted-foreground mb-1">
+            <FlaskConical className="h-3 w-3" />
+            <span className="text-xs">{t("dashboard.scanRecords", "扫描记录")}</span>
+          </div>
+          <div className="text-2xl font-bold">{sonarHistory.length}</div>
+          <div className="text-xs text-muted-foreground">{t("dashboard.totalFiles", "共")} {sonarHistory.reduce((s, r) => s + r.fileCount, 0)} {t("dashboard.files", "文件")}</div>
+        </div>
+      </div>
+
+      {/* Module: Code Coverage Test (Sonar) */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center justify-between text-base">
+            <div className="flex items-center gap-2">
+              <FlaskConical className="h-3.5 w-3.5 text-muted-foreground" />
+              {t("dashboard.codeCoverage", "代码补测")}
+            </div>
+            <Link to="/sonar" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+              {t("common.viewAll")}
+            </Link>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <MiniStat icon={BarChart3} label={t("dashboard.scanCount", "扫描次数")} value={sonarHistory.length} />
+            <MiniStat icon={FileCode} label={t("dashboard.totalFiles", "总文件数")} value={sonarHistory.reduce((s, r) => s + r.fileCount, 0)} />
+            <MiniStat
+              icon={TrendingUp}
+              label={t("dashboard.incrementalCoverage", "增量覆盖率")}
+              value={newCoverage != null ? `${newCoverage.toFixed(1)}%` : "-"}
+            />
+            <MiniStat
+              icon={GitBranch}
+              label={t("dashboard.fullCoverage", "全量覆盖率")}
+              value={allCoverage != null ? `${allCoverage.toFixed(1)}%` : "-"}
+            />
+          </div>
+
+          {/* Recent Scan History */}
+          {sonarHistory.length > 0 && (
+            <div className="border-t mt-4 pt-3">
+              <div className="text-xs text-muted-foreground mb-2">{t("dashboard.recentScans", "最近扫描")}</div>
+              <div className="space-y-2">
+                {sonarHistory.slice(0, 3).map((record) => (
+                  <div key={record.id} className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2 text-xs">
+                    <div className="flex items-center gap-2">
+                      <FileCode className="h-3 w-3 text-muted-foreground" />
+                      <span className="font-medium truncate max-w-[200px]">{record.projectKey}</span>
+                      <span className="text-muted-foreground">{record.branch}</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-muted-foreground">
+                      <span>{record.fileCount} {t("dashboard.files", "文件")}</span>
+                      <span>{new Date(record.createdAt).toLocaleDateString("zh-CN")}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Module: Reminder Tasks */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center justify-between text-base">
             <div className="flex items-center gap-2">
-              <Bell className="h-4 w-4 text-muted-foreground" />
+              <Bell className="h-3.5 w-3.5 text-muted-foreground" />
               {t("dashboard.reminderTasks")}
             </div>
             <div className="flex items-center gap-2">
@@ -213,7 +304,7 @@ export function DashboardPage() {
                   )}
                   <div className="flex items-center gap-3 text-muted-foreground">
                     <span className="flex items-center gap-1">
-                      <Clock3 className="h-3 w-3" />
+                      <Clock3 className="h-2.5 w-2.5" />
                       {task.cron_expr || "-"}
                     </span>
                     {task.last_run_at && (
@@ -237,7 +328,7 @@ export function DashboardPage() {
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center justify-between text-base">
             <div className="flex items-center gap-2">
-              <Radio className="h-4 w-4 text-muted-foreground" />
+              <Radio className="h-3.5 w-3.5 text-muted-foreground" />
               {t("dashboard.notificationChannels")}
             </div>
             <div className="flex items-center gap-2">
@@ -265,15 +356,15 @@ export function DashboardPage() {
               <div className="text-xs text-muted-foreground">{t("dashboard.pushStats")}</div>
               <div className="grid grid-cols-3 gap-2">
                 <div className="flex items-center gap-1.5 text-xs">
-                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                  <CheckCircle2 className="h-3 w-3 text-emerald-500" />
                   <span className="font-medium">{successCount}</span>
                 </div>
                 <div className="flex items-center gap-1.5 text-xs">
-                  <AlertCircle className="h-3.5 w-3.5 text-destructive" />
+                  <AlertCircle className="h-3 w-3 text-destructive" />
                   <span className="font-medium">{failedCount}</span>
                 </div>
                 <div className="flex items-center gap-1.5 text-xs">
-                  <Clock3 className="h-3.5 w-3.5 text-amber-500" />
+                  <Clock3 className="h-3 w-3 text-amber-500" />
                   <span className="font-medium">{pendingCount}</span>
                 </div>
               </div>
@@ -318,7 +409,7 @@ export function DashboardPage() {
                   </div>
                   {ch.last_test_at && (
                     <div className="flex items-center gap-2 text-muted-foreground">
-                      <Clock3 className="h-3 w-3" />
+                      <Clock3 className="h-2.5 w-2.5" />
                       {t("dashboard.lastTest")}: {new Date(ch.last_test_at).toLocaleString("zh-CN", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })}
                       {ch.last_test_result && (
                         <span className={cn(
@@ -348,7 +439,7 @@ export function DashboardPage() {
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center justify-between text-base">
               <div className="flex items-center gap-2">
-                <GitBranch className="h-4 w-4 text-muted-foreground" />
+                <GitBranch className="h-3.5 w-3.5 text-muted-foreground" />
                 {t("dashboard.gitlabCodeScan")}
               </div>
               <div className="flex items-center gap-3">
@@ -401,7 +492,7 @@ export function DashboardPage() {
                 {/* Pipeline Stats */}
                 <div>
                   <div className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1.5">
-                    <Activity className="h-3 w-3" /> {t("dashboard.pipelineStats")}
+                    <Activity className="h-2.5 w-2.5" /> {t("dashboard.pipelineStats")}
                   </div>
                   <div className="grid grid-cols-4 gap-2">
                     <div className="rounded-lg bg-muted/50 p-2 text-center">
@@ -426,7 +517,7 @@ export function DashboardPage() {
                 {/* Code Changes */}
                 <div>
                   <div className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1.5">
-                    <Code2 className="h-3 w-3" /> {t("dashboard.codeChanges")}
+                    <Code2 className="h-2.5 w-2.5" /> {t("dashboard.codeChanges")}
                   </div>
                   <div className="grid grid-cols-3 gap-2">
                     <div className="rounded-lg bg-muted/50 p-2 text-center">
@@ -460,7 +551,7 @@ export function DashboardPage() {
                     return (
                       <div>
                         <div className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1.5">
-                          <Users className="h-3 w-3" /> {t("dashboard.topContributors")}
+                          <Users className="h-2.5 w-2.5" /> {t("dashboard.topContributors")}
                         </div>
                         <div className="space-y-1.5">
                           {top3.map((dev, i) => (
@@ -475,7 +566,7 @@ export function DashboardPage() {
                                 <span className="text-destructive">-{dev.lines_removed}</span>
                                 {dev.mrs_created > 0 && (
                                   <span className="flex items-center gap-0.5">
-                                    <GitMerge className="h-3 w-3" />{dev.mrs_created}
+                                    <GitMerge className="h-2.5 w-2.5" />{dev.mrs_created}
                                   </span>
                                 )}
                               </div>
@@ -501,7 +592,7 @@ export function DashboardPage() {
                     return (
                       <div>
                         <div className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1.5">
-                          <Shield className="h-3 w-3" /> {t("dashboard.qualityRatings")}
+                          <Shield className="h-2.5 w-2.5" /> {t("dashboard.qualityRatings")}
                         </div>
                         <div className="grid grid-cols-3 gap-2">
                           <RatingCard label={t("dashboard.reliability")} value={avgReliability} />
@@ -527,8 +618,8 @@ function MiniStat({ icon: Icon, label, value }: { icon?: React.ComponentType<{ c
   return (
     <div className="flex items-center gap-2">
       {Icon && (
-        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-muted">
-          <Icon className="h-3.5 w-3.5 text-muted-foreground" />
+        <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-muted">
+          <Icon className="h-3 w-3 text-muted-foreground" />
         </div>
       )}
       <div>

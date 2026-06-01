@@ -19,6 +19,20 @@ export interface SonarReport {
 export interface SonarFile {
   key: string;
   path: string;
+  name?: string;
+  language?: string;
+  // 代码行模式字段
+  coverage?: number;
+  coveredLines?: number;
+  totalLines?: number;
+  uncoveredLines?: number;
+  newCoveredLines?: number;
+  newLineCoverageFormatted?: string;
+  fullyCovered?: boolean;
+  // 条件模式字段
+  coverageConditions?: number;
+  totalConditions?: number;
+  uncoveredConditions?: number;
 }
 
 export interface MergedRange {
@@ -52,8 +66,9 @@ export const sonarApi = {
     projectKey: string,
     branch: string,
     reportId: string,
+    selectPageType?: string,
   ): Promise<SonarFile[]> =>
-    call("sonar_get_files", { url, auth, projectKey, branch, reportId }),
+    call("sonar_get_files", { url, auth, projectKey, branch, reportId, selectPageType }),
 
   getFileCoverage: (
     url: string,
@@ -63,9 +78,10 @@ export const sonarApi = {
     fileKey: string,
     filePath: string,
     author: string,
+    selectPageType?: string,
   ): Promise<FileCoverage> =>
     call("sonar_get_file_coverage", {
-      url, auth, projectKey, branch, fileKey, filePath, author,
+      url, auth, projectKey, branch, fileKey, filePath, author, selectPageType,
     }),
 
   generatePrompt: (files: FileCoverage[], template: string): Promise<string> =>

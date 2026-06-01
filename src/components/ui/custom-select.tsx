@@ -48,11 +48,10 @@ export function CustomSelect({
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "flex items-center justify-between gap-1 rounded-md border border-input bg-background px-2 text-sm shadow-sm ring-offset-background transition-colors",
+          "flex w-full items-center justify-between gap-1 rounded-md border border-input bg-background px-2 text-sm shadow-sm ring-offset-background transition-colors",
           "hover:bg-muted/50 focus:outline-none focus:ring-1 focus:ring-ring",
           size === "sm" ? "h-7 py-0.5 text-xs" : "h-9 py-1.5",
-          isOpen && "ring-1 ring-ring bg-muted/50",
-          className
+          isOpen && "ring-1 ring-ring bg-muted/50"
         )}
       >
         <span className={cn(!selectedOption && "text-muted-foreground")}>

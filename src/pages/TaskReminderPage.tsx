@@ -1,8 +1,9 @@
 import { useMemo, useState, useEffect, useCallback } from "react";
-import { Plus, Search, Bell } from "lucide-react";
+import { Plus, Search, ListChecks, CalendarDays, Clock3, ToggleRight } from "lucide-react";
 import { TaskList } from "@/components/modules/reminder/TaskList";
 import { TaskEditor } from "@/components/modules/reminder/TaskEditor";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Kbd } from "@/components/ui/kbd";
 import { useTasks } from "@/lib/query/taskQueries";
@@ -29,6 +30,19 @@ export function TaskReminderPage() {
     () => filterTasks(tasks || [], { search, range }),
     [tasks, search, range],
   );
+
+  const stats = useMemo(() => {
+    const all = tasks || [];
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const weekStart = todayStart - now.getDay() * 86400000;
+    return {
+      total: all.length,
+      today: all.filter((t) => t.next_run_at && t.next_run_at >= todayStart && t.next_run_at < todayStart + 86400000).length,
+      week: all.filter((t) => t.next_run_at && t.next_run_at >= weekStart).length,
+      enabled: all.filter((t) => t.enabled).length,
+    };
+  }, [tasks]);
 
   const handleCreate = useCallback(() => {
     setEditingTaskId(null);
@@ -70,7 +84,7 @@ export function TaskReminderPage() {
 
   if (error) {
     return (
-      <div className="p-6">
+      <div className="p-5">
         <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-sm text-destructive">
           {t("task.loadError")}
         </div>
@@ -79,41 +93,50 @@ export function TaskReminderPage() {
   }
 
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="mb-6 flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 shadow-md">
-          <Bell className="h-5 w-5 text-white" />
-        </div>
-        <div>
-          <h2 className="text-xl font-semibold">{t("reminder.title")}</h2>
-          <p className="text-sm text-muted-foreground">
-            {t("reminder.description")}
-          </p>
-        </div>
+    <div className="p-4">
+      {/* Stats */}
+      <div className="mb-3 grid grid-cols-4 gap-2">
+        {[
+          { icon: ListChecks, label: t("task.total") || "全部任务", value: stats.total },
+          { icon: CalendarDays, label: t("task.today") || "今日", value: stats.today },
+          { icon: Clock3, label: t("task.thisWeek") || "本周", value: stats.week },
+          { icon: ToggleRight, label: t("task.enabled") || "已启用", value: stats.enabled },
+        ].map((card) => (
+          <Card key={card.label} className="bg-card/50">
+            <CardContent className="flex items-center gap-2.5 p-2.5">
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-muted">
+                <card.icon className="h-3.5 w-3.5 text-muted-foreground" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-lg font-bold">{card.value}</p>
+                <p className="text-[11px] text-muted-foreground">{card.label}</p>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       {/* Filters */}
-      <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="relative w-full lg:max-w-sm">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+      <div className="mb-3 flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+        <div className="relative w-full lg:max-w-xs">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder={t("task.searchPlaceholder")}
-            className="pl-10 h-9 bg-card"
+            className="pl-9 h-7 text-xs bg-card"
           />
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <div className="flex rounded-xl border bg-card p-1">
+          <div className="flex rounded-lg border bg-card p-0.5">
             {filterOptions.map((option) => (
               <button
                 key={option.value}
                 type="button"
                 onClick={() => setRange(option.value)}
                 className={cn(
-                  "rounded-md px-3 py-1.5 text-sm font-medium transition-all duration-200",
+                  "rounded-md px-2.5 py-1 text-xs font-medium transition-all duration-200",
                   range === option.value
                     ? "bg-primary text-primary-foreground shadow-sm"
                     : "text-muted-foreground hover:bg-accent hover:text-foreground"
@@ -123,10 +146,10 @@ export function TaskReminderPage() {
               </button>
             ))}
           </div>
-          <Button onClick={handleCreate} className="gap-2 shadow-sm">
-            <Plus className="h-4 w-4" />
+          <Button onClick={handleCreate} size="sm" className="gap-1.5 shadow-sm h-7 text-xs">
+            <Plus className="h-3.5 w-3.5" />
             {t("task.newTask")}
-            <Kbd keys={["⌘", "N"]} className="ml-1" />
+            <Kbd keys={["⌘", "N"]} className="ml-0.5" />
           </Button>
         </div>
       </div>

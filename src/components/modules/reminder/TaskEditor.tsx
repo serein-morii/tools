@@ -103,9 +103,9 @@ export function TaskEditor({ open, onOpenChange, taskId }: TaskEditorProps) {
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/50 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
-        <Dialog.Content className="fixed left-[50%] top-[50%] z-50 w-full max-w-lg max-h-[85vh] translate-x-[-50%] translate-y-[-50%] bg-background shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg border flex flex-col">
-          <div className="flex items-center justify-between p-6 pb-0">
-            <Dialog.Title className="text-lg font-semibold">
+        <Dialog.Content className="fixed left-[50%] top-[50%] z-50 w-full max-w-lg max-h-[85vh] translate-x-[-50%] translate-y-[-50%] bg-background shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 sm:rounded-lg border flex flex-col">
+          <div className="flex items-center justify-between p-4 pb-0">
+            <Dialog.Title className="text-sm font-semibold">
               {taskId ? t("task.editTask") : t("task.newTask")}
             </Dialog.Title>
             <Dialog.Close asChild>
@@ -118,9 +118,9 @@ export function TaskEditor({ open, onOpenChange, taskId }: TaskEditorProps) {
             </Dialog.Close>
           </div>
 
-          <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 pt-4 space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="template_id">{t("task.reminderTemplate")}</Label>
+          <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-4 pt-3 space-y-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="template_id" className="text-xs">{t("task.reminderTemplate")}</Label>
               <Select
                 id="template_id"
                 value={form.template_id || ""}
@@ -133,39 +133,42 @@ export function TaskEditor({ open, onOpenChange, taskId }: TaskEditorProps) {
                   </option>
                 ))}
               </Select>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-[11px] text-muted-foreground">
                 {t("task.templateHint")}
               </p>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="name">{t("task.taskName")}</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="name" className="text-xs">{t("task.taskName")}</Label>
               <Input
                 id="name"
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
                 placeholder={t("task.taskNamePlaceholder")}
+                className="h-7 text-xs"
                 required
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="description">{t("task.descriptionOptional")}</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="description" className="text-xs">{t("task.descriptionOptional")}</Label>
               <Textarea
                 id="description"
                 value={form.description || ""}
                 onChange={(e) => setForm({ ...form, description: e.target.value || undefined })}
                 placeholder={t("task.descriptionPlaceholder")}
                 rows={2}
+                className="text-xs"
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="reminder_type">{t("task.reminderType")}</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="reminder_type" className="text-xs">{t("task.reminderType")}</Label>
               <Select
                 id="reminder_type"
                 value={form.reminder_type}
                 onChange={(e) => setForm({ ...form, reminder_type: e.target.value })}
+                className="h-7 text-xs"
               >
                 <option value="simple">{t("task.simpleNotification")}</option>
                 <option value="confirm">{t("task.needConfirm")}</option>
@@ -173,8 +176,8 @@ export function TaskEditor({ open, onOpenChange, taskId }: TaskEditorProps) {
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label>{t("task.timeConfig")}</Label>
+            <div className="space-y-1.5">
+              <Label className="text-xs">{t("task.timeConfig")}</Label>
               <CronEditor
                 value={form.cron_config || ""}
                 onChange={(cronExpr, cronConfig) =>
@@ -183,13 +186,13 @@ export function TaskEditor({ open, onOpenChange, taskId }: TaskEditorProps) {
               />
             </div>
 
-            <div className="space-y-2">
-              <Label>{t("task.channels")}</Label>
-              <div className="flex flex-wrap gap-2">
+            <div className="space-y-1.5">
+              <Label className="text-xs">{t("task.channels")}</Label>
+              <div className="flex flex-wrap gap-1.5">
                 {channels?.map((channel) => (
                   <label
                     key={channel.id}
-                    className="flex items-center gap-2 px-3 py-1.5 border rounded-md cursor-pointer hover:bg-muted transition-colors"
+                    className="flex items-center gap-1.5 px-2 py-1 border rounded-md cursor-pointer hover:bg-muted transition-colors text-xs"
                   >
                     <input
                       type="checkbox"
@@ -205,25 +208,26 @@ export function TaskEditor({ open, onOpenChange, taskId }: TaskEditorProps) {
                           });
                         }
                       }}
-                      className="h-4 w-4"
+                      className="h-3.5 w-3.5"
                     />
-                    <span className="text-sm">{channel.name}</span>
+                    <span>{channel.name}</span>
                   </label>
                 ))}
                 {(!channels || channels.length === 0) && (
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-xs text-muted-foreground">
                     {t("task.noChannels")}
                   </p>
                 )}
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="priority">{t("task.priority")}</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="priority" className="text-xs">{t("task.priority")}</Label>
               <Select
                 id="priority"
                 value={form.priority?.toString() || "0"}
                 onChange={(e) => setForm({ ...form, priority: parseInt(e.target.value) })}
+                className="h-7 text-xs"
               >
                 <option value="0">{t("task.normal")}</option>
                 <option value="1">{t("task.important")}</option>
@@ -231,15 +235,17 @@ export function TaskEditor({ open, onOpenChange, taskId }: TaskEditorProps) {
               </Select>
             </div>
 
-            <div className="flex justify-end gap-2 pt-4 border-t bg-background p-6 -mx-6 -mb-6">
+            <div className="flex justify-end gap-2 pt-3 border-t bg-background p-4 -mx-4 -mb-4">
               <Button
                 type="button"
                 variant="outline"
+                size="sm"
+                className="h-7 text-xs"
                 onClick={() => onOpenChange(false)}
               >
                 {t("common.cancel")}
               </Button>
-              <Button type="submit" disabled={isPending}>
+              <Button type="submit" size="sm" className="h-7 text-xs" disabled={isPending}>
                 {isPending ? t("task.saving") : t("common.save")}
               </Button>
             </div>

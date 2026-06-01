@@ -20,7 +20,7 @@ export function ChannelList({ channels, onEdit }: ChannelListProps) {
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       {channels.map((channel) => (
         <ChannelCard key={channel.id} channel={channel} onEdit={onEdit} />
       ))}

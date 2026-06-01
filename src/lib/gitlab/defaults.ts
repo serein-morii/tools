@@ -31,6 +31,7 @@ export const defaultGitLabConfig: GitLabConfig = {
   filter_projects: ["basicdata", "lmdm", "network", "notice", "message", "scm"],
   test_keywords: ["单测", "测试", "用例", "test", "spec"],
   scan_schedule: "0 9 * * 1",
+  scan_enabled: true,
   scan_channels: [],
   scan_range_type: "week",
   scan_range_days: 7,
@@ -45,4 +46,5 @@ export const defaultGitLabConfig: GitLabConfig = {
   walkin_project_header: "",
   walkin_x_auth_token: "",
   walkin_project_mappings: [],
+  select_page_type: "代码行",
 };

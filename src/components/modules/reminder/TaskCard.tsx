@@ -3,13 +3,12 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Pencil, Trash2, Bell, BellOff, AlertCircle, Clock, Send } from "lucide-react";
+import { Pencil, Trash2, Bell, BellOff, AlertCircle, Clock, Send, Check, X } from "lucide-react";
 import { useToggleTask, useDeleteTask, useTestTask } from "@/lib/query/taskQueries";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
 import { formatCronDescription } from "@/lib/cron";
-import { toast } from "sonner";
 
 // Parse cron_config and return human-readable description
 function getCronDescription(cronConfigStr: string, t?: (key: string) => string): string {
@@ -31,6 +30,7 @@ export function TaskCard({ task, onEdit }: TaskCardProps) {
   const deleteMutation = useDeleteTask();
   const testMutation = useTestTask();
   const [isDeleting, setIsDeleting] = useState(false);
+  const [testStatus, setTestStatus] = useState<"idle" | "success" | "error">("idle");
   const { t } = useTranslation();
 
   const reminderTypeLabels: Record<string, string> = {
@@ -60,12 +60,15 @@ export function TaskCard({ task, onEdit }: TaskCardProps) {
   };
 
   const handleTest = () => {
+    setTestStatus("idle");
     testMutation.mutate(task.id, {
       onSuccess: () => {
-        toast.success(t("channel.testSuccess"));
+        setTestStatus("success");
+        setTimeout(() => setTestStatus("idle"), 2000);
       },
-      onError: (error) => {
-        toast.error(`${t("channel.testFailed")}: ${error}`);
+      onError: () => {
+        setTestStatus("error");
+        setTimeout(() => setTestStatus("idle"), 2000);
       },
     });
   };
@@ -89,44 +92,44 @@ export function TaskCard({ task, onEdit }: TaskCardProps) {
         priorityConfig[task.priority]?.bgClass
       )}
     >
-      <div className="p-4">
-        <div className="flex items-start gap-4">
+      <div className="p-3">
+        <div className="flex items-start gap-3">
           {/* Icon */}
           <div
             className={cn(
-              "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg transition-colors",
+              "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors",
               task.enabled
                 ? "bg-gradient-to-br from-violet-500 to-indigo-600 text-white shadow-sm"
                 : "bg-muted text-muted-foreground"
             )}
           >
-            {task.enabled ? <Bell className="h-5 w-5" /> : <BellOff className="h-5 w-5" />}
+            {task.enabled ? <Bell className="h-4 w-4" /> : <BellOff className="h-4 w-4" />}
           </div>
 
           {/* Content */}
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap mb-1">
-              <h3 className="font-medium text-foreground truncate">{task.name}</h3>
+            <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
+              <h3 className="text-sm font-medium text-foreground truncate">{task.name}</h3>
               {task.priority > 0 && (
-                <Badge variant="outline" className={cn("gap-1 text-xs", priorityConfig[task.priority]?.color)}>
-                  <AlertCircle className="h-3 w-3" />
+                <Badge variant="outline" className={cn("gap-0.5 text-[10px] px-1.5 py-0", priorityConfig[task.priority]?.color)}>
+                  <AlertCircle className="h-2.5 w-2.5" />
                   {priorityConfig[task.priority]?.label}
                 </Badge>
               )}
               {task.reminder_type !== "simple" && (
-                <Badge variant="secondary" className="text-xs">
+                <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
                   {reminderTypeLabels[task.reminder_type] || task.reminder_type}
                 </Badge>
               )}
             </div>
 
             {task.description && (
-              <p className="text-sm text-muted-foreground mb-2 line-clamp-1">
+              <p className="text-xs text-muted-foreground mb-1 line-clamp-1">
                 {task.description}
               </p>
             )}
 
-            <div className="flex items-center gap-4 text-xs text-muted-foreground">
+            <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
               <span className="flex items-center gap-1.5">
                 <Clock className="h-3 w-3" />
                 {getCronDescription(task.cron_config, t)}
@@ -138,17 +141,31 @@ export function TaskCard({ task, onEdit }: TaskCardProps) {
           </div>
 
           {/* Actions */}
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0.5">
             <Button
               variant="ghost"
               size="icon"
               onClick={handleTest}
               disabled={testMutation.isPending}
-              className="opacity-0 group-hover:opacity-100 transition-opacity"
+              className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
               title={t("channel.testChannel")}
             >
-              <Send className={cn("h-4 w-4", testMutation.isPending && "animate-pulse")} />
+              {testStatus === "success" ? (
+                <Check className="h-3.5 w-3.5 text-emerald-500" />
+              ) : testStatus === "error" ? (
+                <X className="h-3.5 w-3.5 text-red-500" />
+              ) : (
+                <Send className={cn("h-3.5 w-3.5", testMutation.isPending && "animate-pulse")} />
+              )}
             </Button>
+            {testStatus !== "idle" && (
+              <span className={cn(
+                "text-[10px] font-medium",
+                testStatus === "success" ? "text-emerald-600" : "text-red-600"
+              )}>
+                {testStatus === "success" ? t("channel.testSuccess") : t("channel.testFailed")}
+              </span>
+            )}
             <Switch
               checked={task.enabled}
               onCheckedChange={handleToggle}
@@ -158,20 +175,20 @@ export function TaskCard({ task, onEdit }: TaskCardProps) {
               variant="ghost"
               size="icon"
               onClick={() => onEdit(task.id)}
-              className="opacity-0 group-hover:opacity-100 transition-opacity"
+              className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
             >
-              <Pencil className="h-4 w-4" />
+              <Pencil className="h-3.5 w-3.5" />
             </Button>
             <Button
               variant="ghost"
               size="icon"
               onClick={handleDelete}
               className={cn(
-                "opacity-0 group-hover:opacity-100 transition-opacity",
+                "h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity",
                 isDeleting && "opacity-100 text-destructive hover:text-destructive"
               )}
             >
-              <Trash2 className="h-4 w-4" />
+              <Trash2 className="h-3.5 w-3.5" />
             </Button>
           </div>
         </div>

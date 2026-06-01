@@ -38,6 +38,29 @@ pub struct SonarReport {
 pub struct SonarFile {
     pub key: String,
     pub path: String,
+    pub name: Option<String>,
+    pub language: Option<String>,
+    // 代码行模式字段
+    pub coverage: Option<f64>,
+    #[serde(rename = "coveredLines")]
+    pub covered_lines: Option<i32>,
+    #[serde(rename = "totalLines")]
+    pub total_lines: Option<i32>,
+    #[serde(rename = "uncoveredLines")]
+    pub uncovered_lines: Option<i32>,
+    #[serde(rename = "newCoveredLines")]
+    pub new_covered_lines: Option<i32>,
+    #[serde(rename = "newLineCoverageFormatted")]
+    pub new_line_coverage_formatted: Option<String>,
+    #[serde(rename = "fullyCovered")]
+    pub fully_covered: Option<bool>,
+    // 条件模式字段
+    #[serde(rename = "coverageConditions")]
+    pub coverage_conditions: Option<f64>,
+    #[serde(rename = "totalConditions")]
+    pub total_conditions: Option<i32>,
+    #[serde(rename = "uncoveredConditions")]
+    pub uncovered_conditions: Option<i32>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -80,12 +103,26 @@ pub async fn sonar_get_files(
     project_key: String,
     branch: String,
     report_id: String,
+    select_page_type: Option<String>,
 ) -> Result<Vec<SonarFile>> {
     let walkin_auth = to_walkin_auth(&auth);
-    let files = sonar::get_file_list(&url, &walkin_auth, &project_key, &branch, &report_id).await?;
+    let page_type = select_page_type.as_deref().unwrap_or("代码行");
+    let files = sonar::get_file_list(&url, &walkin_auth, &project_key, &branch, &report_id, page_type).await?;
     Ok(files.into_iter().map(|f| SonarFile {
         key: f.key,
         path: f.path,
+        name: f.name,
+        language: f.language,
+        coverage: f.coverage,
+        covered_lines: f.covered_lines,
+        total_lines: f.total_lines,
+        uncovered_lines: f.uncovered_lines,
+        new_covered_lines: f.new_covered_lines,
+        new_line_coverage_formatted: f.new_line_coverage_formatted,
+        fully_covered: f.fully_covered,
+        coverage_conditions: f.coverage_conditions,
+        total_conditions: f.total_conditions,
+        uncovered_conditions: f.uncovered_conditions,
     }).collect())
 }
 
@@ -98,15 +135,23 @@ pub async fn sonar_get_file_coverage(
     file_key: String,
     file_path: String,
     author: String,
+    select_page_type: Option<String>,
 ) -> Result<FileCoverage> {
     let walkin_auth = to_walkin_auth(&auth);
-    let source = sonar::get_source_lines(&url, &walkin_auth, &project_key, &file_key, &branch).await?;
+    let page_type = select_page_type.as_deref().unwrap_or("代码行");
+    let source = sonar::get_source_lines(&url, &walkin_auth, &project_key, &file_key, &branch, page_type).await?;
 
     let target_lines: Vec<i32> = source
         .iter()
         .filter(|line| {
-            line.duplicated == Some(false)
-                && line.scm_author.as_deref() == Some(&author)
+            // 过滤掉明确标记为重复的代码行
+            if line.duplicated == Some(true) {
+                return false;
+            }
+            if author.is_empty() {
+                return true;
+            }
+            line.scm_author.as_deref() == Some(&author)
         })
         .map(|line| line.line)
         .collect();

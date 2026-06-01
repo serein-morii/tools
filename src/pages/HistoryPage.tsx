@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { AlertCircle, CheckCircle2, Clock3, Loader2, History } from "lucide-react";
+import { AlertCircle, CheckCircle2, Clock3, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ReminderActionPanel } from "@/components/modules/reminder/ReminderActionPanel";
@@ -41,7 +41,7 @@ export function HistoryPage() {
 
   if (error) {
     return (
-      <div className="p-6">
+      <div className="p-5">
         <Card className="border-destructive/50 bg-destructive/5">
           <CardContent className="pt-6 text-sm text-destructive">{t("history.loadError")}</CardContent>
         </Card>
@@ -50,22 +50,9 @@ export function HistoryPage() {
   }
 
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="mb-6 flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-md">
-          <History className="h-5 w-5 text-white" />
-        </div>
-        <div>
-          <h2 className="text-xl font-semibold">{t("history.title")}</h2>
-          <p className="text-sm text-muted-foreground">
-            {items.length === 0 ? t("history.empty") : `${items.length} ${t("history.title").toLowerCase()}`}
-          </p>
-        </div>
-      </div>
-
+    <div className="p-4">
       {/* Stats Grid */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-4 gap-2 mb-3">
         <StatCard
           title={t("history.all")}
           value={stats.total}
@@ -147,12 +134,12 @@ function StatCard({
       )}
       onClick={onClick}
     >
-      <CardContent className="py-4">
-        <div className="flex items-center gap-2 mb-1">
-          <Icon className={`h-4 w-4 ${color}`} />
-          <span className="text-sm text-muted-foreground">{title}</span>
+      <CardContent className="py-2.5 px-3">
+        <div className="flex items-center gap-1.5 mb-0.5">
+          <Icon className={`h-3.5 w-3.5 ${color}`} />
+          <span className="text-xs text-muted-foreground">{title}</span>
         </div>
-        <div className={`text-2xl font-semibold ${color}`}>{value}</div>
+        <div className={`text-xl font-semibold ${color}`}>{value}</div>
       </CardContent>
     </Card>
   );
@@ -163,23 +150,23 @@ function HistoryCard({ item }: { item: ReminderHistoryItem }) {
 
   return (
     <Card className="overflow-hidden">
-      <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-3 bg-muted/30 border-b">
+      <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2 bg-muted/30 border-b">
         <div>
-          <CardTitle className="text-base">{item.task_name}</CardTitle>
-          <div className="mt-1 text-xs text-muted-foreground">{t("history.taskId")}: {item.task_id}</div>
+          <CardTitle className="text-sm">{item.task_name}</CardTitle>
+          <div className="mt-0.5 text-[11px] text-muted-foreground">{t("history.taskId")}: {item.task_id}</div>
         </div>
         <StatusBadge status={item.status} />
       </CardHeader>
-      <CardContent className="p-4 space-y-3 text-sm">
+      <CardContent className="p-3 space-y-2 text-xs">
         <div className="grid grid-cols-2 gap-4">
           <TimeRow label={t("history.scheduledTime")} value={item.scheduled_at} />
           <TimeRow label={t("history.executedTime")} value={item.executed_at} />
         </div>
-        <div className="rounded-lg bg-muted/50 p-3 text-xs text-muted-foreground">
+        <div className="rounded-lg bg-muted/50 p-2.5 text-[11px] text-muted-foreground">
           {summarizeChannelResults(item.channel_results, t)}
         </div>
         {item.error_message && (
-          <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-xs text-destructive">
+          <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-2.5 text-[11px] text-destructive">
             <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
             <span>{item.error_message}</span>
           </div>

@@ -343,6 +343,7 @@ export interface GitLabConfig {
   filter_projects: string[];
   test_keywords: string[];
   scan_schedule: string;
+  scan_enabled: boolean;
   scan_channels: string[];
   scan_range_type: "week" | "days";
   scan_range_days?: number;
@@ -357,6 +358,7 @@ export interface GitLabConfig {
   walkin_project_header: string;
   walkin_x_auth_token: string;
   walkin_project_mappings: ProjectMapping[];
+  select_page_type?: string;
 }
 
 export interface MrDetail {
@@ -438,6 +440,39 @@ export interface UnitBoardData {
   xvalue: string | null;
   startDateFrom: string | null;
   startDateTo: string | null;
+}
+
+export interface UnitListItem {
+  id: number | null;
+  commitId: string | null;
+  projectKey: string | null;
+  projectName: string | null;
+  branch: string | null;
+  coverage: string | null;
+  newCoverage: string | null;
+  lineCoverage: string | null;
+  branchCoverage: string | null;
+  newLineCoverage: string | null;
+  newConditionCoverage: string | null;
+  bugs: number | null;
+  newBugs: number | null;
+  vulnerabilities: number | null;
+  newVulnerabilities: number | null;
+  codeSmells: number | null;
+  newCodeSmells: number | null;
+  reliabilityRating: string | null;
+  securityRating: string | null;
+  maintainabilityRating: string | null;
+  tests: number | null;
+  testErrors: number | null;
+  testFailures: number | null;
+  testSuccessDensity: number | null;
+  uncoveredLines: number | null;
+  linesToCover: number | null;
+  duplicatedLinesDensity: string | null;
+  analysisDate: number | null;
+  triggerPerson: string | null;
+  envName: string | null;
 }
 
 export interface GitLabScanResult {

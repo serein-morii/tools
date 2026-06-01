@@ -42,6 +42,12 @@ async fn run_gitlab_scheduler_cycle(db: &Arc<Database>) -> Result<()> {
         return Ok(());
     }
 
+    // Check if scheduled scan is enabled
+    if !config.scan_enabled {
+        log::debug!("GitLab scheduled scan is disabled, skipping scheduler cycle");
+        return Ok(());
+    }
+
     log::info!("GitLab scheduler cycle running, schedule: {}", config.scan_schedule);
 
     // Rust cron crate expects 7 fields: sec min hour day month weekday year
@@ -418,6 +424,7 @@ pub struct GitLabScanConfig {
     pub filter_projects: Vec<String>,
     pub test_keywords: Vec<String>,
     pub scan_schedule: String,
+    pub scan_enabled: bool,
     pub scan_channels: Vec<String>,
     pub scan_range_type: String,
     pub scan_range_days: Option<i32>,
@@ -541,6 +548,7 @@ fn get_gitlab_config_from_settings(conn: &rusqlite::Connection) -> Result<GitLab
         filter_projects: parse_json_array("gitlab_filter_projects", vec!["basicdata".to_string()]),
         test_keywords: parse_json_array("gitlab_test_keywords", vec!["单测".to_string(), "测试".to_string(), "test".to_string(), "spec".to_string()]),
         scan_schedule: get_setting("gitlab_scan_schedule", "0 9 * * 1"),
+        scan_enabled: get_setting("gitlab_scan_enabled", "true") == "true",
         scan_channels: parse_json_array("gitlab_scan_channels", vec![]),
         scan_range_type: get_setting("gitlab_scan_range_type", "week"),
         scan_range_days: get_setting("gitlab_scan_range_days", "7").parse().ok(),

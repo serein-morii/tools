@@ -6,7 +6,7 @@ use crate::database::{Database, dao::settings::SettingsDao, dao::gitlab_scan::{G
 use crate::services::gitlab::{GitLabClient, GitLabScanner, ScanConfig, ScanResult, scanner::{FilterMode, ScanRange, ScanProgress}};
 use crate::services::gitlab::client::{GitLabAuth, GitLabProject};
 use crate::services::gitlab::notifier::send_scan_notification;
-use crate::services::walkin::{WalkinClient, WalkinAuth, ProjectMapping, CaptchaData, WalkinSigninResponse, UnitBoardData, LoginStatusResult, get_captcha, ldap_signin, auto_login, AutoLoginResult, check_walkin_login};
+use crate::services::walkin::{WalkinClient, WalkinAuth, ProjectMapping, CaptchaData, WalkinSigninResponse, UnitBoardData, UnitListItem, LoginStatusResult, get_captcha, ldap_signin, auto_login, AutoLoginResult, check_walkin_login};
 use crate::error::{Result, ToolsError};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -42,6 +42,7 @@ pub struct GitLabConfig {
     pub filter_projects: Vec<String>,
     pub test_keywords: Vec<String>,
     pub scan_schedule: String,
+    pub scan_enabled: bool,
     pub scan_channels: Vec<String>,
     pub scan_range_type: String,
     pub scan_range_days: Option<i32>,
@@ -56,6 +57,7 @@ pub struct GitLabConfig {
     pub walkin_project_header: String,
     pub walkin_x_auth_token: String,
     pub walkin_project_mappings: Vec<ProjectMapping>,
+    pub select_page_type: Option<String>,
 }
 
 impl Default for GitLabConfig {
@@ -77,6 +79,7 @@ impl Default for GitLabConfig {
             filter_projects: vec!["basicdata".to_string(), "lmdm".to_string(), "network".to_string()],
             test_keywords: vec!["单测".to_string(), "测试".to_string(), "用例".to_string(), "test".to_string(), "spec".to_string()],
             scan_schedule: "0 9 * * 1".to_string(),
+            scan_enabled: true,
             scan_channels: vec![],
             scan_range_type: "week".to_string(),
             scan_range_days: Some(7),
@@ -91,6 +94,7 @@ impl Default for GitLabConfig {
             walkin_project_header: String::new(),
             walkin_x_auth_token: String::new(),
             walkin_project_mappings: vec![],
+            select_page_type: Some("代码行".to_string()),
         }
     }
 }
@@ -151,7 +155,7 @@ fn get_gitlab_config_from_settings(conn: &rusqlite::Connection) -> Result<GitLab
     };
 
     Ok(GitLabConfig {
-        url: get_setting("gitlab_url", ""),
+        url: get_setting("gitlab_url", "http://code.jms.com"),
         auth_type: get_setting("gitlab_auth_type", "token"),
         token_profiles: parse_token_profiles(),
         selected_token_ids: parse_selected_token_ids(),
@@ -164,20 +168,22 @@ fn get_gitlab_config_from_settings(conn: &rusqlite::Connection) -> Result<GitLab
         filter_projects: parse_json_array("gitlab_filter_projects", vec!["basicdata".to_string(), "lmdm".to_string()]),
         test_keywords: parse_json_array("gitlab_test_keywords", vec!["单测".to_string(), "测试".to_string(), "test".to_string(), "spec".to_string()]),
         scan_schedule: get_setting("gitlab_scan_schedule", "0 9 * * 1"),
+        scan_enabled: get_setting("gitlab_scan_enabled", "true") == "true",
         scan_channels: parse_json_array("gitlab_scan_channels", vec![]),
         scan_range_type: get_setting("gitlab_scan_range_type", "week"),
         scan_range_days: get_setting("gitlab_scan_range_days", "7").parse().ok(),
-        walkin_enabled: get_setting("walkin_enabled", "false") == "true",
-        walkin_url: get_setting("walkin_url", ""),
+        walkin_enabled: get_setting("walkin_enabled", "true") == "true",
+        walkin_url: get_setting("walkin_url", "http://walkin.jms.com"),
         walkin_username: get_setting("walkin_username", ""),
         walkin_password: get_setting("walkin_password", ""),
-        walkin_dept_name: get_setting("walkin_dept_name", ""),
-        walkin_dept_id: get_setting("walkin_dept_id", ""),
-        walkin_workspace_name: get_setting("walkin_workspace_name", ""),
+        walkin_dept_name: get_setting("walkin_dept_name", "产品架构"),
+        walkin_dept_id: get_setting("walkin_dept_id", "a0a768d7-9e8d-448c-9b79-926d84f51ea1"),
+        walkin_workspace_name: get_setting("walkin_workspace_name", "产品架构&PMO"),
         walkin_csrf_token: get_setting("walkin_csrf_token", ""),
         walkin_project_header: get_setting("walkin_project_header", ""),
         walkin_x_auth_token: get_setting("walkin_x_auth_token", ""),
         walkin_project_mappings: parse_project_mappings(),
+        select_page_type: get_setting_opt("select_page_type").or_else(|| Some("代码行".to_string())),
     })
 }
 
@@ -210,6 +216,7 @@ fn save_gitlab_config_to_settings(conn: &rusqlite::Connection, config: &GitLabCo
     SettingsDao::upsert(conn, "gitlab_filter_projects", &serde_json::to_string(&config.filter_projects).unwrap_or_else(|_| "[]".to_string()))?;
     SettingsDao::upsert(conn, "gitlab_test_keywords", &serde_json::to_string(&config.test_keywords).unwrap_or_else(|_| "[]".to_string()))?;
     SettingsDao::upsert(conn, "gitlab_scan_schedule", &config.scan_schedule)?;
+    SettingsDao::upsert(conn, "gitlab_scan_enabled", &config.scan_enabled.to_string())?;
     SettingsDao::upsert(conn, "gitlab_scan_channels", &serde_json::to_string(&config.scan_channels).unwrap_or_else(|_| "[]".to_string()))?;
     SettingsDao::upsert(conn, "gitlab_scan_range_type", &config.scan_range_type)?;
 
@@ -228,6 +235,10 @@ fn save_gitlab_config_to_settings(conn: &rusqlite::Connection, config: &GitLabCo
     SettingsDao::upsert(conn, "walkin_project_header", &config.walkin_project_header)?;
     SettingsDao::upsert(conn, "walkin_x_auth_token", &config.walkin_x_auth_token)?;
     SettingsDao::upsert(conn, "walkin_project_mappings", &serde_json::to_string(&config.walkin_project_mappings).unwrap_or_else(|_| "[]".to_string()))?;
+
+    if let Some(ref page_type) = config.select_page_type {
+        SettingsDao::upsert(conn, "select_page_type", page_type)?;
+    }
 
     Ok(())
 }
@@ -353,6 +364,7 @@ pub async fn trigger_gitlab_scan(
         "days" => ScanRange::Days(config.scan_range_days.unwrap_or(7)),
         _ => ScanRange::Week,
     };
+    log::info!("Scan config: range_type={}, range={:?}", config.scan_range_type, scan_range);
 
     let scan_config = ScanConfig {
         filter_mode,
@@ -660,6 +672,10 @@ pub async fn trigger_gitlab_scan(
         });
     }
 
+    log::info!("GitLab scan finished: type={}, projects={}, commits={}, lines=+{}/-{}, contributors={}",
+        scan_type, result.total_projects, result.total_commits,
+        result.total_lines_added, result.total_lines_removed, result.contributors.len());
+
     Ok(result)
 }
 
@@ -728,6 +744,8 @@ pub async fn walkin_fetch_unit_board(
     auth: WalkinAuthParams,
     dept_id: String,
     dept_name: String,
+    start_date: Option<String>,
+    end_date: Option<String>,
 ) -> Result<Option<UnitBoardData>> {
     let walkin_auth = WalkinAuth {
         csrf_token: auth.csrf_token,
@@ -736,7 +754,32 @@ pub async fn walkin_fetch_unit_board(
         x_auth_token: auth.x_auth_token,
     };
     let client = WalkinClient::new(&url, walkin_auth, dept_name, auth.workspace)?;
-    client.fetch_unit_board(&dept_id).await
+    client.fetch_unit_board(&dept_id, start_date.as_deref(), end_date.as_deref()).await
+}
+
+#[tauri::command]
+pub async fn walkin_fetch_unit_list(
+    url: String,
+    auth: WalkinAuthParams,
+    dept_name: String,
+    created_at_start: String,
+    created_at_end: String,
+    page_num: Option<i32>,
+    page_size: Option<i32>,
+) -> Result<Vec<UnitListItem>> {
+    let walkin_auth = WalkinAuth {
+        csrf_token: auth.csrf_token,
+        project: auth.project,
+        workspace: auth.workspace.clone(),
+        x_auth_token: auth.x_auth_token,
+    };
+    let client = WalkinClient::new(&url, walkin_auth, dept_name, auth.workspace)?;
+    client.fetch_unit_list(
+        &created_at_start,
+        &created_at_end,
+        page_num.unwrap_or(0),
+        page_size.unwrap_or(100),
+    ).await
 }
 
 #[tauri::command]

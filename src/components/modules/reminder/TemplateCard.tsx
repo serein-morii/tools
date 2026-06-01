@@ -16,60 +16,60 @@ export function TemplateCard({ template, onEdit, onDelete }: TemplateCardProps) 
 
   return (
     <Card className="group overflow-hidden transition-all duration-200 hover:shadow-md">
-      <div className="p-4">
-        <div className="flex items-start gap-4">
+      <div className="p-3">
+        <div className="flex items-start gap-3">
           {/* Icon */}
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 text-white shadow-sm">
-            <FileText className="h-5 w-5" />
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 text-white shadow-sm">
+            <FileText className="h-4 w-4" />
           </div>
 
           {/* Content */}
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <h3 className="font-medium text-foreground truncate">{template.name}</h3>
+            <div className="flex items-center gap-1.5 mb-0.5">
+              <h3 className="text-sm font-medium text-foreground truncate">{template.name}</h3>
               <Badge variant="secondary" className="text-xs">
                 {template.category}
               </Badge>
             </div>
 
             {template.description && (
-              <p className="text-sm text-muted-foreground mb-3 line-clamp-1">
+              <p className="text-xs text-muted-foreground mb-2 line-clamp-1">
                 {template.description}
               </p>
             )}
 
-            <div className="space-y-2">
-              <div className="text-xs">
+            <div className="space-y-1">
+              <div className="text-[11px]">
                 <span className="text-muted-foreground">{t("template.titleTemplate")}: </span>
-                <code className="bg-muted/50 px-1.5 py-0.5 rounded text-foreground">{template.title_template}</code>
+                <code className="bg-muted/50 px-1 py-0.5 rounded text-foreground">{template.title_template}</code>
               </div>
-              <div className="text-xs">
+              <div className="text-[11px]">
                 <span className="text-muted-foreground">{t("template.bodyTemplate")}: </span>
-                <code className="bg-muted/50 px-1.5 py-0.5 rounded text-foreground line-clamp-1">{template.body_template}</code>
+                <code className="bg-muted/50 px-1 py-0.5 rounded text-foreground line-clamp-1">{template.body_template}</code>
               </div>
-              <div className="text-xs text-muted-foreground">
+              <div className="text-[11px] text-muted-foreground">
                 {t("template.defaultCron")}: <span className="font-mono">{template.default_cron || t("template.notSet")}</span>
               </div>
             </div>
           </div>
 
           {/* Actions */}
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0.5">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => onEdit(template.id)}
-              className="opacity-0 group-hover:opacity-100 transition-opacity"
+              className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
             >
-              <Edit className="h-4 w-4" />
+              <Edit className="h-3.5 w-3.5" />
             </Button>
             <Button
               variant="ghost"
               size="icon"
               onClick={() => onDelete(template.id)}
-              className="opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive"
+              className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive"
             >
-              <Trash2 className="h-4 w-4" />
+              <Trash2 className="h-3.5 w-3.5" />
             </Button>
           </div>
         </div>

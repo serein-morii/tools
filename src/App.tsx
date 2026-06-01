@@ -11,6 +11,7 @@ const TaskReminderPage = lazy(() => import("@/pages/TaskReminderPage").then((m) 
 const TemplatesPage = lazy(() => import("@/pages/TemplatesPage").then((m) => ({ default: m.TemplatesPage })));
 const ChannelsPage = lazy(() => import("@/pages/ChannelsPage").then((m) => ({ default: m.ChannelsPage })));
 const HistoryPage = lazy(() => import("@/pages/HistoryPage").then((m) => ({ default: m.HistoryPage })));
+const ReminderSettingsPage = lazy(() => import("@/pages/ReminderSettingsPage").then((m) => ({ default: m.ReminderSettingsPage })));
 const PomodoroTimerPage = lazy(() => import("@/pages/PomodoroTimerPage").then((m) => ({ default: m.PomodoroTimerPage })));
 const QuickNotesPage = lazy(() => import("@/pages/QuickNotesPage").then((m) => ({ default: m.QuickNotesPage })));
 const SettingsPage = lazy(() => import("@/pages/SettingsPage").then((m) => ({ default: m.SettingsPage })));
@@ -39,6 +40,7 @@ function App() {
               <Route path="templates" element={<TemplatesPage />} />
               <Route path="channels" element={<ChannelsPage />} />
               <Route path="history" element={<HistoryPage />} />
+              <Route path="settings" element={<ReminderSettingsPage />} />
             </Route>
             <Route path="gitlab" element={<GitLabLayout />}>
               <Route index element={<Navigate to="/gitlab/overview" replace />} />

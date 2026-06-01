@@ -3,7 +3,7 @@ use super::client::{GitLabClient, GitLabProject, GitLabCommit};
 use crate::services::walkin::{WalkinMetrics, WalkinProjectData, ProjectMapping};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
-use chrono::Datelike;
+use chrono::{Datelike, Local, TimeZone};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ScanConfig {
@@ -261,11 +261,14 @@ impl GitLabScanner {
     {
         let scan_at = chrono::Utc::now().timestamp_millis();
         let since = self.calculate_since()?;
+        log::info!("GitLab scan started: type={}, since={}, filter_mode={:?}", scan_type, since, self.config.filter_mode);
 
         // Get all projects
         let all_projects = self.client.get_all_projects().await?;
+        log::info!("GitLab projects fetched: {} total", all_projects.len());
         let filtered_projects = self.filter_projects(all_projects);
         let total_projects = filtered_projects.len() as i32;
+        log::info!("GitLab projects after filter: {}", total_projects);
 
         let mut projects = Vec::new();
         let mut total_commits = 0i32;
@@ -294,8 +297,12 @@ impl GitLabScanner {
                 phase: Some("gitlab".to_string()),
             });
 
+            log::info!("[{}/{}] Scanning project: {}", current_idx, total_projects, project_name);
+
             match self.scan_project(&project, &since).await {
                 Ok(Some(result)) => {
+                    log::info!("  -> commits={}, lines +/-{}/{}, has_test={}, mrs={}",
+                        result.commits, result.lines_added, result.lines_removed, result.has_test, result.pending_mrs);
                     total_commits += result.commits;
                     total_lines_added += result.lines_added;
                     total_lines_removed += result.lines_removed;
@@ -356,16 +363,21 @@ impl GitLabScanner {
                     projects.push(result);
                 }
                 Ok(None) => {
-                    // No commits in this project during scan range, skip
+                    log::debug!("  -> no commits, skipped");
                 }
                 Err(e) => {
-                    log::warn!("Failed to scan project {}: {}", project.path_with_namespace, e);
+                    log::warn!("  -> scan failed: {}", e);
                 }
             }
         }
 
         let mut developer_stats: Vec<DeveloperStat> = dev_map.into_values().collect();
         developer_stats.sort_by(|a, b| b.commits.cmp(&a.commits));
+
+        log::info!("GitLab scan complete: projects={}, commits={}, lines=+{}/-{}, test_projects={}, mrs={}, pipelines={}/{}/{}, contributors={}",
+            projects.len(), total_commits, total_lines_added, total_lines_removed,
+            test_projects, pending_mrs, pipeline_total, pipeline_success, pipeline_failed,
+            all_contributors.len());
 
         Ok(ScanResult {
             scan_at,
@@ -396,19 +408,26 @@ impl GitLabScanner {
     }
 
     fn calculate_since(&self) -> Result<String> {
-        let now = chrono::Utc::now();
+        let now = chrono::Local::now();
+        log::info!("Current local time: {} ({})", now.format("%Y-%m-%d %H:%M:%S"), now.format("%Z"));
+
         let since = match &self.config.scan_range {
             ScanRange::Week => {
-                // Start of current week (Monday)
+                // Start of current week (Monday) in local time
                 let weekday = now.weekday().num_days_from_monday() as i64;
-                now - chrono::Duration::days(weekday)
+                log::info!("Week scan: weekday={} (0=Mon), subtracting {} days", weekday, weekday);
+                let start_of_week = now.date_naive() - chrono::Duration::days(weekday);
+                start_of_week.and_hms_opt(0, 0, 0).unwrap().and_local_timezone(chrono::Local).unwrap()
             }
             ScanRange::Days(days) => {
+                log::info!("Days scan: going back {} days", days);
                 now - chrono::Duration::days(*days as i64)
             }
         };
 
-        Ok(since.format("%Y-%m-%dT%H:%M:%S%.3fZ").to_string())
+        let since_str = since.format("%Y-%m-%dT%H:%M:%S%.3fZ").to_string();
+        log::info!("Calculated since: {}", since_str);
+        Ok(since_str)
     }
 
     fn filter_projects(&self, projects: Vec<GitLabProject>) -> Vec<GitLabProject> {
@@ -436,11 +455,13 @@ impl GitLabScanner {
     }
 
     async fn scan_project(&self, project: &GitLabProject, since: &str) -> Result<Option<ProjectScanResult>> {
+        log::debug!("  Fetching commits for project {} (id={}) since {}", project.path_with_namespace, project.id, since);
         let commits = self.client.get_all_commits(project.id, since).await?;
 
         if commits.is_empty() {
             return Ok(None);
         }
+        log::debug!("  Found {} commits", commits.len());
 
         // Collect contributors and per-author commit counts
         let mut contributors_set: HashSet<String> = HashSet::new();
@@ -489,9 +510,11 @@ impl GitLabScanner {
         // Get pipelines (fetch before MRs so we can match)
         let pipelines = self.client.get_project_pipelines(project.id, 20).await?;
         let latest_pipeline_status = pipelines.first().map(|p| p.status.clone());
+        log::debug!("  pipelines={}, latest_status={:?}", pipelines.len(), latest_pipeline_status);
 
         // Get pending MRs
         let mrs = self.client.get_merge_requests(project.id, "opened").await?;
+        log::debug!("  open MRs={}", mrs.len());
         let pending_mrs_count = mrs.len() as i32;
 
         // Build MR details with pipeline status matched by source branch

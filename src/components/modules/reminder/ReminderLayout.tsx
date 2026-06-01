@@ -1,7 +1,7 @@
 import { NavLink, Outlet } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
-import { Bell, FileText, Radio, History } from "lucide-react";
+import { Bell, FileText, Radio, History, Settings } from "lucide-react";
 
 export function ReminderLayout() {
   const { t } = useTranslation();
@@ -11,18 +11,19 @@ export function ReminderLayout() {
     { to: "/reminder/templates", label: t("nav.templates"), icon: FileText },
     { to: "/reminder/channels", label: t("nav.channels"), icon: Radio },
     { to: "/reminder/history", label: t("nav.history"), icon: History },
+    { to: "/reminder/settings", label: "配置", icon: Settings },
   ];
 
   return (
     <div className="min-h-full bg-background">
-      <div className="border-b px-6 py-4">
+      <div className="border-b px-5 py-3">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 shadow-md">
-              <Bell className="h-5 w-5 text-white" />
+          <div className="flex items-center gap-2">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600">
+              <Bell className="h-3.5 w-3.5 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-semibold tracking-tight">{t("reminder.title")}</h1>
+              <h1 className="text-sm font-medium">{t("reminder.title")}</h1>
               <p className="text-xs text-muted-foreground mt-0.5">{t("reminder.description")}</p>
             </div>
           </div>

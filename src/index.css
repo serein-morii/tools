@@ -165,4 +165,33 @@
       opacity: 1;
     }
   }
+
+  /* Slide up from bottom animation */
+  .slide-up-from-bottom {
+    animation: slideUpFromBottom 0.3s ease-out;
+  }
+}
+
+/* Global keyframes - outside layer for WebView compatibility */
+@keyframes slideUpFromBottom {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Sonner toast flush right */
+[data-sonner-toaster][data-position="top-right"] {
+  right: 0 !important;
+  left: auto !important;
+  transform: none !important;
+}
+
+[data-sonner-toaster] li[data-sonner-toast] {
+  margin-right: 0 !important;
+  padding-right: 0 !important;
 }

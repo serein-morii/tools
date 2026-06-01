@@ -5,6 +5,7 @@ import { ChevronDown, Search } from "lucide-react";
 export interface SelectOption {
   value: string;
   label: string;
+  description?: string;
 }
 
 export interface SearchableSelectProps {
@@ -36,7 +37,7 @@ export function SearchableSelect({
   const filtered = React.useMemo(() => {
     if (!search) return options;
     const lower = search.toLowerCase();
-    return options.filter((o) => o.label.toLowerCase().includes(lower));
+    return options.filter((o) => o.label.toLowerCase().includes(lower) || (o.description || "").toLowerCase().includes(lower));
   }, [options, search]);
 
   React.useEffect(() => {
@@ -62,9 +63,9 @@ export function SearchableSelect({
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "flex w-full items-center justify-between gap-1 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm ring-offset-background transition-colors",
+          "flex w-full items-center justify-between gap-1 rounded-md border border-input bg-background px-2 py-1 text-sm shadow-sm ring-offset-background transition-colors",
           "hover:bg-muted/50 focus:outline-none focus:ring-1 focus:ring-ring",
-          size === "sm" ? "h-9 text-xs" : "h-10",
+          size === "sm" ? "h-7 text-[11px]" : "h-9 text-xs",
           isOpen && "ring-1 ring-ring bg-muted/50"
         )}
       >
@@ -113,13 +114,17 @@ export function SearchableSelect({
                     setIsOpen(false);
                     setSearch("");
                   }}
+                  title={option.description ? `${option.label} — ${option.description}` : option.label}
                   className={cn(
-                    "flex w-full items-center rounded-sm px-2 py-1.5 text-xs transition-colors",
+                    "flex w-full flex-col items-start rounded-sm px-2 py-1.5 text-xs transition-colors",
                     "hover:bg-accent hover:text-accent-foreground",
                     option.value === value && "bg-accent/50 font-medium"
                   )}
                 >
-                  {option.label}
+                  <span className="truncate max-w-full">{option.label}</span>
+                  {option.description && (
+                    <span className="text-muted-foreground text-[11px] truncate max-w-full">{option.description}</span>
+                  )}
                 </button>
               ))
             )}
