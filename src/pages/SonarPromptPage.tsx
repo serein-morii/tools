@@ -49,7 +49,7 @@ export function SonarPromptPage() {
   const [createTimeEnd, setCreateTimeEnd] = useState(getDefaultTime);
   const [limit, setLimit] = useState(7);
   const [author, setAuthor] = useState(
-    () => localStorage.getItem("sonar_author") || "pengchenghui@jtexpress.com"
+    () => localStorage.getItem("sonar_author") || ""
   );
 
   const { data: gitlabBranches } = useGitLabBranches(selectedProjectId);
@@ -442,7 +442,7 @@ export function SonarPromptPage() {
             {step === "config" && (
               <Card>
                 <CardContent className="p-5 space-y-4">
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-4 gap-3">
                     <div className="space-y-1.5">
                       <Label className="text-xs">扫描项目 *</Label>
                       <SearchableSelect
@@ -453,7 +453,7 @@ export function SonarPromptPage() {
                         emptyMessage="无匹配项目"
                       />
                     </div>
-                    <div className="space-y-1.5 col-span-2">
+                    <div className="space-y-1.5">
                       <Label className="text-xs">分支</Label>
                       <SearchableSelect
                         value={branch}
@@ -480,17 +480,17 @@ export function SonarPromptPage() {
                         onChange={(e) => setLimit(parseInt(e.target.value) || 7)}
                       />
                     </div>
-                    <div className="space-y-1.5 flex items-end">
-                      <Button
-                        variant={showAdvanced ? "secondary" : "ghost"}
-                        size="sm"
-                        className="h-9 text-xs gap-1.5"
-                        onClick={() => setShowAdvanced(!showAdvanced)}
-                      >
-                        <SlidersHorizontal className="h-3.5 w-3.5" />
-                        高级
-                      </Button>
-                    </div>
+                  </div>
+                  <div className="flex gap-3">
+                    <Button
+                      variant={showAdvanced ? "secondary" : "ghost"}
+                      size="sm"
+                      className="h-9 text-xs gap-1.5"
+                      onClick={() => setShowAdvanced(!showAdvanced)}
+                    >
+                      <SlidersHorizontal className="h-3.5 w-3.5" />
+                      高级
+                    </Button>
                   </div>
 
                   {showAdvanced && (
