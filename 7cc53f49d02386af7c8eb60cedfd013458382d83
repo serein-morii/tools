@@ -1,0 +1,21 @@
+src/pages/GitLabOverviewPage.tsx
+  s_3fa5cef6ec2946::t_90164ccbf9bb1e 2,23-57,59-102,113-126,135-196,199-200,205-213,237,242-282,285,304,308-310,377,390-397,403
+src/components/modules/gitlab/TrendChart.tsx
+  s_3fa5cef6ec2946::t_740c35b5ac8fc6 116-122,137-138,140-145,150,167,176-183,191-196
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "7cc53f49d02386af7c8eb60cedfd013458382d83",
+  "prompts": {},
+  "sessions": {
+    "s_3fa5cef6ec2946": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3186f0ff-6f40-4f0b-9cb6-c68899340ddc",
+        "model": "astron-code-latest"
+      },
+      "human_author": "pengchenghui <pengchenghui@jtexpress.com>"
+    }
+  }
+}

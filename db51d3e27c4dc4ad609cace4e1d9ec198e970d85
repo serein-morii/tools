@@ -1,0 +1,32 @@
+src-tauri/src/database/dao/gitlab_scan.rs
+  s_3fa5cef6ec2946::t_e885d85e92ad4f 1-161,163-169,171-172
+  s_3fa5cef6ec2946::t_17263539dbd112 170
+  s_3fa5cef6ec2946::t_9cd356bfa5615a 162
+src-tauri/src/services/gitlab/mod.rs
+  s_3fa5cef6ec2946::t_fec47b7b0925b6 1-2
+  s_3fa5cef6ec2946::t_f36d0abacadee1 3-4
+  s_3fa5cef6ec2946::t_ef24af5a5c08ae 5
+src-tauri/src/database/dao/mod.rs
+  s_3fa5cef6ec2946::t_da029609d537ec 8
+  s_3fa5cef6ec2946::t_3c0f4cc748ce4f 12
+src-tauri/src/services/scheduler/gitlab_scheduler.rs
+  s_3fa5cef6ec2946::t_83d463bd3ca225 1-43,45-268,270-348
+  s_3fa5cef6ec2946::t_a5c97b0ca19dce 44
+  s_3fa5cef6ec2946::t_3081e3b1e5eeeb 269
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "db51d3e27c4dc4ad609cace4e1d9ec198e970d85",
+  "prompts": {},
+  "sessions": {
+    "s_3fa5cef6ec2946": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3186f0ff-6f40-4f0b-9cb6-c68899340ddc",
+        "model": "astron-code-latest"
+      },
+      "human_author": "pengchenghui <pengchenghui@jtexpress.com>"
+    }
+  }
+}

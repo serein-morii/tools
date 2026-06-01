@@ -1,0 +1,24 @@
+src-tauri/src/services/gitlab/scanner.rs
+  s_3fa5cef6ec2946::t_421a93054a64d2 130-132,142-143,145,164-165
+src-tauri/src/commands/gitlab.rs
+  s_3fa5cef6ec2946::t_cd4d9f2c6fd77a 265-268,270-297,300-302,305-315
+src-tauri/src/services/walkin/client.rs
+  s_3fa5cef6ec2946::t_4d37659d1e8cea 543-544,591,606-610,670-672,698-704
+  s_3fa5cef6ec2946::t_66b57f02ced592 673
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "f23ad487ec62c8befa13a54e3a27f33ee2a9a674",
+  "prompts": {},
+  "sessions": {
+    "s_3fa5cef6ec2946": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3186f0ff-6f40-4f0b-9cb6-c68899340ddc",
+        "model": "astron-code-latest"
+      },
+      "human_author": null
+    }
+  }
+}

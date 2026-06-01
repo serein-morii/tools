@@ -1,0 +1,32 @@
+docs/superpowers/specs/2025-05-27-gitlab-scan-feature-design.md
+  s_3fa5cef6ec2946::t_c1160f72c38298 1-494
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "dc8c6db48bb596717d6cd66ed09cfdbbfae4865e",
+  "prompts": {
+    "3fa5cef6ec2946fa": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3186f0ff-6f40-4f0b-9cb6-c68899340ddc",
+        "model": "mimo-v2.5-pro"
+      },
+      "human_author": "pengchenghui <pengchenghui@jtexpress.com>",
+      "total_additions": 3,
+      "total_deletions": 43,
+      "accepted_lines": 428,
+      "overriden_lines": 0
+    }
+  },
+  "sessions": {
+    "s_3fa5cef6ec2946": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3186f0ff-6f40-4f0b-9cb6-c68899340ddc",
+        "model": "astron-code-latest"
+      },
+      "human_author": "pengchenghui <pengchenghui@jtexpress.com>"
+    }
+  }
+}

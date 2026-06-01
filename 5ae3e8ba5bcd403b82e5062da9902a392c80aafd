@@ -1,0 +1,19 @@
+src/pages/SonarPromptPage.tsx
+  s_10b01522c7aa66::t_057bf057ded5e5 416,426
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "5ae3e8ba5bcd403b82e5062da9902a392c80aafd",
+  "prompts": {},
+  "sessions": {
+    "s_10b01522c7aa66": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "17223fd4-466e-4ded-bf27-ae020f2af767",
+        "model": "mimo-v2.5-pro"
+      },
+      "human_author": "pengchenghui <pengchenghui@jtexpress.com>"
+    }
+  }
+}

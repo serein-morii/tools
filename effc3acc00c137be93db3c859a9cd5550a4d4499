@@ -1,0 +1,114 @@
+src/pages/GitLabSettingsPage.tsx
+  s_10b01522c7aa66::t_1097844b3bfb13 290
+  s_10b01522c7aa66::t_e698c948eb35ee 972
+src-tauri/src/services/notifier/dingtalk.rs
+  s_10b01522c7aa66::t_1ede616cd8205b 31-33,40,42
+src-tauri/src/database/mod.rs
+  s_10b01522c7aa66::t_5da7b63e45e7da 6
+src/lib/api/gitlab.ts
+  s_10b01522c7aa66::t_5f0bb5258f6781 4-10,14-15
+  s_10b01522c7aa66::t_c966b2799cb500 16-17
+src-tauri/src/lib.rs
+  s_10b01522c7aa66::t_0186640954e059 7
+  s_10b01522c7aa66::t_b607401fe4d5e8 27-29
+  s_10b01522c7aa66::t_2d753d06d59570 104
+  s_10b01522c7aa66::t_e23866f5434131 105
+src-tauri/src/commands/sonar.rs
+  s_10b01522c7aa66::t_488d7b66c911e8 6-22
+src-tauri/src/services/scheduler/scheduler.rs
+  s_10b01522c7aa66::t_d4b2ca8a0a5e6c 587-588,594
+src/components/modules/reminder/TemplateEditor.tsx
+  s_10b01522c7aa66::t_e3829a418f98a9 151,156-158
+  s_10b01522c7aa66::t_6b9bfa53bd9c15 155
+vite.config.ts
+  s_10b01522c7aa66::t_785c366710e998 16
+src-tauri/tauri.conf.json
+  s_10b01522c7aa66::t_137028a39172b3 8
+src-tauri/src/services/sonar/mod.rs
+  s_10b01522c7aa66::t_eea8b856c729b3 4
+src/components/modules/gitlab/WalkinAuthManager.tsx
+  s_10b01522c7aa66::t_e846157dcc4462 41
+  s_10b01522c7aa66::t_e4dfb753712d97 201
+  s_10b01522c7aa66::t_86e55571431c25 216-232
+src/i18n/locales/zh.json
+  s_10b01522c7aa66::t_2defbb1ee43f19 203-204,206-208
+  s_10b01522c7aa66::t_cbcca702f28a8a 205
+  s_10b01522c7aa66::t_4d6c7c127d2cd6 200-202
+src/i18n/locales/en.json
+  s_10b01522c7aa66::t_8614a2f6b8b068 199-202
+  s_10b01522c7aa66::t_54492e5e6b279f 203-206
+src/pages/SonarPromptPage.tsx
+  s_10b01522c7aa66::t_83bdca0338f0f7 390-391
+  s_10b01522c7aa66::t_12d5f3b6cbddc5 14
+  s_10b01522c7aa66::t_b67fa86f6d6d5c 85,91-109
+  s_10b01522c7aa66::t_cfbfa65767046f 276-332
+  s_10b01522c7aa66::t_9c92cba0818a94 646-651
+  s_10b01522c7aa66::t_5a0f0589883e6f 83-84,86-88
+  s_10b01522c7aa66::t_7e9beeb7021a2f 386-387,413-420
+  s_10b01522c7aa66::t_8f472b6ef71c9f 5,16-17,19-20
+  s_10b01522c7aa66::t_4c38fbb9f2fb46 551-643
+  s_10b01522c7aa66::t_36b9d49d647256 18
+  s_10b01522c7aa66::t_89041ebfa2442c 35-49
+  s_10b01522c7aa66::t_467d330014b635 546-550
+  s_10b01522c7aa66::t_4b22bdd9a7bf02 410
+  s_10b01522c7aa66::t_c9480395c96526 4,21
+  s_10b01522c7aa66::t_fd0478f5e7ba88 201
+  s_10b01522c7aa66::t_4007a90b451ac3 52-61
+  s_10b01522c7aa66::t_8efc7c460a683f 716-725
+  s_10b01522c7aa66::t_1d0c143d4862d2 32
+  s_10b01522c7aa66::t_9df9856da925a9 694-695
+  s_10b01522c7aa66::t_6873776dd0e51a 147-151
+  s_10b01522c7aa66::t_193a3114846433 351-378
+src-tauri/src/services/gitlab/notifier.rs
+  s_10b01522c7aa66::t_bc54c802d3c43c 175
+  s_10b01522c7aa66::t_0ce6f1f01d95f7 183-185,190
+src-tauri/src/database/schema.rs
+  s_10b01522c7aa66::t_bd9f1f747f1c2e 221
+  s_10b01522c7aa66::t_88f2a9baa4ccd5 182-187
+  s_10b01522c7aa66::t_6e639525448882 164-165,168,170,174,254-257
+  s_10b01522c7aa66::t_5a4ece7343b1ca 163,167,169
+  s_10b01522c7aa66::t_5fc9aab8357b0a 188
+  s_10b01522c7aa66::t_c9bdd7fa87bb07 172-173,228-253
+  s_10b01522c7aa66::t_98e4dd2401eee6 176-181,190,214,219,223-224,226
+  s_10b01522c7aa66::t_b60b866e058c03 2-3
+  s_10b01522c7aa66::t_ceded5f1c2b503 191-192,194-196,203-213,215-218,225
+  s_10b01522c7aa66::t_fcf7a931b135cb 193,197-202
+src/lib/sonar/templates.ts
+  s_10b01522c7aa66::t_24a9d3dd6c8a56 1-102
+src-tauri/src/commands/gitlab.rs
+  s_10b01522c7aa66::t_2186a9fe179c6f 816-867
+  s_10b01522c7aa66::t_1af2ec38d29f2b 759-774,776-777,781-783,787
+  s_10b01522c7aa66::t_cff70847a714ba 758,775,778-780,784-786,789,792-814
+  s_10b01522c7aa66::t_9cfe5a7f30379b 755-756,790-791,815
+  s_10b01522c7aa66::t_61d03f8b07906f 757
+  s_10b01522c7aa66::t_203ee74984f962 7
+  s_10b01522c7aa66::t_ab31042d9f3606 788
+src-tauri/src/services/gitlab/mod.rs
+  s_10b01522c7aa66::t_55689c449280c6 5
+src-tauri/src/services/gitlab/client.rs
+  s_10b01522c7aa66::t_2a6f3171ac7ed1 246,266,282,284-285
+  s_10b01522c7aa66::t_199d7a083880ff 247-265,267-281,283
+src/lib/query/gitlabQueries.ts
+  s_10b01522c7aa66::t_6466ff62c83df7 34-42
+  s_10b01522c7aa66::t_92788e68841d6e 9
+  s_10b01522c7aa66::t_cffc3515ea4c8c 26-33
+src/components/ui/searchable-select.tsx
+  s_10b01522c7aa66::t_ed23c7e7fe1a58 85
+  s_10b01522c7aa66::t_3f4ea9455b67d0 60-67
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "effc3acc00c137be93db3c859a9cd5550a4d4499",
+  "prompts": {},
+  "sessions": {
+    "s_10b01522c7aa66": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "17223fd4-466e-4ded-bf27-ae020f2af767",
+        "model": "mimo-v2.5-pro"
+      },
+      "human_author": "pengchenghui <pengchenghui@jtexpress.com>"
+    }
+  }
+}
