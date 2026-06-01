@@ -643,6 +643,8 @@ export function SonarPromptPage() {
         <div className="flex items-center gap-2">
           <FlaskConical className="h-4 w-4 text-primary" />
           <h1 className="text-sm font-semibold tracking-tight">单测</h1>
+          <span className="text-muted-foreground/60">·</span>
+          <span className="text-xs text-muted-foreground">Sonar 覆盖率 → Prompt 生成</span>
         </div>
         <div className="inline-flex h-8 items-center rounded-lg border border-border p-0.5 text-xs">
           {tabs.map((tab) => (
