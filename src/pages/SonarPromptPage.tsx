@@ -2,7 +2,7 @@ import { useState, useCallback, useMemo } from "react";
 import {
   Search, FileCode, Copy, Download, Loader2, ChevronRight, ChevronLeft, Check,
   Trash2, RotateCcw, ClipboardCopy, History, Sparkles, Clock,
-  Plus, Star, Pencil, AlertCircle, Zap, FileText, BarChart3,
+  Plus, Star, Pencil, AlertCircle, Zap, FileText, BarChart3, SlidersHorizontal,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -52,6 +52,9 @@ export function SonarPromptPage() {
   );
 
   const { data: gitlabBranches } = useGitLabBranches(selectedProjectId);
+
+  // --- 高级选项 ---
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   // --- 模板 ---
   const [templates, setTemplates] = useState<SonarTemplate[]>(getTemplates);
@@ -447,15 +450,32 @@ export function SonarPromptPage() {
                         onChange={(e) => setLimit(parseInt(e.target.value) || 7)}
                       />
                     </div>
-                    <div className="space-y-1.5">
-                      <Label className="text-xs">开发者邮箱</Label>
-                      <Input
-                        className="h-9 text-xs"
-                        value={author}
-                        onChange={(e) => setAuthor(e.target.value)}
-                      />
+                    <div className="space-y-1.5 flex items-end">
+                      <Button
+                        variant={showAdvanced ? "secondary" : "ghost"}
+                        size="sm"
+                        className="h-9 text-xs gap-1.5"
+                        onClick={() => setShowAdvanced(!showAdvanced)}
+                      >
+                        <SlidersHorizontal className="h-3.5 w-3.5" />
+                        高级
+                      </Button>
                     </div>
                   </div>
+
+                  {showAdvanced && (
+                    <div className="grid grid-cols-3 gap-3">
+                      <div className="space-y-1.5">
+                        <Label className="text-xs">开发者邮箱</Label>
+                        <Input
+                          className="h-9 text-xs"
+                          value={author}
+                          onChange={(e) => setAuthor(e.target.value)}
+                          placeholder="留空则不过滤"
+                        />
+                      </div>
+                    </div>
+                  )}
 
                   {/* 当前配置摘要 */}
                   {selectedProjectId && (
