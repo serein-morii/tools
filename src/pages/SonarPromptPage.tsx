@@ -1469,10 +1469,10 @@ export function SonarPromptPage() {
 
         {/* ===== Tab 5: 配置 ===== */}
         {activeTab === "settings" && (
-          <div className="mx-auto max-w-3xl space-y-4 px-6 py-6">
-            <Card>
-              <CardContent className="p-4 space-y-4">
-                <div className="flex items-center gap-2 mb-2">
+          <div className="p-4 max-w-2xl">
+            <Card className="mb-3">
+              <CardContent className="p-3 space-y-2">
+                <div className="flex items-center gap-1.5 mb-1">
                   <Shield className="h-4 w-4" />
                   <span className="text-sm font-medium">Walkin 代码质量集成</span>
                 </div>
