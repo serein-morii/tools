@@ -182,12 +182,10 @@ pub async fn get_source_lines(
         base_url.trim_end_matches('/')
     );
 
-    let encoded_key = urlencoding::encode(file_key);
-
     let resp = apply_auth(
         client.get(&url).query(&[
             ("projectKey", project_key),
-            ("key", &encoded_key.to_string()),
+            ("key", file_key),
             ("branch", branch),
             ("page", "1"),
             ("size", "5000"),
