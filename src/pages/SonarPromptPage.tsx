@@ -3,6 +3,7 @@ import {
   Search, FileCode, Copy, Download, Loader2, ChevronRight, ChevronLeft, Check,
   Trash2, RotateCcw, ClipboardCopy, History, Sparkles, Clock,
   Plus, Star, Pencil, AlertCircle, Zap, FileText, BarChart3, SlidersHorizontal,
+  CheckSquare, Square,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -73,6 +74,7 @@ export function SonarPromptPage() {
   const [reports, setReports] = useState<SonarReport[]>([]);
   const [selectedReport, setSelectedReport] = useState<SonarReport | null>(null);
   const [fileCoverages, setFileCoverages] = useState<FileCoverage[]>([]);
+  const [selectedFileIndices, setSelectedFileIndices] = useState<Set<number>>(new Set());
   const [prompt, setPrompt] = useState("");
   const [loading, setLoading] = useState(false);
   const [processing, setProcessing] = useState(false);
@@ -200,9 +202,11 @@ export function SonarPromptPage() {
       }
 
       setFileCoverages(coverages);
+      setSelectedFileIndices(new Set(coverages.map((_, i) => i)));
 
       if (coverages.length > 0) {
-        const generated = await sonarApi.generatePrompt(coverages, activeTemplate?.content || "");
+        const selectedCoverages = coverages;
+        const generated = await sonarApi.generatePrompt(selectedCoverages, activeTemplate?.content || "");
         setPrompt(generated);
         const record = saveRecord({
           projectKey,
@@ -246,8 +250,34 @@ export function SonarPromptPage() {
     setReports([]);
     setSelectedReport(null);
     setFileCoverages([]);
+    setSelectedFileIndices(new Set());
     setPrompt("");
   };
+
+  const toggleFileSelection = (index: number) => {
+    setSelectedFileIndices(prev => {
+      const next = new Set(prev);
+      if (next.has(index)) next.delete(index); else next.add(index);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    setSelectedFileIndices(prev => {
+      if (prev.size === fileCoverages.length) return new Set();
+      return new Set(fileCoverages.map((_, i) => i));
+    });
+  };
+
+  const regeneratePrompt = useCallback(async () => {
+    const selected = fileCoverages.filter((_, i) => selectedFileIndices.has(i));
+    if (selected.length === 0) {
+      setPrompt("没有选中任何文件。");
+      return;
+    }
+    const generated = await sonarApi.generatePrompt(selected, activeTemplate?.content || "");
+    setPrompt(generated);
+  }, [fileCoverages, selectedFileIndices, activeTemplate]);
 
   // --- 历史操作 ---
   const handleLoadFromHistory = (record: SonarScanRecord) => {
@@ -621,16 +651,29 @@ export function SonarPromptPage() {
                   <Card>
                     <CardContent className="p-0">
                       <div className="flex items-center gap-2 border-b px-4 py-2.5">
-                        <Check className="h-4 w-4 text-emerald-500" />
+                        <button onClick={toggleSelectAll} className="flex items-center gap-2 hover:opacity-80">
+                          {selectedFileIndices.size === fileCoverages.length
+                            ? <CheckSquare className="h-4 w-4 text-emerald-500" />
+                            : selectedFileIndices.size > 0
+                              ? <CheckSquare className="h-4 w-4 text-emerald-500/50" />
+                              : <Square className="h-4 w-4 text-muted-foreground" />}
+                        </button>
                         <span className="text-sm font-medium">覆盖区域</span>
                         <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-600">
-                          {fileCoverages.length} 个文件
+                          {selectedFileIndices.size}/{fileCoverages.length} 个文件
                         </span>
+                        {selectedFileIndices.size !== fileCoverages.length && selectedFileIndices.size > 0 && (
+                          <Button variant="ghost" size="sm" className="ml-auto h-6 text-xs" onClick={regeneratePrompt}>
+                            重新生成
+                          </Button>
+                        )}
                       </div>
                       <div className="divide-y max-h-[200px] overflow-auto">
                         {fileCoverages.map((fc, i) => (
-                          <div key={i} className="flex items-start gap-3 px-4 py-2">
-                            <FileCode className="h-3.5 w-3.5 mt-0.5 shrink-0 text-muted-foreground" />
+                          <div key={i} className={`flex items-start gap-3 px-4 py-2 cursor-pointer hover:bg-muted/30 ${!selectedFileIndices.has(i) ? "opacity-50" : ""}`} onClick={() => toggleFileSelection(i)}>
+                            {selectedFileIndices.has(i)
+                              ? <CheckSquare className="h-3.5 w-3.5 mt-0.5 shrink-0 text-emerald-500" />
+                              : <Square className="h-3.5 w-3.5 mt-0.5 shrink-0 text-muted-foreground" />}
                             <div className="min-w-0 flex-1">
                               <p className="text-xs font-mono truncate">{fc.path}</p>
                               <p className="text-[11px] text-muted-foreground mt-0.5">
