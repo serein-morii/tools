@@ -17,6 +17,7 @@ const SettingsPage = lazy(() => import("@/pages/SettingsPage").then((m) => ({ de
 const GitLabOverviewPage = lazy(() => import("@/pages/GitLabOverviewPage").then((m) => ({ default: m.GitLabOverviewPage })));
 const GitLabHistoryPage = lazy(() => import("@/pages/GitLabHistoryPage").then((m) => ({ default: m.GitLabHistoryPage })));
 const GitLabSettingsPage = lazy(() => import("@/pages/GitLabSettingsPage").then((m) => ({ default: m.GitLabSettingsPage })));
+const SonarPromptPage = lazy(() => import("@/pages/SonarPromptPage").then((m) => ({ default: m.SonarPromptPage })));
 
 function App() {
   return (
@@ -46,6 +47,7 @@ function App() {
               <Route path="settings" element={<GitLabSettingsPage />} />
             </Route>
             <Route path="timer" element={<PomodoroTimerPage />} />
+            <Route path="sonar" element={<SonarPromptPage />} />
             <Route path="notes" element={<QuickNotesPage />} />
             <Route path="settings" element={<SettingsPage />} />
           </Route>

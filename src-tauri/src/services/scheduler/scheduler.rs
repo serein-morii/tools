@@ -584,11 +584,14 @@ fn render_template(template: &str, task: &Task) -> String {
     let days_in_month = get_days_in_month(now.year(), now.month());
     let days_remaining = days_in_month - day_of_month;
 
+    let weekday_num = now.weekday().num_days_from_monday() + 1;
+
     let mut result = template.to_string();
     result = result.replace("{task_name}", &task.name);
     result = result.replace("{date}", &date);
     result = result.replace("{time}", &time);
     result = result.replace("{weekday}", weekday);
+    result = result.replace("{weekday_num}", &weekday_num.to_string());
     result = result.replace("{week_of_month}", &week_of_month.to_string());
     result = result.replace("{day_of_month}", &day_of_month.to_string());
     result = result.replace("{days_remaining}", &days_remaining.to_string());

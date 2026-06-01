@@ -61,7 +61,8 @@
     "timer": "计时",
     "notes": "笔记",
     "home": "概览",
-    "gitlab": "代码扫描"
+    "gitlab": "代码扫描",
+    "sonar": "代码补测"
   },
   "dashboard": {
     "title": "概览",
@@ -196,9 +197,15 @@
     "notSet": "未设置",
     "variables": "可用变量",
     "varTaskName": "任务名称",
-    "varDate": "日期",
-    "varTime": "时间",
-    "varWeekday": "星期",
+    "varDescription": "任务描述",
+    "varDate": "日期（2026年01月13日）",
+    "varTime": "时间（14:30）",
+    "varWeekday": "星期中文（星期一）",
+    "varWeekdayNum": "星期数字（1）",
+    "varMonthWeek": "智能日期（本月第3周的星期1/本月第1天/本月倒数第3天）",
+    "varWeekOfMonth": "月内第几周（3）",
+    "varDayOfMonth": "月内第几天（13）",
+    "varDaysRemaining": "月内剩余天数（18）",
     "description": "描述",
     "emptyList": "暂无提醒模板",
     "emptyHint": "点击右上角「新建模板」创建第一个模板",

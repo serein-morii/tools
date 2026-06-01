@@ -4,7 +4,7 @@ mod error;
 mod services;
 
 use std::sync::{Arc, Mutex};
-use database::{Database, init_schema};
+use database::{Database, init_schema, migrate_default_templates};
 use services::scheduler::{start_scheduler, start_gitlab_scheduler};
 use tauri::Manager;
 use tauri::Emitter;
@@ -23,6 +23,9 @@ pub fn run() {
             let conn = db.conn().lock().unwrap();
             if let Err(e) = init_schema(&conn) {
                 log::error!("Failed to initialize database schema: {}", e);
+            }
+            if let Err(e) = migrate_default_templates(&conn) {
+                log::error!("Failed to migrate default templates: {}", e);
             }
             drop(conn);
             Arc::new(db)
@@ -98,6 +101,12 @@ pub fn run() {
             commands::walkin_ldap_login,
             commands::walkin_fetch_unit_board,
             commands::walkin_check_login,
+            commands::gitlab_get_projects,
+            commands::gitlab_get_branches,
+            commands::sonar_get_reports,
+            commands::sonar_get_files,
+            commands::sonar_get_file_coverage,
+            commands::sonar_generate_prompt,
         ])
         .setup(|app| {
             // Store app handle for auto-launch

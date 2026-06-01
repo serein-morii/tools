@@ -287,7 +287,7 @@ export function GitLabSettingsPage() {
   // 定时检测间隔
   const [loginCheckInterval, setLoginCheckInterval] = useState<number>(() => {
     const saved = localStorage.getItem("walkin_login_check_interval");
-    return saved ? parseInt(saved) : 0;
+    return saved ? parseFloat(saved) : 0;
   });
 
   useEffect(() => {
@@ -969,6 +969,7 @@ export function GitLabSettingsPage() {
                 <div className="flex flex-wrap gap-2">
                   {[
                     { value: 0, label: "不定时检测" },
+                    { value: 0.5, label: "30秒" },
                     { value: 10, label: "10分钟" },
                     { value: 30, label: "30分钟" },
                     { value: 60, label: "1小时" },

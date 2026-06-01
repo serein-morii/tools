@@ -1,8 +1,19 @@
 import { call } from "./index";
 import type { GitLabConfig, GitLabScanResult, GitLabScanHistory, CaptchaData, WalkinSigninResponse, AutoLoginResult, UnitBoardData, LoginStatusResult } from "@/types";
 
+export interface GitLabProjectInfo {
+  id: number;
+  path_with_namespace: string;
+  name: string;
+  web_url: string;
+}
+
 export const gitlabApi = {
   getConfig: (): Promise<GitLabConfig> => call<GitLabConfig>("get_gitlab_config"),
+
+  getProjects: (): Promise<GitLabProjectInfo[]> => call<GitLabProjectInfo[]>("gitlab_get_projects"),
+
+  getBranches: (projectId: number): Promise<string[]> => call<string[]>("gitlab_get_branches", { projectId }),
 
   saveConfig: (config: GitLabConfig): Promise<void> =>
     call<void>("save_gitlab_config", { config }),

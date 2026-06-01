@@ -4,7 +4,7 @@ use tauri::{State, AppHandle, Emitter};
 use serde::{Deserialize, Serialize};
 use crate::database::{Database, dao::settings::SettingsDao, dao::gitlab_scan::{GitLabScanDao, GitLabScanHistory, CreateGitLabScanRequest}, dao::channel::ChannelDao};
 use crate::services::gitlab::{GitLabClient, GitLabScanner, ScanConfig, ScanResult, scanner::{FilterMode, ScanRange, ScanProgress}};
-use crate::services::gitlab::client::GitLabAuth;
+use crate::services::gitlab::client::{GitLabAuth, GitLabProject};
 use crate::services::gitlab::notifier::send_scan_notification;
 use crate::services::walkin::{WalkinClient, WalkinAuth, ProjectMapping, CaptchaData, WalkinSigninResponse, UnitBoardData, LoginStatusResult, get_captcha, ldap_signin, auto_login, AutoLoginResult, check_walkin_login};
 use crate::error::{Result, ToolsError};
@@ -751,4 +751,117 @@ pub async fn walkin_check_login(
         x_auth_token: auth.x_auth_token,
     };
     check_walkin_login(&url, &walkin_auth).await
+}
+
+#[tauri::command]
+pub async fn gitlab_get_projects(db: State<'_, Arc<Database>>) -> Result<Vec<GitLabProject>> {
+    let (url, auth_list) = {
+        let conn = db.conn().lock().unwrap();
+        let settings = SettingsDao::get_all(&conn)?;
+
+        let get_setting = |key: &str| -> String {
+            settings.iter()
+                .find(|s| s.key == key)
+                .map(|s| s.value.clone())
+                .unwrap_or_default()
+        };
+
+        let url = get_setting("gitlab_url");
+        if url.is_empty() {
+            return Err(ToolsError::Http("GitLab URL not configured".to_string()));
+        }
+
+        let auth_type = get_setting("gitlab_auth_type");
+        let auth_list: Vec<GitLabAuth> = if auth_type == "ldap" {
+            let ldaps_raw = get_setting("gitlab_ldap_profiles");
+            let profiles: Vec<LdapProfile> = serde_json::from_str(&ldaps_raw).unwrap_or_default();
+            profiles.into_iter()
+                .map(|p| GitLabAuth::Password { username: p.username, password: p.password })
+                .collect()
+        } else {
+            let tokens_raw = get_setting("gitlab_token_profiles");
+            let profiles: Vec<TokenProfile> = serde_json::from_str(&tokens_raw).unwrap_or_default();
+            profiles.into_iter()
+                .map(|p| GitLabAuth::Token(p.token))
+                .collect()
+        };
+
+        (url, auth_list)
+    };
+
+    if auth_list.is_empty() {
+        return Err(ToolsError::Http("No authentication profile configured".to_string()));
+    }
+
+    let mut seen = HashSet::new();
+    let mut all_projects: Vec<GitLabProject> = Vec::new();
+
+    for auth in auth_list {
+        let client = match GitLabClient::new(&url, auth) {
+            Ok(c) => c,
+            Err(_) => continue,
+        };
+        if let Ok(projects) = client.get_all_projects().await {
+            for p in projects {
+                if seen.insert(p.id) {
+                    all_projects.push(p);
+                }
+            }
+        }
+    }
+
+    all_projects.sort_by(|a, b| a.path_with_namespace.cmp(&b.path_with_namespace));
+    Ok(all_projects)
+}
+
+#[tauri::command]
+pub async fn gitlab_get_branches(db: State<'_, Arc<Database>>, project_id: i64) -> Result<Vec<String>> {
+    let (url, auth_list) = {
+        let conn = db.conn().lock().unwrap();
+        let settings = SettingsDao::get_all(&conn)?;
+
+        let get_setting = |key: &str| -> String {
+            settings.iter()
+                .find(|s| s.key == key)
+                .map(|s| s.value.clone())
+                .unwrap_or_default()
+        };
+
+        let url = get_setting("gitlab_url");
+        let auth_type = get_setting("gitlab_auth_type");
+        let auth_list: Vec<GitLabAuth> = if auth_type == "ldap" {
+            let ldaps_raw = get_setting("gitlab_ldap_profiles");
+            let profiles: Vec<LdapProfile> = serde_json::from_str(&ldaps_raw).unwrap_or_default();
+            profiles.into_iter()
+                .map(|p| GitLabAuth::Password { username: p.username, password: p.password })
+                .collect()
+        } else {
+            let tokens_raw = get_setting("gitlab_token_profiles");
+            let profiles: Vec<TokenProfile> = serde_json::from_str(&tokens_raw).unwrap_or_default();
+            profiles.into_iter()
+                .map(|p| GitLabAuth::Token(p.token))
+                .collect()
+        };
+
+        (url, auth_list)
+    };
+
+    let mut all_branches: Vec<String> = Vec::new();
+
+    for auth in auth_list {
+        let client = match GitLabClient::new(&url, auth) {
+            Ok(c) => c,
+            Err(_) => continue,
+        };
+        if let Ok(branches) = client.get_branches(project_id).await {
+            for b in branches {
+                if !all_branches.contains(&b) {
+                    all_branches.push(b);
+                }
+            }
+        }
+    }
+
+    all_branches.sort();
+    Ok(all_branches)
 }

@@ -28,15 +28,18 @@ pub async fn send_dingtalk(
         .map(|m| m.iter().filter(|s| !s.is_empty()).cloned().collect())
         .unwrap_or_default();
 
+    // 钉钉 markdown 中单 \n 不换行，需要统一转为 \n\n
+    let normalized_content = content.replace("\n\n", "\n").replace("\n", "\n\n");
+
     // Build text content with @mentions in markdown format
     let at_text = if !at_mobiles_json.is_empty() {
         let at_str: String = at_mobiles_json.iter()
             .map(|phone| format!("@{}", phone))
             .collect::<Vec<_>>()
             .join(" ");
-        format!("**{}**\n\n{}\n\n{}", title, content, at_str)
+        format!("**{}**\n\n{}\n\n{}", title, normalized_content, at_str)
     } else {
-        format!("**{}**\n\n{}", title, content)
+        format!("**{}**\n\n{}", title, normalized_content)
     };
 
     let body = if at_mobiles_json.is_empty() {

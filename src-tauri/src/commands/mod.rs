@@ -6,6 +6,7 @@ pub mod settings;
 pub mod backup;
 pub mod note;
 pub mod gitlab;
+pub mod sonar;
 
 pub use task::*;
 pub use channel::*;
@@ -15,3 +16,4 @@ pub use settings::*;
 pub use backup::*;
 pub use note::*;
 pub use gitlab::*;
+pub use sonar::*;

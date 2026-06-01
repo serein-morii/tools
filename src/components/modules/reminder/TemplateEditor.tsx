@@ -148,9 +148,14 @@ export function TemplateEditor({ open, onOpenChange, templateId }: TemplateEdito
                 <p className="font-medium">{t("template.variables")}:</p>
                 <div className="grid grid-cols-2 gap-x-4 gap-y-1 pl-2">
                   <span><code className="bg-muted px-1 rounded">{`{task_name}`}</code> {t("template.varTaskName")}</span>
+                  <span><code className="bg-muted px-1 rounded">{`{description}`}</code> {t("template.varDescription")}</span>
                   <span><code className="bg-muted px-1 rounded">{`{date}`}</code> {t("template.varDate")}</span>
                   <span><code className="bg-muted px-1 rounded">{`{time}`}</code> {t("template.varTime")}</span>
                   <span><code className="bg-muted px-1 rounded">{`{weekday}`}</code> {t("template.varWeekday")}</span>
+                  <span><code className="bg-muted px-1 rounded">{`{weekday_num}`}</code> {t("template.varWeekdayNum")}</span>
+                  <span><code className="bg-muted px-1 rounded">{`{week_of_month}`}</code> {t("template.varWeekOfMonth")}</span>
+                  <span><code className="bg-muted px-1 rounded">{`{day_of_month}`}</code> {t("template.varDayOfMonth")}</span>
+                  <span><code className="bg-muted px-1 rounded">{`{days_remaining}`}</code> {t("template.varDaysRemaining")}</span>
                 </div>
               </div>
             </div>

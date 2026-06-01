@@ -13,7 +13,7 @@ export default defineConfig({
   // Tauri 要求的配置
   clearScreen: false,
   server: {
-    port: 1420,
+    port: 1628,
     strictPort: true,
     watch: {
       ignored: ["**/src-tauri/**"],

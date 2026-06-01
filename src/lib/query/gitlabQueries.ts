@@ -6,6 +6,7 @@ const gitlabKeys = {
   config: ["gitlab-config"] as const,
   history: ["gitlab-history"] as const,
   configured: ["gitlab-configured"] as const,
+  projects: ["gitlab-projects"] as const,
 };
 
 export function useGitLabConfig() {
@@ -19,6 +20,23 @@ export function useGitLabConfigured() {
   return useQuery({
     queryKey: gitlabKeys.configured,
     queryFn: gitlabApi.isConfigured,
+  });
+}
+
+export function useGitLabProjects() {
+  return useQuery({
+    queryKey: gitlabKeys.projects,
+    queryFn: gitlabApi.getProjects,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useGitLabBranches(projectId: number | null) {
+  return useQuery({
+    queryKey: [...gitlabKeys.projects, "branches", projectId],
+    queryFn: () => gitlabApi.getBranches(projectId!),
+    enabled: !!projectId,
+    staleTime: 5 * 60 * 1000,
   });
 }
 

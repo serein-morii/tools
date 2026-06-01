@@ -59,7 +59,9 @@
     "reminder": "Reminders",
     "timer": "Timer",
     "notes": "Notes",
-    "home": "Dashboard"
+    "home": "Dashboard",
+    "gitlab": "Code Scan",
+    "sonar": "Test Coverage"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -194,9 +196,14 @@
     "notSet": "Not Set",
     "variables": "Available Variables",
     "varTaskName": "Task name",
-    "varDate": "Date",
-    "varTime": "Time",
-    "varWeekday": "Weekday",
+    "varDescription": "Task description",
+    "varDate": "Date (2026-01-13)",
+    "varTime": "Time (14:30)",
+    "varWeekday": "Weekday (Monday)",
+    "varWeekdayNum": "Weekday number (1)",
+    "varWeekOfMonth": "Week of month (3)",
+    "varDayOfMonth": "Day of month (13)",
+    "varDaysRemaining": "Days remaining (18)",
     "description": "Description",
     "emptyList": "No templates yet",
     "emptyHint": "Click \"New Template\" in the top right to create your first template",

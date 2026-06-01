@@ -243,6 +243,46 @@ impl GitLabClient {
         })
     }
 
+    pub async fn get_branches(&self, project_id: i64) -> Result<Vec<String>> {
+        let mut all_branches = Vec::new();
+        let mut page = 1;
+        let per_page = 100;
+
+        loop {
+            let url = format!(
+                "{}/api/v4/projects/{}/repository/branches?per_page={}&page={}",
+                self.base_url, project_id, per_page, page
+            );
+
+            let request = self.http_client.get(&url);
+            let response = self.build_request(request)
+                .send()
+                .await
+                .map_err(|e| ToolsError::Http(format!("Failed to fetch branches: {}", e)))?;
+
+            if !response.status().is_success() {
+                break;
+            }
+
+            let branches: Vec<serde_json::Value> = response.json().await
+                .map_err(|e| ToolsError::Http(format!("Failed to parse branches: {}", e)))?;
+
+            if branches.is_empty() {
+                break;
+            }
+
+            for b in branches {
+                if let Some(name) = b["name"].as_str() {
+                    all_branches.push(name.to_string());
+                }
+            }
+
+            page += 1;
+        }
+
+        Ok(all_branches)
+    }
+
     pub async fn get_merge_requests(&self, project_id: i64, state: &str) -> Result<Vec<GitLabMergeRequest>> {
         let url = format!(
             "{}/api/v4/projects/{}/merge_requests?state={}&per_page=100",

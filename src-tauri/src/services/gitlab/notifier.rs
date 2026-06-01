@@ -172,7 +172,7 @@ async fn send_dingtalk(client: &Client, config_json: &str, title: &str, content:
     if let Some(secret) = config["secret"].as_str() {
         if !secret.is_empty() {
             let timestamp = chrono::Utc::now().timestamp_millis();
-            let string_to_sign = format!("{}{}", timestamp, secret);
+            let string_to_sign = format!("{}\n{}", timestamp, secret);
             let sign = hmac_sha256::HMAC::mac(string_to_sign.as_bytes(), secret.as_bytes());
             let sign_b64 = STANDARD.encode(&sign);
             let sign_encoded = urlencoding::encode(&sign_b64);
@@ -180,11 +180,14 @@ async fn send_dingtalk(client: &Client, config_json: &str, title: &str, content:
         }
     }
 
+    // 钉钉 markdown 中单 \n 不换行，需要统一转为 \n\n
+    let normalized_content = content.replace("\n\n", "\n").replace("\n", "\n\n");
+
     let body = serde_json::json!({
         "msgtype": "markdown",
         "markdown": {
             "title": title,
-            "text": format!("## {}\n\n{}", title, content)
+            "text": format!("## {}\n\n{}", title, normalized_content)
         }
     });
 

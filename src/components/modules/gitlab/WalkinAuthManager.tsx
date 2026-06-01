@@ -38,6 +38,7 @@ export function WalkinAuthProvider({ children }: { children: ReactNode }) {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const configRef = useRef<GitLabConfig | null>(null);
   const loginCredentialsRef = useRef<{ username: string; password: string } | null>(null);
+  const initialAutoLoginAttempted = useRef(false);
 
   useEffect(() => {
     configRef.current = config || null;
@@ -197,7 +198,7 @@ export function WalkinAuthProvider({ children }: { children: ReactNode }) {
       intervalRef.current = null;
     }
     const intervalStr = localStorage.getItem("walkin_login_check_interval");
-    const interval = intervalStr ? parseInt(intervalStr) : 0;
+    const interval = intervalStr ? parseFloat(intervalStr) : 0;
     const cfg = configRef.current;
     if (interval > 0 && cfg?.walkin_enabled && cfg?.walkin_x_auth_token) {
       checkLogin();
@@ -211,6 +212,24 @@ export function WalkinAuthProvider({ children }: { children: ReactNode }) {
     }
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
   }, [config?.walkin_enabled, config?.walkin_x_auth_token, checkLogin, startAutoLogin]);
+
+  // 初次加载时，检测到未登录自动触发登录
+  useEffect(() => {
+    if (!config || initialAutoLoginAttempted.current) return;
+    if (!config.walkin_enabled) return;
+    const ldapProfile = config.ldap_profiles?.find(p => p.id === config.selected_ldap_id);
+    if (!ldapProfile?.username || !ldapProfile?.password) return;
+    if (isLoggedIn) return;
+
+    initialAutoLoginAttempted.current = true;
+    // 先检测一次登录状态，如果已登录则跳过
+    checkLogin().then((loggedIn) => {
+      if (!loggedIn) {
+        toast.info("检测到未登录，正在自动登录 Walkin...");
+        startAutoLogin();
+      }
+    });
+  }, [config, isLoggedIn, checkLogin, startAutoLogin]);
 
   const contextValue: WalkinAuthContextType = useMemo(
     () => ({ isLoggedIn, userName, checkLogin, startAutoLogin }),
