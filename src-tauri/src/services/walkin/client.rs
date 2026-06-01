@@ -264,8 +264,10 @@ pub struct WalkinSigninResponse {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WalkinSigninData {
-    pub csrfToken: Option<String>,
-    pub sessionId: Option<String>,
+    #[serde(rename = "csrfToken")]
+    pub csrf_token: Option<String>,
+    #[serde(rename = "sessionId")]
+    pub session_id: Option<String>,
     #[serde(rename = "lastWorkspaceId")]
     pub last_workspace_id: Option<String>,
     #[serde(rename = "lastProjectId")]
@@ -277,10 +279,10 @@ pub struct WalkinSigninData {
 impl WalkinSigninResponse {
     /// Extract auth tokens from login response data
     pub fn csrf_token(&self) -> Option<String> {
-        self.data.as_ref()?.csrfToken.clone()
+        self.data.as_ref()?.csrf_token.clone()
     }
     pub fn session_id(&self) -> Option<String> {
-        self.data.as_ref()?.sessionId.clone()
+        self.data.as_ref()?.session_id.clone()
     }
     pub fn last_workspace_id(&self) -> Option<String> {
         self.data.as_ref()?.last_workspace_id.clone()
@@ -307,7 +309,8 @@ pub struct WalkinApiResponse {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WalkinApiData {
-    pub listObject: Vec<WalkinProjectData>,
+    #[serde(rename = "listObject")]
+    pub list_object: Vec<WalkinProjectData>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -450,23 +453,31 @@ pub struct ProjectMapping {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UnitBoardData {
     /// 增量覆盖率【综合】
-    pub ynewValue: Option<f64>,
+    #[serde(rename = "ynewValue")]
+    pub ynew_value: Option<f64>,
     /// 全量覆盖率【综合】
-    pub yallValue: Option<f64>,
+    #[serde(rename = "yallValue")]
+    pub yall_value: Option<f64>,
     /// 增量覆盖率【代码行】
-    pub ynewLineValue: Option<f64>,
+    #[serde(rename = "ynewLineValue")]
+    pub ynew_line_value: Option<f64>,
     /// 全量覆盖率【代码行】
-    pub yallLineValue: Option<f64>,
+    #[serde(rename = "yallLineValue")]
+    pub yall_line_value: Option<f64>,
     /// 增量覆盖率【分支】
-    pub ynewBranchValue: Option<f64>,
+    #[serde(rename = "ynewBranchValue")]
+    pub ynew_branch_value: Option<f64>,
     /// 全量覆盖率【分支】
-    pub yallBranchValue: Option<f64>,
+    #[serde(rename = "yallBranchValue")]
+    pub yall_branch_value: Option<f64>,
     /// 周期标识，如 "W22"
     pub xvalue: Option<String>,
     /// 开始日期
-    pub startDateFrom: Option<String>,
+    #[serde(rename = "startDateFrom")]
+    pub start_date_from: Option<String>,
     /// 结束日期
-    pub startDateTo: Option<String>,
+    #[serde(rename = "startDateTo")]
+    pub start_date_to: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -645,9 +656,9 @@ impl WalkinClient {
                 None => break,
             };
 
-            let count = data.listObject.len();
+            let count = data.list_object.len();
             log::info!("Walkin API returned {} projects on page {}", count, page);
-            all_projects.extend(data.listObject);
+            all_projects.extend(data.list_object);
 
             // Stop if we got fewer than pageSize items (last page)
             if (count as u32) < page_size_val {
@@ -669,6 +680,7 @@ impl WalkinClient {
         Ok(all_projects)
     }
 
+    #[allow(dead_code)]
     pub async fn test_connection(&self) -> Result<bool> {
         match self.fetch_project_metrics().await {
             Ok(data) => Ok(!data.is_empty()),
@@ -770,8 +782,8 @@ impl WalkinClient {
         // 返回最新的一条记录（按周期结束日期降序）
         Ok(api_response.data.and_then(|mut d| {
             d.sort_by(|a, b| {
-                let a_end = a.startDateTo.as_deref().unwrap_or("");
-                let b_end = b.startDateTo.as_deref().unwrap_or("");
+                let a_end = a.start_date_to.as_deref().unwrap_or("");
+                let b_end = b.start_date_to.as_deref().unwrap_or("");
                 b_end.cmp(a_end)
             });
             d.into_iter().next()

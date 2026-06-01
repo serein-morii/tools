@@ -3,7 +3,7 @@ use super::client::{GitLabClient, GitLabProject, GitLabCommit};
 use crate::services::walkin::{WalkinMetrics, WalkinProjectData, ProjectMapping};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
-use chrono::{Datelike, Local, TimeZone};
+use chrono::Datelike;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ScanConfig {

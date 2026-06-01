@@ -13,7 +13,7 @@ export const modules: ModuleConfig[] = [
   {
     id: "task-reminder",
     path: "/",
-    label: "任务提醒",
+    label: "提醒",
     icon: Bell,
     description: "管理定时任务和提醒",
   },

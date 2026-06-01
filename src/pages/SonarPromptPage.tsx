@@ -4,7 +4,7 @@ import {
   Trash2, RotateCcw, History, Sparkles, Clock,
   Plus, Star, Pencil, AlertCircle, Zap, FileText, BarChart3, SlidersHorizontal,
   CheckSquare, Square, FlaskConical, Settings, Shield, XCircle, CheckCircle, RefreshCw, X,
-  ArrowUp, ArrowDown,
+  ArrowUp, ArrowDown, FolderGit2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -637,103 +637,103 @@ export function SonarPromptPage() {
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex h-full flex-col">
       {/* Header */}
-      <div className="border-b border-border/60 px-6 py-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
-              <FlaskConical className="h-3.5 w-3.5 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-sm font-semibold tracking-tight">代码补测</h1>
-              <p className="text-[11px] text-muted-foreground">
-                Sonar 覆盖率分析 → 未覆盖代码提取 → Claude Code Prompt
-              </p>
-            </div>
-          </div>
-          <div className="inline-flex h-8 items-center rounded-lg border border-border p-0.5 text-xs">
-            {tabs.map((tab) => (
-              <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
-                className={cn(
-                  "flex items-center gap-1.5 rounded-md px-3 py-1.5 font-medium transition-colors duration-150",
-                  activeTab === tab.key
-                    ? "bg-muted text-foreground"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                <tab.icon className="h-3.5 w-3.5" />
-                {tab.label}
-              </button>
-            ))}
-          </div>
+      <header className="flex h-12 items-center justify-between gap-3 border-b border-border px-6">
+        <div className="flex items-center gap-2">
+          <FlaskConical className="h-4 w-4 text-primary" />
+          <h1 className="text-sm font-semibold tracking-tight">单测</h1>
         </div>
-      </div>
+        <div className="inline-flex h-8 items-center rounded-lg border border-border p-0.5 text-xs">
+          {tabs.map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={cn(
+                "inline-flex items-center gap-1.5 rounded-md px-3 py-1 font-medium transition-colors",
+                activeTab === tab.key
+                  ? "bg-muted text-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <tab.icon className="h-3.5 w-3.5" />
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </header>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-6">
+      <main className="flex-1 overflow-y-auto">
         {/* ===== Tab: Prompt 生成 ===== */}
         {activeTab === "generator" && (
-          <div className="mx-auto max-w-[960px] space-y-6 animate-in fade-in duration-200">
+          <div className="mx-auto max-w-[960px] space-y-6 px-6 py-6 animate-in fade-in duration-200">
             {/* Overview stats - 单行紧凑 */}
-            <div className="flex items-center gap-6 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1.5">
-                <History className="h-3.5 w-3.5" />
-                <span className="font-mono tabular-nums">{history.length}</span> 扫描记录
-              </span>
-              <span className="flex items-center gap-1.5">
-                <FileText className="h-3.5 w-3.5" />
-                <span className="font-mono tabular-nums">{templates.length}</span> 模板
-              </span>
-              <span className="flex items-center gap-1.5">
-                <BarChart3 className="h-3.5 w-3.5" />
-                <span className="font-mono tabular-nums">{gitlabProjects?.length ?? 0}</span> 项目
-              </span>
+            <div className="flex items-center gap-4 text-xs text-muted-foreground">
+              {[
+                { icon: History, label: "扫描记录", value: history.length },
+                { icon: FileText, label: "模板", value: templates.length },
+                { icon: BarChart3, label: "项目", value: gitlabProjects?.length ?? 0 },
+              ].map((stat) => (
+                <span key={stat.label} className="flex items-center gap-1.5">
+                  <stat.icon className="h-3.5 w-3.5" />
+                  <span className="font-mono tabular-nums">{stat.value}</span>
+                  <span>{stat.label}</span>
+                </span>
+              ))}
               {history.length > 0 && (
-                <span className="flex items-center gap-1.5">
-                  <Sparkles className="h-3.5 w-3.5" />
-                  上次: {formatTime(history[0].createdAt)}
+                <span className="flex items-center gap-1.5 text-muted-foreground/80">
+                  上次: <span className="font-mono tabular-nums">{formatTime(history[0].createdAt)}</span>
                 </span>
               )}
             </div>
 
             {/* Step indicator */}
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <div className="flex items-center gap-2 text-xs">
               {[
-                { key: "config", label: "配置参数", num: "1" },
-                { key: "select", label: "选择报告", num: "2" },
-                { key: "selectFiles", label: "选择文件", num: "3" },
-                { key: "result", label: "生成结果", num: "4" },
-              ].map((s, i) => (
-                <div key={s.key} className="flex items-center gap-1.5">
-                  <div className={cn(
-                    "flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold transition-colors",
-                    step === s.key
-                      ? "bg-primary text-primary-foreground"
-                      : ["select", "selectFiles", "result"].indexOf(step) > i
-                        ? "bg-primary/15 text-primary"
-                        : "bg-muted text-muted-foreground"
-                  )}>
-                    {["select", "selectFiles", "result"].indexOf(step) > i
-                      ? <Check className="h-3 w-3" />
-                      : s.num}
+                { key: "config", label: "配置参数" },
+                { key: "select", label: "选择报告" },
+                { key: "selectFiles", label: "选择文件" },
+                { key: "result", label: "生成结果" },
+              ].map((s, i) => {
+                const stepIndex = ["config", "select", "selectFiles", "result"].indexOf(step);
+                const isActive = step === s.key;
+                const isCompleted = stepIndex > i;
+                return (
+                  <div key={s.key} className="flex items-center gap-1.5">
+                    <span
+                      className={cn(
+                        "inline-flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold",
+                        isActive
+                          ? "bg-primary text-primary-foreground"
+                          : isCompleted
+                            ? "bg-primary/15 text-primary"
+                            : "bg-muted text-muted-foreground"
+                      )}
+                    >
+                      {isCompleted ? <Check className="h-3 w-3" /> : i + 1}
+                    </span>
+                    <span
+                      className={cn(
+                        "transition-colors",
+                        isActive && "text-foreground font-medium",
+                        !isActive && !isCompleted && "text-muted-foreground"
+                      )}
+                    >
+                      {s.label}
+                    </span>
+                    {i < 3 && <ChevronRight className="h-3 w-3 text-muted-foreground/60" />}
                   </div>
-                  <span className={cn("transition-colors", step === s.key && "text-foreground font-medium")}>
-                    {s.label}
-                  </span>
-                  {i < 3 && <ChevronRight className="h-3 w-3 text-muted-foreground/60" />}
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {/* Step 1: 配置 */}
             {step === "config" && (
-              <div className="rounded-xl border border-border bg-card p-4 space-y-4 ring-1 ring-border/40 animate-in fade-in slide-in-from-bottom-2 duration-200">
+              <section className="space-y-4 rounded-xl border border-border bg-card p-4 animate-in fade-in slide-in-from-bottom-2 duration-200">
                 <div className="grid grid-cols-4 gap-4">
                   <div className="space-y-1.5">
-                    <Label className="text-[11px] font-medium text-muted-foreground">扫描项目 *</Label>
+                    <Label className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">扫描项目 *</Label>
                     <SearchableSelect
                       value={selectedProjectId?.toString() || ""}
                       onChange={handleProjectChange}
@@ -743,7 +743,7 @@ export function SonarPromptPage() {
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-[11px] font-medium text-muted-foreground">分支</Label>
+                    <Label className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">分支</Label>
                     <SearchableSelect
                       value={branch}
                       onChange={setBranch}
@@ -752,16 +752,16 @@ export function SonarPromptPage() {
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-[11px] font-medium text-muted-foreground">截止时间 *</Label>
+                    <Label className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">截止时间 *</Label>
                     <input
                       type="datetime-local"
-                      className="flex h-8 w-full rounded-lg border border-input bg-background px-3 text-xs transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                      className="flex h-8 w-full rounded-lg border border-input bg-background px-3 text-xs transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                       value={createTimeEnd}
                       onChange={(e) => setCreateTimeEnd(e.target.value)}
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-[11px] font-medium text-muted-foreground">数量限制</Label>
+                    <Label className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">数量限制</Label>
                     <Input
                       type="number"
                       className="h-8 text-xs"
@@ -776,7 +776,12 @@ export function SonarPromptPage() {
                   <button
                     type="button"
                     onClick={() => setShowAdvanced(!showAdvanced)}
-                    className="inline-flex h-7 items-center gap-1.5 rounded-md border border-border px-2.5 text-[11px] text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
+                    className={cn(
+                      "inline-flex h-7 items-center gap-1.5 rounded-md px-2.5 text-[11px] font-medium transition-colors",
+                      showAdvanced
+                        ? "bg-muted text-foreground"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    )}
                   >
                     <SlidersHorizontal className="h-3 w-3" />
                     高级
@@ -786,7 +791,7 @@ export function SonarPromptPage() {
                 {showAdvanced && (
                   <div className="grid grid-cols-4 gap-4 animate-in fade-in duration-150">
                     <div className="space-y-1.5">
-                      <Label className="text-[11px] font-medium text-muted-foreground">邮箱过滤</Label>
+                      <Label className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">邮箱过滤</Label>
                       <Input
                         className="h-8 text-xs"
                         value={author}
@@ -800,10 +805,10 @@ export function SonarPromptPage() {
                 {/* 配置摘要 */}
                 {selectedProjectId && (
                   <div className="flex items-center gap-2 rounded-lg bg-muted/40 px-3 py-2 text-xs">
-                    <span className="text-muted-foreground">→</span>
-                    <span className="font-medium text-foreground">{projectKey}</span>
+                    <FolderGit2 className="h-3.5 w-3.5 text-muted-foreground" />
+                    <span className="font-medium">{projectKey}</span>
                     <span className="text-muted-foreground/60">/</span>
-                    <span className="text-foreground">{branch}</span>
+                    <span>{branch}</span>
                     <span className="text-muted-foreground/40">·</span>
                     <span className="text-muted-foreground">最近 {limit} 条</span>
                     {author && (
@@ -830,13 +835,13 @@ export function SonarPromptPage() {
                     获取增量报告
                   </button>
                 </div>
-              </div>
+              </section>
             )}
 
             {/* Step 2: 选择报告 */}
             {step === "select" && (
-              <div className="rounded-xl border border-border bg-card ring-1 ring-border/40 overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-200">
-                <div className="flex items-center justify-between border-b border-border/60 px-4 py-2.5">
+              <section className="overflow-hidden rounded-xl border border-border bg-card animate-in fade-in slide-in-from-bottom-2 duration-200">
+                <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
@@ -850,7 +855,7 @@ export function SonarPromptPage() {
                       {reports.length}
                     </span>
                   </div>
-                  <span className="text-xs text-muted-foreground font-mono">
+                  <span className="text-xs font-mono text-muted-foreground">
                     {projectKey} / {branch}
                   </span>
                 </div>
@@ -861,11 +866,11 @@ export function SonarPromptPage() {
                     <p className="text-sm font-medium">没有符合条件的报告</p>
                   </div>
                 ) : (
-                  <div className="divide-y divide-border/60 max-h-[420px] overflow-auto">
+                  <div className="divide-y divide-border max-h-[420px] overflow-auto">
                     {reports.map((r) => (
                       <button
                         key={r.id}
-                        className="flex w-full items-center justify-between px-4 py-3 text-left transition-colors duration-150 hover:bg-primary/5"
+                        className="flex w-full items-center justify-between px-4 py-3 text-left transition-colors hover:bg-muted"
                         onClick={() => handleSelectReport(r)}
                       >
                         <div className="flex items-center gap-3 min-w-0">
@@ -894,13 +899,13 @@ export function SonarPromptPage() {
                     ))}
                   </div>
                 )}
-              </div>
+              </section>
             )}
 
             {/* Step 3: 选择文件 */}
             {step === "selectFiles" && (
-              <div className="rounded-xl border border-border bg-card ring-1 ring-border/40 overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-200">
-                <div className="flex items-center justify-between border-b border-border/60 px-4 py-2.5">
+              <section className="overflow-hidden rounded-xl border border-border bg-card animate-in fade-in slide-in-from-bottom-2 duration-200">
+                <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
@@ -911,13 +916,13 @@ export function SonarPromptPage() {
                     </button>
                     <span className="text-sm font-semibold">选择类文件</span>
                     {selectedReport && (
-                      <span className="text-[11px] text-muted-foreground font-mono">
+                      <span className="text-[11px] font-mono text-muted-foreground">
                         #{selectedReport.id}
                       </span>
                     )}
                   </div>
                   <span className="rounded-md bg-primary/10 px-1.5 py-0.5 text-[11px] font-medium text-primary">
-                    {selectedFileKeys.size}/{sonarFiles.length} 已选
+                    {selectedFileKeys.size}/{sonarFiles.length}
                   </span>
                 </div>
 
@@ -934,14 +939,14 @@ export function SonarPromptPage() {
                 ) : (
                   <>
                     {/* 扫描类型和排序 */}
-                    <div className="flex items-center gap-2 border-b border-border/60 px-4 py-2 bg-muted/30 flex-wrap">
-                      <span className="text-[11px] text-muted-foreground">类型</span>
+                    <div className="flex items-center gap-2 border-b border-border bg-muted/30 px-4 py-2">
+                      <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">类型</span>
                       <button
                         type="button"
                         onClick={() => handlePageTypeChange("代码行")}
                         className={cn(
                           "inline-flex h-6 items-center rounded-md px-2 text-[11px] font-medium transition-colors",
-                          pageType === "代码行" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                          pageType === "代码行" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:bg-muted hover:text-foreground"
                         )}
                       >
                         代码行
@@ -951,98 +956,71 @@ export function SonarPromptPage() {
                         onClick={() => handlePageTypeChange("条件")}
                         className={cn(
                           "inline-flex h-6 items-center rounded-md px-2 text-[11px] font-medium transition-colors",
-                          pageType === "条件" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                          pageType === "条件" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:bg-muted hover:text-foreground"
                         )}
                       >
                         条件
                       </button>
                       <div className="w-px h-4 bg-border mx-1" />
-                      <span className="text-[11px] text-muted-foreground">排序</span>
-                      <button
-                        type="button"
-                        onClick={() => handleSort("uncovered")}
-                        className={cn(
-                          "inline-flex h-6 items-center gap-1 rounded-md px-2 text-[11px] transition-colors",
-                          sortField === "uncovered" ? "bg-muted text-foreground font-medium" : "text-muted-foreground hover:text-foreground"
-                        )}
-                      >
-                        未覆盖
-                        {sortField === "uncovered" && (
-                          sortOrder === "desc" ? <ArrowDown className="h-2.5 w-2.5" /> : <ArrowUp className="h-2.5 w-2.5" />
-                        )}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleSort("coverage")}
-                        className={cn(
-                          "inline-flex h-6 items-center gap-1 rounded-md px-2 text-[11px] transition-colors",
-                          sortField === "coverage" ? "bg-muted text-foreground font-medium" : "text-muted-foreground hover:text-foreground"
-                        )}
-                      >
-                        覆盖率
-                        {sortField === "coverage" && (
-                          sortOrder === "desc" ? <ArrowDown className="h-2.5 w-2.5" /> : <ArrowUp className="h-2.5 w-2.5" />
-                        )}
-                      </button>
-                      {pageType === "代码行" && (
+                      <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">排序</span>
+                      {[
+                        { key: "uncovered", label: "未覆盖" },
+                        { key: "coverage", label: "覆盖率" },
+                        ...(pageType === "代码行" ? [{ key: "newCovered", label: "新增" }] : []),
+                        { key: "path", label: "路径" },
+                      ].map((sort) => (
                         <button
+                          key={sort.key}
                           type="button"
-                          onClick={() => handleSort("newCovered")}
+                          onClick={() => handleSort(sort.key as typeof sortField)}
                           className={cn(
                             "inline-flex h-6 items-center gap-1 rounded-md px-2 text-[11px] transition-colors",
-                            sortField === "newCovered" ? "bg-muted text-foreground font-medium" : "text-muted-foreground hover:text-foreground"
+                            sortField === sort.key
+                              ? "bg-muted font-medium text-foreground"
+                              : "text-muted-foreground hover:bg-muted hover:text-foreground"
                           )}
                         >
-                          新增
-                          {sortField === "newCovered" && (
+                          {sort.label}
+                          {sortField === sort.key && (
                             sortOrder === "desc" ? <ArrowDown className="h-2.5 w-2.5" /> : <ArrowUp className="h-2.5 w-2.5" />
                           )}
                         </button>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => handleSort("path")}
-                        className={cn(
-                          "inline-flex h-6 items-center gap-1 rounded-md px-2 text-[11px] transition-colors",
-                          sortField === "path" ? "bg-muted text-foreground font-medium" : "text-muted-foreground hover:text-foreground"
-                        )}
-                      >
-                        路径
-                        {sortField === "path" && (
-                          sortOrder === "desc" ? <ArrowDown className="h-2.5 w-2.5" /> : <ArrowUp className="h-2.5 w-2.5" />
-                        )}
-                      </button>
+                      ))}
                       <div className="flex items-center gap-1.5 ml-auto">
                         <button
                           type="button"
                           onClick={toggleSelectAllFiles}
                           className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground transition-colors hover:text-foreground"
                         >
-                          {selectedFileKeys.size === sonarFiles.length
-                            ? <CheckSquare className="h-3.5 w-3.5 text-primary" />
-                            : selectedFileKeys.size > 0
-                              ? <CheckSquare className="h-3.5 w-3.5 text-primary/50" />
-                              : <Square className="h-3.5 w-3.5" />}
+                          {selectedFileKeys.size === sonarFiles.length ? (
+                            <CheckSquare className="h-3.5 w-3.5 text-primary" />
+                          ) : selectedFileKeys.size > 0 ? (
+                            <CheckSquare className="h-3.5 w-3.5 text-primary/50" />
+                          ) : (
+                            <Square className="h-3.5 w-3.5" />
+                          )}
                           全选
                         </button>
                       </div>
                     </div>
-                    <div className="divide-y divide-border/60 max-h-[400px] overflow-auto">
+                    <div className="divide-y divide-border max-h-[400px] overflow-auto">
                       {sortedFiles.map((f) => (
                         <div
                           key={f.key}
                           className={cn(
-                            "flex items-center gap-3 px-4 py-2.5 cursor-pointer transition-colors duration-150 hover:bg-primary/5",
+                            "flex items-center gap-3 px-4 py-2.5 cursor-pointer transition-colors hover:bg-muted",
                             !selectedFileKeys.has(f.key) && "opacity-50"
                           )}
                           onClick={() => toggleFileSelection(f.key)}
                         >
-                          {selectedFileKeys.has(f.key)
-                            ? <CheckSquare className="h-3.5 w-3.5 shrink-0 text-primary" />
-                            : <Square className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />}
+                          {selectedFileKeys.has(f.key) ? (
+                            <CheckSquare className="h-3.5 w-3.5 shrink-0 text-primary" />
+                          ) : (
+                            <Square className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                          )}
                           <div className="flex-1 min-w-0">
-                            <p className="text-xs font-mono truncate text-foreground">{f.path}</p>
-                            <div className="flex items-center gap-3 mt-0.5 text-[11px] text-muted-foreground">
+                            <p className="truncate font-mono text-xs">{f.path}</p>
+                            <div className="mt-0.5 flex items-center gap-3 text-[11px] text-muted-foreground">
                               {f.language && (
                                 <span className="rounded bg-muted px-1 py-0.5 text-[10px]">{f.language}</span>
                               )}
@@ -1112,7 +1090,7 @@ export function SonarPromptPage() {
                     </div>
                   </>
                 )}
-              </div>
+              </section>
             )}
 
             {/* Step 4: 结果 */}
@@ -1249,7 +1227,7 @@ export function SonarPromptPage() {
 
         {/* ===== Tab: 模板管理 ===== */}
         {activeTab === "template" && (
-          <div className="space-y-3">
+          <div className="mx-auto max-w-[960px] space-y-3 px-6 py-6">
             {/* 编辑/创建表单 */}
             {(editingTemplate || isCreating) && (
               <Card>
@@ -1367,7 +1345,7 @@ export function SonarPromptPage() {
 
         {/* ===== Tab 3: 生成历史 ===== */}
         {activeTab === "history" && !detailRecord && (
-          <div className="space-y-3">
+          <div className="mx-auto max-w-[960px] space-y-3 px-6 py-6">
             {history.length > 0 && (
               <div className="flex items-center justify-between">
                 <span className="text-xs text-muted-foreground">共 {history.length} 条记录</span>
@@ -1427,7 +1405,7 @@ export function SonarPromptPage() {
         )}
 
         {activeTab === "history" && detailRecord && (
-          <div className="space-y-3">
+          <div className="mx-auto max-w-[960px] space-y-3 px-6 py-6">
             <div className="flex items-center justify-between">
               <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={() => setDetailRecord(null)}>
                 <RotateCcw className="h-3 w-3" /> 返回列表
@@ -1469,7 +1447,7 @@ export function SonarPromptPage() {
 
         {/* ===== Tab 1: 覆盖率 ===== */}
         {activeTab === "coverage" && currentWeek && (
-          <div className="space-y-4">
+          <div className="space-y-4 px-5 py-4">
             <UnitBoardCard
               config={config}
               startDate={fmtDate(currentWeek.monday)}
@@ -1484,7 +1462,7 @@ export function SonarPromptPage() {
 
         {/* ===== Tab 5: 配置 ===== */}
         {activeTab === "settings" && (
-          <div className="max-w-3xl space-y-4">
+          <div className="mx-auto max-w-3xl space-y-4 px-6 py-6">
             <Card>
               <CardContent className="p-4 space-y-4">
                 <div className="flex items-center gap-2 mb-2">
@@ -1642,7 +1620,7 @@ export function SonarPromptPage() {
             </Card>
           </div>
         )}
-      </div>
+      </main>
 
       {/* Inline confirmations */}
       {deleteId && (

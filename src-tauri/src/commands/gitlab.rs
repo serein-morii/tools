@@ -531,7 +531,7 @@ pub async fn trigger_gitlab_scan(
         let title = "【GitLab周报】本周代码提交汇总";
 
         let test_coverage = if result.total_projects > 0 {
-            let pct = (result.test_projects * 100 / result.total_projects);
+            let pct = result.test_projects * 100 / result.total_projects;
             format!("{}/{} ({}%)", result.test_projects, result.total_projects, pct)
         } else {
             "0/0".to_string()

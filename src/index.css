@@ -4,12 +4,13 @@
 
 @layer base {
   :root {
-    /* Clean neutral theme - aligned with cc-switch */
+    /* Clean neutral theme - aligned with git-ai-studio */
     --background: 0 0% 100%;
     --foreground: 240 10% 3.9%;
 
     --card: 0 0% 100%;
     --card-foreground: 240 10% 3.9%;
+    --card-elevated: 240 4.8% 97%;
 
     --popover: 0 0% 100%;
     --popover-foreground: 240 10% 3.9%;
@@ -33,7 +34,36 @@
     --input: 240 5.9% 90%;
     --ring: 210 100% 56%;
 
-    --radius: 0.5rem;
+    --radius: 0.625rem;
+    --radius-sm: calc(var(--radius) * 0.6);
+    --radius-md: calc(var(--radius) * 0.8);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) * 1.4);
+
+    /* Semantic data/status colors - git-ai-studio style */
+    --ai: 210 100% 56%;
+    --ai-foreground: 0 0% 100%;
+    --ai-muted: 210 100% 56% / 0.12;
+
+    --human: 160 84% 39%;
+    --human-foreground: 0 0% 100%;
+    --human-muted: 160 84% 39% / 0.12;
+
+    --success: 162 63% 41%;
+    --success-foreground: 0 0% 100%;
+    --success-muted: 162 63% 41% / 0.12;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 20 14% 10%;
+    --warning-muted: 38 92% 50% / 0.12;
+
+    --danger: 346 77% 50%;
+    --danger-foreground: 0 0% 100%;
+    --danger-muted: 346 77% 50% / 0.12;
+
+    --info: 210 100% 56%;
+    --info-foreground: 0 0% 100%;
+    --info-muted: 210 100% 56% / 0.12;
 
     /* Custom properties */
     --sidebar-width: 240px;
@@ -46,6 +76,7 @@
 
     --card: 240 5% 16%;
     --card-foreground: 0 0% 98%;
+    --card-elevated: 240 5% 20%;
 
     --popover: 240 5% 16%;
     --popover-foreground: 0 0% 98%;
@@ -68,6 +99,26 @@
     --border: 240 5% 24%;
     --input: 240 5% 24%;
     --ring: 210 100% 54%;
+
+    /* Semantic colors - dark mode */
+    --ai: 210 100% 54%;
+    --ai-muted: 210 100% 54% / 0.15;
+
+    --human: 160 84% 45%;
+    --human-muted: 160 84% 45% / 0.15;
+
+    --success: 162 63% 50%;
+    --success-muted: 162 63% 50% / 0.15;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 98%;
+    --warning-muted: 38 92% 50% / 0.15;
+
+    --danger: 346 77% 55%;
+    --danger-muted: 346 77% 55% / 0.15;
+
+    --info: 210 100% 54%;
+    --info-muted: 210 100% 54% / 0.15;
   }
 }
 
@@ -109,29 +160,44 @@
 }
 
 @layer components {
-  /* Glass effect for cards */
-  .glass {
-    @apply bg-card/80 backdrop-blur-xl border border-border/50;
+  /* Semantic color utilities */
+  .text-ai { color: hsl(var(--ai)); }
+  .bg-ai { background-color: hsl(var(--ai)); }
+  .bg-ai-muted { background-color: hsl(var(--ai-muted)); }
+  .border-ai { border-color: hsl(var(--ai)); }
+
+  .text-human { color: hsl(var(--human)); }
+  .bg-human { background-color: hsl(var(--human)); }
+  .bg-human-muted { background-color: hsl(var(--human-muted)); }
+  .border-human { border-color: hsl(var(--human)); }
+
+  .text-success { color: hsl(var(--success)); }
+  .bg-success { background-color: hsl(var(--success)); }
+  .bg-success-muted { background-color: hsl(var(--success-muted)); }
+
+  .text-warning { color: hsl(var(--warning)); }
+  .bg-warning { background-color: hsl(var(--warning)); }
+  .bg-warning-muted { background-color: hsl(var(--warning-muted)); }
+
+  .text-danger { color: hsl(var(--danger)); }
+  .bg-danger { background-color: hsl(var(--danger)); }
+  .bg-danger-muted { background-color: hsl(var(--danger-muted)); }
+
+  .bg-card-elevated { background-color: hsl(var(--card-elevated)); }
+
+  /* Ring effect for cards - softer than shadow in dark mode */
+  .ring-card {
+    @apply ring-1 ring-border/40;
   }
 
-  /* Glass card with stronger blur */
-  .glass-card {
-    @apply bg-card/80 backdrop-blur-xl border border-border/50 shadow-sm;
+  /* Interactive hover state */
+  .interactive-hover {
+    @apply transition-colors duration-150 hover:border-primary/40 hover:bg-card-elevated;
   }
 
-  /* Gradient text */
-  .gradient-text {
-    @apply bg-gradient-to-r from-violet-600 to-indigo-600 bg-clip-text text-transparent;
-  }
-
-  /* Subtle hover effect */
-  .hover-lift {
-    @apply transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg;
-  }
-
-  /* Active indicator dot */
-  .active-dot {
-    @apply absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full;
+  /* Compact table header */
+  .table-header-compact {
+    @apply bg-muted/30 text-[10px] uppercase tracking-wider text-muted-foreground;
   }
 }
 
@@ -169,6 +235,11 @@
   /* Slide up from bottom animation */
   .slide-up-from-bottom {
     animation: slideUpFromBottom 0.3s ease-out;
+  }
+
+  /* Monospace numbers for alignment */
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
   }
 }
 

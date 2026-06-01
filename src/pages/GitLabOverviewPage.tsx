@@ -7,8 +7,6 @@ import { useGitLabConfigured, useGitLabScanHistory, useTriggerGitLabScan, useGit
 import { FirstTimeSetupModal } from "@/components/modules/gitlab/FirstTimeSetupModal";
 import { TrendChart, ContributorRanking } from "@/components/modules/gitlab/TrendChart";
 import { ScanProgressModal } from "@/components/modules/gitlab/ScanProgressModal";
-import { UnitBoardCard } from "@/components/modules/gitlab/UnitBoardCard";
-import { getWeekOptions, fmtDate } from "@/components/modules/gitlab/UnitCoverageList";
 import { toast } from "sonner";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { formatTimestamp, formatNumber } from "@/lib/gitlab/format";
@@ -723,11 +721,6 @@ export function GitLabOverviewPage() {
   const { data: history, refetch: refetchHistory } = useGitLabScanHistory(10);
   const triggerScan = useTriggerGitLabScan();
 
-  // 代码补测周期选择
-  const weekOptions = useMemo(() => getWeekOptions(24), []);
-  const [weekIndex, setWeekIndex] = useState(0);
-  const currentWeek = weekOptions[weekIndex];
-
   // Selected scan data (defaults to latest)
   const selectedHistory = history?.[selectedScanIndex];
   const previousHistory = history?.[selectedScanIndex + 1];
@@ -870,18 +863,6 @@ export function GitLabOverviewPage() {
 
       {/* Summary Cards */}
       <SummaryCards current={selectedHistory} previous={previousHistory} />
-
-      {/* 代码补测模块 */}
-      <div className="px-5 py-3">
-        <UnitBoardCard
-          config={config}
-          startDate={fmtDate(currentWeek.monday)}
-          endDate={fmtDate(currentWeek.sunday)}
-          weekOptions={weekOptions}
-          weekIndex={weekIndex}
-          onWeekIndexChange={setWeekIndex}
-        />
-      </div>
 
       {/* Empty State */}
       {!selectedHistory && (

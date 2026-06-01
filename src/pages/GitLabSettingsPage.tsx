@@ -617,7 +617,7 @@ export function GitLabSettingsPage() {
           <div className="space-y-2">
             <label className="text-xs font-medium">推送渠道</label>
             <p className="text-xs text-muted-foreground">
-              请到 <span className="font-medium">任务提醒 - 渠道</span> 中配置通知渠道
+              请到 <span className="font-medium">提醒 - 渠道</span> 中配置通知渠道
             </p>
             <div className="flex flex-wrap gap-2">
               {channels?.map((channel) => (

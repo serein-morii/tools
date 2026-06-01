@@ -409,6 +409,7 @@ pub struct LdapProfile {
 }
 
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct GitLabScanConfig {
     pub url: String,
     pub auth_type: String,

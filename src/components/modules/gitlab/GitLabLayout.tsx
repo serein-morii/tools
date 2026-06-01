@@ -21,7 +21,7 @@ export function GitLabLayout() {
               <GitBranch className="h-3.5 w-3.5 text-white" />
             </div>
             <div>
-              <h1 className="text-sm font-medium">{t("gitlab.title", "GitLab 代码扫描")}</h1>
+              <h1 className="text-sm font-medium">{t("gitlab.title", "GitLab 代码")}</h1>
               <p className="text-xs text-muted-foreground mt-0.5">{t("gitlab.description", "扫描代码提交，检测单测覆盖情况")}</p>
             </div>
           </div>

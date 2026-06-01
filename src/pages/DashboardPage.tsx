@@ -188,7 +188,7 @@ export function DashboardPage() {
           <CardTitle className="flex items-center justify-between text-base">
             <div className="flex items-center gap-2">
               <FlaskConical className="h-3.5 w-3.5 text-muted-foreground" />
-              {t("dashboard.codeCoverage", "代码补测")}
+              {t("dashboard.codeCoverage", "单测")}
             </div>
             <Link to="/sonar" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
               {t("common.viewAll")}
