@@ -637,39 +637,41 @@ export function SonarPromptPage() {
   };
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="min-h-full bg-background">
       {/* Header */}
-      <header className="flex h-12 items-center justify-between gap-3 border-b border-border px-6">
-        <div className="flex items-center gap-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
-            <FlaskConical className="h-3.5 w-3.5 text-primary" />
+      <div className="border-b px-5 py-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
+              <FlaskConical className="h-3.5 w-3.5 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-sm font-medium">单测</h1>
+              <p className="text-xs text-muted-foreground mt-0.5">Sonar 覆盖率 → Prompt 生成</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-sm font-medium">单测</h1>
-            <p className="text-xs text-muted-foreground mt-0.5">Sonar 覆盖率 → Prompt 生成</p>
+          <div className="inline-flex gap-1 rounded-lg bg-muted p-0.5">
+            {tabs.map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={cn(
+                  "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all",
+                  activeTab === tab.key
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <tab.icon className="h-3.5 w-3.5" />
+                {tab.label}
+              </button>
+            ))}
           </div>
         </div>
-        <div className="inline-flex h-8 items-center rounded-lg border border-border p-0.5 text-xs">
-          {tabs.map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={cn(
-                "inline-flex items-center gap-1.5 rounded-md px-3 py-1 font-medium transition-colors",
-                activeTab === tab.key
-                  ? "bg-muted text-foreground"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              <tab.icon className="h-3.5 w-3.5" />
-              {tab.label}
-            </button>
-          ))}
-        </div>
-      </header>
+      </div>
 
       {/* Content */}
-      <main className="flex-1 overflow-y-auto">
+      <div className="animate-in">
         {/* ===== Tab: Prompt 生成 ===== */}
         {activeTab === "generator" && (
           <div className="mx-auto max-w-[960px] space-y-6 px-6 py-6 animate-in fade-in duration-200">
@@ -1625,7 +1627,7 @@ export function SonarPromptPage() {
             </Card>
           </div>
         )}
-      </main>
+      </div>
 
       {/* Inline confirmations */}
       {deleteId && (
