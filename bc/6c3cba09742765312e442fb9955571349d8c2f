@@ -1,0 +1,49 @@
+src/pages/SonarPromptPage.tsx
+  s_5ee4ad3ded713f::t_929faad9215e5a 371-374,378-380,382,385-386,389-390,393
+  s_5ee4ad3ded713f::t_66942bf0e6f6c7 418
+  s_5ee4ad3ded713f::t_728c191ff24596 838-850,853-856,858-987,989-994,996-1089,1092,1095-1115
+  s_5ee4ad3ded713f::t_170697777039ab 640,642,644-653,655,661,663,676-677,679-701,703,707-708,710,712,714-716,719,723,726,733-787,789,791-794,798,800-816,818-820,823,826,828,831-833
+  s_5ee4ad3ded713f::t_ca5b8c740ba162 1118,1120,1122,1124-1130,1132-1137,1142,1146,1148-1150,1153-1154,1158,1163-1164,1169-1192,1194-1215,1217-1220,1225-1232,1234-1243,1250
+src-tauri/src/commands/sonar.rs
+  s_5ee4ad3ded713f::t_fbbe07abe614d0 147-148
+src/pages/DashboardPage.tsx
+  s_5ee4ad3ded713f::t_80622c1053fa83 144
+  s_5ee4ad3ded713f::t_911b37182ce9ae 193
+  s_5ee4ad3ded713f::t_b443e1e782e9ef 243
+  s_5ee4ad3ded713f::t_45d3e842bc1956 359,363,367
+  s_5ee4ad3ded713f::t_1c84660c666e91 161
+  s_5ee4ad3ded713f::t_573e5bcc527a1b 130-131
+  s_5ee4ad3ded713f::t_14829650a975c3 153
+  s_5ee4ad3ded713f::t_970effd14443e4 177
+  s_5ee4ad3ded713f::t_072c8bc0a50723 190
+  s_5ee4ad3ded713f::t_80c7198e12499f 331
+  s_5ee4ad3ded713f::t_bda4548f81b1ae 169
+  s_5ee4ad3ded713f::t_683750d41b1bbe 412
+  s_5ee4ad3ded713f::t_967ccb3e824950 222
+  s_5ee4ad3ded713f::t_8b570042f767e3 442
+  s_5ee4ad3ded713f::t_b5df8468c38d93 520
+  s_5ee4ad3ded713f::t_0a888714a63941 554
+  s_5ee4ad3ded713f::t_7041715ea6fd29 569
+  s_5ee4ad3ded713f::t_f4cef56a40f6c3 495
+  s_5ee4ad3ded713f::t_dd1df06c86d769 621-622
+  s_5ee4ad3ded713f::t_46dafff0ca7e07 307
+  s_5ee4ad3ded713f::t_0c813415ee53c8 595
+src/lib/sonar/templates.ts
+  s_5ee4ad3ded713f::t_e7e26e63639a20 21-22
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "bc6c3cba09742765312e442fb9955571349d8c2f",
+  "prompts": {},
+  "sessions": {
+    "s_5ee4ad3ded713f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "16bac21d-3e82-4e9d-9ed1-296b67e0c341",
+        "model": "astron-code-latest"
+      },
+      "human_author": "pengchenghui <pengchenghui@jtexpress.com>"
+    }
+  }
+}
