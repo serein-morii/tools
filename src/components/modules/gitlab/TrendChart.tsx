@@ -59,7 +59,8 @@ export function TrendChart({ history }: TrendChartProps) {
 
   // Use responsive SVG width (100%) instead of fixed pixel width
   const chartHeight = 120;
-  const padding = { top: 14, right: 8, bottom: 18, left: 28 };
+  const padding = { top: 14, right: 24, bottom: 18, left: 32 };
+  const drawingWidth = 200 - padding.left - padding.right;
 
   // Sample commits for y-axis ticks (4 evenly spaced values)
   const commitTicks = [0, Math.round(maxCommits / 4), Math.round(maxCommits / 2), Math.round(maxCommits * 3 / 4), maxCommits];
@@ -102,20 +103,20 @@ export function TrendChart({ history }: TrendChartProps) {
         </div>
 
         <div className="flex-1 min-h-0">
-          <svg viewBox={`0 0 200 ${chartHeight}`} preserveAspectRatio="none" className="w-full h-full overflow-visible">
+          <svg viewBox={`0 0 ${200} ${chartHeight}`} preserveAspectRatio="none" className="w-full h-full">
             {/* Grid lines (4 horizontal) */}
             {[0, 1, 2, 3, 4].map(i => {
               const y = padding.top + (i / 4) * (chartHeight - padding.top - padding.bottom);
               return (
                 <g key={`grid-${i}`}>
-                  <line x1={padding.left} y1={y} x2={200 - padding.right} y2={y} stroke="hsl(var(--border))" strokeWidth="0.5" />
+                  <line x1={padding.left} y1={y} x2={padding.left + drawingWidth} y2={y} stroke="hsl(var(--border))" strokeWidth="0.5" />
                   {/* Y-axis labels (commits on left, coverage on right) */}
                   <text x={padding.left - 4} y={y + 3} textAnchor="end" fontSize="7" fill="hsl(var(--muted-foreground))">
-                    {commitTicks[i]}
+                    {commitTicks[4 - i]}
                   </text>
                   {hasCoverage && (
-                    <text x={200 - padding.right + 4} y={y + 3} textAnchor="start" fontSize="7" fill="hsl(var(--muted-foreground))">
-                      {i * 25}%
+                    <text x={padding.left + drawingWidth + 4} y={y + 3} textAnchor="start" fontSize="7" fill="hsl(var(--muted-foreground))">
+                      {(4 - i) * 25}%
                     </text>
                   )}
                 </g>
@@ -125,7 +126,7 @@ export function TrendChart({ history }: TrendChartProps) {
             {/* Commit line */}
             <polyline
               points={scans.map((s, i) => {
-                const x = padding.left + (i / (scans.length - 1)) * (200 - padding.left - padding.right);
+                const x = padding.left + (i / (scans.length - 1)) * drawingWidth;
                 const y = padding.top + (chartHeight - padding.top - padding.bottom) * (1 - s.total_commits / maxCommits);
                 return `${x},${y}`;
               }).join(" ")}
@@ -141,7 +142,7 @@ export function TrendChart({ history }: TrendChartProps) {
               <polyline
                 points={scans.map((s, i) => {
                   const cov = getNewCoverage(s) ?? 0;
-                  const x = padding.left + (i / (scans.length - 1)) * (200 - padding.left - padding.right);
+                  const x = padding.left + (i / (scans.length - 1)) * drawingWidth;
                   const y = padding.top + (chartHeight - padding.top - padding.bottom) * (1 - cov / 100);
                   return `${x},${y}`;
                 }).join(" ")}
@@ -158,7 +159,7 @@ export function TrendChart({ history }: TrendChartProps) {
             <text x={padding.left} y={chartHeight - 2} fontSize="6" fill="hsl(var(--muted-foreground))">
               {new Date(scans[0].scan_at).toLocaleDateString("zh-CN", { month: "numeric", day: "numeric" })}
             </text>
-            <text x={200 - padding.right} y={chartHeight - 2} fontSize="6" fill="hsl(var(--muted-foreground))" textAnchor="end">
+            <text x={padding.left + drawingWidth} y={chartHeight - 2} fontSize="6" fill="hsl(var(--muted-foreground))" textAnchor="end">
               {new Date(scans[scans.length - 1].scan_at).toLocaleDateString("zh-CN", { month: "numeric", day: "numeric" })}
             </text>
           </svg>
