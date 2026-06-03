@@ -324,50 +324,113 @@ function DepartmentRow({
 
                               {/* Commit detail expansion */}
                               {showDetail && commitDetail && (
-                                <div className="bg-muted/10 border-b border-border/20 px-4 py-2" style={{ paddingLeft: 60 + indent }}>
-                                  {/* AI Info */}
+                                <div className="bg-muted/10 border-b border-border/20 px-4 py-3" style={{ paddingLeft: 60 + indent }}>
+                                  {/* Commit info row */}
                                   <div className="flex items-center gap-4 mb-2 text-xs">
                                     <span className="flex items-center gap-1 text-muted-foreground">
-                                      <Brain className="h-3 w-3" />
-                                      {commitDetail.ai_note.tool_name}
+                                      <User className="h-3 w-3" />
+                                      {commitDetail.commit.author_name}
+                                    </span>
+                                    <span className="flex items-center gap-1 text-muted-foreground">
+                                      <GitBranch className="h-3 w-3" />
+                                      {commitDetail.commit.branch}
+                                    </span>
+                                    <a
+                                      href={commitDetail.commit.web_url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="flex items-center gap-1 text-primary hover:underline"
+                                    >
+                                      <ExternalLink className="h-3 w-3" />
+                                      查看完整提交
+                                    </a>
+                                  </div>
+
+                                  {/* AI Info row */}
+                                  <div className="flex items-center gap-4 mb-2 text-xs">
+                                    <span className="flex items-center gap-1">
+                                      <Brain className="h-3 w-3 text-primary" />
+                                      <span className="font-medium">{commitDetail.ai_note.tool_name}</span>
                                     </span>
                                     <span className="flex items-center gap-1 text-muted-foreground">
                                       <Code2 className="h-3 w-3" />
                                       {commitDetail.ai_note.model_name}
                                     </span>
                                     <span className="text-muted-foreground">
-                                      Prompts: {commitDetail.ai_note.prompts_count}
+                                      v{commitDetail.ai_note.git_ai_version}
+                                    </span>
+                                    <span className="text-muted-foreground">
+                                      Prompts: <span className="font-medium text-foreground">{commitDetail.ai_note.prompts_count}</span>
                                     </span>
                                   </div>
 
-                                  {/* Stats */}
-                                  <div className="flex items-center gap-4 mb-2 text-[10px] text-muted-foreground">
-                                    <span>有效文件: {commitDetail.stats.valid_files_count}</span>
-                                    <span>AI行数: {commitDetail.stats.ai_additions.toLocaleString()}</span>
-                                    <span>人工行数: {commitDetail.stats.human_additions}</span>
+                                  {/* Stats row */}
+                                  <div className="flex items-center gap-4 mb-3 text-xs">
+                                    <div className="flex items-center gap-3 px-2 py-1 rounded bg-muted/50">
+                                      <span className="text-muted-foreground">文件:</span>
+                                      <span className="font-mono font-medium">{commitDetail.stats.valid_files_count}</span>
+                                      {commitDetail.stats.excluded_files_count > 0 && (
+                                        <span className="text-muted-foreground">(+{commitDetail.stats.excluded_files_count} 排除)</span>
+                                      )}
+                                    </div>
+                                    <div className="flex items-center gap-3 px-2 py-1 rounded bg-muted/50">
+                                      <span className="text-emerald-600">+{commitDetail.stats.ai_additions.toLocaleString()}</span>
+                                      <span className="text-muted-foreground">AI</span>
+                                    </div>
+                                    <div className="flex items-center gap-3 px-2 py-1 rounded bg-muted/50">
+                                      <span className="text-blue-600">+{commitDetail.stats.human_additions}</span>
+                                      <span className="text-muted-foreground">人工</span>
+                                    </div>
+                                    <div className="flex items-center gap-3 px-2 py-1 rounded bg-muted/50">
+                                      <span className="text-rose-600">-{commitDetail.commit.deletions.toLocaleString()}</span>
+                                      <span className="text-muted-foreground">删除</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 px-2 py-1 rounded bg-muted/50">
+                                      <span className="text-muted-foreground">AI率:</span>
+                                      <span className={cn(
+                                        "font-mono font-bold",
+                                        commitDetail.stats.ai_rate >= 80 ? "text-emerald-600" :
+                                        commitDetail.stats.ai_rate >= 50 ? "text-amber-600" : "text-rose-600"
+                                      )}>
+                                        {commitDetail.stats.ai_rate.toFixed(1)}%
+                                      </span>
+                                    </div>
                                   </div>
 
                                   {/* Files list */}
                                   {commitDetail.valid_files.length > 0 && (
                                     <div className="space-y-0.5">
+                                      <div className="text-[10px] text-muted-foreground mb-1">变更文件:</div>
                                       {commitDetail.valid_files.slice(0, 10).map((file, idx) => (
-                                        <div key={idx} className="flex items-center gap-2 text-[10px]">
+                                        <div key={idx} className="flex items-center gap-2 text-[10px] py-0.5 hover:bg-muted/30 rounded px-1">
                                           <FileCode className="h-3 w-3 text-muted-foreground shrink-0" />
                                           <span className="truncate flex-1 text-muted-foreground">{file.path}</span>
-                                          <span className="font-mono text-muted-foreground">+{file.additions}</span>
+                                          {file.deletions > 0 && (
+                                            <span className="font-mono text-rose-500">-{file.deletions}</span>
+                                          )}
+                                          <span className="font-mono text-emerald-600">+{file.additions}</span>
                                           <span className={cn(
-                                            "rounded px-1 py-0.5 font-mono",
-                                            file.ai_rate >= 80 ? "text-emerald-600" : file.ai_rate >= 50 ? "text-amber-600" : "text-rose-600"
+                                            "rounded px-1.5 py-0.5 font-mono text-[9px]",
+                                            file.ai_rate >= 80 ? "text-emerald-600 bg-emerald-500/10" :
+                                            file.ai_rate >= 50 ? "text-amber-600 bg-amber-500/10" : "text-rose-600 bg-rose-500/10"
                                           )}>
                                             {file.ai_rate.toFixed(0)}%
                                           </span>
                                         </div>
                                       ))}
                                       {commitDetail.valid_files.length > 10 && (
-                                        <div className="text-[10px] text-muted-foreground pl-5">
+                                        <div className="text-[10px] text-muted-foreground pl-5 py-1">
                                           还有 {commitDetail.valid_files.length - 10} 个文件...
                                         </div>
                                       )}
+                                    </div>
+                                  )}
+
+                                  {/* Excluded files */}
+                                  {commitDetail.excluded_files.length > 0 && (
+                                    <div className="mt-2 text-[10px] text-muted-foreground">
+                                      排除文件: {commitDetail.excluded_files.slice(0, 5).join(", ")}
+                                      {commitDetail.excluded_files.length > 5 && ` 等 ${commitDetail.excluded_files.length} 个`}
                                     </div>
                                   )}
                                 </div>
