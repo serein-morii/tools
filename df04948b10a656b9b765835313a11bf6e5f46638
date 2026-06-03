@@ -1,0 +1,26 @@
+src/i18n/locales/ko.json
+  s_5ee4ad3ded713f::t_fd751e8942ea3f 432
+  s_5ee4ad3ded713f::t_44420322c94c94 62-64
+src/i18n/locales/ja.json
+  s_5ee4ad3ded713f::t_e701359785989f 62-64
+  s_5ee4ad3ded713f::t_11fb1de80e83ee 406
+src/i18n/locales/en.json
+  s_5ee4ad3ded713f::t_82d9d5e402fbbc 63-64
+  s_5ee4ad3ded713f::t_172ebf9d47bb3c 437
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "df04948b10a656b9b765835313a11bf6e5f46638",
+  "prompts": {},
+  "sessions": {
+    "s_5ee4ad3ded713f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "16bac21d-3e82-4e9d-9ed1-296b67e0c341",
+        "model": "astron-code-latest"
+      },
+      "human_author": "pengchenghui <pengchenghui@jtexpress.com>"
+    }
+  }
+}
