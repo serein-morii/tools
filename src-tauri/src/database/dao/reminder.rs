@@ -16,6 +16,7 @@ pub struct Reminder {
     pub user_action: Option<String>,
     pub user_feedback: Option<String>,
     pub action_at: Option<i64>,
+    pub retry_count: i32,
     pub created_at: i64,
 }
 
@@ -56,6 +57,7 @@ impl Reminder {
             user_feedback: row.get(8)?,
             action_at: row.get(9)?,
             created_at: row.get(10)?,
+            retry_count: row.get(11)?,
         })
     }
 }
@@ -89,10 +91,10 @@ impl ReminderDao {
 
         conn.execute(
             r#"
-            INSERT INTO reminders (id, task_id, scheduled_at, status, channel_results, created_at)
-            VALUES (?1, ?2, ?3, 'pending', '[]', ?4)
+            INSERT INTO reminders (id, task_id, scheduled_at, status, channel_results, retry_count, created_at)
+            VALUES (?1, ?2, ?3, 'pending', '[]', ?4, ?5)
             "#,
-            rusqlite::params![id, req.task_id, req.scheduled_at, now],
+            rusqlite::params![id, req.task_id, req.scheduled_at, 0i64, now],
         )?;
 
         Ok(Reminder {
@@ -106,6 +108,7 @@ impl ReminderDao {
             user_action: None,
             user_feedback: None,
             action_at: None,
+            retry_count: 0,
             created_at: now,
         })
     }
@@ -114,9 +117,9 @@ impl ReminderDao {
         let now = Utc::now().timestamp_millis();
         let mut stmt = conn.prepare(
             "SELECT id, task_id, scheduled_at, executed_at, status, channel_results,
-                    error_message, user_action, user_feedback, action_at, created_at
+                    error_message, user_action, user_feedback, action_at, retry_count, created_at
              FROM reminders
-             WHERE status = 'pending' AND scheduled_at <= ?1
+             WHERE status = 'pending' AND scheduled_at <= ?1 AND retry_count < 3
              ORDER BY scheduled_at ASC"
         )?;
 
@@ -129,7 +132,7 @@ impl ReminderDao {
     pub fn get_by_task(conn: &Connection, task_id: &str) -> Result<Vec<Reminder>> {
         let mut stmt = conn.prepare(
             "SELECT id, task_id, scheduled_at, executed_at, status, channel_results,
-                    error_message, user_action, user_feedback, action_at, created_at
+                    error_message, user_action, user_feedback, action_at, retry_count, created_at
              FROM reminders
              WHERE task_id = ?1
              ORDER BY scheduled_at DESC
@@ -160,6 +163,14 @@ impl ReminderDao {
         Ok(items)
     }
 
+    pub fn increment_retry(conn: &Connection, id: &str) -> Result<()> {
+        conn.execute(
+            "UPDATE reminders SET retry_count = retry_count + 1 WHERE id = ?1",
+            rusqlite::params![id],
+        )?;
+        Ok(())
+    }
+
     pub fn update_status(conn: &Connection, id: &str, status: &str, channel_results: &str, error: Option<&str>) -> Result<()> {
         let now = Utc::now().timestamp_millis();
         conn.execute(
@@ -172,7 +183,7 @@ impl ReminderDao {
     pub fn get_by_id(conn: &Connection, id: &str) -> Result<Option<Reminder>> {
         let mut stmt = conn.prepare(
             "SELECT id, task_id, scheduled_at, executed_at, status, channel_results,
-                    error_message, user_action, user_feedback, action_at, created_at
+                    error_message, user_action, user_feedback, action_at, retry_count, created_at
              FROM reminders WHERE id = ?1"
         )?;
 
@@ -254,6 +265,7 @@ mod tests {
                 user_action TEXT,
                 user_feedback TEXT,
                 action_at INTEGER,
+                retry_count INTEGER NOT NULL DEFAULT 0,
                 created_at INTEGER NOT NULL
             );"
         ).unwrap();
@@ -263,14 +275,14 @@ mod tests {
             rusqlite::params!["task-1", "每日复盘", "feedback"],
         ).unwrap();
         conn.execute(
-            "INSERT INTO reminders (id, task_id, scheduled_at, executed_at, status, channel_results, created_at)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
-            rusqlite::params!["old", "task-1", 1000, 1100, "sent", "[]", 900],
+            "INSERT INTO reminders (id, task_id, scheduled_at, executed_at, status, channel_results, retry_count, created_at)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
+            rusqlite::params!["old", "task-1", 1000, 1100, "sent", "[]", 0, 900],
         ).unwrap();
         conn.execute(
-            "INSERT INTO reminders (id, task_id, scheduled_at, executed_at, status, channel_results, error_message, created_at)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
-            rusqlite::params!["new", "missing-task", 2000, 2100, "failed", "[]", "发送失败", 1900],
+            "INSERT INTO reminders (id, task_id, scheduled_at, executed_at, status, channel_results, error_message, retry_count, created_at)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
+            rusqlite::params!["new", "missing-task", 2000, 2100, "failed", "[]", "发送失败", 0, 1900],
         ).unwrap();
 
         let history = ReminderDao::get_history(&conn, 10).unwrap();
@@ -327,6 +339,7 @@ mod tests {
                 user_action TEXT,
                 user_feedback TEXT,
                 action_at INTEGER,
+                retry_count INTEGER NOT NULL DEFAULT 0,
                 created_at INTEGER NOT NULL
             );"
         ).unwrap();
@@ -335,9 +348,9 @@ mod tests {
 
     fn insert_action_reminder(conn: &Connection, id: &str, status: &str, scheduled_at: i64) {
         conn.execute(
-            "INSERT INTO reminders (id, task_id, scheduled_at, executed_at, status, channel_results, created_at)
-             VALUES (?1, 'task-1', ?2, ?3, ?4, '[]', ?5)",
-            rusqlite::params![id, scheduled_at, scheduled_at + 100, status, scheduled_at - 100],
+            "INSERT INTO reminders (id, task_id, scheduled_at, executed_at, status, channel_results, retry_count, created_at)
+             VALUES (?1, 'task-1', ?2, ?3, ?4, '[]', ?5, ?6)",
+            rusqlite::params![id, scheduled_at, scheduled_at + 100, status, 0i64, scheduled_at - 100],
         ).unwrap();
     }
 

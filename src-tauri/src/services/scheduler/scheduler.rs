@@ -325,15 +325,19 @@ async fn execute_pending_reminders(db: &Arc<Database>) -> Result<()> {
                             log::info!("Reminder {} sent successfully", reminder.id);
                             ("sent", res)
                         } else {
-                            ReminderDao::update_status(&conn, &reminder.id, "failed", &res, Some("所有通知渠道发送失败"))?;
-                            log::error!("Reminder {} failed: all channels failed", reminder.id);
-                            ("failed", res)
+                            // Retry on failure (up to 3 attempts)
+                            ReminderDao::increment_retry(&conn, &reminder.id)?;
+                            log::warn!("Reminder {} failed (retry {}), will retry", reminder.id, reminder.retry_count + 1);
+                            // Keep as pending for next cycle
+                            continue;
                         }
                     }
                     Err(e) => {
-                        ReminderDao::update_status(&conn, &reminder.id, "failed", "[]", Some(&e.to_string()))?;
-                        log::error!("Reminder {} failed: {}", reminder.id, e);
-                        ("failed", "[]".to_string())
+                        // Retry on error (up to 3 attempts)
+                        ReminderDao::increment_retry(&conn, &reminder.id)?;
+                        log::warn!("Reminder {} error (retry {}): {}, will retry", reminder.id, reminder.retry_count + 1, e);
+                        // Keep as pending for next cycle
+                        continue;
                     }
                 };
                 // Insert into reminder_history

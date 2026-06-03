@@ -67,6 +67,7 @@ pub fn init_schema(conn: &Connection) -> Result<()> {
             user_action     TEXT,
             user_feedback   TEXT,
             action_at       INTEGER,
+            retry_count     INTEGER NOT NULL DEFAULT 0,
             created_at      INTEGER NOT NULL,
             FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE
         );
@@ -154,6 +155,8 @@ pub fn init_schema(conn: &Connection) -> Result<()> {
     let _ = conn.execute("ALTER TABLE gitlab_scan_history ADD COLUMN pipeline_success INTEGER DEFAULT 0", []);
     let _ = conn.execute("ALTER TABLE gitlab_scan_history ADD COLUMN pipeline_failed INTEGER DEFAULT 0", []);
     let _ = conn.execute("ALTER TABLE gitlab_scan_history ADD COLUMN developer_stats TEXT DEFAULT '[]'", []);
+    // Safe migration for retry_count
+    let _ = conn.execute("ALTER TABLE reminders ADD COLUMN retry_count INTEGER NOT NULL DEFAULT 0", []);
 
     Ok(())
 }
