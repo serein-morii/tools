@@ -938,7 +938,6 @@ export function GitLabOverviewPage() {
             </div>
             <div>
               <h1 className="text-sm font-medium">GitLab 概览</h1>
-              <p className="text-xs text-muted-foreground mt-0.5">项目代码质量与提交统计</p>
             </div>
           </div>
         </div>

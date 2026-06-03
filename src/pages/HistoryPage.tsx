@@ -60,7 +60,6 @@ export function HistoryPage() {
             </div>
             <div>
               <h1 className="text-sm font-medium">提醒历史</h1>
-              <p className="text-xs text-muted-foreground mt-0.5">查看所有已发递的提醒记录</p>
             </div>
           </div>
         </div>

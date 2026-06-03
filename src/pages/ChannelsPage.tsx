@@ -64,7 +64,6 @@ export function ChannelsPage() {
             </div>
             <div>
               <h1 className="text-sm font-medium">渠道管理</h1>
-              <p className="text-xs text-muted-foreground mt-0.5">Slack / Discord 等渠道通知配置</p>
             </div>
           </div>
           <Button onClick={handleCreate} size="sm" className="gap-1.5 shadow-sm h-7 text-xs">

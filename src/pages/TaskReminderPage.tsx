@@ -83,7 +83,6 @@ export function TaskReminderPage() {
             </div>
             <div>
               <h1 className="text-sm font-medium">任务提醒</h1>
-              <p className="text-xs text-muted-foreground mt-0.5">管理定时任务和通知提醒</p>
             </div>
           </div>
         </div>
@@ -112,7 +111,6 @@ export function TaskReminderPage() {
             </div>
             <div>
               <h1 className="text-sm font-medium">任务提醒</h1>
-              <p className="text-xs text-muted-foreground mt-0.5">管理定时任务和通知提醒</p>
             </div>
           </div>
         </div>
@@ -139,7 +137,6 @@ export function TaskReminderPage() {
             </div>
             <div>
               <h1 className="text-sm font-medium">任务提醒</h1>
-              <p className="text-xs text-muted-foreground mt-0.5">管理定时任务和通知提醒</p>
             </div>
           </div>
         </div>

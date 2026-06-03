@@ -747,7 +747,6 @@ export function AiCoveragePage() {
             </div>
             <div>
               <h1 className="text-sm font-medium">AI 生成率</h1>
-              <p className="text-xs text-muted-foreground mt-0.5">各部门 AI 辅助编程代码贡献统计</p>
             </div>
           </div>
           <div className="inline-flex gap-1 rounded-lg bg-muted p-0.5">

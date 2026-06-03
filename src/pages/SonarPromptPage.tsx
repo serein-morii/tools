@@ -773,7 +773,6 @@ export function SonarPromptPage() {
                         </div>
                         <div>
                             <h1 className="text-sm font-medium">单测覆盖率</h1>
-                            <p className="text-xs text-muted-foreground mt-0.5">Sonar 覆盖率 → Prompt 生成</p>
                         </div>
                     </div>
                     <div className="inline-flex gap-1 rounded-lg bg-muted p-0.5">
@@ -1519,9 +1518,6 @@ export function SonarPromptPage() {
                                                             <span className="text-muted-foreground">/</span>
                                                             <span className="text-sm">{record.branch}</span>
                                                         </div>
-                                                        <p className="text-xs text-muted-foreground mt-0.5">
-                                                            {formatTime(record.createdAt)} &middot; {record.fileCount} 个文件 &middot; {record.author}
-                                                        </p>
                                                     </div>
                                                 </div>
                                                 <div className="flex gap-1 shrink-0">

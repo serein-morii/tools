@@ -95,7 +95,6 @@ export function TemplatesPage() {
             </div>
             <div>
               <h1 className="text-sm font-medium">模板管理</h1>
-              <p className="text-xs text-muted-foreground mt-0.5">管理和创建通知模板</p>
             </div>
           </div>
           <Button onClick={handleCreate} size="sm" className="gap-1.5 shadow-sm h-7 text-xs">
