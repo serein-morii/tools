@@ -1504,6 +1504,9 @@ export function SonarPromptPage() {
                                     className="max-w-[280px]"
                                     size="md"
                                 />
+                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 shrink-0" onClick={fetchWorkspaces} disabled={loadingWorkspaces}>
+                                    <RefreshCw className={cn("h-3.5 w-3.5", loadingWorkspaces && "animate-spin")} />
+                                </Button>
                             </div>
                         )}
                         <UnitBoardCard
@@ -1578,22 +1581,21 @@ export function SonarPromptPage() {
                                                 <Input placeholder="a0a768d7-..." value={walkinForm.walkin_dept_id} onChange={(e) => setWalkinForm({ ...walkinForm, walkin_dept_id: e.target.value })} className="h-8 text-xs" />
                                             </div>
                                             <div className="space-y-1.5">
-                                                <div className="flex items-center justify-between">
-                                                    <Label className="text-xs">工作空间</Label>
-                                                    {workspaces.length > 0 && (
-                                                        <Button variant="ghost" size="sm" className="h-5 text-[10px] gap-1" onClick={fetchWorkspaces} disabled={loadingWorkspaces}>
-                                                            <RefreshCw className={cn("h-2.5 w-2.5", loadingWorkspaces && "animate-spin")} />刷新
-                                                        </Button>
-                                                    )}
-                                                </div>
+                                                <Label className="text-xs">工作空间</Label>
                                                 {workspaces.length > 0 ? (
-                                                    <SearchableSelect
-                                                        options={workspaces.map((w) => ({ value: w.name, label: w.name, description: w.id }))}
-                                                        value={walkinForm.walkin_workspace_name}
-                                                        onChange={(v) => setWalkinForm({ ...walkinForm, walkin_workspace_name: v })}
-                                                        placeholder="选择工作空间"
-                                                        size="md"
-                                                    />
+                                                    <div className="flex items-center gap-2">
+                                                        <SearchableSelect
+                                                            options={workspaces.map((w) => ({ value: w.name, label: w.name, description: w.id }))}
+                                                            value={walkinForm.walkin_workspace_name}
+                                                            onChange={(v) => setWalkinForm({ ...walkinForm, walkin_workspace_name: v })}
+                                                            placeholder="选择工作空间"
+                                                            size="md"
+                                                            className="flex-1"
+                                                        />
+                                                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 shrink-0" onClick={fetchWorkspaces} disabled={loadingWorkspaces}>
+                                                            <RefreshCw className={cn("h-3.5 w-3.5", loadingWorkspaces && "animate-spin")} />
+                                                        </Button>
+                                                    </div>
                                                 ) : (
                                                     <Input placeholder="产品架构&PMO" value={walkinForm.walkin_workspace_name} onChange={(e) => setWalkinForm({ ...walkinForm, walkin_workspace_name: e.target.value })} className="h-8 text-xs" />
                                                 )}
