@@ -2,11 +2,11 @@ import { NavLink } from "react-router-dom";
 import { Bell, Settings, ChevronLeft, ChevronRight, Home, GitBranch, FileCode, Brain, Timer, StickyNote } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
-import { useState } from "react";
-import { useSettings, getSettingValue } from "@/lib/query/settingsQueries";
+import { useState, useEffect } from "react";
+import { useSettings, useUpdateSetting, getSettingValue } from "@/lib/query/settingsQueries";
 
 const primaryItems = [
-  { to: "/", icon: Home, labelKey: "nav.home", match: "/", settingKey: null },
+  { to: "/home", icon: Home, labelKey: "nav.home", match: "/home", settingKey: null },
   { to: "/gitlab", icon: GitBranch, labelKey: "nav.gitlab", match: "/gitlab", settingKey: "page_gitlab_visible" },
   { to: "/sonar", icon: FileCode, labelKey: "nav.sonar", match: "/sonar", settingKey: "page_sonar_visible" },
   { to: "/ai-coverage", icon: Brain, labelKey: "nav.aiCoverage", match: "/ai-coverage", settingKey: "page_ai_coverage_visible" },
@@ -17,12 +17,36 @@ const primaryItems = [
 
 export function Sidebar() {
   const { t } = useTranslation();
-  const [collapsed, setCollapsed] = useState(false);
   const { data: settings } = useSettings();
+  const updateSetting = useUpdateSetting();
+  const [collapsed, setCollapsed] = useState(false);
 
-  const visibleItems = primaryItems.filter(item => {
+  useEffect(() => {
+    const saved = getSettingValue(settings, "sidebar_collapsed", "false");
+    if (saved === "true") setCollapsed(true);
+  }, [settings]);
+
+  const toggleCollapse = () => {
+    const next = !collapsed;
+    setCollapsed(next);
+    updateSetting.mutate({ key: "sidebar_collapsed", value: next ? "true" : "false" });
+  };
+
+  const raw = getSettingValue(settings, "menu_order", "");
+  const menuOrder: string[] = raw ? JSON.parse(raw) : [];
+
+  const filtered = primaryItems.filter(item => {
     if (!item.settingKey) return true;
     return getSettingValue(settings, item.settingKey, "true") === "true";
+  });
+
+  const visibleItems = [...filtered].sort((a, b) => {
+    if (a.to === "/home") return -1;
+    if (b.to === "/home") return 1;
+    const aId = a.to.replace("/", "").replace("/tasks", "");
+    const bId = b.to.replace("/", "").replace("/tasks", "");
+    const ai = menuOrder.indexOf(aId); const bi = menuOrder.indexOf(bId);
+    return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
   });
 
   return (
@@ -52,7 +76,7 @@ export function Sidebar() {
           />
         )}
         <button
-          onClick={() => setCollapsed(!collapsed)}
+          onClick={toggleCollapse}
           className={cn(
             "flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors",
             collapsed && "absolute right-2"

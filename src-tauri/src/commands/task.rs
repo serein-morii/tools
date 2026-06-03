@@ -35,6 +35,16 @@ pub fn delete_task(db: State<'_, Arc<Database>>, id: String) -> Result<()> {
 }
 
 #[tauri::command]
+pub fn clear_all_tasks(db: State<'_, Arc<Database>>) -> Result<()> {
+    let conn = db.conn().lock().unwrap();
+    let tasks = TaskDao::get_all(&conn)?;
+    for task in tasks {
+        TaskDao::delete(&conn, &task.id)?;
+    }
+    Ok(())
+}
+
+#[tauri::command]
 pub fn toggle_task(db: State<'_, Arc<Database>>, id: String, enabled: bool) -> Result<Task> {
     let conn = db.conn().lock().unwrap();
     TaskDao::toggle(&conn, &id, enabled)

@@ -15,6 +15,7 @@ import { CopyButton } from "@/components/ui/copy-button";
 import { sonarApi, type SonarAuth, type SonarReport, type SonarFile, type FileCoverage } from "@/lib/api/sonar";
 import { gitlabApi } from "@/lib/api/gitlab";
 import { useGitLabConfig, useSaveGitLabConfig, useGitLabProjects, useGitLabBranches } from "@/lib/query/gitlabQueries";
+
 import { useWalkinAuth } from "@/components/modules/gitlab/WalkinAuthManager";
 import { defaultGitLabConfig } from "@/lib/gitlab/defaults";
 import type { GitLabConfig, LdapProfile, WorkspaceItem } from "@/types";

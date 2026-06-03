@@ -818,34 +818,34 @@ export function AiCoveragePage() {
 
           {/* Stats Cards */}
           {data && (
-            <div className="grid grid-cols-5 gap-3 px-5 py-3 bg-muted/30">
-              <div className="rounded-lg border bg-card p-2.5">
-                <p className="text-[10px] text-muted-foreground mb-0.5">AI生成率</p>
-            <p className="text-lg font-bold text-primary font-mono">
+            <div className="grid grid-cols-5 gap-2 px-4 py-2 bg-muted/30 rounded-lg border">
+              <div className="rounded-md border bg-card p-2">
+                <p className="text-[9px] text-muted-foreground mb-0.5">AI生成率</p>
+            <p className="text-sm font-bold text-primary">
               {data.overall.ai_rate.toFixed(1)}%
             </p>
           </div>
-          <div className="rounded-lg border bg-card p-2.5">
-            <p className="text-[10px] text-muted-foreground mb-0.5">总代码行</p>
-            <p className="text-lg font-bold font-mono">
+          <div className="rounded-md border bg-card p-2">
+            <p className="text-[9px] text-muted-foreground mb-0.5">总代码行</p>
+            <p className="text-sm font-bold">
               {(data.overall.total_lines / 1_000_000).toFixed(2)}M
             </p>
           </div>
-          <div className="rounded-lg border bg-card p-2.5">
-            <p className="text-[10px] text-muted-foreground mb-0.5">AI 代码行</p>
-            <p className="text-lg font-bold text-primary font-mono">
+          <div className="rounded-md border bg-card p-2">
+            <p className="text-[9px] text-muted-foreground mb-0.5">AI 代码行</p>
+            <p className="text-sm font-bold text-primary">
               {(data.overall.ai_lines / 1_000_000).toFixed(2)}M
             </p>
           </div>
-          <div className="rounded-lg border bg-card p-2.5">
-            <p className="text-[10px] text-muted-foreground mb-0.5">总提交数</p>
-            <p className="text-lg font-bold font-mono">
+          <div className="rounded-md border bg-card p-2">
+            <p className="text-[9px] text-muted-foreground mb-0.5">总提交数</p>
+            <p className="text-sm font-bold">
               {data.overall.total_commits.toLocaleString()}
             </p>
           </div>
-          <div className="rounded-lg border bg-card p-2.5">
-            <p className="text-[10px] text-muted-foreground mb-0.5">AI 提交数</p>
-            <p className="text-lg font-bold text-primary font-mono">
+          <div className="rounded-md border bg-card p-2">
+            <p className="text-[9px] text-muted-foreground mb-0.5">AI 提交数</p>
+            <p className="text-sm font-bold text-primary">
               {data.overall.commits_with_ai.toLocaleString()}
             </p>
           </div>

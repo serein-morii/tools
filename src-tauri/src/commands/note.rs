@@ -38,3 +38,13 @@ pub fn search_notes(db: tauri::State<'_, Arc<Database>>, query: String) -> Resul
     let conn = db.conn().lock().unwrap();
     NoteDao::search(&conn, &query)
 }
+
+#[tauri::command]
+pub fn clear_all_notes(db: tauri::State<'_, Arc<Database>>) -> Result<()> {
+    let conn = db.conn().lock().unwrap();
+    let notes = NoteDao::get_all(&conn)?;
+    for note in notes {
+        NoteDao::delete(&conn, &note.id)?;
+    }
+    Ok(())
+}

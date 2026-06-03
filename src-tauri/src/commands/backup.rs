@@ -76,3 +76,9 @@ fn default_backup_path() -> Result<PathBuf> {
         .ok_or_else(|| ToolsError::Backup("Cannot resolve backup directory".to_string()))?;
     Ok(downloads.join(format!("tools-backup-{}.json", Utc::now().format("%Y%m%d-%H%M%S"))))
 }
+
+#[tauri::command]
+pub fn write_text_file(path: String, content: String) -> Result<()> {
+    std::fs::write(&path, &content)
+        .map_err(|e| ToolsError::Backup(format!("Failed to write file: {}", e)))
+}

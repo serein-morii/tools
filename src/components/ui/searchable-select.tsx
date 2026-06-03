@@ -6,6 +6,7 @@ export interface SelectOption {
   value: string;
   label: string;
   description?: string;
+  icon?: React.ComponentType<{ className?: string }>;
 }
 
 export interface SearchableSelectProps {
@@ -69,7 +70,8 @@ export function SearchableSelect({
           isOpen && "ring-1 ring-ring bg-muted/50"
         )}
       >
-        <span className={cn("truncate", !selectedOption && "text-muted-foreground")}>
+        <span className={cn("truncate flex items-center gap-1.5", !selectedOption && "text-muted-foreground")}>
+          {selectedOption?.icon && <selectedOption.icon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />}
           {selectedOption?.label || placeholder}
         </span>
         <ChevronDown
@@ -121,7 +123,10 @@ export function SearchableSelect({
                     option.value === value && "bg-accent/50 font-medium"
                   )}
                 >
-                  <span className="truncate max-w-full">{option.label}</span>
+                  <span className="truncate max-w-full flex items-center gap-1.5">
+                    {option.icon && <option.icon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />}
+                    {option.label}
+                  </span>
                   {option.description && (
                     <span className="text-muted-foreground text-[11px] truncate max-w-full">{option.description}</span>
                   )}

@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy } from "react";
+import { useState, useEffect, useRef, lazy } from "react";
 import { useTranslation } from "react-i18next";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,10 +6,13 @@ import { useSettings, useUpdateSetting, getSettingValue } from "@/lib/query/sett
 import { useQueryClient } from "@tanstack/react-query";
 import { open, save } from "@tauri-apps/plugin-dialog";
 import { invoke } from "@tauri-apps/api/core";
-import { Monitor, Moon, Sun, Power, EyeOff, MonitorUp, Download, Upload, Info, Palette, Database, LayoutGrid } from "lucide-react";
+import { Monitor, Moon, Sun, Power, EyeOff, MonitorUp, Download, Upload, Info, Palette, Database, LayoutGrid, GripVertical, ChevronUp, ChevronDown, RotateCcw, Home, AlertTriangle, Bell, GitBranch, FileCode, Brain, Timer, StickyNote } from "lucide-react";
 import { ToggleRow } from "@/components/ui/toggle-row";
+import { Switch } from "@/components/ui/switch";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/theme-provider";
+import { toast } from "sonner";
 
 const LanguageSettings = lazy(() => import("@/components/settings/LanguageSettings").then((m) => ({ default: m.LanguageSettings })));
 
@@ -21,6 +24,7 @@ export function SettingsPage() {
   const [backupMessage, setBackupMessage] = useState<string | null>(null);
   const [backupError, setBackupError] = useState<string | null>(null);
   const [autoLaunchSystemStatus, setAutoLaunchSystemStatus] = useState<boolean>(false);
+  const [dragIdx, setDragIdx] = useState<number | null>(null);
   const { theme, setTheme } = useTheme();
 
   const autoLaunch = getSettingValue(settings, "auto_launch", "false") === "true";
@@ -204,6 +208,54 @@ export function SettingsPage() {
           </CardContent>
         </Card>
 
+        {/* Default Startup Page */}
+        <Card>
+          <CardHeader className="bg-muted/30 border-b py-2 px-3">
+            <div className="flex items-center gap-1.5">
+              <Home className="h-3.5 w-3.5 text-indigo-500" />
+              <CardTitle className="text-sm">启动页</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="p-3">
+            <p className="text-[10px] text-muted-foreground mb-2">选择打开应用时默认显示的页面</p>
+            <SearchableSelect
+              value={getSettingValue(settings, "startup_page", "/home")}
+              onChange={(v) => updateSetting.mutate({ key: "startup_page", value: v })}
+              options={[
+                { value: "/home", label: "概览", icon: Home },
+                { value: "/reminder/tasks", label: "智能提醒", icon: Bell },
+                { value: "/gitlab/overview", label: "Git 扫描", icon: GitBranch },
+                { value: "/sonar", label: "单测覆盖率", icon: FileCode },
+                { value: "/ai-coverage", label: "AI 生成率", icon: Brain },
+                { value: "/timer", label: "番茄钟", icon: Timer },
+                { value: "/notes", label: "速记", icon: StickyNote },
+              ]}
+              placeholder="选择启动页"
+              size="md"
+            />
+          </CardContent>
+        </Card>
+
+        {/* Page Visibility + Ordering */}
+        <Card className="overflow-hidden">
+          <CardHeader className="bg-muted/30 border-b py-2 px-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <LayoutGrid className="h-3.5 w-3.5 text-blue-500" />
+                <CardTitle className="text-sm">菜单与页面</CardTitle>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="p-3">
+            <ReorderableMenuList
+              settings={settings}
+              updateSetting={updateSetting}
+              dragIdx={dragIdx}
+              setDragIdx={setDragIdx}
+            />
+          </CardContent>
+        </Card>
+
         {/* Data Management */}
         <Card className="overflow-hidden">
           <CardHeader className="bg-muted/30 border-b py-2 px-3">
@@ -228,44 +280,77 @@ export function SettingsPage() {
           </CardContent>
         </Card>
 
-        {/* Page Visibility */}
-        <Card className="overflow-hidden">
-          <CardHeader className="bg-muted/30 border-b py-2 px-3">
+        {/* Reset & Clear */}
+        <Card className="overflow-hidden border-destructive/30">
+          <CardHeader className="bg-destructive/5 border-b border-destructive/20 py-2 px-3">
             <div className="flex items-center gap-1.5">
-              <LayoutGrid className="h-3.5 w-3.5 text-blue-500" />
-              <CardTitle className="text-sm">页面显示</CardTitle>
+              <AlertTriangle className="h-3.5 w-3.5 text-destructive" />
+              <CardTitle className="text-sm text-destructive">危险操作</CardTitle>
             </div>
           </CardHeader>
           <CardContent className="p-3 space-y-2">
-            {[
-              { key: "page_reminder_visible", label: "智能提醒", icon: "🔔" },
-              { key: "page_gitlab_visible", label: "Git 扫描", icon: "📊" },
-              { key: "page_sonar_visible", label: "单测覆盖率", icon: "🧪" },
-              { key: "page_ai_coverage_visible", label: "AI 生成率", icon: "🤖" },
-              { key: "page_timer_visible", label: "番茄钟", icon: "⏱️" },
-              { key: "page_notes_visible", label: "速记", icon: "📝" },
-            ].map(({ key, label, icon }) => {
-              const visible = getSettingValue(settings, key, "true") === "true";
-              return (
-                <div key={key} className="flex items-center justify-between rounded-lg border bg-card/50 p-2.5">
-                  <span className="text-xs">{icon} {label}</span>
-                  <div className="flex gap-1">
-                    <Button
-                      variant={visible ? "default" : "outline"}
-                      size="sm"
-                      className="h-6 text-[10px]"
-                      onClick={() => updateSetting.mutate({ key, value: "true" })}
-                    >显示</Button>
-                    <Button
-                      variant={!visible ? "default" : "outline"}
-                      size="sm"
-                      className="h-6 text-[10px]"
-                      onClick={() => updateSetting.mutate({ key, value: "false" })}
-                    >隐藏</Button>
-                  </div>
-                </div>
-              );
-            })}
+            <div className="flex items-center justify-between rounded-lg border bg-card/50 p-2.5">
+              <div>
+                <p className="text-xs font-medium">重置所有配置</p>
+                <p className="text-[10px] text-muted-foreground">恢复所有设置项到默认值，保留数据</p>
+              </div>
+              <Button variant="destructive" size="sm" className="h-7 text-xs" onClick={() => {
+                if (window.confirm("确定重置所有设置？此操作不可撤销，将恢复全部配置到默认值。")) {
+                  (settings || []).forEach(s => updateSetting.mutate({ key: s.key, value: "" }));
+                  queryClient.invalidateQueries();
+                  toast.success("所有设置已重置");
+                }
+              }}>
+                <RotateCcw className="h-3 w-3 mr-1" />重置配置
+              </Button>
+            </div>
+            <div className="flex items-center justify-between rounded-lg border bg-card/50 p-2.5">
+              <div>
+                <p className="text-xs font-medium">清除全部提醒任务</p>
+                <p className="text-[10px] text-muted-foreground">删除所有提醒任务，不可恢复</p>
+              </div>
+              <Button variant="destructive" size="sm" className="h-7 text-xs" onClick={() => {
+                if (window.confirm("确定删除所有提醒任务？此操作不可撤销。")) {
+                  invoke("clear_all_tasks").then(() => {
+                    queryClient.invalidateQueries();
+                    toast.success("所有任务已删除");
+                  }).catch(e => toast.error("删除失败: " + e));
+                }
+              }}>
+                <RotateCcw className="h-3 w-3 mr-1" />清除任务
+              </Button>
+            </div>
+            <div className="flex items-center justify-between rounded-lg border bg-card/50 p-2.5">
+              <div>
+                <p className="text-xs font-medium">清除全部速记</p>
+                <p className="text-[10px] text-muted-foreground">删除所有速记，不可恢复</p>
+              </div>
+              <Button variant="destructive" size="sm" className="h-7 text-xs" onClick={() => {
+                if (window.confirm("确定删除所有速记？此操作不可撤销。")) {
+                  invoke("clear_all_notes").then(() => {
+                    queryClient.invalidateQueries();
+                    toast.success("所有速记已删除");
+                  }).catch(e => toast.error("删除失败: " + e));
+                }
+              }}>
+                <RotateCcw className="h-3 w-3 mr-1" />清除速记
+              </Button>
+            </div>
+            <div className="flex items-center justify-between rounded-lg border bg-card/50 p-2.5">
+              <div>
+                <p className="text-xs font-medium">清除本地缓存</p>
+                <p className="text-[10px] text-muted-foreground">清除所有本地缓存数据，建议重启应用</p>
+              </div>
+              <Button variant="destructive" size="sm" className="h-7 text-xs" onClick={() => {
+                if (window.confirm("确定清除所有本地缓存？")) {
+                  localStorage.clear(); sessionStorage.clear();
+                  queryClient.clear();
+                  toast.success("缓存已清除，建议重启应用");
+                }
+              }}>
+                <RotateCcw className="h-3 w-3 mr-1" />清除缓存
+              </Button>
+            </div>
           </CardContent>
         </Card>
 
@@ -321,5 +406,130 @@ function ThemeButton({ active, onClick, icon: Icon, children }: ThemeButtonProps
       <Icon className="h-3 w-3" />
       {children}
     </Button>
+  );
+}
+
+const PAGES = [
+  { key: "page_gitlab_visible", id: "gitlab", label: "Git 扫描", icon: GitBranch },
+  { key: "page_sonar_visible", id: "sonar", label: "单测覆盖率", icon: FileCode },
+  { key: "page_ai_coverage_visible", id: "ai-coverage", label: "AI 生成率", icon: Brain },
+  { key: "page_reminder_visible", id: "reminder", label: "智能提醒", icon: Bell },
+  { key: "page_timer_visible", id: "timer", label: "番茄钟", icon: Timer },
+  { key: "page_notes_visible", id: "notes", label: "速记", icon: StickyNote },
+];
+
+function ReorderableMenuList({ settings, updateSetting, dragIdx, setDragIdx }: {
+  settings: any; updateSetting: any; dragIdx: number | null; setDragIdx: (v: number | null) => void;
+}) {
+  const raw = getSettingValue(settings, "menu_order", "");
+  const order: string[] = raw ? JSON.parse(raw) : PAGES.map(p => p.id);
+  const sorted = [...PAGES].sort((a, b) => {
+    const ai = order.indexOf(a.id); const bi = order.indexOf(b.id);
+    return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+  });
+  const orderRef = useRef(order);
+  const sortedRef = useRef(sorted);
+  orderRef.current = order; sortedRef.current = sorted;
+  const updateRef = useRef(updateSetting);
+  updateRef.current = updateSetting;
+  const dragRef = useRef<number | null>(null);
+
+  const moveUp = (idx: number) => {
+    if (idx <= 0) return;
+    const newOrder = [...orderRef.current];
+    [newOrder[idx - 1], newOrder[idx]] = [newOrder[idx], newOrder[idx - 1]];
+    updateSetting.mutate({ key: "menu_order", value: JSON.stringify(newOrder) });
+  };
+  const moveDown = (idx: number) => {
+    if (idx >= sortedRef.current.length - 1) return;
+    const newOrder = [...orderRef.current];
+    [newOrder[idx], newOrder[idx + 1]] = [newOrder[idx + 1], newOrder[idx]];
+    updateSetting.mutate({ key: "menu_order", value: JSON.stringify(newOrder) });
+  };
+
+  const onPointerDown = (e: React.PointerEvent, idx: number) => {
+    if ((e.target as HTMLElement).closest("button")) return;
+    e.preventDefault();
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    dragRef.current = idx;
+    setDragIdx(idx);
+  };
+  const onPointerMove = (e: React.PointerEvent) => {
+    if (dragRef.current === null) return;
+    document.querySelectorAll("[data-menu-item]").forEach(el => el.classList.remove("ring-2", "ring-primary"));
+    const target = document.elementFromPoint(e.clientX, e.clientY)?.closest("[data-menu-item]");
+    if (target) target.classList.add("ring-2", "ring-primary");
+  };
+  const onPointerUp = (e: React.PointerEvent) => {
+    if (dragRef.current === null) return;
+    const fromIdx = dragRef.current;
+    dragRef.current = null;
+    document.querySelectorAll("[data-menu-item]").forEach(el => el.classList.remove("ring-2", "ring-primary"));
+    const target = document.elementFromPoint(e.clientX, e.clientY)?.closest("[data-menu-item]");
+    const targetIdx = target ? parseInt(target.getAttribute("data-menu-item") || "-1") : -1;
+    if (targetIdx >= 0 && fromIdx !== targetIdx) {
+      const ord = orderRef.current;
+      const srt = sortedRef.current;
+      const newOrder = [...ord];
+      const movedId = srt[fromIdx].id;
+      const oldPos = newOrder.indexOf(movedId);
+      if (oldPos >= 0) {
+        newOrder.splice(oldPos, 1);
+        const targetId = srt[targetIdx].id;
+        const targetPos = newOrder.indexOf(targetId);
+        newOrder.splice(targetPos, 0, movedId);
+        updateRef.current.mutate({ key: "menu_order", value: JSON.stringify(newOrder) });
+      }
+    }
+    setDragIdx(null);
+  };
+
+  const itemClass = (idx: number, visible: boolean) => cn(
+    "flex items-center gap-1.5 rounded-lg border p-2 transition-colors select-none",
+    dragIdx === idx ? "opacity-50 bg-muted/30" : "bg-card/50 hover:bg-muted/30",
+    !visible && "opacity-60"
+  );
+
+  return (
+    <div className="space-y-1.5">
+      <div className={itemClass(-1, true)}>
+        <GripVertical className="h-3.5 w-3.5 text-muted-foreground/30" />
+        <div className="flex flex-col gap-0.5 shrink-0">
+          <button disabled className="h-3 w-4 flex items-center justify-center opacity-20"><ChevronUp className="h-2.5 w-2.5" /></button>
+          <button disabled className="h-3 w-4 flex items-center justify-center opacity-20"><ChevronDown className="h-2.5 w-2.5" /></button>
+        </div>
+        <div className="flex items-center gap-1.5 flex-1 text-xs">
+          <Home className="h-3.5 w-3.5 text-muted-foreground" />概览
+        </div>
+        <div className="flex gap-1"><Switch checked disabled /></div>
+      </div>
+      {sorted.map((page, idx) => {
+        const visible = getSettingValue(settings, page.key, "true") === "true";
+        return (
+          <div
+            key={page.id}
+            data-menu-item={idx}
+            onPointerDown={(e) => onPointerDown(e, idx)}
+            onPointerMove={onPointerMove}
+            onPointerUp={onPointerUp}
+            className={itemClass(idx, visible)}
+            style={{ touchAction: "none" }}
+          >
+            <GripVertical className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0 cursor-grab active:cursor-grabbing" />
+            <div className="flex flex-col gap-0.5 shrink-0">
+              <button onClick={(e) => { e.stopPropagation(); moveUp(idx); }} disabled={idx === 0} className="h-3 w-4 flex items-center justify-center text-muted-foreground hover:text-foreground disabled:opacity-30"><ChevronUp className="h-2.5 w-2.5" /></button>
+              <button onClick={(e) => { e.stopPropagation(); moveDown(idx); }} disabled={idx === sorted.length - 1} className="h-3 w-4 flex items-center justify-center text-muted-foreground hover:text-foreground disabled:opacity-30"><ChevronDown className="h-2.5 w-2.5" /></button>
+            </div>
+            <div className="flex items-center gap-1.5 flex-1 text-xs">
+              <page.icon className="h-3.5 w-3.5 text-muted-foreground" />{page.label}
+            </div>
+            <Switch
+              checked={visible}
+              onCheckedChange={(checked) => updateSetting.mutate({ key: page.key, value: checked ? "true" : "false" })}
+            />
+          </div>
+        );
+      })}
+    </div>
   );
 }

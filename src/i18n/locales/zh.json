@@ -57,9 +57,9 @@
     "channels": "渠道",
     "history": "历史",
     "settings": "设置",
-    "reminder": "提醒",
-    "timer": "计时",
-    "notes": "笔记",
+    "reminder": "智能提醒",
+    "timer": "番茄钟",
+    "notes": "速记",
     "home": "概览",
     "gitlab": "Git扫描",
     "sonar": "单测覆盖率",
@@ -411,16 +411,16 @@
     "noContent": "无内容"
   },
   "notes": {
-    "title": "快捷笔记",
+    "title": "速记",
     "description": "快速记录想法和备忘",
     "placeholder": "记录想法... (Cmd+Enter 保存)",
-    "search": "搜索笔记...",
-    "empty": "暂无笔记，开始记录你的想法吧",
-    "noResults": "没有找到匹配的笔记",
+    "search": "搜索速记...",
+    "empty": "暂无速记，开始记录你的想法吧",
+    "noResults": "没有找到匹配的速记",
     "pinned": "已置顶",
     "unpinned": "置顶",
-    "other": "其他笔记",
-    "deleteConfirm": "确定删除这条笔记吗？"
+    "other": "其他速记",
+    "deleteConfirm": "确定删除这条速记吗？"
   },
   "timer": {
     "title": "专注计时",

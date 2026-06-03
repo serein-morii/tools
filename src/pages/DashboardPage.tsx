@@ -100,29 +100,62 @@ export function DashboardPage() {
 
   return (
     <div className="p-3 space-y-2.5 max-w-[1400px] mx-auto">
-      {/* Top Bar */}
-      <div className="flex items-center justify-between px-4 py-2 bg-muted/30 rounded-lg border">
-        <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600">
-            <LayoutGrid className="h-4 w-4 text-white" />
-          </div>
-          <div>
-            <h2 className="text-sm font-semibold">Dev Tools</h2>
-            <p className="text-[10px] text-muted-foreground">
-              {currentTime.toLocaleDateString("zh-CN", { year: "numeric", month: "long", day: "numeric", weekday: "long" })}
-              {" · "}{currentTime.toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" })}
-            </p>
-          </div>
+      {/* Welcome Bar */}
+      <div className="relative overflow-hidden rounded-lg border bg-gradient-to-r from-violet-500/10 via-indigo-500/10 to-purple-500/10 px-4 py-3">
+        <div className="absolute top-0 right-0 text-4xl opacity-10 select-none">
+          {(["☀️","🌤️","🌙","🌟"])[currentTime.getHours() < 12 ? 0 : currentTime.getHours() < 18 ? 1 : 2]}
         </div>
-        <div className="flex items-center gap-2">
-          <span className={cn("inline-flex items-center gap-1 text-[10px]", isLoggedIn ? "text-emerald-600" : "text-muted-foreground")}>
-            <span className={cn("h-1.5 w-1.5 rounded-full", isLoggedIn ? "bg-emerald-500" : "bg-muted-foreground")} />
-            {isLoggedIn ? "Walkin 已连接" : "Walkin 未连接"}
-          </span>
-          <button onClick={handleRefresh} disabled={isRefreshing} className="flex items-center gap-1 h-6 rounded px-2 text-[10px] text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
-            <RefreshCw className={cn("h-3 w-3", isRefreshing && "animate-spin")} />
-            刷新
-          </button>
+        <div className="flex items-center justify-between relative z-10">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 shadow-md">
+              <LayoutGrid className="h-[18px] w-[18px] text-white" />
+            </div>
+            <div>
+              <div className="flex items-center gap-1.5">
+                <h2 className="text-sm font-semibold">Dev Tools</h2>
+                <span className="text-[10px] text-muted-foreground font-normal">— {
+                  currentTime.getHours() < 6 ? "夜深了，注意休息 🌙" :
+                  currentTime.getHours() < 9 ? "早上好，新的一天 ☀️" :
+                  currentTime.getHours() < 12 ? "上午好，效率满满 💪" :
+                  currentTime.getHours() < 14 ? "中午好，别忘了休息 🍵" :
+                  currentTime.getHours() < 18 ? "下午好，继续加油 🚀" :
+                  currentTime.getHours() < 22 ? "晚上好，收尾工作 ✨" : "夜深了，注意休息 🌙"
+                }</span>
+              </div>
+              <p className="text-[10px] text-muted-foreground">
+                {currentTime.toLocaleDateString("zh-CN", { year: "numeric", month: "long", day: "numeric", weekday: "long" })}
+                {" · "}{currentTime.toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" })}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="hidden sm:flex items-center gap-1.5 flex-wrap justify-end">
+              <span className="inline-flex items-center gap-1 text-[9px] bg-background/80 rounded-full px-2 py-0.5">
+                <span className="h-1 w-1 rounded-full bg-emerald-500" />
+                扫描 {sonarHistory.length}
+              </span>
+              {gitlabConfigured && (
+                <span className="inline-flex items-center gap-1 text-[9px] bg-background/80 rounded-full px-2 py-0.5">
+                  <span className="h-1 w-1 rounded-full bg-orange-500" />
+                  Git {gitlabProjects}
+                </span>
+              )}
+              <span className="inline-flex items-center gap-1 text-[9px] bg-background/80 rounded-full px-2 py-0.5">
+                <span className="h-1 w-1 rounded-full bg-yellow-500" />
+                速记 {noteList.length}
+              </span>
+              <span className={cn("inline-flex items-center gap-1 text-[9px] bg-background/80 rounded-full px-2 py-0.5",
+                isLoggedIn ? "" : "text-muted-foreground"
+              )}>
+                <span className={cn("h-1 w-1 rounded-full", isLoggedIn ? "bg-emerald-500" : "bg-muted-foreground")} />
+                {isLoggedIn ? "Walkin 在线" : "Walkin 离线"}
+              </span>
+            </div>
+            <button onClick={handleRefresh} disabled={isRefreshing} className="flex items-center gap-1 h-6 rounded-md bg-background/80 px-2 text-[10px] text-muted-foreground hover:text-foreground hover:bg-background transition-colors shrink-0">
+              <RefreshCw className={cn("h-3 w-3", isRefreshing && "animate-spin")} />
+              刷新
+            </button>
+          </div>
         </div>
       </div>
 

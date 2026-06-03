@@ -29,6 +29,12 @@ function PageGuard({ settingKey, children }: { settingKey: string; children: Rea
   return <>{children}</>;
 }
 
+function StartupRedirect() {
+  const { data: settings } = useSettings();
+  const startup = getSettingValue(settings, "startup_page", "/");
+  return <Navigate to={startup} replace />;
+}
+
 function App() {
   return (
     <ErrorBoundary>
@@ -42,7 +48,8 @@ function App() {
       >
         <Routes>
           <Route path="/" element={<MainLayout />}>
-            <Route index element={<DashboardPage />} />
+            <Route index element={<StartupRedirect />} />
+            <Route path="home" element={<DashboardPage />} />
             <Route path="reminder" element={<PageGuard settingKey="page_reminder_visible"><ReminderLayout /></PageGuard>}>
               <Route index element={<Navigate to="/reminder/tasks" replace />} />
               <Route path="tasks" element={<TaskReminderPage />} />
