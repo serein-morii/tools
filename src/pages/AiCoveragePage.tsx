@@ -1,8 +1,8 @@
 import { useState, useEffect, useMemo } from "react";
 import {
   Brain, ChevronRight, ChevronDown, Users, GitCommit, Code2,
-  Calendar, RefreshCw, Search, ChevronLeft, User, ArrowLeft, Trophy,
-  GitBranch, FileText, ExternalLink
+  Calendar, RefreshCw, Search, ChevronLeft, User, Trophy,
+  GitBranch, ExternalLink, Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,20 +14,57 @@ interface DepartmentRowProps {
   dept: AiCoverageDepartment;
   level: number;
   expanded: Set<string>;
-  onToggle: (name: string) => void;
-  onDrilldown: (dept: string, deptL2: string | null) => void;
+  authorExpanded: Set<string>;
+  authorsMap: Map<string, AiCoverageAuthor[]>;
+  loadingAuthors: Set<string>;
+  commitsExpanded: Set<string>;
+  commitsMap: Map<string, AiCoverageCommit[]>;
+  loadingCommits: Set<string>;
+  onToggleDept: (name: string) => void;
+  onToggleAuthors: (key: string) => void;
+  onToggleCommits: (key: string) => void;
+  onLoadAuthors: (dept: string, deptL2: string | null, key: string) => void;
+  onLoadCommits: (dept: string, deptL2: string | null, authorEmail: string, key: string) => void;
 }
 
-function DepartmentRow({ dept, level, expanded, onToggle, onDrilldown }: DepartmentRowProps) {
+function DepartmentRow({
+  dept,
+  level,
+  expanded,
+  authorExpanded,
+  authorsMap,
+  loadingAuthors,
+  commitsExpanded,
+  commitsMap,
+  loadingCommits,
+  onToggleDept,
+  onToggleAuthors,
+  onToggleCommits,
+  onLoadAuthors,
+  onLoadCommits,
+}: DepartmentRowProps) {
   const hasChildren = dept.children && dept.children.length > 0;
   const isExpanded = expanded.has(dept.name);
   const indent = level * 16;
+
+  // Key for author data: "dept|deptL2" or just "dept" for level 0
+  const authorKey = level === 0 ? dept.name : `${dept.name}|${dept.name}`;
+  const showAuthors = authorExpanded.has(authorKey);
+  const authors = authorsMap.get(authorKey) || [];
+  const isLoadingAuthors = loadingAuthors.has(authorKey);
 
   const rateColor = dept.ai_rate >= 80
     ? "text-emerald-600 bg-emerald-500/10"
     : dept.ai_rate >= 50
       ? "text-amber-600 bg-amber-500/10"
       : "text-rose-600 bg-rose-500/10";
+
+  const handleShowAuthors = () => {
+    if (!showAuthors && authors.length === 0 && !isLoadingAuthors) {
+      onLoadAuthors(level === 0 ? dept.name : "", level === 0 ? null : dept.name, authorKey);
+    }
+    onToggleAuthors(authorKey);
+  };
 
   return (
     <>
@@ -41,7 +78,7 @@ function DepartmentRow({ dept, level, expanded, onToggle, onDrilldown }: Departm
         {hasChildren ? (
           <button
             type="button"
-            onClick={() => onToggle(dept.name)}
+            onClick={() => onToggleDept(dept.name)}
             className="shrink-0 p-0.5 rounded hover:bg-muted transition-colors"
           >
             {isExpanded
@@ -81,129 +118,196 @@ function DepartmentRow({ dept, level, expanded, onToggle, onDrilldown }: Departm
             variant="ghost"
             size="sm"
             className="h-6 px-2 text-xs"
-            onClick={() => onDrilldown(
-              level === 0 ? dept.name : "",
-              level === 0 ? null : dept.name
-            )}
+            onClick={handleShowAuthors}
           >
+            {isLoadingAuthors ? (
+              <Loader2 className="h-3 w-3 animate-spin" />
+            ) : showAuthors ? (
+              <ChevronDown className="h-3 w-3 mr-1" />
+            ) : (
+              <ChevronRight className="h-3 w-3 mr-1" />
+            )}
             <User className="h-3 w-3 mr-1" />
             人员
           </Button>
         </div>
       </div>
+
+      {/* Author list (inline expansion) */}
+      {showAuthors && (
+        <>
+          {isLoadingAuthors ? (
+            <div className="flex items-center justify-center py-8 bg-muted/10" style={{ paddingLeft: 32 + indent }}>
+              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+            </div>
+          ) : authors.length === 0 ? (
+            <div className="py-4 text-center text-xs text-muted-foreground bg-muted/10" style={{ paddingLeft: 32 + indent }}>
+              暂无人员数据
+            </div>
+          ) : (
+            authors.map((author, idx) => {
+              const commitKey = `${authorKey}|${author.author_email}`;
+              const showCommits = commitsExpanded.has(commitKey);
+              const commits = commitsMap.get(commitKey) || [];
+              const isLoadingCommits = loadingCommits.has(commitKey);
+
+              const authorRateColor = author.ai_rate >= 80
+                ? "text-emerald-600 bg-emerald-500/10"
+                : author.ai_rate >= 50
+                  ? "text-amber-600 bg-amber-500/10"
+                  : "text-rose-600 bg-rose-500/10";
+
+              return (
+                <div key={author.author_email}>
+                  {/* Author row */}
+                  <div
+                    className="flex items-center gap-2 px-4 py-2 border-b border-border/30 bg-muted/10 hover:bg-muted/20 transition-colors"
+                    style={{ paddingLeft: 32 + indent }}
+                  >
+                    <div className={cn(
+                      "flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold shrink-0",
+                      idx === 0 ? "bg-yellow-500/20 text-yellow-600" :
+                        idx === 1 ? "bg-gray-300/40 text-gray-600" :
+                          idx === 2 ? "bg-amber-600/20 text-amber-700" :
+                            "bg-muted text-muted-foreground"
+                    )}>
+                      {idx < 3 ? <Trophy className="h-2.5 w-2.5" /> : idx + 1}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm truncate">{author.author_name}</p>
+                      <p className="text-xs text-muted-foreground">{author.author_email}</p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="font-mono text-xs text-muted-foreground">
+                        {author.ai_lines.toLocaleString()} / {author.total_lines.toLocaleString()}
+                      </p>
+                    </div>
+                    <span className={cn(
+                      "shrink-0 rounded px-1.5 py-0.5 text-[10px] font-bold font-mono",
+                      authorRateColor
+                    )}>
+                      {author.ai_rate.toFixed(1)}%
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-5 px-1.5 text-[10px]"
+                      onClick={() => {
+                        if (!showCommits && commits.length === 0 && !isLoadingCommits) {
+                          onLoadCommits(
+                            level === 0 ? dept.name : "",
+                            level === 0 ? null : dept.name,
+                            author.author_email,
+                            commitKey
+                          );
+                        }
+                        onToggleCommits(commitKey);
+                      }}
+                    >
+                      {isLoadingCommits ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : showCommits ? (
+                        <ChevronDown className="h-3 w-3" />
+                      ) : (
+                        <ChevronRight className="h-3 w-3" />
+                      )}
+                      <GitBranch className="h-3 w-3 mx-0.5" />
+                      {author.total_commits}
+                    </Button>
+                  </div>
+
+                  {/* Commits list (inline expansion) */}
+                  {showCommits && (
+                    <>
+                      {isLoadingCommits ? (
+                        <div className="flex items-center justify-center py-4 bg-muted/5" style={{ paddingLeft: 48 + indent }}>
+                          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                        </div>
+                      ) : commits.length === 0 ? (
+                        <div className="py-2 text-center text-xs text-muted-foreground bg-muted/5" style={{ paddingLeft: 48 + indent }}>
+                          暂无提交数据
+                        </div>
+                      ) : (
+                        commits.map((commit) => {
+                          const commitRateColor = commit.ai_rate >= 80
+                            ? "text-emerald-600 bg-emerald-500/10"
+                            : commit.ai_rate >= 50
+                              ? "text-amber-600 bg-amber-500/10"
+                              : commit.ai_rate > 0
+                                ? "text-rose-600 bg-rose-500/10"
+                                : "text-gray-500 bg-gray-500/10";
+
+                          const commitDate = new Date(commit.committed_at).toLocaleDateString("zh-CN", {
+                            month: "2-digit", day: "2-digit"
+                          });
+
+                          return (
+                            <div
+                              key={commit.commit_id}
+                              className="flex items-center gap-2 px-4 py-1.5 border-b border-border/20 bg-muted/5 hover:bg-muted/10 transition-colors"
+                              style={{ paddingLeft: 48 + indent }}
+                            >
+                              <code className="rounded bg-muted px-1 py-0.5 text-[10px] font-mono text-muted-foreground shrink-0">
+                                {commit.short_sha}
+                              </code>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs truncate">{commit.title}</p>
+                                <p className="text-[10px] text-muted-foreground">
+                                  {commit.project_name} · {commitDate}
+                                </p>
+                              </div>
+                              <span className="font-mono text-[10px] text-muted-foreground shrink-0">
+                                +{commit.additions}
+                              </span>
+                              <span className={cn(
+                                "shrink-0 rounded px-1 py-0.5 text-[10px] font-bold font-mono",
+                                commitRateColor
+                              )}>
+                                {commit.ai_rate.toFixed(0)}%
+                              </span>
+                              <a
+                                href={`https://gitlab.jms.com/${commit.project_gitlab_id}/-/commit/${commit.gitlab_id}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="shrink-0"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <ExternalLink className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+                              </a>
+                            </div>
+                          );
+                        })
+                      )}
+                    </>
+                  )}
+                </div>
+              );
+            })
+          )}
+        </>
+      )}
+
+      {/* Child departments */}
       {hasChildren && isExpanded && dept.children!.map((child) => (
         <DepartmentRow
           key={child.name}
           dept={child}
           level={level + 1}
           expanded={expanded}
-          onToggle={onToggle}
-          onDrilldown={onDrilldown}
+          authorExpanded={authorExpanded}
+          authorsMap={authorsMap}
+          loadingAuthors={loadingAuthors}
+          commitsExpanded={commitsExpanded}
+          commitsMap={commitsMap}
+          loadingCommits={loadingCommits}
+          onToggleDept={onToggleDept}
+          onToggleAuthors={onToggleAuthors}
+          onToggleCommits={onToggleCommits}
+          onLoadAuthors={onLoadAuthors}
+          onLoadCommits={onLoadCommits}
         />
       ))}
     </>
-  );
-}
-
-function AuthorRow({ author, index, onDrilldown }: { author: AiCoverageAuthor; index: number; onDrilldown: () => void }) {
-  const rateColor = author.ai_rate >= 80
-    ? "text-emerald-600 bg-emerald-500/10"
-    : author.ai_rate >= 50
-      ? "text-amber-600 bg-amber-500/10"
-      : "text-rose-600 bg-rose-500/10";
-
-  return (
-    <div className="flex items-center gap-3 px-4 py-3 hover:bg-muted/30 border-b border-border/50">
-      <div className={cn(
-        "flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold",
-        index === 0 ? "bg-yellow-500/20 text-yellow-600" :
-          index === 1 ? "bg-gray-300/40 text-gray-600" :
-            index === 2 ? "bg-amber-600/20 text-amber-700" :
-              "bg-muted text-muted-foreground"
-      )}>
-        {index < 3 ? <Trophy className="h-3.5 w-3.5" /> : index + 1}
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium truncate">{author.author_name}</p>
-        <p className="text-xs text-muted-foreground">{author.author_email}</p>
-      </div>
-      <div className="text-right">
-        <p className="font-mono text-xs text-muted-foreground">
-          {author.ai_lines.toLocaleString()} / {author.total_lines.toLocaleString()} 行
-        </p>
-        <p className="text-xs text-muted-foreground">
-          {author.commits_with_ai}/{author.total_commits} 提交
-        </p>
-      </div>
-      <span className={cn(
-        "shrink-0 rounded px-2 py-0.5 text-xs font-bold font-mono",
-        rateColor
-      )}>
-        {author.ai_rate.toFixed(1)}%
-      </span>
-      <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={onDrilldown}>
-        <GitBranch className="h-3 w-3 mr-1" />
-        提交
-      </Button>
-    </div>
-  );
-}
-
-function CommitRow({ commit }: { commit: AiCoverageCommit }) {
-  const rateColor = commit.ai_rate >= 80
-    ? "text-emerald-600 bg-emerald-500/10"
-    : commit.ai_rate >= 50
-      ? "text-amber-600 bg-amber-500/10"
-      : commit.ai_rate > 0
-        ? "text-rose-600 bg-rose-500/10"
-        : "text-gray-500 bg-gray-500/10";
-
-  const commitDate = new Date(commit.committed_at).toLocaleDateString("zh-CN", {
-    month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit"
-  });
-
-  return (
-    <div className="flex items-center gap-3 px-4 py-3 hover:bg-muted/30 border-b border-border/50">
-      <div className="flex items-center gap-2 shrink-0">
-        <FileText className="h-4 w-4 text-muted-foreground" />
-        <code className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground">
-          {commit.short_sha}
-        </code>
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm truncate">{commit.title}</p>
-        <div className="flex items-center gap-2 mt-0.5">
-          <span className="text-xs text-muted-foreground">{commit.project_name}</span>
-          <span className="text-xs text-muted-foreground">|</span>
-          <span className="text-xs text-muted-foreground">{commitDate}</span>
-        </div>
-      </div>
-      <div className="text-right shrink-0">
-        <p className="font-mono text-xs">
-          <span className="text-muted-foreground">{commit.additions.toLocaleString()}</span>
-          <span className="text-muted-foreground mx-0.5">行</span>
-          {commit.ai_lines > 0 && (
-            <span className="text-primary">(+{commit.ai_lines.toLocaleString()} AI)</span>
-          )}
-        </p>
-      </div>
-      <span className={cn(
-        "shrink-0 rounded px-2 py-0.5 text-xs font-bold font-mono",
-        rateColor
-      )}>
-        {commit.ai_rate.toFixed(0)}%
-      </span>
-      <a
-        href={`https://gitlab.jms.com/${commit.project_gitlab_id}/-/commit/${commit.gitlab_id}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="shrink-0"
-      >
-        <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-          <ExternalLink className="h-3 w-3" />
-        </Button>
-      </a>
-    </div>
   );
 }
 
@@ -213,18 +317,15 @@ export function AiCoveragePage() {
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState("");
 
-  // Drilldown state: 3 levels
-  // Level 1: Department list
-  // Level 2: Author list
-  // Level 3: Commit list
-  const [drilldownDept, setDrilldownDept] = useState<string | null>(null);
-  const [drilldownDeptL2, setDrilldownDeptL2] = useState<string | null>(null);
-  const [authors, setAuthors] = useState<AiCoverageAuthor[]>([]);
-  const [loadingAuthors, setLoadingAuthors] = useState(false);
+  // Authors expansion state
+  const [authorExpanded, setAuthorExpanded] = useState<Set<string>>(new Set());
+  const [authorsMap, setAuthorsMap] = useState<Map<string, AiCoverageAuthor[]>>(new Map());
+  const [loadingAuthors, setLoadingAuthors] = useState<Set<string>>(new Set());
 
-  const [selectedAuthor, setSelectedAuthor] = useState<AiCoverageAuthor | null>(null);
-  const [commits, setCommits] = useState<AiCoverageCommit[]>([]);
-  const [loadingCommits, setLoadingCommits] = useState(false);
+  // Commits expansion state
+  const [commitsExpanded, setCommitsExpanded] = useState<Set<string>>(new Set());
+  const [commitsMap, setCommitsMap] = useState<Map<string, AiCoverageCommit[]>>(new Map());
+  const [loadingCommits, setLoadingCommits] = useState<Set<string>>(new Set());
 
   const today = new Date();
   const defaultEnd = today.toISOString().slice(0, 10);
@@ -238,12 +339,14 @@ export function AiCoveragePage() {
     try {
       const result = await aiCoverageApi.getCoverage(startDate, endDate);
       setData(result);
-      // Reset drilldown on date change
-      setDrilldownDept(null);
-      setDrilldownDeptL2(null);
-      setAuthors([]);
-      setSelectedAuthor(null);
-      setCommits([]);
+      // Clear expansion states on date change
+      setExpanded(new Set());
+      setAuthorExpanded(new Set());
+      setAuthorsMap(new Map());
+      setLoadingAuthors(new Set());
+      setCommitsExpanded(new Set());
+      setCommitsMap(new Map());
+      setLoadingCommits(new Set());
     } catch (e) {
       toast.error(`获取数据失败: ${e instanceof Error ? e.message : String(e)}`);
     } finally {
@@ -251,12 +354,8 @@ export function AiCoveragePage() {
     }
   };
 
-  const fetchAuthors = async (dept: string, deptL2: string | null) => {
-    setLoadingAuthors(true);
-    setDrilldownDept(dept);
-    setDrilldownDeptL2(deptL2);
-    setSelectedAuthor(null);
-    setCommits([]);
+  const loadAuthors = async (dept: string, deptL2: string | null, key: string) => {
+    setLoadingAuthors((prev) => new Set(prev).add(key));
     try {
       const result = await aiCoverageApi.getCoverageAuthors(
         dept || "",
@@ -264,30 +363,37 @@ export function AiCoveragePage() {
         startDate,
         endDate
       );
-      setAuthors(result);
+      setAuthorsMap((prev) => new Map(prev).set(key, result));
     } catch (e) {
       toast.error(`获取人员数据失败: ${e instanceof Error ? e.message : String(e)}`);
     } finally {
-      setLoadingAuthors(false);
+      setLoadingAuthors((prev) => {
+        const next = new Set(prev);
+        next.delete(key);
+        return next;
+      });
     }
   };
 
-  const fetchCommits = async (author: AiCoverageAuthor) => {
-    setLoadingCommits(true);
-    setSelectedAuthor(author);
+  const loadCommits = async (dept: string, deptL2: string | null, authorEmail: string, key: string) => {
+    setLoadingCommits((prev) => new Set(prev).add(key));
     try {
       const result = await aiCoverageApi.getCoverageCommits(
-        drilldownDept || "",
-        drilldownDeptL2,
-        author.author_email,
+        dept || "",
+        deptL2,
+        authorEmail,
         startDate,
         endDate
       );
-      setCommits(result);
+      setCommitsMap((prev) => new Map(prev).set(key, result));
     } catch (e) {
       toast.error(`获取提交数据失败: ${e instanceof Error ? e.message : String(e)}`);
     } finally {
-      setLoadingCommits(false);
+      setLoadingCommits((prev) => {
+        const next = new Set(prev);
+        next.delete(key);
+        return next;
+      });
     }
   };
 
@@ -304,25 +410,22 @@ export function AiCoveragePage() {
     });
   };
 
-  const handleDrilldownDept = (dept: string, deptL2: string | null) => {
-    fetchAuthors(dept, deptL2);
+  const toggleAuthorExpand = (key: string) => {
+    setAuthorExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
   };
 
-  const handleDrilldownAuthor = (author: AiCoverageAuthor) => {
-    fetchCommits(author);
-  };
-
-  const handleBackToDept = () => {
-    setDrilldownDept(null);
-    setDrilldownDeptL2(null);
-    setAuthors([]);
-    setSelectedAuthor(null);
-    setCommits([]);
-  };
-
-  const handleBackToAuthors = () => {
-    setSelectedAuthor(null);
-    setCommits([]);
+  const toggleCommitExpand = (key: string) => {
+    setCommitsExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
   };
 
   const filteredDepartments = useMemo(() => {
@@ -361,10 +464,11 @@ export function AiCoveragePage() {
     setExpanded(all);
   };
 
-  const collapseAll = () => setExpanded(new Set());
-
-  // Determine current view level
-  const viewLevel = selectedAuthor ? 3 : drilldownDept ? 2 : 1;
+  const collapseAll = () => {
+    setExpanded(new Set());
+    setAuthorExpanded(new Set());
+    setCommitsExpanded(new Set());
+  };
 
   return (
     <div className="flex h-full flex-col overflow-auto">
@@ -404,7 +508,7 @@ export function AiCoveragePage() {
       </div>
 
       {/* Stats Cards */}
-      {data && viewLevel === 1 && (
+      {data && (
         <div className="grid grid-cols-5 gap-4 p-6 bg-muted/30">
           <div className="rounded-xl border bg-card p-4">
             <p className="text-xs text-muted-foreground mb-1">AI 覆盖率</p>
@@ -439,176 +543,75 @@ export function AiCoveragePage() {
         </div>
       )}
 
-      {/* Author stats when viewing level 2 */}
-      {viewLevel === 2 && authors.length > 0 && !loadingAuthors && (
-        <div className="grid grid-cols-4 gap-4 p-6 bg-muted/30">
-          <div className="rounded-xl border bg-card p-4">
-            <p className="text-xs text-muted-foreground mb-1">团队</p>
-            <p className="text-lg font-bold truncate">{drilldownDeptL2 || drilldownDept}</p>
-          </div>
-          <div className="rounded-xl border bg-card p-4">
-            <p className="text-xs text-muted-foreground mb-1">人员数</p>
-            <p className="text-2xl font-bold font-mono">{authors.length}</p>
-          </div>
-          <div className="rounded-xl border bg-card p-4">
-            <p className="text-xs text-muted-foreground mb-1">总提交</p>
-            <p className="text-2xl font-bold font-mono">
-              {authors.reduce((s, a) => s + a.total_commits, 0).toLocaleString()}
-            </p>
-          </div>
-          <div className="rounded-xl border bg-card p-4">
-            <p className="text-xs text-muted-foreground mb-1">平均覆盖率</p>
-            <p className="text-2xl font-bold text-primary font-mono">
-              {(authors.reduce((s, a) => s + a.ai_rate, 0) / authors.length).toFixed(1)}%
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* Commit stats when viewing level 3 */}
-      {viewLevel === 3 && commits.length > 0 && !loadingCommits && selectedAuthor && (
-        <div className="grid grid-cols-4 gap-4 p-6 bg-muted/30">
-          <div className="rounded-xl border bg-card p-4">
-            <p className="text-xs text-muted-foreground mb-1">开发者</p>
-            <p className="text-lg font-bold truncate">{selectedAuthor.author_name}</p>
-          </div>
-          <div className="rounded-xl border bg-card p-4">
-            <p className="text-xs text-muted-foreground mb-1">提交数</p>
-            <p className="text-2xl font-bold font-mono">{commits.length}</p>
-          </div>
-          <div className="rounded-xl border bg-card p-4">
-            <p className="text-xs text-muted-foreground mb-1">总代码行</p>
-            <p className="text-2xl font-bold font-mono">
-              {commits.reduce((s, c) => s + c.additions, 0).toLocaleString()}
-            </p>
-          </div>
-          <div className="rounded-xl border bg-card p-4">
-            <p className="text-xs text-muted-foreground mb-1">AI 覆盖率</p>
-            <p className="text-2xl font-bold text-primary font-mono">
-              {selectedAuthor.ai_rate.toFixed(1)}%
-            </p>
-          </div>
-        </div>
-      )}
-
       {/* Main Content */}
       <div className="flex-1 p-6 pt-0">
         {/* Toolbar */}
         <div className="flex items-center justify-between py-3 border-b">
           <div className="flex items-center gap-2">
-            {viewLevel === 3 && (
-              <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={handleBackToAuthors}>
-                <ArrowLeft className="h-3.5 w-3.5 mr-1" />
-                返回人员列表
-              </Button>
-            )}
-            {viewLevel === 2 && (
-              <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={handleBackToDept}>
-                <ArrowLeft className="h-3.5 w-3.5 mr-1" />
-                返回部门列表
-              </Button>
-            )}
-            {viewLevel === 1 && (
-              <>
-                <div className="relative">
-                  <Search className="h-3.5 w-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    className="h-8 w-64 pl-8 text-xs"
-                    placeholder="搜索部门..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                  />
-                </div>
-                <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={expandAll}>
-                  展开全部
-                </Button>
-                <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={collapseAll}>
-                  收起全部
-                </Button>
-              </>
-            )}
+            <div className="relative">
+              <Search className="h-3.5 w-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                className="h-8 w-64 pl-8 text-xs"
+                placeholder="搜索部门..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+            <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={expandAll}>
+              展开全部
+            </Button>
+            <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={collapseAll}>
+              收起全部
+            </Button>
           </div>
-          <div className="text-sm font-medium">
-            {viewLevel === 3 && `${selectedAuthor?.author_name} - 提交列表`}
-            {viewLevel === 2 && `${drilldownDeptL2 || drilldownDept} - 人员排行`}
-            {viewLevel === 1 && data && `共 ${data.departments.length} 个部门`}
-          </div>
+          {data && (
+            <span className="text-xs text-muted-foreground">
+              共 {data.departments.length} 个部门
+            </span>
+          )}
         </div>
 
-        {/* Content */}
-        {viewLevel === 3 ? (
-          <div className="border rounded-xl overflow-auto max-h-[calc(100vh-420px)]">
-            {loadingCommits ? (
-              <div className="flex items-center justify-center py-16">
-                <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
-              </div>
-            ) : commits.length === 0 ? (
-              <div className="flex flex-col items-center py-16 text-muted-foreground">
-                <GitBranch className="h-8 w-8 mb-2 opacity-50" />
-                <p className="text-sm">暂无提交数据</p>
-              </div>
-            ) : (
-              commits.map((c) => <CommitRow key={c.commit_id} commit={c} />)
-            )}
-          </div>
-        ) : viewLevel === 2 ? (
-          <div className="border rounded-xl overflow-auto max-h-[calc(100vh-420px)]">
-            {loadingAuthors ? (
-              <div className="flex items-center justify-center py-16">
-                <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
-              </div>
-            ) : authors.length === 0 ? (
-              <div className="flex flex-col items-center py-16 text-muted-foreground">
-                <User className="h-8 w-8 mb-2 opacity-50" />
-                <p className="text-sm">暂无人员数据</p>
-              </div>
-            ) : (
-              authors.map((a, i) => (
-                <AuthorRow
-                  key={a.author_email}
-                  author={a}
-                  index={i}
-                  onDrilldown={() => handleDrilldownAuthor(a)}
-                />
-              ))
-            )}
-          </div>
-        ) : (
-          <>
-            {/* Header Row */}
-            <div className="flex items-center gap-2 px-4 py-2 bg-muted/50 border-b font-medium text-xs text-muted-foreground">
-              <span className="flex-1">部门 / 团队</span>
-              <span className="w-24 text-right">代码行</span>
-              <span className="w-16 text-right">覆盖率</span>
-              <span className="w-14" />
-            </div>
+        {/* Header Row */}
+        <div className="flex items-center gap-2 px-4 py-2 bg-muted/50 border-b font-medium text-xs text-muted-foreground">
+          <span className="flex-1">部门 / 团队</span>
+          <span className="w-24 text-right">代码行</span>
+          <span className="w-16 text-right">覆盖率</span>
+          <span className="w-14" />
+        </div>
 
-            {/* List */}
-            <div className="border rounded-b-xl divide-y divide-border/50 overflow-auto max-h-[calc(100vh-420px)]">
-              {loading ? (
-                <div className="flex items-center justify-center py-16">
-                  <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
-                </div>
-              ) : filteredDepartments.length === 0 ? (
-                <div className="flex flex-col items-center py-16 text-muted-foreground">
-                  <Code2 className="h-8 w-8 mb-2 opacity-50" />
-                  <p className="text-sm">暂无数据</p>
-                </div>
-              ) : (
-                filteredDepartments.map((dept) => (
-                  <DepartmentRow
-                    key={dept.name}
-                    dept={dept}
-                    level={0}
-                    expanded={expanded}
-                    onToggle={toggleExpand}
-                    onDrilldown={handleDrilldownDept}
-                  />
-                ))
-              )}
+        {/* List */}
+        <div className="border rounded-b-xl divide-y divide-border/50 overflow-auto max-h-[calc(100vh-380px)]">
+          {loading ? (
+            <div className="flex items-center justify-center py-16">
+              <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
-          </>
-        )}
+          ) : filteredDepartments.length === 0 ? (
+            <div className="flex flex-col items-center py-16 text-muted-foreground">
+              <Code2 className="h-8 w-8 mb-2 opacity-50" />
+              <p className="text-sm">暂无数据</p>
+            </div>
+          ) : (
+            filteredDepartments.map((dept) => (
+              <DepartmentRow
+                key={dept.name}
+                dept={dept}
+                level={0}
+                expanded={expanded}
+                authorExpanded={authorExpanded}
+                authorsMap={authorsMap}
+                loadingAuthors={loadingAuthors}
+                commitsExpanded={commitsExpanded}
+                commitsMap={commitsMap}
+                loadingCommits={loadingCommits}
+                onToggleDept={toggleExpand}
+                onToggleAuthors={toggleAuthorExpand}
+                onToggleCommits={toggleCommitExpand}
+                onLoadAuthors={loadAuthors}
+                onLoadCommits={loadCommits}
+              />
+            ))
+          )}
+        </div>
       </div>
     </div>
   );
