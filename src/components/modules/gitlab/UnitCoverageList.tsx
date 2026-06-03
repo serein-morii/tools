@@ -80,9 +80,11 @@ function CoverageBar({ value }: { value: number }) {
 
 export function UnitCoverageList({
   startDate, endDate, onPromptGenerate,
+  workspaceName: workspaceNameOverride,
 }: {
   startDate: string; endDate: string;
   onPromptGenerate?: (projectKey: string, branch: string, author: string, commitId: string) => void;
+  workspaceName?: string;
 }) {
   const [items, setItems] = useState<UnitListItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -98,10 +100,11 @@ export function UnitCoverageList({
         toast.error("请先配置 Walkin 登录信息");
         return;
       }
+      const ws = workspaceNameOverride || config.walkin_workspace_name;
       const auth = {
         csrf_token: config.walkin_csrf_token,
         project: config.walkin_project_header,
-        workspace: config.walkin_workspace_name,
+        workspace: ws,
         x_auth_token: config.walkin_x_auth_token,
       };
 
@@ -115,7 +118,7 @@ export function UnitCoverageList({
     } finally {
       setLoading(false);
     }
-  }, [startDate, endDate]);
+  }, [startDate, endDate, workspaceNameOverride]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 

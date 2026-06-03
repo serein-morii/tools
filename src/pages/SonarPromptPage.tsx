@@ -82,6 +82,8 @@ export function SonarPromptPage() {
     // --- 工作空间列表 ---
     const [workspaces, setWorkspaces] = useState<WorkspaceItem[]>([]);
     const [loadingWorkspaces, setLoadingWorkspaces] = useState(false);
+    // 覆盖率页面选中的工作空间（独立于配置页面的 workspace 字段）
+    const [coverageWorkspace, setCoverageWorkspace] = useState<string>(() => walkinForm.walkin_workspace_name);
 
     const fetchWorkspaces = useCallback(async () => {
         if (!walkinForm.walkin_url) return;
@@ -108,6 +110,13 @@ export function SonarPromptPage() {
             fetchWorkspaces();
         }
     }, [isLoggedIn, walkinForm.walkin_url, walkinForm.walkin_csrf_token, fetchWorkspaces]);
+
+    // 同步 config 的 workspace 到覆盖率选中的工作空间（仅在首次有值时）
+    useEffect(() => {
+        if (!coverageWorkspace && walkinForm.walkin_workspace_name) {
+            setCoverageWorkspace(walkinForm.walkin_workspace_name);
+        }
+    }, [walkinForm.walkin_workspace_name]);
 
     function generateId(): string {
         return `id-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
@@ -1484,15 +1493,33 @@ export function SonarPromptPage() {
                 {/* ===== Tab 1: 覆盖率 ===== */}
                 {activeTab === "coverage" && currentWeek && (
                     <div className="space-y-4 px-5 py-4">
+                        {workspaces.length > 0 && (
+                            <div className="flex items-center gap-2">
+                                <span className="text-xs text-muted-foreground shrink-0">工作空间</span>
+                                <SearchableSelect
+                                    options={workspaces.map((w) => ({ value: w.name, label: w.name }))}
+                                    value={coverageWorkspace}
+                                    onChange={setCoverageWorkspace}
+                                    placeholder="选择工作空间"
+                                    className="max-w-[280px]"
+                                />
+                            </div>
+                        )}
                         <UnitBoardCard
                             config={config}
+                            workspaceName={coverageWorkspace || undefined}
                             startDate={fmtDate(currentWeek.monday)}
                             endDate={fmtDate(currentWeek.sunday)}
                             weekOptions={weekOptions}
                             weekIndex={weekIndex}
                             onWeekIndexChange={setWeekIndex}
                         />
-                        <UnitCoverageList startDate={fmtDate(currentWeek.monday)} endDate={fmtDate(currentWeek.sunday)} onPromptGenerate={handlePromptFromCoverage} />
+                        <UnitCoverageList
+                            startDate={fmtDate(currentWeek.monday)}
+                            endDate={fmtDate(currentWeek.sunday)}
+                            workspaceName={coverageWorkspace || undefined}
+                            onPromptGenerate={handlePromptFromCoverage}
+                        />
                     </div>
                 )}
 
