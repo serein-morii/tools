@@ -1502,6 +1502,7 @@ export function SonarPromptPage() {
                                     onChange={setCoverageWorkspace}
                                     placeholder="选择工作空间"
                                     className="max-w-[280px]"
+                                    size="md"
                                 />
                             </div>
                         )}
@@ -1591,6 +1592,7 @@ export function SonarPromptPage() {
                                                         value={walkinForm.walkin_workspace_name}
                                                         onChange={(v) => setWalkinForm({ ...walkinForm, walkin_workspace_name: v })}
                                                         placeholder="选择工作空间"
+                                                        size="md"
                                                     />
                                                 ) : (
                                                     <Input placeholder="产品架构&PMO" value={walkinForm.walkin_workspace_name} onChange={(e) => setWalkinForm({ ...walkinForm, walkin_workspace_name: e.target.value })} className="h-8 text-xs" />
