@@ -1,0 +1,19 @@
+src/pages/AiCoveragePage.tsx
+  s_10b01522c7aa66::t_64c1106aaf477b 327-328,331-353,360-363,367-397,403,405,408-411,413-415,422,428-433
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "985f7f3d14d43f1803e5d58d64754cb71eb5273c",
+  "prompts": {},
+  "sessions": {
+    "s_10b01522c7aa66": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "17223fd4-466e-4ded-bf27-ae020f2af767",
+        "model": "astron-code-latest"
+      },
+      "human_author": "pengchenghui <pengchenghui@jtexpress.com>"
+    }
+  }
+}
