@@ -16,7 +16,7 @@ import { sonarApi, type SonarAuth, type SonarReport, type SonarFile, type FileCo
 import { useGitLabConfig, useSaveGitLabConfig, useGitLabProjects, useGitLabBranches } from "@/lib/query/gitlabQueries";
 import { useWalkinAuth } from "@/components/modules/gitlab/WalkinAuthManager";
 import { defaultGitLabConfig } from "@/lib/gitlab/defaults";
-import type { GitLabConfig } from "@/types";
+import type { GitLabConfig, LdapProfile } from "@/types";
 import { getHistory, saveRecord, deleteRecord, clearHistory, type SonarScanRecord } from "@/lib/sonar/history";
 import {
     getTemplates, saveTemplate, updateTemplate, deleteTemplate,
@@ -78,6 +78,25 @@ export function SonarPromptPage() {
         localStorage.setItem("walkin_login_check_interval", interval.toString());
     };
 
+    function generateId(): string {
+        return `id-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+    }
+
+    const addLdapProfile = () => {
+        const p: LdapProfile = { id: generateId(), username: "", password: "", label: "" };
+        setWalkinForm({ ...walkinForm, ldap_profiles: [...walkinForm.ldap_profiles, p], selected_ldap_id: p.id });
+    };
+    const deleteLdapProfile = (id: string) => {
+        const updated = walkinForm.ldap_profiles.filter(p => p.id !== id);
+        setWalkinForm({ ...walkinForm, ldap_profiles: updated, selected_ldap_id: walkinForm.selected_ldap_id === id ? updated[0]?.id : walkinForm.selected_ldap_id });
+    };
+    const updateLdapProfiles = (profiles: LdapProfile[]) => {
+        setWalkinForm({ ...walkinForm, ldap_profiles: profiles });
+    };
+    const getSelectedLdap = () => {
+        const p = walkinForm.ldap_profiles.find(p => p.id === walkinForm.selected_ldap_id);
+        return p ? { username: p.username, password: p.password } : undefined;
+    };
     const handleSaveWalkin = async () => {
         setSaveStatus("saving");
         try {
@@ -1505,6 +1524,33 @@ export function SonarPromptPage() {
                                             </div>
                                         </div>
 
+                                        {/* LDAP */}
+                                        <div className="space-y-2">
+                                            <div className="flex items-center justify-between">
+                                                <Label className="text-xs">LDAP 配置</Label>
+                                                <Button variant="outline" size="sm" className="h-6 text-xs" onClick={addLdapProfile}><Plus className="h-3 w-3 mr-1" />新增</Button>
+                                            </div>
+                                            <div className="flex flex-wrap gap-1.5">
+                                                {walkinForm.ldap_profiles.map((p) => (
+                                                    <Button key={p.id} variant={walkinForm.selected_ldap_id === p.id ? "default" : "outline"} size="sm" className="h-6 text-xs" onClick={() => setWalkinForm({ ...walkinForm, selected_ldap_id: p.id })}>
+                                                        {p.label || `LDAP ${p.id.slice(0, 6)}`}
+                                                    </Button>
+                                                ))}
+                                            </div>
+                                            {walkinForm.selected_ldap_id && walkinForm.ldap_profiles.filter(p => p.id === walkinForm.selected_ldap_id).map((p) => (
+                                                <div key={p.id} className="border rounded p-2 bg-muted/30 space-y-2">
+                                                    <div className="flex gap-2">
+                                                        <Input placeholder="备注" value={p.label} onChange={(e) => updateLdapProfiles(walkinForm.ldap_profiles.map(lp => lp.id === p.id ? { ...lp, label: e.target.value } : lp))} className="h-7 text-xs" />
+                                                        <Button variant="destructive" size="sm" className="h-7 text-xs" onClick={() => deleteLdapProfile(p.id)} disabled={walkinForm.ldap_profiles.length <= 1}><Trash2 className="h-3 w-3" /></Button>
+                                                    </div>
+                                                    <div className="grid grid-cols-2 gap-2">
+                                                        <Input placeholder="LDAP 用户名" value={p.username} onChange={(e) => updateLdapProfiles(walkinForm.ldap_profiles.map(lp => lp.id === p.id ? { ...lp, username: e.target.value } : lp))} className="h-7 text-xs" />
+                                                        <Input type="password" placeholder="LDAP 密码" value={p.password} onChange={(e) => updateLdapProfiles(walkinForm.ldap_profiles.map(lp => lp.id === p.id ? { ...lp, password: e.target.value } : lp))} className="h-7 text-xs" />
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+
                                         {/* 登录状态 */}
                                         <div className="border rounded p-3 bg-muted/30 space-y-2">
                                             <div className="flex items-center justify-between">
@@ -1517,10 +1563,12 @@ export function SonarPromptPage() {
                                                         <RefreshCw className={`mr-1 h-3 w-3 ${isCheckingLogin ? "animate-spin" : ""}`} />检测
                                                     </Button>
                                                     <Button size="sm" className="h-7 text-xs" onClick={async () => {
+                                                        const ldap = getSelectedLdap();
+                                                        if (!ldap?.username || !ldap?.password) { toast.error("请先填写 LDAP 用户名和密码"); return; }
                                                         if (!walkinForm.walkin_url) { toast.error("请先填写 Walkin 地址"); return; }
                                                         try {
                                                             await saveConfig.mutateAsync(walkinForm);
-                                                            await startAutoLogin(undefined, { walkin_url: walkinForm.walkin_url, walkin_project_header: walkinForm.walkin_project_header, walkin_workspace_name: walkinForm.walkin_workspace_name });
+                                                            await startAutoLogin(ldap, { walkin_url: walkinForm.walkin_url, walkin_project_header: walkinForm.walkin_project_header, walkin_workspace_name: walkinForm.walkin_workspace_name, ldap_profiles: walkinForm.ldap_profiles, selected_ldap_id: walkinForm.selected_ldap_id });
                                                         } catch (e) { toast.error("操作失败: " + (e instanceof Error ? e.message : String(e))); }
                                                     }}>{isLoggedIn ? "重新登录" : "登录"}</Button>
                                                     <Button variant="destructive" size="sm" className="h-7 text-xs" onClick={async () => {
