@@ -105,7 +105,7 @@ function SummaryCards({
 
   return (
     <div className="space-y-1">
-      <div className="grid grid-cols-4 gap-2 px-4 py-2 bg-muted/30 rounded-lg border">
+      <div className="grid grid-cols-4 gap-2">
         {cards.map((card) => (
           <div
             key={card.id}
@@ -131,7 +131,7 @@ function SummaryCards({
 
       {/* 下探详情面板 */}
       {expandedCard && current && (
-        <div className="rounded-lg border bg-card/50 p-3 animate-in fade-in slide-in-from-top-1 duration-150">
+        <div className="rounded-lg border bg-card/50 px-3 py-2.5 animate-in fade-in slide-in-from-top-1 duration-150">
           {expandedCard === "projects" && (
             <div className="space-y-2">
               <div className="flex items-center justify-between text-[10px] text-muted-foreground">
@@ -365,9 +365,9 @@ function ProjectTable({ projects, gitlabUrl }: { projects: GitLabProjectResult[]
 
 
   return (
-    <div className="p-3 pt-0">
+    <div>
       {/* Filters */}
-      <div className="mb-3 flex flex-wrap items-center gap-2">
+      <div className="mb-2 flex flex-wrap items-center gap-2">
         <input
           type="text"
           placeholder={t("common.search")}
@@ -928,47 +928,45 @@ export function GitLabOverviewPage() {
   }
 
   return (
-    <div>
+    <div className="p-3 space-y-3">
       <ScanProgressModal
         isOpen={showProgressModal}
         onClose={() => setShowProgressModal(false)}
       />
 
       {/* Header */}
-      <div className="border-b px-4 py-2">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            {history && history.length > 0 && (
-              <CustomSelect
-                value={selectedScanIndex.toString()}
-                onChange={(v) => setSelectedScanIndex(parseInt(v))}
-                options={history.map((scan, idx) => ({
-                  value: idx.toString(),
-                  label: new Date(scan.scan_at).toLocaleDateString(i18n.language),
-                }))}
-                className="w-32"
-              />
-            )}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          {history && history.length > 0 && (
+            <CustomSelect
+              value={selectedScanIndex.toString()}
+              onChange={(v) => setSelectedScanIndex(parseInt(v))}
+              options={history.map((scan, idx) => ({
+                value: idx.toString(),
+                label: new Date(scan.scan_at).toLocaleDateString(i18n.language),
+              }))}
+              className="w-32"
+            />
+          )}
+          <span className="text-xs text-muted-foreground">
+            {selectedHistory ? formatTimestamp(selectedHistory.scan_at) : t("gitlab.overview.noRecords")}
+          </span>
+          {latestWalkinDate && (
             <span className="text-xs text-muted-foreground">
-              {selectedHistory ? formatTimestamp(selectedHistory.scan_at) : t("gitlab.overview.noRecords")}
+              Walkin: {formatTimestamp(latestWalkinDate)}
             </span>
-            {latestWalkinDate && (
-              <span className="text-xs text-muted-foreground">
-                Walkin: {formatTimestamp(latestWalkinDate)}
-              </span>
-            )}
-            {nextScanTime && (
-              <span className="text-xs text-muted-foreground">
-                {t("gitlab.overview.nextScan")}{nextScanTime.toLocaleDateString(i18n.language)}
-              </span>
-            )}
-          </div>
-          <div className="flex gap-2">
-            <Button size="sm" className="h-7 text-xs" onClick={handleScan} disabled={triggerScan.isPending}>
-              <RefreshCw className={`mr-1 h-3 w-3 ${triggerScan.isPending ? "animate-spin" : ""}`} />
-              {t("gitlab.overview.scan")}
-            </Button>
-          </div>
+          )}
+          {nextScanTime && (
+            <span className="text-xs text-muted-foreground">
+              {t("gitlab.overview.nextScan")}{nextScanTime.toLocaleDateString(i18n.language)}
+            </span>
+          )}
+        </div>
+        <div className="flex gap-2">
+          <Button size="sm" className="h-7 text-xs" onClick={handleScan} disabled={triggerScan.isPending}>
+            <RefreshCw className={`mr-1 h-3 w-3 ${triggerScan.isPending ? "animate-spin" : ""}`} />
+            {t("gitlab.overview.scan")}
+          </Button>
         </div>
       </div>
 
@@ -977,7 +975,7 @@ export function GitLabOverviewPage() {
 
       {/* Empty State */}
       {!selectedHistory && (
-        <div className="flex flex-col items-center justify-center py-8 px-6">
+        <div className="flex flex-col items-center justify-center py-8">
           <Inbox className="h-10 w-10 text-muted-foreground mb-3" />
           <p className="text-xs font-medium mb-1.5">{t("gitlab.overview.noScanData")}</p>
           <p className="text-xs text-muted-foreground mb-3">{t("gitlab.overview.clickToScan")}</p>
@@ -987,7 +985,7 @@ export function GitLabOverviewPage() {
       {selectedHistory && (
         <>
           {/* Trend Charts + Developer Ranking */}
-          <div className="flex items-stretch mt-3">
+          <div className="flex items-stretch gap-3">
             <TrendChart history={history || []} />
             <ContributorRanking history={history || []} />
           </div>
@@ -1009,7 +1007,7 @@ export function GitLabOverviewPage() {
               ? (walkinProjects.reduce((s, p) => s + (p.walkin_metrics?.duplicated_lines_density || 0), 0) / totalDup).toFixed(1)
               : "-";
             return (
-              <div className="mt-2 rounded-lg border bg-card/50 p-3">
+              <div className="rounded-lg border bg-card/50 p-3">
                 <div className="flex items-center gap-1.5 mb-2">
                   <ShieldAlert className="h-3 w-3 text-muted-foreground" />
                   <span className="text-xs font-medium">Walkin 代码质量汇总</span>
@@ -1042,9 +1040,7 @@ export function GitLabOverviewPage() {
           })()}
 
           {/* Project Table */}
-          <div className="mt-3">
-            <ProjectTable projects={projects} gitlabUrl={config?.url} />
-          </div>
+          <ProjectTable projects={projects} gitlabUrl={config?.url} />
         </>
       )}
     </div>

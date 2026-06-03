@@ -94,7 +94,7 @@ export function TrendChart({ history }: TrendChartProps) {
   ];
 
   return (
-    <div className="px-3 pb-3 flex-1">
+    <div className="flex-1">
       <div className="rounded-md border bg-card/50 p-3 h-full flex flex-col">
         {/* Header */}
         <div className="mb-3 flex items-center justify-between flex-shrink-0">
@@ -254,7 +254,7 @@ export function ContributorRanking({ history }: { history: GitLabScanHistory[] }
   const top5 = devStats.slice(0, 5);
 
   return (
-    <div className="px-3 pb-3 flex-1">
+    <div className="flex-1">
       <div className="rounded-md border bg-card/50 p-3 h-full flex flex-col">
         <div className="mb-2 flex items-center justify-between flex-shrink-0">
           <h4 className="text-xs font-medium">🏆 {t("gitlab.chart.contributionTop5")}</h4>
