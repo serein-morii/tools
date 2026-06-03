@@ -1538,26 +1538,6 @@ export function SonarPromptPage() {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-xs font-medium">扫描类型</label>
-                                    <div className="flex gap-2">
-                                        <Button
-                                            variant={(walkinForm.select_page_type || "代码行") === "代码行" ? "default" : "outline"}
-                                            size="sm"
-                                            onClick={() => setWalkinForm({ ...walkinForm, select_page_type: "代码行" })}
-                                        >
-                                            代码行
-                                        </Button>
-                                        <Button
-                                            variant={walkinForm.select_page_type === "条件" ? "default" : "outline"}
-                                            size="sm"
-                                            onClick={() => setWalkinForm({ ...walkinForm, select_page_type: "条件" })}
-                                        >
-                                            条件
-                                        </Button>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-2">
                                     <label className="text-xs font-medium">启用</label>
                                     <div className="flex gap-2">
                                         <Button variant={walkinForm.walkin_enabled ? "default" : "outline"} size="sm" onClick={() => setWalkinForm({ ...walkinForm, walkin_enabled: true })}>启用</Button>
