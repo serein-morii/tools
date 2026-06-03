@@ -15,7 +15,7 @@ import { toast } from "sonner";
 import { SettingsTab, getConfig, type AiCoverageConfig } from "@/components/modules/aiCoverage/SettingsTab";
 
 const tabs = [
-  { key: "coverage", label: "覆盖率", icon: Brain },
+  { key: "coverage", label: "生成率", icon: Brain },
   { key: "settings", label: "配置", icon: Settings },
 ] as const;
 
@@ -102,9 +102,9 @@ function DepartmentRow({
       <div
         className={cn(
           "flex items-center gap-2 px-3 py-1.5 border-b border-border/50 transition-colors hover:bg-muted/50",
-          level > 0 && "bg-muted/20"
+          level > 0 && "bg-muted/20",
+          `pl-[${12 + indent}px]`
         )}
-        style={{ paddingLeft: 12 + indent }}
       >
         {hasChildren ? (
           <button
@@ -168,11 +168,11 @@ function DepartmentRow({
       {showAuthors && (
         <>
           {isLoadingAuthors ? (
-            <div className="flex items-center justify-center py-6 bg-muted/5" style={{ paddingLeft: 24 + indent }}>
+            <div className="flex items-center justify-center py-6 bg-muted/5" style={{ paddingLeft: `${24 + indent}px` }}>
               <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
             </div>
           ) : authors.length === 0 ? (
-            <div className="py-3 text-center text-[10px] text-muted-foreground bg-muted/5" style={{ paddingLeft: 24 + indent }}>
+            <div className="py-3 text-center text-[10px] text-muted-foreground bg-muted/5" style={{ paddingLeft: `${24 + indent}px` }}>
               暂无人员数据
             </div>
           ) : (
@@ -193,7 +193,7 @@ function DepartmentRow({
                   {/* Author row */}
                   <div
                     className="flex items-center gap-2 px-3 py-1.5 border-b border-border/30 bg-muted/5 hover:bg-muted/10 transition-colors"
-                    style={{ paddingLeft: 24 + indent }}
+                    style={{ paddingLeft: `${24 + indent}px` }}
                   >
                     <div className={cn(
                       "flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-bold shrink-0",
@@ -251,11 +251,11 @@ function DepartmentRow({
                   {showCommits && (
                     <>
                       {isLoadingCommits ? (
-                        <div className="flex items-center justify-center py-3 bg-muted/5" style={{ paddingLeft: 32 + indent }}>
+                        <div className="flex items-center justify-center py-3 bg-muted/5" style={{ paddingLeft: `${32 + indent}px` }}>
                           <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
                         </div>
                       ) : commits.length === 0 ? (
-                        <div className="py-2 text-center text-[10px] text-muted-foreground bg-muted/5" style={{ paddingLeft: 32 + indent }}>
+                        <div className="py-2 text-center text-[10px] text-muted-foreground bg-muted/5" style={{ paddingLeft: `${32 + indent}px` }}>
                           暂无提交数据
                         </div>
                       ) : (
@@ -281,7 +281,7 @@ function DepartmentRow({
                             <div key={commit.commit_id}>
                               <div
                                 className="flex items-center gap-2 px-3 py-1 border-b border-border/20 bg-muted/5 hover:bg-muted/10 transition-colors"
-                                style={{ paddingLeft: 32 + indent }}
+                                style={{ paddingLeft: `${32 + indent}px` }}
                               >
                                 <code className="rounded bg-muted px-1 py-0.5 text-[9px] font-mono text-muted-foreground shrink-0">
                                   {commit.short_sha}
@@ -334,7 +334,7 @@ function DepartmentRow({
 
                               {/* Commit detail expansion */}
                               {showDetail && commitDetail && (
-                                <div className="bg-muted/10 border-b border-border/20 px-3 py-2" style={{ paddingLeft: 40 + indent }}>
+                                <div className="bg-muted/10 border-b border-border/20 px-3 py-2" style={{ paddingLeft: `${40 + indent}px` }}>
                                   {/* Commit info row */}
                                   <div className="flex items-center gap-3 mb-1.5 text-[10px]">
                                     <span className="flex items-center gap-0.5 text-muted-foreground">
@@ -737,7 +737,7 @@ export function AiCoveragePage() {
   };
 
   return (
-    <div className="min-h-full bg-background overflow-auto">
+    <div className="mx-auto max-w-[1400px] min-h-full bg-background">
       {/* Header */}
       <div className="border-b px-5 py-3">
         <div className="flex items-center justify-between">
@@ -818,42 +818,42 @@ export function AiCoveragePage() {
 
           {/* Stats Cards */}
           {data && (
-            <div className="grid grid-cols-5 gap-2 px-4 py-2 bg-muted/30 rounded-lg border">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 p-3 bg-muted/30 rounded-lg border">
               <div className="rounded-md border bg-card p-2">
                 <p className="text-[9px] text-muted-foreground mb-0.5">AI生成率</p>
-            <p className="text-sm font-bold text-primary">
-              {data.overall.ai_rate.toFixed(1)}%
-            </p>
-          </div>
-          <div className="rounded-md border bg-card p-2">
-            <p className="text-[9px] text-muted-foreground mb-0.5">总代码行</p>
-            <p className="text-sm font-bold">
-              {(data.overall.total_lines / 1_000_000).toFixed(2)}M
-            </p>
-          </div>
-          <div className="rounded-md border bg-card p-2">
-            <p className="text-[9px] text-muted-foreground mb-0.5">AI 代码行</p>
-            <p className="text-sm font-bold text-primary">
-              {(data.overall.ai_lines / 1_000_000).toFixed(2)}M
-            </p>
-          </div>
-          <div className="rounded-md border bg-card p-2">
-            <p className="text-[9px] text-muted-foreground mb-0.5">总提交数</p>
-            <p className="text-sm font-bold">
-              {data.overall.total_commits.toLocaleString()}
-            </p>
-          </div>
-          <div className="rounded-md border bg-card p-2">
-            <p className="text-[9px] text-muted-foreground mb-0.5">AI 提交数</p>
-            <p className="text-sm font-bold text-primary">
-              {data.overall.commits_with_ai.toLocaleString()}
-            </p>
-          </div>
-        </div>
-      )}
+                <p className="text-sm font-bold text-primary">
+                  {data.overall.ai_rate.toFixed(1)}%
+                </p>
+              </div>
+              <div className="rounded-md border bg-card p-2">
+                <p className="text-[9px] text-muted-foreground mb-0.5">总代码行</p>
+                <p className="text-sm font-bold">
+                  {(data.overall.total_lines / 1_000_000).toFixed(2)}M
+                </p>
+              </div>
+              <div className="rounded-md border bg-card p-2">
+                <p className="text-[9px] text-muted-foreground mb-0.5">AI 代码行</p>
+                <p className="text-sm font-bold text-primary">
+                  {(data.overall.ai_lines / 1_000_000).toFixed(2)}M
+                </p>
+              </div>
+              <div className="rounded-md border bg-card p-2">
+                <p className="text-[9px] text-muted-foreground mb-0.5">总提交数</p>
+                <p className="text-sm font-bold">
+                  {data.overall.total_commits.toLocaleString()}
+                </p>
+              </div>
+              <div className="rounded-md border bg-card p-2">
+                <p className="text-[9px] text-muted-foreground mb-0.5">AI 提交数</p>
+                <p className="text-sm font-bold text-primary">
+                  {data.overall.commits_with_ai.toLocaleString()}
+                </p>
+              </div>
+            </div>
+          )}
 
       {/* Main Content */}
-      <div className="px-5 py-3">
+      <div className="px-3 py-3">
         {/* Toolbar */}
         <div className="flex items-center justify-between py-2 border-b">
           <div className="flex items-center gap-2">
