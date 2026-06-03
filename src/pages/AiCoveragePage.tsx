@@ -737,45 +737,46 @@ export function AiCoveragePage() {
   };
 
   return (
-    <div className="mx-auto max-w-[1400px] min-h-full bg-background">
+    <div className="min-h-full bg-background">
       {/* Header */}
-      <div className="flex items-center justify-between mb-4 px-1">
-        <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 ring-1 ring-primary/10">
-            <Brain className="h-4 w-4 text-primary" />
+      <div className="border-b px-5 py-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
+              <Brain className="h-3.5 w-3.5 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-sm font-medium">AI 生成率</h1>
+              <p className="text-xs text-muted-foreground mt-0.5">各部门 AI 辅助编程代码贡献统计</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-sm font-semibold">AI 生成率</h1>
-            <p className="text-[11px] text-muted-foreground mt-0.5">
-              各部门 AI 辅助编程代码贡献统计
-            </p>
+          <div className="inline-flex gap-1 rounded-lg bg-muted p-0.5">
+            {tabs.map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={cn(
+                  "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all",
+                  activeTab === tab.key
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <tab.icon className="h-3.5 w-3.5" />
+                {tab.label}
+              </button>
+            ))}
           </div>
-        </div>
-        {/* Tabs */}
-        <div className="inline-flex gap-1 rounded-lg bg-muted p-0.5">
-          {tabs.map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={cn(
-                "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all",
-                activeTab === tab.key
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              <tab.icon className="h-3.5 w-3.5" />
-              {tab.label}
-            </button>
-          ))}
         </div>
       </div>
 
       {/* Tab Content */}
       {activeTab === "settings" ? (
-        <SettingsTab config={config} onConfigChange={setConfig} />
+        <div className="mx-auto max-w-[1400px] p-3">
+          <SettingsTab config={config} onConfigChange={setConfig} />
+        </div>
       ) : (
-        <>
+        <div className="mx-auto max-w-[1400px] space-y-3 px-3 py-3 animate-in fade-in duration-200">
           {/* Card wrapper */}
           <div className="rounded-xl border bg-card shadow-sm">
             {/* Query Bar */}
@@ -893,42 +894,42 @@ export function AiCoveragePage() {
                 <div className="flex items-center justify-center py-12">
                   <RefreshCw className="h-4 w-4 animate-spin text-muted-foreground" />
                 </div>
-          ) : filteredDepartments.length === 0 ? (
-            <div className="flex flex-col items-center py-12 text-muted-foreground">
-              <Code2 className="h-6 w-6 mb-1.5 opacity-50" />
-              <p className="text-xs">暂无数据</p>
-            </div>
-          ) : (
-            filteredDepartments.map((dept) => (
-              <DepartmentRow
-                key={dept.name}
-                dept={dept}
-                level={0}
-                expanded={expanded}
-                authorExpanded={authorExpanded}
-                authorsMap={authorsMap}
-                loadingAuthors={loadingAuthors}
-                commitsExpanded={commitsExpanded}
-                commitsMap={commitsMap}
-                loadingCommits={loadingCommits}
-                commitDetailExpanded={commitDetailExpanded}
-                commitDetailsMap={commitDetailsMap}
-                loadingCommitDetails={loadingCommitDetails}
-                filesExpanded={filesExpanded}
-                onToggleDept={toggleExpand}
-                onToggleAuthors={toggleAuthorExpand}
-                onToggleCommits={toggleCommitExpand}
-                onToggleCommitDetail={toggleCommitDetailExpand}
-                onToggleFiles={toggleFilesExpand}
-                onLoadAuthors={loadAuthors}
-                onLoadCommits={loadCommits}
-                onLoadCommitDetail={loadCommitDetail}
-              />
-            ))
-          )}
+              ) : filteredDepartments.length === 0 ? (
+                <div className="flex flex-col items-center py-12 text-muted-foreground">
+                  <Code2 className="h-6 w-6 mb-1.5 opacity-50" />
+                  <p className="text-xs">暂无数据</p>
+                </div>
+              ) : (
+                filteredDepartments.map((dept) => (
+                  <DepartmentRow
+                    key={dept.name}
+                    dept={dept}
+                    level={0}
+                    expanded={expanded}
+                    authorExpanded={authorExpanded}
+                    authorsMap={authorsMap}
+                    loadingAuthors={loadingAuthors}
+                    commitsExpanded={commitsExpanded}
+                    commitsMap={commitsMap}
+                    loadingCommits={loadingCommits}
+                    commitDetailExpanded={commitDetailExpanded}
+                    commitDetailsMap={commitDetailsMap}
+                    loadingCommitDetails={loadingCommitDetails}
+                    filesExpanded={filesExpanded}
+                    onToggleDept={toggleExpand}
+                    onToggleAuthors={toggleAuthorExpand}
+                    onToggleCommits={toggleCommitExpand}
+                    onToggleCommitDetail={toggleCommitDetailExpand}
+                    onToggleFiles={toggleFilesExpand}
+                    onLoadAuthors={loadAuthors}
+                    onLoadCommits={loadCommits}
+                    onLoadCommitDetail={loadCommitDetail}
+                  />
+                ))
+              )}
         </div>
       </div>
-        </>
+      </div>
       )}
     </div>
   );
