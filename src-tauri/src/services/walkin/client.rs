@@ -2,6 +2,70 @@ use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use crate::error::{Result, ToolsError};
 
+/// 获取 RSA 公钥响应
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PublicKeyResponse {
+    pub success: bool,
+    pub message: Option<String>,
+    pub data: Option<serde_json::Value>,
+}
+
+/// 从 is-login 接口获取 RSA 公钥（免登录）
+pub async fn get_public_key(base_url: &str) -> Result<String> {
+    let url = format!("{}/is-login", base_url.trim_end_matches('/'));
+
+    let http_client = Client::builder()
+        .timeout(std::time::Duration::from_secs(15))
+        .danger_accept_invalid_certs(true)
+        .build()
+        .map_err(|e| ToolsError::Http(format!("Failed to create HTTP client: {}", e)))?;
+
+    let response = http_client
+        .get(&url)
+        .header("Accept", "application/json, text/plain, */*")
+        .send()
+        .await
+        .map_err(|e| ToolsError::Http(format!("获取公钥请求失败: {}", e)))?;
+
+    if !response.status().is_success() {
+        let status = response.status();
+        let body = response.text().await.unwrap_or_default();
+        return Err(ToolsError::Http(format!("获取公钥失败 (HTTP {}): {}", status, body)));
+    }
+
+    let json_value: serde_json::Value = response.json().await
+        .map_err(|e| ToolsError::Http(format!("解析公钥响应失败: {}", e)))?;
+
+    // 公钥在 message 字段中
+    let public_key = json_value.get("message")
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| ToolsError::Http("响应中未找到公钥".to_string()))?;
+
+    log::info!("成功获取 RSA 公钥");
+    Ok(public_key.to_string())
+}
+
+/// 使用 RSA 公钥加密数据 (PKCS1_v1_5)
+pub fn rsa_encrypt(public_key: &str, data: &str) -> Result<String> {
+    use rsa::{Pkcs1v15Encrypt, RsaPublicKey, pkcs8::DecodePublicKey};
+    use base64::{Engine as _, engine::general_purpose::STANDARD as BASE64};
+
+    // 解码 Base64 公钥
+    let public_key_der = BASE64.decode(public_key)
+        .map_err(|e| ToolsError::Http(format!("公钥 Base64 解码失败: {}", e)))?;
+
+    // 解析 DER 格式的公钥
+    let public_key = RsaPublicKey::from_public_key_der(&public_key_der)
+        .map_err(|e| ToolsError::Http(format!("解析公钥失败: {}", e)))?;
+
+    // 加密数据
+    let encrypted = public_key.encrypt(&mut rand::thread_rng(), Pkcs1v15Encrypt, data.as_bytes())
+        .map_err(|e| ToolsError::Http(format!("RSA 加密失败: {}", e)))?;
+
+    // Base64 编码结果
+    Ok(BASE64.encode(&encrypted))
+}
+
 /// Fetch a captcha image from Walkin and return its UUID and base64-encoded image.
 pub async fn get_captcha(base_url: &str) -> Result<CaptchaData> {
     let uuid = uuid::Uuid::new_v4().to_string();
@@ -36,7 +100,17 @@ pub async fn get_captcha(base_url: &str) -> Result<CaptchaData> {
 }
 
 /// Perform LDAP login with captcha and return the auth tokens.
+/// 此函数会先获取 RSA 公钥，然后加密用户名和密码再登录
 pub async fn ldap_signin(base_url: &str, username: &str, password: &str, captcha: &str, captcha_uuid: &str) -> Result<WalkinSigninResponse> {
+    // 1. 先获取 RSA 公钥
+    let public_key = get_public_key(base_url).await?;
+
+    // 2. 加密用户名和密码
+    let encrypted_username = rsa_encrypt(&public_key, username)?;
+    let encrypted_password = rsa_encrypt(&public_key, password)?;
+
+    log::info!("已加密用户名和密码进行登录");
+
     let url = format!("{}/ldap/signin", base_url.trim_end_matches('/'));
 
     let http_client = Client::builder()
@@ -52,8 +126,8 @@ pub async fn ldap_signin(base_url: &str, username: &str, password: &str, captcha
         .header("PROJECT", "undefined")
         .header("WORKSPACE", "undefined")
         .json(&serde_json::json!({
-            "username": username,
-            "password": password,
+            "username": encrypted_username,
+            "password": encrypted_password,
             "authenticate": "LDAP",
             "captcha": captcha,
             "uuid": captcha_uuid,
