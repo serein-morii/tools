@@ -1,0 +1,23 @@
+src-tauri/Cargo.toml
+  s_10b01522c7aa66::t_bd74eeac79c57b 40-41
+src-tauri/src/services/walkin/client.rs
+  s_10b01522c7aa66::t_c258865e014e1f 5-49,51-68
+  s_10b01522c7aa66::t_2e7e5583b58d69 50
+  s_10b01522c7aa66::t_dd62d63a3ada22 103,105-113,129-130
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "08d9333208bf26e5174815621143e7ad8e86ec39",
+  "prompts": {},
+  "sessions": {
+    "s_10b01522c7aa66": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "17223fd4-466e-4ded-bf27-ae020f2af767",
+        "model": "astron-code-latest"
+      },
+      "human_author": "pengchenghui <pengchenghui@jtexpress.com>"
+    }
+  }
+}
