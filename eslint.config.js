@@ -13,12 +13,13 @@ export default tseslint.config(
       "react-refresh": reactRefresh,
     },
     rules: {
-      // Only include the standard hooks rules, not experimental new ones
       "react-hooks/rules-of-hooks": "error",
       "react-hooks/exhaustive-deps": "warn",
+      "react-hooks/set-state-in-effect": "warn",
       "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
       "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
       "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/no-empty-object-type": "warn",
       "prefer-const": "warn",
       "no-empty": "warn",
       "no-useless-assignment": "warn",
