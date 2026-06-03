@@ -1,0 +1,26 @@
+src/pages/AiCoveragePage.tsx
+  s_10b01522c7aa66::t_adb61ddc1163a8 881,886
+  s_10b01522c7aa66::t_8351ef81d720fe 479
+  s_10b01522c7aa66::t_0f19fe00fe4ff4 484
+  s_10b01522c7aa66::t_2f1499ff6196a8 60
+  s_10b01522c7aa66::t_9bb9ced2284a09 30,35,55
+  s_10b01522c7aa66::t_c46629a618d12a 663-671
+  s_10b01522c7aa66::t_0429749d9b21f8 514
+  s_10b01522c7aa66::t_51b926b4e397ce 408,426-435
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "ea99cce771e8cf10693463d65d40ecf5505dfcf5",
+  "prompts": {},
+  "sessions": {
+    "s_10b01522c7aa66": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "17223fd4-466e-4ded-bf27-ae020f2af767",
+        "model": "astron-code-latest"
+      },
+      "human_author": "pengchenghui <pengchenghui@jtexpress.com>"
+    }
+  }
+}
