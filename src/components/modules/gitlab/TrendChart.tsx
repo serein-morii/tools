@@ -30,62 +30,39 @@ export function TrendChart({ history }: TrendChartProps) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Take last N scans and reverse to chronological order (oldest to newest)
   const scans = history.slice(0, dataCount).reverse();
 
   if (scans.length < 2) {
     return (
-      <div className="px-6 pb-4 flex-1">
-        <div className="rounded-lg border bg-card/50 p-4 h-full flex items-center justify-center">
-          <p className="text-sm text-muted-foreground">{t("gitlab.chart.needMoreScans")}</p>
+      <div className="flex-1">
+        <div className="rounded-md border bg-card/50 h-full flex items-center justify-center">
+          <p className="text-xs text-muted-foreground">{t("gitlab.chart.needMoreScans")}</p>
         </div>
       </div>
     );
   }
 
-  // Calculate max values for scaling
-  const maxCommits = Math.max(...scans.map(s => s.total_commits), 1);
-  const maxCoverage = 100;
-
-  // Calculate incremental coverage from walkin_metrics in summary
   const getNewCoverage = (scan: GitLabScanHistory): number | null => {
     try {
       const projects: GitLabProjectResult[] = JSON.parse(scan.summary || "[]");
-      let sum = 0;
-      let count = 0;
+      let sum = 0, count = 0;
       for (const p of projects) {
-        if (p.walkin_metrics?.new_coverage != null) {
-          sum += p.walkin_metrics.new_coverage;
-          count++;
-        }
+        if (p.walkin_metrics?.new_coverage != null) { sum += p.walkin_metrics.new_coverage; count++; }
       }
       return count > 0 ? sum / count : null;
-    } catch {
-      return null;
-    }
+    } catch { return null; }
   };
 
-  // Chart dimensions
-  const chartWidth = scans.length * 30;
-  const chartHeight = 140;
-  const padding = { top: 20, right: 10, bottom: 20, left: 30 };
-  const innerWidth = chartWidth - padding.left - padding.right;
-  const innerHeight = chartHeight - padding.top - padding.bottom;
+  // Separate Y axes: commits use its own max, coverage is always 0-100
+  const maxCommits = Math.max(...scans.map(s => s.total_commits), 1);
+  const hasCoverage = scans.some(s => getNewCoverage(s) != null);
 
-  // Generate SVG path for commits
-  const commitsPoints = scans.map((s, i) => {
-    const x = padding.left + (i / (scans.length - 1)) * innerWidth;
-    const y = padding.top + innerHeight - (s.total_commits / maxCommits) * innerHeight;
-    return `${x},${y}`;
-  }).join(" ");
+  // Use responsive SVG width (100%) instead of fixed pixel width
+  const chartHeight = 120;
+  const padding = { top: 14, right: 8, bottom: 18, left: 28 };
 
-  // Generate SVG path for coverage (incremental coverage from walkin_metrics)
-  const coveragePoints = scans.map((s, i) => {
-    const coverage = getNewCoverage(s) ?? 0;
-    const x = padding.left + (i / (scans.length - 1)) * innerWidth;
-    const y = padding.top + innerHeight - (coverage / maxCoverage) * innerHeight;
-    return `${x},${y}`;
-  }).join(" ");
+  // Sample commits for y-axis ticks (4 evenly spaced values)
+  const commitTicks = [0, Math.round(maxCommits / 4), Math.round(maxCommits / 2), Math.round(maxCommits * 3 / 4), maxCommits];
 
   const countOptions = [
     { value: 20, label: t("gitlab.chart.last20") },
@@ -94,31 +71,27 @@ export function TrendChart({ history }: TrendChartProps) {
   ];
 
   return (
-    <div className="flex-1">
+    <div className="flex-1 min-w-0">
       <div className="rounded-md border bg-card/50 p-3 h-full flex flex-col">
-        {/* Header */}
-        <div className="mb-3 flex items-center justify-between flex-shrink-0">
+        <div className="mb-2 flex items-center justify-between flex-shrink-0">
           <h4 className="text-xs font-medium">{t("gitlab.chart.trendAnalysis")}</h4>
           <div ref={menuRef} className="relative">
             <button
               type="button"
               onClick={() => setMenuOpen(!menuOpen)}
-              className="flex items-center gap-1 h-7 rounded-md border border-input bg-background px-2 text-xs hover:bg-muted/50 transition-colors"
+              className="flex items-center gap-1 h-6 rounded-md border border-input bg-background px-2 text-[10px] hover:bg-muted/50 transition-colors"
             >
               {t("gitlab.chart.lastN", { count: dataCount })}
-              <ChevronDown className={`h-3 w-3 transition-transform ${menuOpen ? "rotate-180" : ""}`} />
+              <ChevronDown className={`h-2.5 w-2.5 transition-transform ${menuOpen ? "rotate-180" : ""}`} />
             </button>
             {menuOpen && (
-              <div className="absolute right-0 z-50 mt-1 min-w-[100px] rounded-md border bg-popover p-1 shadow-md animate-in fade-in-0 zoom-in-95">
+              <div className="absolute right-0 z-50 mt-1 min-w-[80px] rounded-md border bg-popover p-1 shadow-md animate-in fade-in-0 zoom-in-95">
                 {countOptions.map((opt) => (
                   <button
                     key={opt.value}
                     type="button"
-                    onClick={() => {
-                      setDataCount(opt.value as 20 | 30 | 50);
-                      setMenuOpen(false);
-                    }}
-                    className={`flex w-full items-center rounded-sm px-2 py-1.5 text-xs transition-colors hover:bg-accent ${opt.value === dataCount ? "bg-accent/50 font-medium" : ""}`}
+                    onClick={() => { setDataCount(opt.value as 20 | 30 | 50); setMenuOpen(false); }}
+                    className={`flex w-full items-center rounded-sm px-2 py-1 text-[10px] transition-colors hover:bg-accent ${opt.value === dataCount ? "bg-accent/50 font-medium" : ""}`}
                   >
                     {opt.label}
                   </button>
@@ -128,86 +101,81 @@ export function TrendChart({ history }: TrendChartProps) {
           </div>
         </div>
 
-        {/* Charts container */}
-        <div className="flex-1 overflow-x-auto">
-          <svg width={chartWidth} height={chartHeight} className="overflow-visible">
-            {/* Grid lines */}
-            {[0, 25, 50, 75, 100].map((pct) => (
-              <line
-                key={pct}
-                x1={padding.left}
-                y1={padding.top + innerHeight * (1 - pct / 100)}
-                x2={chartWidth - padding.right}
-                y2={padding.top + innerHeight * (1 - pct / 100)}
-                stroke="hsl(var(--muted))"
-                strokeDasharray="2,2"
-                strokeWidth="0.5"
-              />
-            ))}
+        <div className="flex-1 min-h-0">
+          <svg viewBox={`0 0 200 ${chartHeight}`} preserveAspectRatio="none" className="w-full h-full overflow-visible">
+            {/* Grid lines (4 horizontal) */}
+            {[0, 1, 2, 3, 4].map(i => {
+              const y = padding.top + (i / 4) * (chartHeight - padding.top - padding.bottom);
+              return (
+                <g key={`grid-${i}`}>
+                  <line x1={padding.left} y1={y} x2={200 - padding.right} y2={y} stroke="hsl(var(--border))" strokeWidth="0.5" />
+                  {/* Y-axis labels (commits on left, coverage on right) */}
+                  <text x={padding.left - 4} y={y + 3} textAnchor="end" fontSize="7" fill="hsl(var(--muted-foreground))">
+                    {commitTicks[i]}
+                  </text>
+                  {hasCoverage && (
+                    <text x={200 - padding.right + 4} y={y + 3} textAnchor="start" fontSize="7" fill="hsl(var(--muted-foreground))">
+                      {i * 25}%
+                    </text>
+                  )}
+                </g>
+              );
+            })}
 
-            {/* Commits line */}
+            {/* Commit line */}
             <polyline
-              points={commitsPoints}
+              points={scans.map((s, i) => {
+                const x = padding.left + (i / (scans.length - 1)) * (200 - padding.left - padding.right);
+                const y = padding.top + (chartHeight - padding.top - padding.bottom) * (1 - s.total_commits / maxCommits);
+                return `${x},${y}`;
+              }).join(" ")}
               fill="none"
               stroke="hsl(var(--primary))"
-              strokeWidth="2"
-              strokeLinecap="round"
+              strokeWidth="1.5"
               strokeLinejoin="round"
+              strokeLinecap="round"
             />
 
-            {/* Commits dots */}
-            {scans.map((s, i) => {
-              const x = padding.left + (i / (scans.length - 1)) * innerWidth;
-              const y = padding.top + innerHeight - (s.total_commits / maxCommits) * innerHeight;
-              return (
-                <circle key={`c-${s.id}`} cx={x} cy={y} r="3" fill="hsl(var(--primary))" />
-              );
-            })}
+            {/* Coverage line (dashed, right axis mapped to 0-100%) */}
+            {hasCoverage && (
+              <polyline
+                points={scans.map((s, i) => {
+                  const cov = getNewCoverage(s) ?? 0;
+                  const x = padding.left + (i / (scans.length - 1)) * (200 - padding.left - padding.right);
+                  const y = padding.top + (chartHeight - padding.top - padding.bottom) * (1 - cov / 100);
+                  return `${x},${y}`;
+                }).join(" ")}
+                fill="none"
+                stroke="hsl(var(--muted-foreground))"
+                strokeWidth="1"
+                strokeDasharray="3 2"
+                strokeLinejoin="round"
+                strokeLinecap="round"
+              />
+            )}
 
-            {/* Coverage line */}
-            <polyline
-              points={coveragePoints}
-              fill="none"
-              stroke="hsl(var(--muted-foreground))"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeDasharray="4,2"
-            />
-
-            {/* Coverage dots */}
-            {scans.map((s, i) => {
-              const coverage = getNewCoverage(s) ?? 0;
-              const x = padding.left + (i / (scans.length - 1)) * innerWidth;
-              const y = padding.top + innerHeight - (coverage / maxCoverage) * innerHeight;
-              return (
-                <circle key={`cov-${s.id}`} cx={x} cy={y} r="2.5" fill="hsl(var(--muted-foreground))" />
-              );
-            })}
-
-            {/* X-axis labels (first, middle, last) */}
-            <text x={padding.left} y={chartHeight - 4} fontSize="9" fill="hsl(var(--muted-foreground))" textAnchor="start">
+            {/* X-axis date labels (first, middle, last) */}
+            <text x={padding.left} y={chartHeight - 2} fontSize="6" fill="hsl(var(--muted-foreground))">
               {new Date(scans[0].scan_at).toLocaleDateString("zh-CN", { month: "numeric", day: "numeric" })}
             </text>
-            <text x={chartWidth / 2} y={chartHeight - 4} fontSize="9" fill="hsl(var(--muted-foreground))" textAnchor="middle">
-              {new Date(scans[Math.floor(scans.length / 2)].scan_at).toLocaleDateString("zh-CN", { month: "numeric", day: "numeric" })}
-            </text>
-            <text x={chartWidth - padding.right} y={chartHeight - 4} fontSize="9" fill="hsl(var(--muted-foreground))" textAnchor="end">
+            <text x={200 - padding.right} y={chartHeight - 2} fontSize="6" fill="hsl(var(--muted-foreground))" textAnchor="end">
               {new Date(scans[scans.length - 1].scan_at).toLocaleDateString("zh-CN", { month: "numeric", day: "numeric" })}
             </text>
           </svg>
         </div>
 
         {/* Legend */}
-        <div className="mt-2 flex items-center justify-center gap-6 text-xs flex-shrink-0">
-          <div className="flex items-center gap-1.5">
-            <span className="w-3 h-0.5 bg-primary rounded" />
+        <div className="mt-1.5 flex items-center justify-center gap-4 text-[10px] flex-shrink-0">
+          <div className="flex items-center gap-1">
+            <span className="w-2.5 h-[2px] bg-primary rounded" />
             <span className="text-muted-foreground">{t("gitlab.chart.commitCount")}</span>
           </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-3 h-0.5 bg-muted-foreground rounded" style={{ borderStyle: "dashed" }} />
-            <span className="text-muted-foreground">{t("gitlab.chart.incrementalCoveragePercent")}</span>
-          </div>
+          {hasCoverage && (
+            <div className="flex items-center gap-1">
+              <span className="w-2.5 h-0" style={{ borderTop: "1.5px dashed hsl(var(--muted-foreground))" }} />
+              <span className="text-muted-foreground">{t("gitlab.chart.incrementalCoveragePercent")}</span>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -219,9 +187,9 @@ export function ContributorRanking({ history }: { history: GitLabScanHistory[] }
 
   if (history.length === 0) {
     return (
-      <div className="px-6 pb-4 flex-1">
-        <div className="rounded-lg border bg-card/50 p-4 h-full flex items-center justify-center">
-          <p className="text-sm text-muted-foreground">{t("gitlab.chart.noScanData")}</p>
+      <div className="flex-1">
+        <div className="rounded-md border bg-card/50 h-full flex items-center justify-center">
+          <p className="text-xs text-muted-foreground">{t("gitlab.chart.noScanData")}</p>
         </div>
       </div>
     );
@@ -232,61 +200,52 @@ export function ContributorRanking({ history }: { history: GitLabScanHistory[] }
 
   if (devStats.length === 0) {
     return (
-      <div className="px-6 pb-4 flex-1">
-        <div className="rounded-lg border bg-card/50 p-4 h-full flex items-center justify-center">
-          <p className="text-sm text-muted-foreground">{t("gitlab.chart.noDeveloperData")}</p>
+      <div className="flex-1">
+        <div className="rounded-md border bg-card/50 h-full flex items-center justify-center">
+          <p className="text-xs text-muted-foreground">{t("gitlab.chart.noDeveloperData")}</p>
         </div>
       </div>
     );
   }
 
-  // Sort by code volume (lines_added + lines_removed)
   devStats = [...devStats].sort((a, b) => {
     const aTotal = a.lines_added + a.lines_removed;
     const bTotal = b.lines_added + b.lines_removed;
     return bTotal - aTotal;
   });
 
-  // Get max code volume for bar scaling
   const maxCodeVolume = Math.max(...devStats.map(d => d.lines_added + d.lines_removed), 1);
-
-  // Take only TOP 5
   const top5 = devStats.slice(0, 5);
 
   return (
-    <div className="flex-1">
+    <div className="flex-1 min-w-0">
       <div className="rounded-md border bg-card/50 p-3 h-full flex flex-col">
         <div className="mb-2 flex items-center justify-between flex-shrink-0">
           <h4 className="text-xs font-medium">🏆 {t("gitlab.chart.contributionTop5")}</h4>
-          <span className="text-xs text-muted-foreground">{t("gitlab.chart.rankByCodeVolume")}</span>
         </div>
-        <div className="space-y-2 flex-1">
+        <div className="space-y-1.5 flex-1">
           {top5.map((dev, index) => {
             const codeVolume = dev.lines_added + dev.lines_removed;
             const barWidth = (codeVolume / maxCodeVolume) * 100;
             return (
-              <div key={dev.name} className="flex items-center gap-2">
-                <span className="w-4 text-center text-sm flex-shrink-0">
+              <div key={dev.name} className="flex items-center gap-1.5">
+                <span className="w-3.5 text-center text-xs flex-shrink-0">
                   {index === 0 ? "🥇" : index === 1 ? "🥈" : "🥉"}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-medium truncate" title={dev.name}>{dev.name}</span>
-                    <span className="text-xs font-semibold text-primary ml-2 flex-shrink-0">
+                  <div className="flex items-center justify-between mb-0.5">
+                    <span className="text-[10px] font-medium truncate" title={dev.name}>{dev.name}</span>
+                    <span className="text-[10px] font-semibold text-primary ml-1 flex-shrink-0">
                       {formatNum(codeVolume)}{t("gitlab.chart.linesOfCode")}
                     </span>
                   </div>
-                  <div className="w-full bg-muted rounded-full h-1.5">
-                    <div
-                      className="h-2 rounded-full bg-gradient-to-r from-primary/80 to-primary"
-                      style={{ width: `${Math.max(barWidth, 5)}%` }}
-                    />
+                  <div className="w-full bg-muted rounded-full h-1">
+                    <div className="h-1 rounded-full bg-gradient-to-r from-primary/60 to-primary" style={{ width: `${Math.max(barWidth, 3)}%` }} />
                   </div>
-                  <div className="flex items-center gap-3 mt-1 text-[10px] text-muted-foreground">
-                    <span className="flex items-center gap-0.5"><GitCommit className="h-3 w-3" />{dev.commits}{t("gitlab.chart.commitsCompact")}</span>
-                    <span className="flex items-center gap-0.5 text-emerald-600"><Plus className="h-3 w-3" />{formatNum(dev.lines_added)}</span>
-                    <span className="flex items-center gap-0.5 text-red-600"><Minus className="h-3 w-3" />{formatNum(dev.lines_removed)}</span>
-                    <span className="text-muted-foreground">{dev.projects.length}{t("gitlab.chart.projectsCompact")}</span>
+                  <div className="flex items-center gap-2 text-[9px] text-muted-foreground mt-0.5">
+                    <span className="flex items-center gap-0.5"><GitCommit className="h-2.5 w-2.5" />{dev.commits}</span>
+                    <span className="flex items-center gap-0.5 text-emerald-600"><Plus className="h-2.5 w-2.5" />{formatNum(dev.lines_added)}</span>
+                    <span className="flex items-center gap-0.5 text-red-600"><Minus className="h-2.5 w-2.5" />{formatNum(dev.lines_removed)}</span>
                   </div>
                 </div>
               </div>
