@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import {
   Brain, ChevronRight, ChevronDown, Users, GitCommit, Code2,
   Calendar, RefreshCw, Search, ChevronLeft, User, Trophy,
-  GitBranch, ExternalLink, Loader2, FileCode
+  GitBranch, ExternalLink, Loader2, FileCode, Settings
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,12 @@ import {
   type AiCoverageAuthor, type AiCoverageCommit, type CommitCheckResponse
 } from "@/lib/api/aiCoverage";
 import { toast } from "sonner";
+import { SettingsTab, getConfig, type AiCoverageConfig } from "@/components/modules/aiCoverage/SettingsTab";
+
+const tabs = [
+  { key: "coverage", label: "覆盖率", icon: Brain },
+  { key: "settings", label: "配置", icon: Settings },
+] as const;
 
 interface DepartmentRowProps {
   dept: AiCoverageDepartment;
@@ -492,6 +498,9 @@ function DepartmentRow({
 }
 
 export function AiCoveragePage() {
+  const [activeTab, setActiveTab] = useState<"coverage" | "settings">("coverage");
+  const [config, setConfig] = useState<AiCoverageConfig>(getConfig);
+
   const [data, setData] = useState<AiCoverageResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
@@ -743,48 +752,75 @@ export function AiCoveragePage() {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            {/* Quick presets */}
-            <div className="flex items-center gap-0.5">
-              {datePresets.map((preset) => (
-                <Button
-                  key={preset.label}
-                  variant="ghost"
-                  size="sm"
-                  className="h-6 px-2 text-[10px]"
-                  onClick={() => applyPreset(preset)}
-                >
-                  {preset.label}
-                </Button>
-              ))}
-            </div>
-            <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
-            <input
-              type="date"
-              className="h-6 rounded-md border border-input bg-background px-2 text-[10px]"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-            />
-            <ChevronLeft className="h-3 w-3 text-muted-foreground rotate-180" />
-            <input
-              type="date"
-              className="h-6 rounded-md border border-input bg-background px-2 text-[10px]"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-            />
-            <Button size="sm" className="h-6 text-[10px]" onClick={fetchData} disabled={loading}>
-              <RefreshCw className={cn("h-3 w-3 mr-1", loading && "animate-spin")} />
-              查询
-            </Button>
+          {/* Tabs */}
+          <div className="inline-flex gap-1 rounded-lg bg-muted p-0.5">
+            {tabs.map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={cn(
+                  "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all",
+                  activeTab === tab.key
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <tab.icon className="h-3.5 w-3.5" />
+                {tab.label}
+              </button>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* Stats Cards */}
-      {data && (
-        <div className="grid grid-cols-5 gap-3 px-5 py-3 bg-muted/30">
-          <div className="rounded-lg border bg-card p-2.5">
-            <p className="text-[10px] text-muted-foreground mb-0.5">AI 覆盖率</p>
+      {/* Tab Content */}
+      {activeTab === "settings" ? (
+        <SettingsTab config={config} onConfigChange={setConfig} />
+      ) : (
+        <>
+          {/* Query Bar */}
+          <div className="border-b px-5 py-2 bg-muted/30">
+            <div className="flex items-center gap-2">
+              {/* Quick presets */}
+              <div className="flex items-center gap-0.5">
+                {datePresets.map((preset) => (
+                  <Button
+                    key={preset.label}
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 px-2 text-[10px]"
+                    onClick={() => applyPreset(preset)}
+                  >
+                    {preset.label}
+                  </Button>
+                ))}
+              </div>
+              <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+              <input
+                type="date"
+                className="h-6 rounded-md border border-input bg-background px-2 text-[10px]"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+              />
+              <ChevronLeft className="h-3 w-3 text-muted-foreground rotate-180" />
+              <input
+                type="date"
+                className="h-6 rounded-md border border-input bg-background px-2 text-[10px]"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+              />
+              <Button size="sm" className="h-6 text-[10px]" onClick={fetchData} disabled={loading}>
+                <RefreshCw className={cn("h-3 w-3 mr-1", loading && "animate-spin")} />
+                查询
+              </Button>
+            </div>
+          </div>
+
+          {/* Stats Cards */}
+          {data && (
+            <div className="grid grid-cols-5 gap-3 px-5 py-3 bg-muted/30">
+              <div className="rounded-lg border bg-card p-2.5">
+                <p className="text-[10px] text-muted-foreground mb-0.5">AI 覆盖率</p>
             <p className="text-lg font-bold text-primary font-mono">
               {data.overall.ai_rate.toFixed(1)}%
             </p>
@@ -893,6 +929,8 @@ export function AiCoveragePage() {
           )}
         </div>
       </div>
+        </>
+      )}
     </div>
   );
 }
