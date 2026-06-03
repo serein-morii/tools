@@ -51,7 +51,8 @@ export function WalkinAuthProvider({ children }: { children: ReactNode }) {
         ...currentConfig,
         walkin_csrf_token: tokens.csrf_token,
         walkin_project_header: tokens.project,
-        walkin_workspace_name: tokens.workspace,
+        // 保留用户配置的 workspace_name，只在为空时才使用服务端返回的值
+        walkin_workspace_name: currentConfig.walkin_workspace_name || tokens.workspace,
         walkin_x_auth_token: tokens.x_auth_token,
       };
       saveConfig.mutateAsync(updatedConfig).then(() => refetch());
