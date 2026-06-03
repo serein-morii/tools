@@ -800,7 +800,7 @@ export function SonarPromptPage() {
             <div className="animate-in">
                 {/* ===== Tab: Prompt 生成 ===== */}
                 {activeTab === "generator" && (
-                    <div className="mx-auto max-w-[960px] space-y-6 px-6 py-6 animate-in fade-in duration-200">
+                    <div className="mx-auto max-w-[1400px] space-y-3 px-3 py-3 animate-in fade-in duration-200">
                         {/* Overview stats - 单行紧凑 */}
                         <div className="flex items-center gap-4 text-xs text-muted-foreground">
                             {[
@@ -1365,7 +1365,7 @@ export function SonarPromptPage() {
 
                 {/* ===== Tab: 模板管理 ===== */}
                 {activeTab === "template" && (
-                    <div className="mx-auto max-w-[960px] space-y-3 px-6 py-6">
+                    <div className="mx-auto max-w-[1400px] space-y-3 px-3 py-3">
                         {/* 编辑/创建表单 */}
                         {(editingTemplate || isCreating) && (
                             <Card>
@@ -1483,7 +1483,7 @@ export function SonarPromptPage() {
 
                 {/* ===== Tab 3: 生成历史 ===== */}
                 {activeTab === "history" && !detailRecord && (
-                    <div className="mx-auto max-w-[960px] space-y-3 px-6 py-6">
+                    <div className="mx-auto max-w-[1400px] space-y-3 px-3 py-3">
                         {history.length > 0 && (
                             <div className="flex items-center justify-between">
                                 <span className="text-xs text-muted-foreground">共 {history.length} 条记录</span>
@@ -1543,7 +1543,7 @@ export function SonarPromptPage() {
                 )}
 
                 {activeTab === "history" && detailRecord && (
-                    <div className="mx-auto max-w-[960px] space-y-3 px-6 py-6">
+                    <div className="mx-auto max-w-[1400px] space-y-3 px-3 py-3">
                         <div className="flex items-center justify-between">
                             <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={() => setDetailRecord(null)}>
                                 <RotateCcw className="h-3 w-3" /> 返回列表
@@ -1558,7 +1558,7 @@ export function SonarPromptPage() {
 
                         <Card>
                             <CardContent className="p-4 space-y-3">
-                                <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-xs">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 text-xs">
                                     <div><span className="text-muted-foreground">项目：</span><span className="font-medium">{detailRecord.projectKey}</span></div>
                                     <div><span className="text-muted-foreground">分支：</span><span className="font-medium">{detailRecord.branch}</span></div>
                                     <div><span className="text-muted-foreground">截止时间：</span><span className="font-medium">{formatDateTime(detailRecord.createTimeEnd)}</span></div>

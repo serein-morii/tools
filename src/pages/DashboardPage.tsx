@@ -180,7 +180,7 @@ export function DashboardPage() {
       </div>
 
       {/* Two Column Layout */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
         {/* Left Column */}
         <div className="space-y-3">
           {/* Reminder Status */}
@@ -306,7 +306,7 @@ export function DashboardPage() {
             <CardContent className="px-3 pb-3 pt-0">
               {unitBoardData ? (
                 <div className="space-y-2">
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                     <div>
                       <div className="text-[10px] text-muted-foreground mb-1">增量覆盖率</div>
                       <div className="grid grid-cols-3 gap-1.5 text-center">

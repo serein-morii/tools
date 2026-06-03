@@ -158,7 +158,7 @@ function HistoryCard({ item }: { item: ReminderHistoryItem }) {
         <StatusBadge status={item.status} />
       </CardHeader>
       <CardContent className="p-2.5 space-y-1.5 text-xs">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <TimeRow label={t("history.scheduledTime")} value={item.scheduled_at} />
           <TimeRow label={t("history.executedTime")} value={item.executed_at} />
         </div>
