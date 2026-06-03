@@ -3,7 +3,7 @@ import { Plus, Search, ListChecks, CalendarDays, Clock3, ToggleRight } from "luc
 import { TaskList } from "@/components/modules/reminder/TaskList";
 import { TaskEditor } from "@/components/modules/reminder/TaskEditor";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+
 import { Input } from "@/components/ui/input";
 import { Kbd } from "@/components/ui/kbd";
 import { useTasks } from "@/lib/query/taskQueries";
@@ -95,24 +95,22 @@ export function TaskReminderPage() {
   return (
     <div className="p-4">
       {/* Stats */}
-      <div className="mb-3 grid grid-cols-4 gap-2">
+      <div className="mb-3 grid grid-cols-4 gap-3 px-5 py-3 bg-muted/30">
         {[
           { icon: ListChecks, label: t("task.total") || "全部任务", value: stats.total },
           { icon: CalendarDays, label: t("task.today") || "今日", value: stats.today },
           { icon: Clock3, label: t("task.thisWeek") || "本周", value: stats.week },
           { icon: ToggleRight, label: t("task.enabled") || "已启用", value: stats.enabled },
         ].map((card) => (
-          <Card key={card.label} className="bg-card/50">
-            <CardContent className="flex items-center gap-2.5 p-2.5">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-muted">
-                <card.icon className="h-3.5 w-3.5 text-muted-foreground" />
-              </div>
+          <div key={card.label} className="rounded-lg border bg-card p-2.5">
+            <div className="flex items-center gap-2">
+              <card.icon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="text-lg font-bold">{card.value}</p>
-                <p className="text-[11px] text-muted-foreground">{card.label}</p>
+                <p className="text-[10px] text-muted-foreground">{card.label}</p>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         ))}
       </div>
 

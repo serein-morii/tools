@@ -82,17 +82,17 @@ function SummaryCards({
   ];
 
   return (
-    <div className="grid grid-cols-4 gap-3 p-5">
+    <div className="grid grid-cols-4 gap-3 px-5 py-3 bg-muted/30">
       {cards.map((card) => (
         <Card key={card.label} className="bg-card/50">
-          <CardContent className="flex items-center gap-3 p-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted">
-              <card.icon className="h-4 w-4 text-muted-foreground" />
+          <CardContent className="flex items-center gap-2 p-2.5">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-muted">
+              <card.icon className="h-3.5 w-3.5 text-muted-foreground" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xl font-bold">{card.value}</p>
+              <p className="text-lg font-bold">{card.value}</p>
               <div className="flex items-center gap-1">
-                <p className="text-xs text-muted-foreground truncate">{card.label}</p>
+                <p className="text-[10px] text-muted-foreground truncate">{card.label}</p>
                 <TrendIndicator
                   current={typeof card.value === 'string' ? parseFloat(card.value) || 0 : card.value}
                   previous={card.previousValue}

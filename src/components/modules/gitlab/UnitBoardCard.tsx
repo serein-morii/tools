@@ -184,49 +184,49 @@ export function UnitBoardCard({
 
   return (
     <Card className="bg-card/50">
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between mb-3">
-          <h4 className="font-medium flex items-center gap-2 text-sm">
-            <BarChart3 className="h-4 w-4" />
+      <CardContent className="p-3">
+        <div className="flex items-center justify-between mb-2">
+          <h4 className="font-medium flex items-center gap-1.5 text-xs">
+            <BarChart3 className="h-3.5 w-3.5" />
             {t("gitlab.overview.teamCoverageBoard")}
           </h4>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             {lastUpdate && (
-              <span className="text-xs text-muted-foreground">
-                {t("gitlab.overview.updatedAt")}{lastUpdate.toLocaleTimeString()}
+              <span className="text-[11px] text-muted-foreground">
+                {lastUpdate.toLocaleTimeString()}
               </span>
             )}
             {nextRefreshTime && (
-              <span className="text-xs text-muted-foreground hidden sm:inline">
-                {t("gitlab.overview.nextRefresh")}{nextRefreshTime.toLocaleTimeString()}
+              <span className="text-[11px] text-muted-foreground hidden sm:inline">
+                {nextRefreshTime.toLocaleTimeString()}
               </span>
             )}
             {canFetch && csrfToken && xAuthToken && (
-              <Button variant="ghost" size="sm" onClick={() => fetchData()}>
-                <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+              <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => fetchData()}>
+                <RefreshCw className={`h-3 w-3 ${loading ? "animate-spin" : ""}`} />
               </Button>
             )}
           </div>
         </div>
         {!isLoggedIn && (
-          <p className="text-sm text-muted-foreground">{t("gitlab.overview.loginWalkinFirst")}</p>
+          <p className="text-xs text-muted-foreground">{t("gitlab.overview.loginWalkinFirst")}</p>
         )}
         {isLoggedIn && (!walkinDeptId || !walkinDeptName) && (
-          <p className="text-sm text-muted-foreground">{t("gitlab.overview.configureDeptFirst")}</p>
+          <p className="text-xs text-muted-foreground">{t("gitlab.overview.configureDeptFirst")}</p>
         )}
         {loading && (
-          <div className="flex items-center gap-2 py-4">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            <span className="text-sm text-muted-foreground">{t("gitlab.overview.loading")}</span>
+          <div className="flex items-center gap-1.5 py-2">
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            <span className="text-xs text-muted-foreground">{t("gitlab.overview.loading")}</span>
           </div>
         )}
         {error && (
-          <p className="text-sm text-destructive">{t("gitlab.overview.loadFailed")}{error}</p>
+          <p className="text-xs text-destructive">{error}</p>
         )}
         {data && !loading && (
-          <div className="space-y-3">
+          <div className="space-y-2">
             {(data.xvalue || weekOptions) && (
-              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
                 <span>{t("gitlab.overview.period")}</span>
                 {weekOptions && weekIndex != null && onWeekIndexChange ? (
                   <div className="flex items-center gap-0.5">
@@ -238,7 +238,7 @@ export function UnitBoardCard({
                       <ChevronLeft className="h-3 w-3" />
                     </Button>
                     <select
-                      className="h-5 border-0 bg-transparent text-xs font-medium text-foreground focus:outline-none cursor-pointer appearance-none"
+                      className="h-5 border-0 bg-transparent text-[11px] font-medium text-foreground focus:outline-none cursor-pointer appearance-none"
                       value={weekIndex}
                       onChange={(e) => onWeekIndexChange(parseInt(e.target.value))}
                     >
@@ -264,49 +264,49 @@ export function UnitBoardCard({
                 )}
               </div>
             )}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <div className="text-xs font-medium text-muted-foreground">{t("gitlab.overview.incrementalCoverage")}</div>
-                <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <div className="text-[11px] font-medium text-muted-foreground">{t("gitlab.overview.incrementalCoverage")}</div>
+                <div className="grid grid-cols-3 gap-1.5">
                   {data.ynewValue != null && (
                     <div className="text-center">
-                      <div className="text-lg font-bold text-primary">{data.ynewValue.toFixed(2)}%</div>
-                      <div className="text-xs text-muted-foreground">{t("gitlab.overview.overall")}</div>
+                      <div className="text-base font-bold text-primary">{data.ynewValue.toFixed(2)}%</div>
+                      <div className="text-[11px] text-muted-foreground">{t("gitlab.overview.overall")}</div>
                     </div>
                   )}
                   {data.ynewLineValue != null && (
                     <div className="text-center">
-                      <div className="text-lg font-bold text-primary">{data.ynewLineValue.toFixed(2)}%</div>
-                      <div className="text-xs text-muted-foreground">{t("gitlab.overview.line")}</div>
+                      <div className="text-base font-bold text-primary">{data.ynewLineValue.toFixed(2)}%</div>
+                      <div className="text-[11px] text-muted-foreground">{t("gitlab.overview.line")}</div>
                     </div>
                   )}
                   {data.ynewBranchValue != null && (
                     <div className="text-center">
-                      <div className="text-lg font-bold text-primary">{data.ynewBranchValue.toFixed(2)}%</div>
-                      <div className="text-xs text-muted-foreground">{t("gitlab.overview.condition")}</div>
+                      <div className="text-base font-bold text-primary">{data.ynewBranchValue.toFixed(2)}%</div>
+                      <div className="text-[11px] text-muted-foreground">{t("gitlab.overview.condition")}</div>
                     </div>
                   )}
                 </div>
               </div>
-              <div className="space-y-2">
-                <div className="text-xs font-medium text-muted-foreground">{t("gitlab.overview.fullCoverage")}</div>
-                <div className="grid grid-cols-3 gap-2">
+              <div className="space-y-1.5">
+                <div className="text-[11px] font-medium text-muted-foreground">{t("gitlab.overview.fullCoverage")}</div>
+                <div className="grid grid-cols-3 gap-1.5">
                   {data.yallValue != null && (
                     <div className="text-center">
-                      <div className="text-lg font-bold text-emerald-600">{data.yallValue.toFixed(2)}%</div>
-                      <div className="text-xs text-muted-foreground">{t("gitlab.overview.overall")}</div>
+                      <div className="text-base font-bold text-emerald-600">{data.yallValue.toFixed(2)}%</div>
+                      <div className="text-[11px] text-muted-foreground">{t("gitlab.overview.overall")}</div>
                     </div>
                   )}
                   {data.yallLineValue != null && (
                     <div className="text-center">
-                      <div className="text-lg font-bold text-emerald-600">{data.yallLineValue.toFixed(2)}%</div>
-                      <div className="text-xs text-muted-foreground">{t("gitlab.overview.line")}</div>
+                      <div className="text-base font-bold text-emerald-600">{data.yallLineValue.toFixed(2)}%</div>
+                      <div className="text-[11px] text-muted-foreground">{t("gitlab.overview.line")}</div>
                     </div>
                   )}
                   {data.yallBranchValue != null && (
                     <div className="text-center">
-                      <div className="text-lg font-bold text-emerald-600">{data.yallBranchValue.toFixed(2)}%</div>
-                      <div className="text-xs text-muted-foreground">{t("gitlab.overview.condition")}</div>
+                      <div className="text-base font-bold text-emerald-600">{data.yallBranchValue.toFixed(2)}%</div>
+                      <div className="text-[11px] text-muted-foreground">{t("gitlab.overview.condition")}</div>
                     </div>
                   )}
                 </div>
@@ -315,7 +315,7 @@ export function UnitBoardCard({
           </div>
         )}
         {!data && !loading && !error && isLoggedIn && (
-          <p className="text-sm text-muted-foreground">{t("common.noData")}</p>
+          <p className="text-xs text-muted-foreground">{t("common.noData")}</p>
         )}
       </CardContent>
     </Card>

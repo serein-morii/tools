@@ -247,7 +247,7 @@ export function SettingsPage() {
             </div>
             <div className="flex justify-between text-xs">
               <span className="text-muted-foreground">{t("settings.author")}</span>
-              <span>pedro</span>
+              <span>Pedro</span>
             </div>
           </CardContent>
         </Card>
