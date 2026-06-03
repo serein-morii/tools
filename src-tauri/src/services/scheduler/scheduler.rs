@@ -163,6 +163,44 @@ async fn run_scheduler_cycle(db: &Arc<Database>) -> Result<()> {
         return Err(e);
     }
 
+    // 4. Cleanup old history records (runs every cycle, condition inside)
+    if let Err(e) = cleanup_old_history(db) {
+        log::error!("cleanup_old_history error: {}", e);
+    }
+
+    Ok(())
+}
+
+fn cleanup_old_history(db: &Arc<Database>) -> Result<()> {
+    use crate::database::dao::settings::SettingsDao;
+
+    let conn = db.conn().lock().unwrap();
+    let settings = SettingsDao::get_all(&conn)?;
+    drop(conn);
+
+    let retention_days: i64 = settings
+        .iter()
+        .find(|s| s.key == "history_retention_days")
+        .and_then(|s| s.value.parse().ok())
+        .unwrap_or(30);
+
+    let cutoff = chrono::Utc::now().timestamp_millis() - retention_days * 24 * 60 * 60 * 1000;
+
+    let conn = db.conn().lock().unwrap();
+    let deleted = conn.execute(
+        "DELETE FROM reminders WHERE status != 'pending' AND created_at < ?1",
+        rusqlite::params![cutoff],
+    )?;
+    let deleted_history = conn.execute(
+        "DELETE FROM reminder_history WHERE created_at < ?1",
+        rusqlite::params![cutoff],
+    )?;
+    drop(conn);
+
+    if deleted > 0 || deleted_history > 0 {
+        log::info!("Cleaned up {} reminders and {} history records older than {} days", deleted, deleted_history, retention_days);
+    }
+
     Ok(())
 }
 
