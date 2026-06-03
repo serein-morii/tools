@@ -122,24 +122,32 @@ export function SonarPromptPage() {
     }, [walkinForm.walkin_workspace_name]);
 
     // 切换工作空间时获取关联项目/部门
-    useEffect(() => {
-        if (!coverageWorkspace || !walkinForm.walkin_url || !walkinForm.walkin_csrf_token || !isLoggedIn) return;
-        const ws = workspaces.find((w) => w.name === coverageWorkspace);
+    const handleCoverageWorkspaceChange = useCallback(async (name: string) => {
+        setCoverageWorkspace(name);
+        if (!name || !walkinForm.walkin_url || !walkinForm.walkin_csrf_token || !isLoggedIn) return;
+        const ws = workspaces.find((w) => w.name === name);
         if (!ws?.id) return;
         const userId = userName || "";
         const auth = {
             csrf_token: walkinForm.walkin_csrf_token,
             project: walkinForm.walkin_project_header,
-            workspace: walkinForm.walkin_workspace_name,
+            workspace: name,
             x_auth_token: walkinForm.walkin_x_auth_token,
         };
-        gitlabApi.walkinFetchRelatedProjects(walkinForm.walkin_url, auth, userId, ws.id).then((projects) => {
+        try {
+            const projects = await gitlabApi.walkinFetchRelatedProjects(walkinForm.walkin_url, auth, userId, ws.id);
             if (projects.length > 0) {
                 setCoverageDeptId(projects[0].id);
                 setCoverageDeptName(projects[0].name);
+            } else {
+                setCoverageDeptId("");
+                setCoverageDeptName("");
             }
-        }).catch(() => {});
-    }, [coverageWorkspace, isLoggedIn]);
+        } catch {
+            setCoverageDeptId("");
+            setCoverageDeptName("");
+        }
+    }, [walkinForm.walkin_url, walkinForm.walkin_csrf_token, walkinForm.walkin_project_header, walkinForm.walkin_x_auth_token, isLoggedIn, userName, workspaces]);
 
     function generateId(): string {
         return `id-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
@@ -1522,7 +1530,7 @@ export function SonarPromptPage() {
                                 <SearchableSelect
                                     options={workspaces.map((w) => ({ value: w.name, label: w.name }))}
                                     value={coverageWorkspace}
-                                    onChange={setCoverageWorkspace}
+                                    onChange={handleCoverageWorkspaceChange}
                                     placeholder="选择工作空间"
                                     className="max-w-[280px]"
                                     size="md"
