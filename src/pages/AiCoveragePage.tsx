@@ -95,10 +95,10 @@ function DepartmentRow({
     <>
       <div
         className={cn(
-          "flex items-center gap-2 px-4 py-2 border-b border-border/50 transition-colors hover:bg-muted/50",
+          "flex items-center gap-2 px-3 py-1.5 border-b border-border/50 transition-colors hover:bg-muted/50",
           level > 0 && "bg-muted/20"
         )}
-        style={{ paddingLeft: 16 + indent }}
+        style={{ paddingLeft: 12 + indent }}
       >
         {hasChildren ? (
           <button
@@ -107,34 +107,34 @@ function DepartmentRow({
             className="shrink-0 p-0.5 rounded hover:bg-muted transition-colors"
           >
             {isExpanded
-              ? <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
-              : <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
+              ? <ChevronDown className="h-3 w-3 text-muted-foreground" />
+              : <ChevronRight className="h-3 w-3 text-muted-foreground" />
             }
           </button>
         ) : (
-          <span className="w-4" />
+          <span className="w-3" />
         )}
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium truncate">{dept.name}</p>
-          <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5">
-            <span className="flex items-center gap-1">
-              <Users className="h-3 w-3" />
+          <p className="text-xs font-medium truncate">{dept.name}</p>
+          <div className="flex items-center gap-2 text-[10px] text-muted-foreground mt-0.5">
+            <span className="flex items-center gap-0.5">
+              <Users className="h-2.5 w-2.5" />
               {dept.contributor_count}
             </span>
-            <span className="flex items-center gap-1">
-              <GitCommit className="h-3 w-3" />
+            <span className="flex items-center gap-0.5">
+              <GitCommit className="h-2.5 w-2.5" />
               {dept.total_commits.toLocaleString()}
             </span>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <div className="text-right">
-            <p className="font-mono text-xs text-muted-foreground">
+            <p className="font-mono text-[10px] text-muted-foreground">
               {dept.ai_lines.toLocaleString()} / {dept.total_lines.toLocaleString()}
             </p>
           </div>
           <span className={cn(
-            "shrink-0 rounded px-2 py-0.5 text-xs font-bold font-mono",
+            "shrink-0 rounded px-1.5 py-0.5 text-[10px] font-bold font-mono",
             rateColor
           )}>
             {dept.ai_rate.toFixed(1)}%
@@ -142,17 +142,17 @@ function DepartmentRow({
           <Button
             variant="ghost"
             size="sm"
-            className="h-6 px-2 text-xs"
+            className="h-5 px-1.5 text-[10px]"
             onClick={handleShowAuthors}
           >
             {isLoadingAuthors ? (
-              <Loader2 className="h-3 w-3 animate-spin" />
+              <Loader2 className="h-2.5 w-2.5 animate-spin" />
             ) : showAuthors ? (
-              <ChevronDown className="h-3 w-3 mr-1" />
+              <ChevronDown className="h-2.5 w-2.5 mr-0.5" />
             ) : (
-              <ChevronRight className="h-3 w-3 mr-1" />
+              <ChevronRight className="h-2.5 w-2.5 mr-0.5" />
             )}
-            <User className="h-3 w-3 mr-1" />
+            <User className="h-2.5 w-2.5 mr-0.5" />
             人员
           </Button>
         </div>
@@ -162,11 +162,11 @@ function DepartmentRow({
       {showAuthors && (
         <>
           {isLoadingAuthors ? (
-            <div className="flex items-center justify-center py-8 bg-muted/10" style={{ paddingLeft: 32 + indent }}>
-              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+            <div className="flex items-center justify-center py-6 bg-muted/5" style={{ paddingLeft: 24 + indent }}>
+              <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
             </div>
           ) : authors.length === 0 ? (
-            <div className="py-4 text-center text-xs text-muted-foreground bg-muted/10" style={{ paddingLeft: 32 + indent }}>
+            <div className="py-3 text-center text-[10px] text-muted-foreground bg-muted/5" style={{ paddingLeft: 24 + indent }}>
               暂无人员数据
             </div>
           ) : (
@@ -186,29 +186,29 @@ function DepartmentRow({
                 <div key={author.author_email}>
                   {/* Author row */}
                   <div
-                    className="flex items-center gap-2 px-4 py-2 border-b border-border/30 bg-muted/10 hover:bg-muted/20 transition-colors"
-                    style={{ paddingLeft: 32 + indent }}
+                    className="flex items-center gap-2 px-3 py-1.5 border-b border-border/30 bg-muted/5 hover:bg-muted/10 transition-colors"
+                    style={{ paddingLeft: 24 + indent }}
                   >
                     <div className={cn(
-                      "flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold shrink-0",
+                      "flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-bold shrink-0",
                       idx === 0 ? "bg-yellow-500/20 text-yellow-600" :
                         idx === 1 ? "bg-gray-300/40 text-gray-600" :
                           idx === 2 ? "bg-amber-600/20 text-amber-700" :
                             "bg-muted text-muted-foreground"
                     )}>
-                      {idx < 3 ? <Trophy className="h-2.5 w-2.5" /> : idx + 1}
+                      {idx < 3 ? <Trophy className="h-2 w-2" /> : idx + 1}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm truncate">{author.author_name}</p>
-                      <p className="text-xs text-muted-foreground">{author.author_email}</p>
+                      <p className="text-xs truncate">{author.author_name}</p>
+                      <p className="text-[10px] text-muted-foreground">{author.author_email}</p>
                     </div>
                     <div className="text-right shrink-0">
-                      <p className="font-mono text-xs text-muted-foreground">
+                      <p className="font-mono text-[10px] text-muted-foreground">
                         {author.ai_lines.toLocaleString()} / {author.total_lines.toLocaleString()}
                       </p>
                     </div>
                     <span className={cn(
-                      "shrink-0 rounded px-1.5 py-0.5 text-[10px] font-bold font-mono",
+                      "shrink-0 rounded px-1 py-0.5 text-[9px] font-bold font-mono",
                       authorRateColor
                     )}>
                       {author.ai_rate.toFixed(1)}%
@@ -216,7 +216,7 @@ function DepartmentRow({
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-5 px-1.5 text-[10px]"
+                      className="h-4 px-1 text-[9px]"
                       onClick={() => {
                         if (!showCommits && commits.length === 0 && !isLoadingCommits) {
                           onLoadCommits(
@@ -232,11 +232,11 @@ function DepartmentRow({
                       {isLoadingCommits ? (
                         <Loader2 className="h-3 w-3 animate-spin" />
                       ) : showCommits ? (
-                        <ChevronDown className="h-3 w-3" />
+                        <ChevronDown className="h-2.5 w-2.5" />
                       ) : (
-                        <ChevronRight className="h-3 w-3" />
+                        <ChevronRight className="h-2.5 w-2.5" />
                       )}
-                      <GitBranch className="h-3 w-3 mx-0.5" />
+                      <GitBranch className="h-2.5 w-2.5 mx-0.5" />
                       {author.total_commits}
                     </Button>
                   </div>
@@ -245,11 +245,11 @@ function DepartmentRow({
                   {showCommits && (
                     <>
                       {isLoadingCommits ? (
-                        <div className="flex items-center justify-center py-4 bg-muted/5" style={{ paddingLeft: 48 + indent }}>
-                          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                        <div className="flex items-center justify-center py-3 bg-muted/5" style={{ paddingLeft: 32 + indent }}>
+                          <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
                         </div>
                       ) : commits.length === 0 ? (
-                        <div className="py-2 text-center text-xs text-muted-foreground bg-muted/5" style={{ paddingLeft: 48 + indent }}>
+                        <div className="py-2 text-center text-[10px] text-muted-foreground bg-muted/5" style={{ paddingLeft: 32 + indent }}>
                           暂无提交数据
                         </div>
                       ) : (
@@ -274,23 +274,23 @@ function DepartmentRow({
                           return (
                             <div key={commit.commit_id}>
                               <div
-                                className="flex items-center gap-2 px-4 py-1.5 border-b border-border/20 bg-muted/5 hover:bg-muted/10 transition-colors"
-                                style={{ paddingLeft: 48 + indent }}
+                                className="flex items-center gap-2 px-3 py-1 border-b border-border/20 bg-muted/5 hover:bg-muted/10 transition-colors"
+                                style={{ paddingLeft: 32 + indent }}
                               >
-                                <code className="rounded bg-muted px-1 py-0.5 text-[10px] font-mono text-muted-foreground shrink-0">
+                                <code className="rounded bg-muted px-1 py-0.5 text-[9px] font-mono text-muted-foreground shrink-0">
                                   {commit.short_sha}
                                 </code>
                                 <div className="flex-1 min-w-0">
-                                  <p className="text-xs truncate">{commit.title}</p>
-                                  <p className="text-[10px] text-muted-foreground">
+                                  <p className="text-[10px] truncate">{commit.title}</p>
+                                  <p className="text-[9px] text-muted-foreground">
                                     {commit.project_name} · {commitDate}
                                   </p>
                                 </div>
-                                <span className="font-mono text-[10px] text-muted-foreground shrink-0">
+                                <span className="font-mono text-[9px] text-muted-foreground shrink-0">
                                   +{commit.additions}
                                 </span>
                                 <span className={cn(
-                                  "shrink-0 rounded px-1 py-0.5 text-[10px] font-bold font-mono",
+                                  "shrink-0 rounded px-1 py-0.5 text-[9px] font-bold font-mono",
                                   commitRateColor
                                 )}>
                                   {commit.ai_rate.toFixed(0)}%
@@ -299,7 +299,7 @@ function DepartmentRow({
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  className="h-5 px-1"
+                                  className="h-4 px-1"
                                   onClick={() => {
                                     if (!showDetail && !commitDetail && !isLoadingDetail) {
                                       onLoadCommitDetail(commit.project_name, commit.gitlab_id, commit.project_gitlab_id, detailKey);
@@ -308,11 +308,11 @@ function DepartmentRow({
                                   }}
                                 >
                                   {isLoadingDetail ? (
-                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                    <Loader2 className="h-2.5 w-2.5 animate-spin" />
                                   ) : showDetail ? (
-                                    <ChevronDown className="h-3 w-3" />
+                                    <ChevronDown className="h-2.5 w-2.5" />
                                   ) : (
-                                    <ChevronRight className="h-3 w-3" />
+                                    <ChevronRight className="h-2.5 w-2.5" />
                                   )}
                                 </Button>
                                 <a
@@ -322,42 +322,42 @@ function DepartmentRow({
                                   className="shrink-0"
                                   onClick={(e) => e.stopPropagation()}
                                 >
-                                  <ExternalLink className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+                                  <ExternalLink className="h-2.5 w-2.5 text-muted-foreground hover:text-foreground" />
                                 </a>
                               </div>
 
                               {/* Commit detail expansion */}
                               {showDetail && commitDetail && (
-                                <div className="bg-muted/10 border-b border-border/20 px-4 py-3" style={{ paddingLeft: 60 + indent }}>
+                                <div className="bg-muted/10 border-b border-border/20 px-3 py-2" style={{ paddingLeft: 40 + indent }}>
                                   {/* Commit info row */}
-                                  <div className="flex items-center gap-4 mb-2 text-xs">
-                                    <span className="flex items-center gap-1 text-muted-foreground">
-                                      <User className="h-3 w-3" />
+                                  <div className="flex items-center gap-3 mb-1.5 text-[10px]">
+                                    <span className="flex items-center gap-0.5 text-muted-foreground">
+                                      <User className="h-2.5 w-2.5" />
                                       {commitDetail.commit.author_name}
                                     </span>
-                                    <span className="flex items-center gap-1 text-muted-foreground">
-                                      <GitBranch className="h-3 w-3" />
+                                    <span className="flex items-center gap-0.5 text-muted-foreground">
+                                      <GitBranch className="h-2.5 w-2.5" />
                                       {commitDetail.commit.branch}
                                     </span>
                                     <a
                                       href={commitDetail.commit.web_url}
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      className="flex items-center gap-1 text-primary hover:underline"
+                                      className="flex items-center gap-0.5 text-primary hover:underline"
                                     >
-                                      <ExternalLink className="h-3 w-3" />
+                                      <ExternalLink className="h-2.5 w-2.5" />
                                       查看完整提交
                                     </a>
                                   </div>
 
                                   {/* AI Info row */}
-                                  <div className="flex items-center gap-4 mb-2 text-xs">
-                                    <span className="flex items-center gap-1">
-                                      <Brain className="h-3 w-3 text-primary" />
+                                  <div className="flex items-center gap-3 mb-1.5 text-[10px]">
+                                    <span className="flex items-center gap-0.5">
+                                      <Brain className="h-2.5 w-2.5 text-primary" />
                                       <span className="font-medium">{commitDetail.ai_note.tool_name}</span>
                                     </span>
-                                    <span className="flex items-center gap-1 text-muted-foreground">
-                                      <Code2 className="h-3 w-3" />
+                                    <span className="flex items-center gap-0.5 text-muted-foreground">
+                                      <Code2 className="h-2.5 w-2.5" />
                                       {commitDetail.ai_note.model_name}
                                     </span>
                                     <span className="text-muted-foreground">
@@ -369,27 +369,27 @@ function DepartmentRow({
                                   </div>
 
                                   {/* Stats row */}
-                                  <div className="flex items-center gap-4 mb-3 text-xs">
-                                    <div className="flex items-center gap-3 px-2 py-1 rounded bg-muted/50">
+                                  <div className="flex items-center gap-2 mb-2 text-[10px]">
+                                    <div className="flex items-center gap-1.5 px-1.5 py-0.5 rounded bg-muted/50">
                                       <span className="text-muted-foreground">文件:</span>
                                       <span className="font-mono font-medium">{commitDetail.stats.valid_files_count}</span>
                                       {commitDetail.stats.excluded_files_count > 0 && (
-                                        <span className="text-muted-foreground">(+{commitDetail.stats.excluded_files_count} 排除)</span>
+                                        <span className="text-muted-foreground">(+{commitDetail.stats.excluded_files_count})</span>
                                       )}
                                     </div>
-                                    <div className="flex items-center gap-3 px-2 py-1 rounded bg-muted/50">
+                                    <div className="flex items-center gap-1.5 px-1.5 py-0.5 rounded bg-muted/50">
                                       <span className="text-emerald-600">+{commitDetail.stats.ai_additions.toLocaleString()}</span>
                                       <span className="text-muted-foreground">AI</span>
                                     </div>
-                                    <div className="flex items-center gap-3 px-2 py-1 rounded bg-muted/50">
+                                    <div className="flex items-center gap-1.5 px-1.5 py-0.5 rounded bg-muted/50">
                                       <span className="text-blue-600">+{commitDetail.stats.human_additions}</span>
                                       <span className="text-muted-foreground">人工</span>
                                     </div>
-                                    <div className="flex items-center gap-3 px-2 py-1 rounded bg-muted/50">
+                                    <div className="flex items-center gap-1.5 px-1.5 py-0.5 rounded bg-muted/50">
                                       <span className="text-rose-600">-{commitDetail.commit.deletions.toLocaleString()}</span>
                                       <span className="text-muted-foreground">删除</span>
                                     </div>
-                                    <div className="flex items-center gap-2 px-2 py-1 rounded bg-muted/50">
+                                    <div className="flex items-center gap-1.5 px-1.5 py-0.5 rounded bg-muted/50">
                                       <span className="text-muted-foreground">AI率:</span>
                                       <span className={cn(
                                         "font-mono font-bold",
@@ -404,17 +404,17 @@ function DepartmentRow({
                                   {/* Files list */}
                                   {commitDetail.valid_files.length > 0 && (
                                     <div className="space-y-0.5">
-                                      <div className="text-[10px] text-muted-foreground mb-1">变更文件:</div>
+                                      <div className="text-[9px] text-muted-foreground mb-0.5">变更文件:</div>
                                       {commitDetail.valid_files.slice(0, filesExpanded.has(detailKey) ? undefined : 10).map((file, idx) => (
-                                        <div key={idx} className="flex items-center gap-2 text-[10px] py-0.5 hover:bg-muted/30 rounded px-1">
-                                          <FileCode className="h-3 w-3 text-muted-foreground shrink-0" />
+                                        <div key={idx} className="flex items-center gap-1.5 text-[9px] py-0.5 hover:bg-muted/30 rounded px-1">
+                                          <FileCode className="h-2.5 w-2.5 text-muted-foreground shrink-0" />
                                           <span className="truncate flex-1 text-muted-foreground">{file.path}</span>
                                           {file.deletions > 0 && (
                                             <span className="font-mono text-rose-500">-{file.deletions}</span>
                                           )}
                                           <span className="font-mono text-emerald-600">+{file.additions}</span>
                                           <span className={cn(
-                                            "rounded px-1.5 py-0.5 font-mono text-[9px]",
+                                            "rounded px-1 py-0.5 font-mono text-[8px]",
                                             file.ai_rate >= 80 ? "text-emerald-600 bg-emerald-500/10" :
                                             file.ai_rate >= 50 ? "text-amber-600 bg-amber-500/10" : "text-rose-600 bg-rose-500/10"
                                           )}>
@@ -425,7 +425,7 @@ function DepartmentRow({
                                       {commitDetail.valid_files.length > 10 && (
                                         <button
                                           type="button"
-                                          className="text-[10px] text-primary hover:underline pl-5 py-1 text-left"
+                                          className="text-[9px] text-primary hover:underline pl-4 py-0.5 text-left"
                                           onClick={() => onToggleFiles(detailKey)}
                                         >
                                           {filesExpanded.has(detailKey)
@@ -439,8 +439,8 @@ function DepartmentRow({
 
                                   {/* Excluded files */}
                                   {commitDetail.excluded_files.length > 0 && (
-                                    <div className="mt-2 text-[10px] text-muted-foreground">
-                                      排除文件: {commitDetail.excluded_files.slice(0, 5).join(", ")}
+                                    <div className="mt-1.5 text-[9px] text-muted-foreground">
+                                      排除: {commitDetail.excluded_files.slice(0, 5).join(", ")}
                                       {commitDetail.excluded_files.length > 5 && ` 等 ${commitDetail.excluded_files.length} 个`}
                                     </div>
                                   )}
@@ -728,51 +728,52 @@ export function AiCoveragePage() {
   };
 
   return (
-    <div className="flex h-full flex-col overflow-auto">
+    <div className="min-h-full bg-background overflow-auto">
       {/* Header */}
-      <div className="border-b px-6 py-4">
+      <div className="border-b px-5 py-3">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Brain className="h-6 w-6 text-primary" />
+          <div className="flex items-center gap-2">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
+              <Brain className="h-3.5 w-3.5 text-primary" />
+            </div>
             <div>
-              <h1 className="text-xl font-bold tracking-tight">AI 代码覆盖率</h1>
+              <h1 className="text-sm font-medium">AI 覆盖率</h1>
               <p className="text-xs text-muted-foreground mt-0.5">
                 各部门 AI 辅助编程代码贡献统计
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-2">
             {/* Quick presets */}
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-0.5">
               {datePresets.map((preset) => (
                 <Button
                   key={preset.label}
                   variant="ghost"
                   size="sm"
-                  className="h-7 px-2 text-xs"
+                  className="h-6 px-2 text-[10px]"
                   onClick={() => applyPreset(preset)}
                 >
                   {preset.label}
                 </Button>
               ))}
             </div>
-            <span className="text-muted-foreground mx-1">|</span>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
+            <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
             <input
               type="date"
-              className="h-8 rounded-md border border-input bg-background px-2 text-xs"
+              className="h-6 rounded-md border border-input bg-background px-2 text-[10px]"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
             />
             <ChevronLeft className="h-3 w-3 text-muted-foreground rotate-180" />
             <input
               type="date"
-              className="h-8 rounded-md border border-input bg-background px-2 text-xs"
+              className="h-6 rounded-md border border-input bg-background px-2 text-[10px]"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
             />
-            <Button size="sm" className="h-8" onClick={fetchData} disabled={loading}>
-              <RefreshCw className={cn("h-3.5 w-3.5 mr-1.5", loading && "animate-spin")} />
+            <Button size="sm" className="h-6 text-[10px]" onClick={fetchData} disabled={loading}>
+              <RefreshCw className={cn("h-3 w-3 mr-1", loading && "animate-spin")} />
               查询
             </Button>
           </div>
@@ -781,34 +782,34 @@ export function AiCoveragePage() {
 
       {/* Stats Cards */}
       {data && (
-        <div className="grid grid-cols-5 gap-4 p-6 bg-muted/30">
-          <div className="rounded-xl border bg-card p-4">
-            <p className="text-xs text-muted-foreground mb-1">AI 覆盖率</p>
-            <p className="text-2xl font-bold text-primary font-mono">
+        <div className="grid grid-cols-5 gap-3 px-5 py-3 bg-muted/30">
+          <div className="rounded-lg border bg-card p-2.5">
+            <p className="text-[10px] text-muted-foreground mb-0.5">AI 覆盖率</p>
+            <p className="text-lg font-bold text-primary font-mono">
               {data.overall.ai_rate.toFixed(1)}%
             </p>
           </div>
-          <div className="rounded-xl border bg-card p-4">
-            <p className="text-xs text-muted-foreground mb-1">总代码行</p>
-            <p className="text-2xl font-bold font-mono">
+          <div className="rounded-lg border bg-card p-2.5">
+            <p className="text-[10px] text-muted-foreground mb-0.5">总代码行</p>
+            <p className="text-lg font-bold font-mono">
               {(data.overall.total_lines / 1_000_000).toFixed(2)}M
             </p>
           </div>
-          <div className="rounded-xl border bg-card p-4">
-            <p className="text-xs text-muted-foreground mb-1">AI 代码行</p>
-            <p className="text-2xl font-bold text-primary font-mono">
+          <div className="rounded-lg border bg-card p-2.5">
+            <p className="text-[10px] text-muted-foreground mb-0.5">AI 代码行</p>
+            <p className="text-lg font-bold text-primary font-mono">
               {(data.overall.ai_lines / 1_000_000).toFixed(2)}M
             </p>
           </div>
-          <div className="rounded-xl border bg-card p-4">
-            <p className="text-xs text-muted-foreground mb-1">总提交数</p>
-            <p className="text-2xl font-bold font-mono">
+          <div className="rounded-lg border bg-card p-2.5">
+            <p className="text-[10px] text-muted-foreground mb-0.5">总提交数</p>
+            <p className="text-lg font-bold font-mono">
               {data.overall.total_commits.toLocaleString()}
             </p>
           </div>
-          <div className="rounded-xl border bg-card p-4">
-            <p className="text-xs text-muted-foreground mb-1">AI 提交数</p>
-            <p className="text-2xl font-bold text-primary font-mono">
+          <div className="rounded-lg border bg-card p-2.5">
+            <p className="text-[10px] text-muted-foreground mb-0.5">AI 提交数</p>
+            <p className="text-lg font-bold text-primary font-mono">
               {data.overall.commits_with_ai.toLocaleString()}
             </p>
           </div>
@@ -816,51 +817,51 @@ export function AiCoveragePage() {
       )}
 
       {/* Main Content */}
-      <div className="flex-1 p-6 pt-0">
+      <div className="px-5 py-3">
         {/* Toolbar */}
-        <div className="flex items-center justify-between py-3 border-b">
+        <div className="flex items-center justify-between py-2 border-b">
           <div className="flex items-center gap-2">
             <div className="relative">
-              <Search className="h-3.5 w-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <Search className="h-3 w-3 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <Input
-                className="h-8 w-64 pl-8 text-xs"
+                className="h-6 w-48 pl-6 text-[10px]"
                 placeholder="搜索部门..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
-            <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={expandAll}>
+            <Button variant="ghost" size="sm" className="h-6 text-[10px] px-2" onClick={expandAll}>
               展开全部
             </Button>
-            <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={collapseAll}>
+            <Button variant="ghost" size="sm" className="h-6 text-[10px] px-2" onClick={collapseAll}>
               收起全部
             </Button>
           </div>
           {data && (
-            <span className="text-xs text-muted-foreground">
+            <span className="text-[10px] text-muted-foreground">
               共 {data.departments.length} 个部门
             </span>
           )}
         </div>
 
         {/* Header Row */}
-        <div className="flex items-center gap-2 px-4 py-2 bg-muted/50 border-b font-medium text-xs text-muted-foreground">
+        <div className="flex items-center gap-2 px-3 py-1.5 bg-muted/50 border-b font-medium text-[10px] text-muted-foreground">
           <span className="flex-1">部门 / 团队</span>
-          <span className="w-24 text-right">代码行</span>
-          <span className="w-16 text-right">覆盖率</span>
-          <span className="w-14" />
+          <span className="w-20 text-right">代码行</span>
+          <span className="w-14 text-right">覆盖率</span>
+          <span className="w-12" />
         </div>
 
         {/* List */}
-        <div className="border rounded-b-xl divide-y divide-border/50 overflow-auto max-h-[calc(100vh-380px)]">
+        <div className="border rounded-lg divide-y divide-border/50 overflow-auto max-h-[calc(100vh-280px)]">
           {loading ? (
-            <div className="flex items-center justify-center py-16">
-              <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
+            <div className="flex items-center justify-center py-12">
+              <RefreshCw className="h-4 w-4 animate-spin text-muted-foreground" />
             </div>
           ) : filteredDepartments.length === 0 ? (
-            <div className="flex flex-col items-center py-16 text-muted-foreground">
-              <Code2 className="h-8 w-8 mb-2 opacity-50" />
-              <p className="text-sm">暂无数据</p>
+            <div className="flex flex-col items-center py-12 text-muted-foreground">
+              <Code2 className="h-6 w-6 mb-1.5 opacity-50" />
+              <p className="text-xs">暂无数据</p>
             </div>
           ) : (
             filteredDepartments.map((dept) => (
