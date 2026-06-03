@@ -327,12 +327,49 @@ export function AiCoveragePage() {
   const [commitsMap, setCommitsMap] = useState<Map<string, AiCoverageCommit[]>>(new Map());
   const [loadingCommits, setLoadingCommits] = useState<Set<string>>(new Set());
 
+  // Default date range: last 30 days
   const today = new Date();
   const defaultEnd = today.toISOString().slice(0, 10);
-  const defaultStart = new Date(today.setDate(today.getDate() - 30)).toISOString().slice(0, 10);
+  const thirtyDaysAgo = new Date(today);
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  const defaultStart = thirtyDaysAgo.toISOString().slice(0, 10);
 
   const [startDate, setStartDate] = useState(defaultStart);
   const [endDate, setEndDate] = useState(defaultEnd);
+
+  // Quick date range presets
+  const datePresets: { label: string; start: number | "month" | "lastMonth"; end: number | "lastMonthEnd" }[] = [
+    { label: "近7天", start: -7, end: 0 },
+    { label: "近30天", start: -30, end: 0 },
+    { label: "近90天", start: -90, end: 0 },
+    { label: "本月", start: "month", end: 0 },
+    { label: "上月", start: "lastMonth", end: "lastMonthEnd" },
+  ];
+
+  const applyPreset = (preset: typeof datePresets[0]) => {
+    const today = new Date();
+    let start: Date;
+    let end: Date;
+
+    if (preset.start === "month") {
+      start = new Date(today.getFullYear(), today.getMonth(), 1);
+    } else if (preset.start === "lastMonth") {
+      start = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+    } else {
+      start = new Date(today);
+      start.setDate(start.getDate() + preset.start);
+    }
+
+    if (preset.end === "lastMonthEnd") {
+      end = new Date(today.getFullYear(), today.getMonth(), 0);
+    } else {
+      end = new Date(today);
+      end.setDate(end.getDate() + preset.end);
+    }
+
+    setStartDate(start.toISOString().slice(0, 10));
+    setEndDate(end.toISOString().slice(0, 10));
+  };
 
   const fetchData = async () => {
     setLoading(true);
@@ -484,7 +521,22 @@ export function AiCoveragePage() {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Quick presets */}
+            <div className="flex items-center gap-1">
+              {datePresets.map((preset) => (
+                <Button
+                  key={preset.label}
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 px-2 text-xs"
+                  onClick={() => applyPreset(preset)}
+                >
+                  {preset.label}
+                </Button>
+              ))}
+            </div>
+            <span className="text-muted-foreground mx-1">|</span>
             <Calendar className="h-4 w-4 text-muted-foreground" />
             <input
               type="date"
