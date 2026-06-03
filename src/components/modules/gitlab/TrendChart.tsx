@@ -111,11 +111,11 @@ export function TrendChart({ history }: TrendChartProps) {
                 <g key={`grid-${i}`}>
                   <line x1={padding.left} y1={y} x2={padding.left + drawingWidth} y2={y} stroke="hsl(var(--border))" strokeWidth="0.5" />
                   {/* Y-axis labels (commits on left, coverage on right) */}
-                  <text x={padding.left - 4} y={y + 3} textAnchor="end" fontSize="7" fill="hsl(var(--muted-foreground))">
+                  <text x={padding.left - 4} y={y + 3} textAnchor="end" fontSize="5" fill="hsl(var(--muted-foreground))">
                     {commitTicks[4 - i]}
                   </text>
                   {hasCoverage && (
-                    <text x={padding.left + drawingWidth + 4} y={y + 3} textAnchor="start" fontSize="7" fill="hsl(var(--muted-foreground))">
+                    <text x={padding.left + drawingWidth + 4} y={y + 3} textAnchor="start" fontSize="5" fill="hsl(var(--muted-foreground))">
                       {(4 - i) * 25}%
                     </text>
                   )}
