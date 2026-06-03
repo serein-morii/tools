@@ -738,17 +738,7 @@ export function AiCoveragePage() {
 
   return (
     <div className="min-h-full bg-background">
-      {/* Header */}
-      <div className="border-b px-5 py-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
-              <Brain className="h-3.5 w-3.5 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-sm font-medium">AI 生成率</h1>
-            </div>
-          </div>
+      <div className="mb-3 flex items-center justify-end">
           <div className="inline-flex gap-1 rounded-lg bg-muted p-0.5">
             {tabs.map((tab) => (
               <button
@@ -766,8 +756,8 @@ export function AiCoveragePage() {
               </button>
             ))}
           </div>
-        </div>
       </div>
+
 
       {/* Tab Content */}
       {activeTab === "settings" ? (

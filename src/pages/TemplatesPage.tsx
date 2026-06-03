@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FileText, Plus, Trash2, Check, X } from "lucide-react";
+import { Plus, Trash2, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TemplateEditor } from "@/components/modules/reminder/TemplateEditor";
 import { TemplateList } from "@/components/modules/reminder/TemplateList";
@@ -85,26 +85,17 @@ export function TemplatesPage() {
   }
 
   return (
-    <div className="min-h-full bg-background">
-      {/* Header */}
-      <div className="border-b px-5 py-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
-              <FileText className="h-3.5 w-3.5 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-sm font-medium">模板管理</h1>
-            </div>
-          </div>
-          <Button onClick={handleCreate} size="sm" className="gap-1.5 shadow-sm h-7 text-xs">
-            <Plus className="h-3.5 w-3.5" />
-            新建模板
-          </Button>
-        </div>
+    <div className="p-4">
+      <div className="mb-3 flex items-center justify-between">
+        <p className="text-xs text-muted-foreground">
+          {(templates || []).length === 0 ? t("template.emptyList") : `${(templates || []).length} ${t("template.pageTitle").toLowerCase()}`}
+        </p>
+        <Button onClick={handleCreate} size="sm" className="gap-1.5 shadow-sm h-7 text-xs">
+          <Plus className="h-3.5 w-3.5" />
+          新建模板
+        </Button>
       </div>
 
-      <div className="mx-auto max-w-[1400px] space-y-3 px-3 py-3 animate-in fade-in duration-200">
         <TemplateList templates={templates || []} onEdit={handleEdit} onDelete={handleDelete} />
 
         <TemplateEditor
@@ -126,7 +117,6 @@ export function TemplatesPage() {
             </Button>
           </div>
         )}
-      </div>
     </div>
   );
 }
