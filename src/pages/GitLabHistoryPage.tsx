@@ -114,32 +114,32 @@ function ScanDetailDialog({ item, open, onClose, gitlabUrl }: {
         className="bg-background rounded-lg shadow-lg max-w-3xl w-full max-h-[80vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between p-4 border-b">
-          <h3 className="font-semibold flex items-center gap-2">
-            <Calendar className="h-5 w-5" />
+        <div className="flex items-center justify-between p-2.5 border-b">
+          <h3 className="text-xs font-semibold flex items-center gap-1.5">
+            <Calendar className="h-3.5 w-3.5" />
             {t("gitlab.history.scanDetail")}
           </h3>
           <Button variant="ghost" size="sm" onClick={onClose}>
-            <X className="h-4 w-4" />
+            <X className="h-3.5 w-3.5" />
           </Button>
         </div>
 
-        <div className="p-4 space-y-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="p-3 space-y-3">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
             <div className="rounded-lg border bg-muted/30 p-3">
-              <div className="text-sm text-muted-foreground">{t("gitlab.history.scanTime")}</div>
+              <div className="text-[10px] text-muted-foreground">{t("gitlab.history.scanTime")}</div>
               <div className="font-medium">{formatTimestamp(item.scan_at, i18n.language)}</div>
             </div>
             <div className="rounded-lg border bg-muted/30 p-3">
-              <div className="text-sm text-muted-foreground">{t("gitlab.history.scanType")}</div>
+              <div className="text-[10px] text-muted-foreground">{t("gitlab.history.scanType")}</div>
               <div className="font-medium">{item.scan_type === "weekly" ? t("gitlab.history.scheduledScan") : t("gitlab.history.manualScan")}</div>
             </div>
             <div className="rounded-lg border bg-muted/30 p-3">
-              <div className="text-sm text-muted-foreground">{t("gitlab.history.changedProjects")}</div>
+              <div className="text-[10px] text-muted-foreground">{t("gitlab.history.changedProjects")}</div>
               <div className="font-medium">{item.total_projects}{t("gitlab.history.countUnit")}</div>
             </div>
             <div className="rounded-lg border bg-muted/30 p-3">
-              <div className="text-sm text-muted-foreground">{t("gitlab.history.testCoverage")}</div>
+              <div className="text-[10px] text-muted-foreground">{t("gitlab.history.testCoverage")}</div>
               <div className="font-medium">{coverage}% ({item.test_projects}/{item.total_projects})</div>
             </div>
           </div>
@@ -151,26 +151,26 @@ function ScanDetailDialog({ item, open, onClose, gitlabUrl }: {
           )}
 
           {item.pipeline_total > 0 && (
-            <div className="rounded-lg border bg-muted/30 p-4">
-              <h4 className="font-medium mb-3 flex items-center gap-2">
-                <Activity className="h-4 w-4" />
+            <div className="rounded-lg border bg-muted/30 p-2.5">
+              <h4 className="text-[10px] font-medium mb-2 flex items-center gap-1.5">
+                <Activity className="h-3 w-3" />
                 {t("gitlab.history.pipelineStats")}
               </h4>
               <div className="grid grid-cols-4 gap-4">
                 <div className="text-center">
-                  <div className="text-2xl font-bold">{item.pipeline_total}</div>
+                  <div className="text-sm font-bold">{item.pipeline_total}</div>
                   <div className="text-xs text-muted-foreground">{t("gitlab.history.total")}</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-emerald-600">{item.pipeline_success}</div>
+                  <div className="text-sm font-bold text-emerald-600">{item.pipeline_success}</div>
                   <div className="text-xs text-emerald-600">{t("gitlab.history.success")}</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-destructive">{item.pipeline_failed}</div>
+                  <div className="text-sm font-bold text-destructive">{item.pipeline_failed}</div>
                   <div className="text-xs text-destructive">{t("gitlab.history.failed")}</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-amber-600">{item.pending_mrs}</div>
+                  <div className="text-sm font-bold text-amber-600">{item.pending_mrs}</div>
                   <div className="text-xs text-amber-600">{t("gitlab.history.pendingMRs")}</div>
                 </div>
               </div>
@@ -179,9 +179,9 @@ function ScanDetailDialog({ item, open, onClose, gitlabUrl }: {
                   <span>{t("gitlab.history.successRate")}</span>
                   <span>{item.pipeline_total > 0 ? Math.round((item.pipeline_success / item.pipeline_total) * 100) : 0}%</span>
                 </div>
-                <div className="w-full bg-muted rounded-full h-2">
+                <div className="w-full bg-muted rounded-full h-1.5">
                   <div
-                    className="h-2 rounded-full bg-emerald-500"
+                    className="h-1.5 rounded-full bg-emerald-500"
                     style={{ width: `${item.pipeline_total > 0 ? (item.pipeline_success / item.pipeline_total) * 100 : 0}%` }}
                   />
                 </div>
@@ -190,12 +190,12 @@ function ScanDetailDialog({ item, open, onClose, gitlabUrl }: {
           )}
 
           {walkin.matched > 0 && (
-            <div className="rounded-lg border bg-muted/30 p-4">
-              <h4 className="font-medium mb-3 flex items-center gap-2">
-                <BarChart3 className="h-4 w-4" />
+            <div className="rounded-lg border bg-muted/30 p-2.5">
+              <h4 className="text-[10px] font-medium mb-2 flex items-center gap-1.5">
+                <BarChart3 className="h-3 w-3" />
                 {t("gitlab.history.walkinQuality", { count: walkin.matched })}
               </h4>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
                 <div>
                   <span className="text-muted-foreground">Bug</span>
                   <div className="font-medium">{walkin.totalBugs}</div>
@@ -224,31 +224,31 @@ function ScanDetailDialog({ item, open, onClose, gitlabUrl }: {
             </div>
           )}
 
-          <div className="rounded-lg border bg-muted/30 p-4">
-            <h4 className="font-medium mb-3">{t("gitlab.history.codeChanges")}</h4>
+          <div className="rounded-lg border bg-muted/30 p-2.5">
+            <h4 className="text-[10px] font-medium mb-2">{t("gitlab.history.codeChanges")}</h4>
             <div className="flex items-center gap-6">
               <div className="flex items-center gap-2">
-                <GitCommit className="h-4 w-4 text-muted-foreground" />
+                <GitCommit className="h-3 w-3 text-muted-foreground" />
                 <span>{item.total_commits}{t("gitlab.history.commitsSuffix")}</span>
               </div>
               <div className="flex items-center gap-2">
-                <Plus className="h-4 w-4 text-emerald-600" />
+                <Plus className="h-3 w-3 text-emerald-600" />
                 <span className="text-emerald-600">+{item.total_lines_added.toLocaleString()}{t("gitlab.history.linesSuffix")}</span>
               </div>
               <div className="flex items-center gap-2">
-                <Minus className="h-4 w-4 text-red-600" />
+                <Minus className="h-3 w-3 text-red-600" />
                 <span className="text-red-600">-{item.total_lines_removed.toLocaleString()}{t("gitlab.history.linesSuffix")}</span>
               </div>
             </div>
           </div>
 
           {devStats.length > 0 && (
-            <div className="rounded-lg border bg-muted/30 p-4">
-              <h4 className="font-medium mb-3">{t("gitlab.history.devContributionTop5")}</h4>
-              <div className="space-y-2">
+            <div className="rounded-lg border bg-muted/30 p-2.5">
+              <h4 className="text-[10px] font-medium mb-2">{t("gitlab.history.devContributionTop5")}</h4>
+              <div className="space-y-1.5">
                 {devStats.slice(0, 5).map((dev, idx) => (
                   <div key={dev.name} className="flex items-center gap-3">
-                    <span className="w-6 text-center font-medium text-muted-foreground">
+                    <span className="w-5 text-center text-[10px] text-muted-foreground">
                       {idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : idx + 1}
                     </span>
                     <div className="flex-1">
@@ -256,7 +256,7 @@ function ScanDetailDialog({ item, open, onClose, gitlabUrl }: {
                         <span className="font-medium">{dev.name}</span>
                         <span className="text-sm text-muted-foreground">{dev.projects.length}{t("gitlab.history.projectsSuffix")}</span>
                       </div>
-                      <div className="flex items-center gap-4 text-xs text-muted-foreground mt-1">
+                      <div className="flex items-center gap-3 text-[9px] text-muted-foreground mt-0.5">
                         <span className="flex items-center gap-1"><GitCommit className="h-3 w-3" />{dev.commits}</span>
                         <span className="flex items-center gap-1 text-emerald-600"><Plus className="h-3 w-3" />{dev.lines_added}</span>
                         <span className="flex items-center gap-1 text-red-600"><Minus className="h-3 w-3" />{dev.lines_removed}</span>
@@ -278,9 +278,9 @@ function ScanDetailDialog({ item, open, onClose, gitlabUrl }: {
           )}
 
           {noTestProjects.length > 0 && (
-            <div className="rounded-lg border bg-muted/30 p-4">
-              <h4 className="font-medium mb-3">{t("gitlab.history.noTestProjects", { count: noTestProjects.length })}</h4>
-              <div className="space-y-2">
+            <div className="rounded-lg border bg-muted/30 p-2.5">
+              <h4 className="text-[10px] font-medium mb-2">{t("gitlab.history.noTestProjects", { count: noTestProjects.length })}</h4>
+              <div className="space-y-1.5">
                 {noTestProjects.map((p) => (
                   <div key={p.project_id} className="flex items-center justify-between text-sm">
                     <div className="flex items-center gap-2">
@@ -294,9 +294,9 @@ function ScanDetailDialog({ item, open, onClose, gitlabUrl }: {
             </div>
           )}
 
-          <div className="rounded-lg border bg-muted/30 p-4">
-            <h4 className="font-medium mb-3">{t("gitlab.history.projectList", { count: sortedProjects.length })}</h4>
-            <div className="space-y-2 max-h-80 overflow-y-auto">
+          <div className="rounded-lg border bg-muted/30 p-2.5">
+            <h4 className="text-[10px] font-medium mb-2">{t("gitlab.history.projectList", { count: sortedProjects.length })}</h4>
+            <div className="space-y-1.5 max-h-80 overflow-y-auto">
               {sortedProjects.map((p) => (
                 <div key={p.project_id} className="rounded-lg border bg-background/50 p-3 text-sm">
                   <div className="flex items-center justify-between mb-2">
@@ -395,8 +395,8 @@ function ScanDetailDialog({ item, open, onClose, gitlabUrl }: {
             </div>
           </div>
 
-          <div className="rounded-lg border bg-muted/30 p-4">
-            <h4 className="font-medium mb-3">{t("gitlab.history.participants", { count: contributors.length })}</h4>
+          <div className="rounded-lg border bg-muted/30 p-2.5">
+            <h4 className="text-[10px] font-medium mb-2">{t("gitlab.history.participants", { count: contributors.length })}</h4>
             <div className="flex flex-wrap gap-2">
               {contributors.map((name) => (
                 <span key={name} className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-sm">
@@ -574,7 +574,7 @@ function CompareView({ left, right, onClose }: {
             {t("gitlab.history.scanComparison")}
           </h4>
           <Button variant="ghost" size="sm" onClick={onClose}>
-            <X className="h-4 w-4" />
+            <X className="h-3.5 w-3.5" />
           </Button>
         </div>
 
