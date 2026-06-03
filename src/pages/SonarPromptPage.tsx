@@ -1562,17 +1562,15 @@ export function SonarPromptPage() {
                                                     <Button variant="outline" size="sm" className="h-7 text-xs" onClick={async () => { setIsCheckingLogin(true); try { await checkLogin(); } finally { setIsCheckingLogin(false); } }} disabled={isCheckingLogin}>
                                                         <RefreshCw className={`mr-1 h-3 w-3 ${isCheckingLogin ? "animate-spin" : ""}`} />检测
                                                     </Button>
-                                                    {!isLoggedIn && (
-                                                        <Button size="sm" className="h-7 text-xs" onClick={async () => {
-                                                            const ldap = getSelectedLdap();
-                                                            if (!ldap?.username || !ldap?.password) { toast.error("请先填写 LDAP 用户名和密码"); return; }
-                                                            if (!walkinForm.walkin_url) { toast.error("请先填写 Walkin 地址"); return; }
-                                                            try {
-                                                                await saveConfig.mutateAsync(walkinForm);
-                                                                await startAutoLogin(ldap, { walkin_url: walkinForm.walkin_url, walkin_project_header: walkinForm.walkin_project_header, walkin_workspace_name: walkinForm.walkin_workspace_name, ldap_profiles: walkinForm.ldap_profiles, selected_ldap_id: walkinForm.selected_ldap_id });
-                                                            } catch (e) { toast.error("操作失败: " + (e instanceof Error ? e.message : String(e))); }
-                                                        }}>登录</Button>
-                                                    )}
+                                                    <Button size="sm" className="h-7 text-xs" onClick={async () => {
+                                                        const ldap = getSelectedLdap();
+                                                        if (!ldap?.username || !ldap?.password) { toast.error("请先填写 LDAP 用户名和密码"); return; }
+                                                        if (!walkinForm.walkin_url) { toast.error("请先填写 Walkin 地址"); return; }
+                                                        try {
+                                                            await saveConfig.mutateAsync(walkinForm);
+                                                            await startAutoLogin(ldap, { walkin_url: walkinForm.walkin_url, walkin_project_header: walkinForm.walkin_project_header, walkin_workspace_name: walkinForm.walkin_workspace_name, ldap_profiles: walkinForm.ldap_profiles, selected_ldap_id: walkinForm.selected_ldap_id });
+                                                        } catch (e) { toast.error("操作失败: " + (e instanceof Error ? e.message : String(e))); }
+                                                    }}>{isLoggedIn ? "重新登录" : "登录"}</Button>
                                                     <Button variant="destructive" size="sm" className="h-7 text-xs" onClick={async () => {
                                                         const cleared = { ...walkinForm, walkin_csrf_token: "", walkin_project_header: "", walkin_x_auth_token: "" };
                                                         setWalkinForm(cleared);
