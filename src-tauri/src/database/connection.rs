@@ -20,6 +20,9 @@ impl Database {
 
         // Enable foreign keys
         conn.execute_batch("PRAGMA foreign_keys = ON;")?;
+        // WAL mode for better concurrent read/write performance
+        conn.execute_batch("PRAGMA journal_mode=WAL;")?;
+        conn.execute_batch("PRAGMA synchronous=NORMAL;")?;
 
         Ok(Self {
             conn: Arc::new(Mutex::new(conn)),
