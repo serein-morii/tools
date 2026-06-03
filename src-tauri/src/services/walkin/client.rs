@@ -920,4 +920,64 @@ impl WalkinClient {
 
         Ok(api_response.data.and_then(|d| d.list_object).unwrap_or_default())
     }
+
+    /// 获取用户工作空间列表
+    pub async fn fetch_workspaces(&self) -> Result<Vec<WorkspaceItem>> {
+        let url = format!("{}/project/workspace/list/userworkspace", self.base_url);
+
+        log::info!("Fetching workspaces from {}", url);
+
+        let response = self.http_client
+            .get(&url)
+            .header("CSRF-TOKEN", &self.auth.csrf_token)
+            .header("PROJECT", &self.auth.project)
+            .header("WORKSPACE", &self.auth.workspace)
+            .header("X-AUTH-TOKEN", &self.auth.x_auth_token)
+            .header("Accept", "application/json, text/plain, */*")
+            .header("Referer", &self.base_url)
+            .send()
+            .await
+            .map_err(|e| ToolsError::Http(format!("walkin workspaces request failed: {}", e)))?;
+
+        if !response.status().is_success() {
+            let status = response.status();
+            let body = response.text().await.unwrap_or_default();
+            return Err(ToolsError::Http(format!("walkin workspaces error {}: {}", status, body)));
+        }
+
+        let body_text = response.text().await
+            .map_err(|e| ToolsError::Http(format!("Failed to read workspaces response: {}", e)))?;
+
+        log::info!("Workspaces response: {} bytes", body_text.len());
+
+        #[derive(Debug, Clone, Serialize, Deserialize)]
+        struct WorkspaceListResponse {
+            success: bool,
+            message: Option<String>,
+            data: Option<Vec<WorkspaceItem>>,
+        }
+
+        let api_response: WorkspaceListResponse = serde_json::from_str(&body_text)
+            .map_err(|e| ToolsError::Http(format!("Failed to parse workspaces response: {} - body: {}", e, body_text)))?;
+
+        if !api_response.success {
+            return Err(ToolsError::Http(format!("walkin workspaces error: {}", api_response.message.unwrap_or_default())));
+        }
+
+        Ok(api_response.data.unwrap_or_default())
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct WorkspaceItem {
+    pub id: String,
+    pub name: String,
+    #[serde(default)]
+    pub description: Option<String>,
+    #[serde(rename = "createTime", default)]
+    pub create_time: Option<i64>,
+    #[serde(rename = "updateTime", default)]
+    pub update_time: Option<i64>,
+    #[serde(rename = "createUser", default)]
+    pub create_user: Option<String>,
 }

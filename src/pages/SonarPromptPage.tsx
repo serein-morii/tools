@@ -13,10 +13,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { CopyButton } from "@/components/ui/copy-button";
 import { sonarApi, type SonarAuth, type SonarReport, type SonarFile, type FileCoverage } from "@/lib/api/sonar";
+import { gitlabApi } from "@/lib/api/gitlab";
 import { useGitLabConfig, useSaveGitLabConfig, useGitLabProjects, useGitLabBranches } from "@/lib/query/gitlabQueries";
 import { useWalkinAuth } from "@/components/modules/gitlab/WalkinAuthManager";
 import { defaultGitLabConfig } from "@/lib/gitlab/defaults";
-import type { GitLabConfig, LdapProfile } from "@/types";
+import type { GitLabConfig, LdapProfile, WorkspaceItem } from "@/types";
 import { getHistory, saveRecord, deleteRecord, clearHistory, type SonarScanRecord } from "@/lib/sonar/history";
 import {
     getTemplates, saveTemplate, updateTemplate, deleteTemplate,
@@ -77,6 +78,36 @@ export function SonarPromptPage() {
         setLoginCheckInterval(interval);
         localStorage.setItem("walkin_login_check_interval", interval.toString());
     };
+
+    // --- 工作空间列表 ---
+    const [workspaces, setWorkspaces] = useState<WorkspaceItem[]>([]);
+    const [loadingWorkspaces, setLoadingWorkspaces] = useState(false);
+
+    const fetchWorkspaces = useCallback(async () => {
+        if (!walkinForm.walkin_url) return;
+        try {
+            setLoadingWorkspaces(true);
+            const auth = {
+                csrf_token: walkinForm.walkin_csrf_token,
+                project: walkinForm.walkin_project_header,
+                workspace: walkinForm.walkin_workspace_name,
+                x_auth_token: walkinForm.walkin_x_auth_token,
+            };
+            const list = await gitlabApi.walkinFetchWorkspaces(walkinForm.walkin_url, auth);
+            setWorkspaces(list);
+        } catch {
+            // ignore
+        } finally {
+            setLoadingWorkspaces(false);
+        }
+    }, [walkinForm.walkin_url, walkinForm.walkin_csrf_token, walkinForm.walkin_project_header, walkinForm.walkin_workspace_name, walkinForm.walkin_x_auth_token]);
+
+    // 登录后自动拉取工作空间列表
+    useEffect(() => {
+        if (isLoggedIn && walkinForm.walkin_url && walkinForm.walkin_csrf_token) {
+            fetchWorkspaces();
+        }
+    }, [isLoggedIn, walkinForm.walkin_url, walkinForm.walkin_csrf_token, fetchWorkspaces]);
 
     function generateId(): string {
         return `id-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
@@ -1519,8 +1550,24 @@ export function SonarPromptPage() {
                                                 <Input placeholder="a0a768d7-..." value={walkinForm.walkin_dept_id} onChange={(e) => setWalkinForm({ ...walkinForm, walkin_dept_id: e.target.value })} className="h-8 text-xs" />
                                             </div>
                                             <div className="space-y-1.5">
-                                                <Label className="text-xs">工作空间名称</Label>
-                                                <Input placeholder="产品架构&PMO" value={walkinForm.walkin_workspace_name} onChange={(e) => setWalkinForm({ ...walkinForm, walkin_workspace_name: e.target.value })} className="h-8 text-xs" />
+                                                <div className="flex items-center justify-between">
+                                                    <Label className="text-xs">工作空间</Label>
+                                                    {workspaces.length > 0 && (
+                                                        <Button variant="ghost" size="sm" className="h-5 text-[10px] gap-1" onClick={fetchWorkspaces} disabled={loadingWorkspaces}>
+                                                            <RefreshCw className={cn("h-2.5 w-2.5", loadingWorkspaces && "animate-spin")} />刷新
+                                                        </Button>
+                                                    )}
+                                                </div>
+                                                {workspaces.length > 0 ? (
+                                                    <SearchableSelect
+                                                        options={workspaces.map((w) => ({ value: w.name, label: w.name, description: w.id }))}
+                                                        value={walkinForm.walkin_workspace_name}
+                                                        onChange={(v) => setWalkinForm({ ...walkinForm, walkin_workspace_name: v })}
+                                                        placeholder="选择工作空间"
+                                                    />
+                                                ) : (
+                                                    <Input placeholder="产品架构&PMO" value={walkinForm.walkin_workspace_name} onChange={(e) => setWalkinForm({ ...walkinForm, walkin_workspace_name: e.target.value })} className="h-8 text-xs" />
+                                                )}
                                             </div>
                                         </div>
 

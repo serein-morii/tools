@@ -556,6 +556,15 @@ export interface LoginStatusResult {
   message?: string;
 }
 
+export interface WorkspaceItem {
+  id: string;
+  name: string;
+  description?: string;
+  create_time?: number;
+  update_time?: number;
+  create_user?: string;
+}
+
 export interface GitLabScanHistory {
   id: string;
   scan_type: string;

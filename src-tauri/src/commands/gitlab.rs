@@ -6,7 +6,7 @@ use crate::database::{Database, dao::settings::SettingsDao, dao::gitlab_scan::{G
 use crate::services::gitlab::{GitLabClient, GitLabScanner, ScanConfig, ScanResult, scanner::{FilterMode, ScanRange, ScanProgress}};
 use crate::services::gitlab::client::{GitLabAuth, GitLabProject};
 use crate::services::gitlab::notifier::send_scan_notification;
-use crate::services::walkin::{WalkinClient, WalkinAuth, ProjectMapping, CaptchaData, WalkinSigninResponse, UnitBoardData, UnitListItem, LoginStatusResult, get_captcha, ldap_signin, auto_login, AutoLoginResult, check_walkin_login};
+use crate::services::walkin::{WalkinClient, WalkinAuth, ProjectMapping, CaptchaData, WalkinSigninResponse, UnitBoardData, UnitListItem, LoginStatusResult, WorkspaceItem, get_captcha, ldap_signin, auto_login, AutoLoginResult, check_walkin_login};
 use crate::error::{Result, ToolsError};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -794,6 +794,21 @@ pub async fn walkin_check_login(
         x_auth_token: auth.x_auth_token,
     };
     check_walkin_login(&url, &walkin_auth).await
+}
+
+#[tauri::command]
+pub async fn walkin_fetch_workspaces(
+    url: String,
+    auth: WalkinAuthParams,
+) -> Result<Vec<WorkspaceItem>> {
+    let walkin_auth = WalkinAuth {
+        csrf_token: auth.csrf_token,
+        project: auth.project,
+        workspace: auth.workspace.clone(),
+        x_auth_token: auth.x_auth_token,
+    };
+    let client = WalkinClient::new(&url, walkin_auth, String::new(), auth.workspace)?;
+    client.fetch_workspaces().await
 }
 
 #[tauri::command]

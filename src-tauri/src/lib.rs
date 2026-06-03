@@ -102,6 +102,7 @@ pub fn run() {
             commands::walkin_fetch_unit_board,
             commands::walkin_fetch_unit_list,
             commands::walkin_check_login,
+            commands::walkin_fetch_workspaces,
             commands::gitlab_get_projects,
             commands::gitlab_get_branches,
             commands::sonar_get_reports,
