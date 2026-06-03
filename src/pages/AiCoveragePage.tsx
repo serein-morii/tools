@@ -739,37 +739,35 @@ export function AiCoveragePage() {
   return (
     <div className="mx-auto max-w-[1400px] min-h-full bg-background">
       {/* Header */}
-      <div className="border-b px-5 py-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
-              <Brain className="h-3.5 w-3.5 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-sm font-medium">AI生成率</h1>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                各部门 AI 辅助编程代码贡献统计
-              </p>
-            </div>
+      <div className="flex items-center justify-between mb-4 px-1">
+        <div className="flex items-center gap-3">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 ring-1 ring-primary/10">
+            <Brain className="h-4 w-4 text-primary" />
           </div>
-          {/* Tabs */}
-          <div className="inline-flex gap-1 rounded-lg bg-muted p-0.5">
-            {tabs.map((tab) => (
-              <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
-                className={cn(
-                  "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all",
-                  activeTab === tab.key
-                    ? "bg-background text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                <tab.icon className="h-3.5 w-3.5" />
-                {tab.label}
-              </button>
-            ))}
+          <div>
+            <h1 className="text-sm font-semibold">AI 生成率</h1>
+            <p className="text-[11px] text-muted-foreground mt-0.5">
+              各部门 AI 辅助编程代码贡献统计
+            </p>
           </div>
+        </div>
+        {/* Tabs */}
+        <div className="inline-flex gap-1 rounded-lg bg-muted p-0.5">
+          {tabs.map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={cn(
+                "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all",
+                activeTab === tab.key
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <tab.icon className="h-3.5 w-3.5" />
+              {tab.label}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -778,9 +776,10 @@ export function AiCoveragePage() {
         <SettingsTab config={config} onConfigChange={setConfig} />
       ) : (
         <>
-          {/* Query Bar */}
-          <div className="border-b px-5 py-2 bg-muted/30">
-            <div className="flex items-center gap-2">
+          {/* Card wrapper */}
+          <div className="rounded-xl border bg-card shadow-sm">
+            {/* Query Bar */}
+            <div className="flex items-center gap-2 px-4 py-2.5 border-b bg-muted/20">
               {/* Quick presets */}
               <div className="flex items-center gap-0.5">
                 {datePresets.map((preset) => (
@@ -814,86 +813,86 @@ export function AiCoveragePage() {
                 查询
               </Button>
             </div>
-          </div>
 
-          {/* Stats Cards */}
-          {data && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 p-3 bg-muted/30 rounded-lg border">
-              <div className="rounded-md border bg-card p-2">
-                <p className="text-[9px] text-muted-foreground mb-0.5">AI生成率</p>
-                <p className="text-sm font-bold text-primary">
-                  {data.overall.ai_rate.toFixed(1)}%
-                </p>
+            {/* Stats Cards */}
+            {data && (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 p-4">
+                <div className="rounded-lg border bg-gradient-to-br from-background to-muted/30 p-3">
+                  <p className="text-[10px] text-muted-foreground mb-1">AI 生成率</p>
+                  <p className="text-lg font-bold text-primary">
+                    {data.overall.ai_rate.toFixed(1)}%
+                  </p>
+                </div>
+                <div className="rounded-lg border bg-gradient-to-br from-background to-muted/30 p-3">
+                  <p className="text-[10px] text-muted-foreground mb-1">总代码行</p>
+                  <p className="text-lg font-bold">
+                    {(data.overall.total_lines / 1_000_000).toFixed(2)}M
+                  </p>
+                </div>
+                <div className="rounded-lg border bg-gradient-to-br from-background to-muted/30 p-3">
+                  <p className="text-[10px] text-muted-foreground mb-1">AI 代码行</p>
+                  <p className="text-lg font-bold text-primary">
+                    {(data.overall.ai_lines / 1_000_000).toFixed(2)}M
+                  </p>
+                </div>
+                <div className="rounded-lg border bg-gradient-to-br from-background to-muted/30 p-3">
+                  <p className="text-[10px] text-muted-foreground mb-1">总提交数</p>
+                  <p className="text-lg font-bold">
+                    {data.overall.total_commits.toLocaleString()}
+                  </p>
+                </div>
+                <div className="rounded-lg border bg-gradient-to-br from-background to-muted/30 p-3">
+                  <p className="text-[10px] text-muted-foreground mb-1">AI 提交数</p>
+                  <p className="text-lg font-bold text-primary">
+                    {data.overall.commits_with_ai.toLocaleString()}
+                  </p>
+                </div>
               </div>
-              <div className="rounded-md border bg-card p-2">
-                <p className="text-[9px] text-muted-foreground mb-0.5">总代码行</p>
-                <p className="text-sm font-bold">
-                  {(data.overall.total_lines / 1_000_000).toFixed(2)}M
-                </p>
+            )}
+
+            {/* Divider */}
+            <div className="border-t" />
+
+            {/* Toolbar */}
+            <div className="flex items-center justify-between px-4 py-2 border-b">
+              <div className="flex items-center gap-2">
+                <div className="relative">
+                  <Search className="h-3 w-3 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    className="h-6 w-48 pl-6 text-[10px]"
+                    placeholder="搜索部门..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                  />
+                </div>
+                <Button variant="ghost" size="sm" className="h-6 text-[10px] px-2" onClick={expandAll}>
+                  展开全部
+                </Button>
+                <Button variant="ghost" size="sm" className="h-6 text-[10px] px-2" onClick={collapseAll}>
+                  收起全部
+                </Button>
               </div>
-              <div className="rounded-md border bg-card p-2">
-                <p className="text-[9px] text-muted-foreground mb-0.5">AI 代码行</p>
-                <p className="text-sm font-bold text-primary">
-                  {(data.overall.ai_lines / 1_000_000).toFixed(2)}M
-                </p>
-              </div>
-              <div className="rounded-md border bg-card p-2">
-                <p className="text-[9px] text-muted-foreground mb-0.5">总提交数</p>
-                <p className="text-sm font-bold">
-                  {data.overall.total_commits.toLocaleString()}
-                </p>
-              </div>
-              <div className="rounded-md border bg-card p-2">
-                <p className="text-[9px] text-muted-foreground mb-0.5">AI 提交数</p>
-                <p className="text-sm font-bold text-primary">
-                  {data.overall.commits_with_ai.toLocaleString()}
-                </p>
-              </div>
+              {data && (
+                <span className="text-[10px] text-muted-foreground">
+                  共 {data.departments.length} 个部门
+                </span>
+              )}
             </div>
-          )}
 
-      {/* Main Content */}
-      <div className="px-3 py-3">
-        {/* Toolbar */}
-        <div className="flex items-center justify-between py-2 border-b">
-          <div className="flex items-center gap-2">
-            <div className="relative">
-              <Search className="h-3 w-3 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                className="h-6 w-48 pl-6 text-[10px]"
-                placeholder="搜索部门..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
+            {/* Header Row */}
+            <div className="flex items-center gap-2 px-4 py-1.5 bg-muted/30 border-y font-medium text-[10px] text-muted-foreground">
+              <span className="flex-1">部门 / 团队</span>
+              <span className="w-20 text-right">代码行</span>
+              <span className="w-14 text-right">覆盖率</span>
+              <span className="w-12" />
             </div>
-            <Button variant="ghost" size="sm" className="h-6 text-[10px] px-2" onClick={expandAll}>
-              展开全部
-            </Button>
-            <Button variant="ghost" size="sm" className="h-6 text-[10px] px-2" onClick={collapseAll}>
-              收起全部
-            </Button>
-          </div>
-          {data && (
-            <span className="text-[10px] text-muted-foreground">
-              共 {data.departments.length} 个部门
-            </span>
-          )}
-        </div>
 
-        {/* Header Row */}
-        <div className="flex items-center gap-2 px-3 py-1.5 bg-muted/50 border-b font-medium text-[10px] text-muted-foreground">
-          <span className="flex-1">部门 / 团队</span>
-          <span className="w-20 text-right">代码行</span>
-          <span className="w-14 text-right">覆盖率</span>
-          <span className="w-12" />
-        </div>
-
-        {/* List */}
-        <div className="border rounded-lg divide-y divide-border/50 overflow-auto max-h-[calc(100vh-280px)]">
-          {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <RefreshCw className="h-4 w-4 animate-spin text-muted-foreground" />
-            </div>
+            {/* List */}
+            <div className="divide-y divide-border/50 overflow-auto max-h-[calc(100vh-280px)]">
+              {loading ? (
+                <div className="flex items-center justify-center py-12">
+                  <RefreshCw className="h-4 w-4 animate-spin text-muted-foreground" />
+                </div>
           ) : filteredDepartments.length === 0 ? (
             <div className="flex flex-col items-center py-12 text-muted-foreground">
               <Code2 className="h-6 w-6 mb-1.5 opacity-50" />
