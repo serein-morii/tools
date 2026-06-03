@@ -24,7 +24,30 @@ export interface AiCoverageResponse {
   departments: AiCoverageDepartment[];
 }
 
+export interface AiCoverageAuthor {
+  author_name: string;
+  author_email: string;
+  total_commits: number;
+  total_lines: number;
+  ai_lines: number;
+  commits_with_ai: number;
+  ai_rate: number;
+}
+
 export const aiCoverageApi = {
   getCoverage: (startDate: string, endDate: string): Promise<AiCoverageResponse> =>
     call<AiCoverageResponse>("get_ai_coverage", { startDate, endDate }),
+
+  getCoverageAuthors: (
+    department: string,
+    departmentL2: string | null,
+    startDate: string,
+    endDate: string
+  ): Promise<AiCoverageAuthor[]> =>
+    call<AiCoverageAuthor[]>("get_ai_coverage_authors", {
+      department,
+      departmentL2,
+      startDate,
+      endDate,
+    }),
 };

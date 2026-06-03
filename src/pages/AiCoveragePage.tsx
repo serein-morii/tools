@@ -1,12 +1,12 @@
 import { useState, useEffect, useMemo } from "react";
 import {
   Brain, ChevronRight, ChevronDown, Users, GitCommit, Code2,
-  Calendar, RefreshCw, Search, ChevronLeft
+  Calendar, RefreshCw, Search, ChevronLeft, User, ArrowLeft, Trophy
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { aiCoverageApi, type AiCoverageDepartment, type AiCoverageResponse } from "@/lib/api/aiCoverage";
+import { aiCoverageApi, type AiCoverageDepartment, type AiCoverageResponse, type AiCoverageAuthor } from "@/lib/api/aiCoverage";
 import { toast } from "sonner";
 
 interface DepartmentRowProps {
@@ -14,9 +14,10 @@ interface DepartmentRowProps {
   level: number;
   expanded: Set<string>;
   onToggle: (name: string) => void;
+  onDrilldown: (dept: string, deptL2: string | null) => void;
 }
 
-function DepartmentRow({ dept, level, expanded, onToggle }: DepartmentRowProps) {
+function DepartmentRow({ dept, level, expanded, onToggle, onDrilldown }: DepartmentRowProps) {
   const hasChildren = dept.children && dept.children.length > 0;
   const isExpanded = expanded.has(dept.name);
   const indent = level * 16;
@@ -75,6 +76,18 @@ function DepartmentRow({ dept, level, expanded, onToggle }: DepartmentRowProps) 
           )}>
             {dept.ai_rate.toFixed(1)}%
           </span>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-6 px-2 text-xs"
+            onClick={() => onDrilldown(
+              level === 0 ? dept.name : "",
+              level === 0 ? null : dept.name
+            )}
+          >
+            <User className="h-3 w-3 mr-1" />
+            人员
+          </Button>
         </div>
       </div>
       {hasChildren && isExpanded && dept.children!.map((child) => (
@@ -84,9 +97,73 @@ function DepartmentRow({ dept, level, expanded, onToggle }: DepartmentRowProps) 
           level={level + 1}
           expanded={expanded}
           onToggle={onToggle}
+          onDrilldown={onDrilldown}
         />
       ))}
     </>
+  );
+}
+
+function AuthorRankList({ authors, loading }: { authors: AiCoverageAuthor[]; loading: boolean }) {
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (authors.length === 0) {
+    return (
+      <div className="flex flex-col items-center py-16 text-muted-foreground">
+        <User className="h-8 w-8 mb-2 opacity-50" />
+        <p className="text-sm">暂无数据</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="divide-y divide-border/50">
+      {authors.map((author, index) => {
+        const rateColor = author.ai_rate >= 80
+          ? "text-emerald-600 bg-emerald-500/10"
+          : author.ai_rate >= 50
+            ? "text-amber-600 bg-amber-500/10"
+            : "text-rose-600 bg-rose-500/10";
+
+        return (
+          <div key={author.author_email} className="flex items-center gap-3 px-4 py-3 hover:bg-muted/30">
+            <div className={cn(
+              "flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold",
+              index === 0 ? "bg-yellow-500/20 text-yellow-600" :
+                index === 1 ? "bg-gray-300/40 text-gray-600" :
+                  index === 2 ? "bg-amber-600/20 text-amber-700" :
+                    "bg-muted text-muted-foreground"
+            )}>
+              {index < 3 ? <Trophy className="h-3.5 w-3.5" /> : index + 1}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium truncate">{author.author_name}</p>
+              <p className="text-xs text-muted-foreground">{author.author_email}</p>
+            </div>
+            <div className="text-right">
+              <p className="font-mono text-xs text-muted-foreground">
+                {author.ai_lines.toLocaleString()} / {author.total_lines.toLocaleString()} 行
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {author.commits_with_ai}/{author.total_commits} 提交
+              </p>
+            </div>
+            <span className={cn(
+              "shrink-0 rounded px-2 py-0.5 text-xs font-bold font-mono",
+              rateColor
+            )}>
+              {author.ai_rate.toFixed(1)}%
+            </span>
+          </div>
+        );
+      })}
+    </div>
   );
 }
 
@@ -95,6 +172,12 @@ export function AiCoveragePage() {
   const [loading, setLoading] = useState(false);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState("");
+
+  // Drilldown state
+  const [drilldownDept, setDrilldownDept] = useState<string | null>(null);
+  const [drilldownDeptL2, setDrilldownDeptL2] = useState<string | null>(null);
+  const [authors, setAuthors] = useState<AiCoverageAuthor[]>([]);
+  const [loadingAuthors, setLoadingAuthors] = useState(false);
 
   const today = new Date();
   const defaultEnd = today.toISOString().slice(0, 10);
@@ -115,6 +198,25 @@ export function AiCoveragePage() {
     }
   };
 
+  const fetchAuthors = async (dept: string, deptL2: string | null) => {
+    setLoadingAuthors(true);
+    setDrilldownDept(dept);
+    setDrilldownDeptL2(deptL2);
+    try {
+      const result = await aiCoverageApi.getCoverageAuthors(
+        dept || "",
+        deptL2,
+        startDate,
+        endDate
+      );
+      setAuthors(result);
+    } catch (e) {
+      toast.error(`获取人员数据失败: ${e instanceof Error ? e.message : String(e)}`);
+    } finally {
+      setLoadingAuthors(false);
+    }
+  };
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -126,6 +228,16 @@ export function AiCoveragePage() {
       else next.add(name);
       return next;
     });
+  };
+
+  const handleDrilldown = (dept: string, deptL2: string | null) => {
+    fetchAuthors(dept, deptL2);
+  };
+
+  const handleBackToDept = () => {
+    setDrilldownDept(null);
+    setDrilldownDeptL2(null);
+    setAuthors([]);
   };
 
   const filteredDepartments = useMemo(() => {
@@ -239,64 +351,89 @@ export function AiCoveragePage() {
         </div>
       )}
 
-      {/* Department List */}
+      {/* Main Content */}
       <div className="flex-1 p-6 pt-0">
         {/* Toolbar */}
         <div className="flex items-center justify-between py-3 border-b">
           <div className="flex items-center gap-2">
-            <div className="relative">
-              <Search className="h-3.5 w-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                className="h-8 w-64 pl-8 text-xs"
-                placeholder="搜索部门..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-            <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={expandAll}>
-              展开全部
-            </Button>
-            <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={collapseAll}>
-              收起全部
-            </Button>
+            {drilldownDept ? (
+              <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={handleBackToDept}>
+                <ArrowLeft className="h-3.5 w-3.5 mr-1" />
+                返回部门列表
+              </Button>
+            ) : (
+              <>
+                <div className="relative">
+                  <Search className="h-3.5 w-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    className="h-8 w-64 pl-8 text-xs"
+                    placeholder="搜索部门..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                  />
+                </div>
+                <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={expandAll}>
+                  展开全部
+                </Button>
+                <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={collapseAll}>
+                  收起全部
+                </Button>
+              </>
+            )}
           </div>
-          {data && (
+          {drilldownDept && (
+            <span className="text-sm font-medium">
+              {drilldownDeptL2 || drilldownDept} - 人员排行
+            </span>
+          )}
+          {data && !drilldownDept && (
             <span className="text-xs text-muted-foreground">
               共 {data.departments.length} 个部门
             </span>
           )}
         </div>
 
-        {/* Header Row */}
-        <div className="flex items-center gap-2 px-4 py-2 bg-muted/50 border-b font-medium text-xs text-muted-foreground">
-          <span className="flex-1">部门 / 团队</span>
-          <span className="w-24 text-right">代码行</span>
-          <span className="w-16 text-right">覆盖率</span>
-        </div>
+        {/* Content */}
+        {drilldownDept ? (
+          <div className="border rounded-xl overflow-auto max-h-[calc(100vh-380px)]">
+            <AuthorRankList authors={authors} loading={loadingAuthors} />
+          </div>
+        ) : (
+          <>
+            {/* Header Row */}
+            <div className="flex items-center gap-2 px-4 py-2 bg-muted/50 border-b font-medium text-xs text-muted-foreground">
+              <span className="flex-1">部门 / 团队</span>
+              <span className="w-24 text-right">代码行</span>
+              <span className="w-16 text-right">覆盖率</span>
+              <span className="w-14" />
+            </div>
 
-        {/* List */}
-        <div className="border rounded-b-xl divide-y divide-border/50 overflow-auto max-h-[calc(100vh-380px)]">
-          {loading ? (
-            <div className="flex items-center justify-center py-16">
-              <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
+            {/* List */}
+            <div className="border rounded-b-xl divide-y divide-border/50 overflow-auto max-h-[calc(100vh-420px)]">
+              {loading ? (
+                <div className="flex items-center justify-center py-16">
+                  <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : filteredDepartments.length === 0 ? (
+                <div className="flex flex-col items-center py-16 text-muted-foreground">
+                  <Code2 className="h-8 w-8 mb-2 opacity-50" />
+                  <p className="text-sm">暂无数据</p>
+                </div>
+              ) : (
+                filteredDepartments.map((dept) => (
+                  <DepartmentRow
+                    key={dept.name}
+                    dept={dept}
+                    level={0}
+                    expanded={expanded}
+                    onToggle={toggleExpand}
+                    onDrilldown={handleDrilldown}
+                  />
+                ))
+              )}
             </div>
-          ) : filteredDepartments.length === 0 ? (
-            <div className="flex flex-col items-center py-16 text-muted-foreground">
-              <Code2 className="h-8 w-8 mb-2 opacity-50" />
-              <p className="text-sm">暂无数据</p>
-            </div>
-          ) : (
-            filteredDepartments.map((dept) => (
-              <DepartmentRow
-                key={dept.name}
-                dept={dept}
-                level={0}
-                expanded={expanded}
-                onToggle={toggleExpand}
-              />
-            ))
-          )}
-        </div>
+          </>
+        )}
       </div>
     </div>
   );
