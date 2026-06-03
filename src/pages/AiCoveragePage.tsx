@@ -2,12 +2,15 @@ import { useState, useEffect, useMemo } from "react";
 import {
   Brain, ChevronRight, ChevronDown, Users, GitCommit, Code2,
   Calendar, RefreshCw, Search, ChevronLeft, User, Trophy,
-  GitBranch, ExternalLink, Loader2
+  GitBranch, ExternalLink, Loader2, FileCode
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { aiCoverageApi, type AiCoverageDepartment, type AiCoverageResponse, type AiCoverageAuthor, type AiCoverageCommit } from "@/lib/api/aiCoverage";
+import {
+  aiCoverageApi, type AiCoverageDepartment, type AiCoverageResponse,
+  type AiCoverageAuthor, type AiCoverageCommit, type CommitCheckResponse
+} from "@/lib/api/aiCoverage";
 import { toast } from "sonner";
 
 interface DepartmentRowProps {
@@ -21,11 +24,16 @@ interface DepartmentRowProps {
   commitsExpanded: Set<string>;
   commitsMap: Map<string, AiCoverageCommit[]>;
   loadingCommits: Set<string>;
+  commitDetailExpanded: Set<string>;
+  commitDetailsMap: Map<string, CommitCheckResponse>;
+  loadingCommitDetails: Set<string>;
   onToggleDept: (name: string) => void;
   onToggleAuthors: (key: string) => void;
   onToggleCommits: (key: string) => void;
+  onToggleCommitDetail: (key: string) => void;
   onLoadAuthors: (dept: string, deptL2: string | null, key: string) => void;
   onLoadCommits: (dept: string, deptL2: string | null, authorEmail: string, key: string) => void;
+  onLoadCommitDetail: (projectName: string, commitSha: string, gitlabProjectId: number, key: string) => void;
 }
 
 function DepartmentRow({
@@ -39,11 +47,16 @@ function DepartmentRow({
   commitsExpanded,
   commitsMap,
   loadingCommits,
+  commitDetailExpanded,
+  commitDetailsMap,
+  loadingCommitDetails,
   onToggleDept,
   onToggleAuthors,
   onToggleCommits,
+  onToggleCommitDetail,
   onLoadAuthors,
   onLoadCommits,
+  onLoadCommitDetail,
 }: DepartmentRowProps) {
   const hasChildren = dept.children && dept.children.length > 0;
   const isExpanded = expanded.has(dept.name);
@@ -249,39 +262,116 @@ function DepartmentRow({
                             month: "2-digit", day: "2-digit"
                           });
 
+                          const detailKey = `${commit.gitlab_id}`;
+                          const showDetail = commitDetailExpanded.has(detailKey);
+                          const isLoadingDetail = loadingCommitDetails.has(detailKey);
+                          const commitDetail = commitDetailsMap.get(detailKey);
+
                           return (
-                            <div
-                              key={commit.commit_id}
-                              className="flex items-center gap-2 px-4 py-1.5 border-b border-border/20 bg-muted/5 hover:bg-muted/10 transition-colors"
-                              style={{ paddingLeft: 48 + indent }}
-                            >
-                              <code className="rounded bg-muted px-1 py-0.5 text-[10px] font-mono text-muted-foreground shrink-0">
-                                {commit.short_sha}
-                              </code>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-xs truncate">{commit.title}</p>
-                                <p className="text-[10px] text-muted-foreground">
-                                  {commit.project_name} · {commitDate}
-                                </p>
-                              </div>
-                              <span className="font-mono text-[10px] text-muted-foreground shrink-0">
-                                +{commit.additions}
-                              </span>
-                              <span className={cn(
-                                "shrink-0 rounded px-1 py-0.5 text-[10px] font-bold font-mono",
-                                commitRateColor
-                              )}>
-                                {commit.ai_rate.toFixed(0)}%
-                              </span>
-                              <a
-                                href={`https://gitlab.jms.com/${commit.project_gitlab_id}/-/commit/${commit.gitlab_id}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="shrink-0"
-                                onClick={(e) => e.stopPropagation()}
+                            <div key={commit.commit_id}>
+                              <div
+                                className="flex items-center gap-2 px-4 py-1.5 border-b border-border/20 bg-muted/5 hover:bg-muted/10 transition-colors"
+                                style={{ paddingLeft: 48 + indent }}
                               >
-                                <ExternalLink className="h-3 w-3 text-muted-foreground hover:text-foreground" />
-                              </a>
+                                <code className="rounded bg-muted px-1 py-0.5 text-[10px] font-mono text-muted-foreground shrink-0">
+                                  {commit.short_sha}
+                                </code>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-xs truncate">{commit.title}</p>
+                                  <p className="text-[10px] text-muted-foreground">
+                                    {commit.project_name} · {commitDate}
+                                  </p>
+                                </div>
+                                <span className="font-mono text-[10px] text-muted-foreground shrink-0">
+                                  +{commit.additions}
+                                </span>
+                                <span className={cn(
+                                  "shrink-0 rounded px-1 py-0.5 text-[10px] font-bold font-mono",
+                                  commitRateColor
+                                )}>
+                                  {commit.ai_rate.toFixed(0)}%
+                                </span>
+                                {/* Detail button */}
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-5 px-1"
+                                  onClick={() => {
+                                    if (!showDetail && !commitDetail && !isLoadingDetail) {
+                                      onLoadCommitDetail(commit.project_name, commit.gitlab_id, commit.project_gitlab_id, detailKey);
+                                    }
+                                    onToggleCommitDetail(detailKey);
+                                  }}
+                                >
+                                  {isLoadingDetail ? (
+                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                  ) : showDetail ? (
+                                    <ChevronDown className="h-3 w-3" />
+                                  ) : (
+                                    <ChevronRight className="h-3 w-3" />
+                                  )}
+                                </Button>
+                                <a
+                                  href={`https://gitlab.jms.com/${commit.project_gitlab_id}/-/commit/${commit.gitlab_id}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="shrink-0"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <ExternalLink className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+                                </a>
+                              </div>
+
+                              {/* Commit detail expansion */}
+                              {showDetail && commitDetail && (
+                                <div className="bg-muted/10 border-b border-border/20 px-4 py-2" style={{ paddingLeft: 60 + indent }}>
+                                  {/* AI Info */}
+                                  <div className="flex items-center gap-4 mb-2 text-xs">
+                                    <span className="flex items-center gap-1 text-muted-foreground">
+                                      <Brain className="h-3 w-3" />
+                                      {commitDetail.ai_note.tool_name}
+                                    </span>
+                                    <span className="flex items-center gap-1 text-muted-foreground">
+                                      <Code2 className="h-3 w-3" />
+                                      {commitDetail.ai_note.model_name}
+                                    </span>
+                                    <span className="text-muted-foreground">
+                                      Prompts: {commitDetail.ai_note.prompts_count}
+                                    </span>
+                                  </div>
+
+                                  {/* Stats */}
+                                  <div className="flex items-center gap-4 mb-2 text-[10px] text-muted-foreground">
+                                    <span>有效文件: {commitDetail.stats.valid_files_count}</span>
+                                    <span>AI行数: {commitDetail.stats.ai_additions.toLocaleString()}</span>
+                                    <span>人工行数: {commitDetail.stats.human_additions}</span>
+                                  </div>
+
+                                  {/* Files list */}
+                                  {commitDetail.valid_files.length > 0 && (
+                                    <div className="space-y-0.5">
+                                      {commitDetail.valid_files.slice(0, 10).map((file, idx) => (
+                                        <div key={idx} className="flex items-center gap-2 text-[10px]">
+                                          <FileCode className="h-3 w-3 text-muted-foreground shrink-0" />
+                                          <span className="truncate flex-1 text-muted-foreground">{file.path}</span>
+                                          <span className="font-mono text-muted-foreground">+{file.additions}</span>
+                                          <span className={cn(
+                                            "rounded px-1 py-0.5 font-mono",
+                                            file.ai_rate >= 80 ? "text-emerald-600" : file.ai_rate >= 50 ? "text-amber-600" : "text-rose-600"
+                                          )}>
+                                            {file.ai_rate.toFixed(0)}%
+                                          </span>
+                                        </div>
+                                      ))}
+                                      {commitDetail.valid_files.length > 10 && (
+                                        <div className="text-[10px] text-muted-foreground pl-5">
+                                          还有 {commitDetail.valid_files.length - 10} 个文件...
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
                             </div>
                           );
                         })
@@ -309,11 +399,16 @@ function DepartmentRow({
           commitsExpanded={commitsExpanded}
           commitsMap={commitsMap}
           loadingCommits={loadingCommits}
+          commitDetailExpanded={commitDetailExpanded}
+          commitDetailsMap={commitDetailsMap}
+          loadingCommitDetails={loadingCommitDetails}
           onToggleDept={onToggleDept}
           onToggleAuthors={onToggleAuthors}
           onToggleCommits={onToggleCommits}
+          onToggleCommitDetail={onToggleCommitDetail}
           onLoadAuthors={onLoadAuthors}
           onLoadCommits={onLoadCommits}
+          onLoadCommitDetail={onLoadCommitDetail}
         />
       ))}
     </>
@@ -335,6 +430,11 @@ export function AiCoveragePage() {
   const [commitsExpanded, setCommitsExpanded] = useState<Set<string>>(new Set());
   const [commitsMap, setCommitsMap] = useState<Map<string, AiCoverageCommit[]>>(new Map());
   const [loadingCommits, setLoadingCommits] = useState<Set<string>>(new Set());
+
+  // Commit detail expansion state
+  const [commitDetailExpanded, setCommitDetailExpanded] = useState<Set<string>>(new Set());
+  const [commitDetailsMap, setCommitDetailsMap] = useState<Map<string, CommitCheckResponse>>(new Map());
+  const [loadingCommitDetails, setLoadingCommitDetails] = useState<Set<string>>(new Set());
 
   // Default date range: last 30 days
   const today = new Date();
@@ -472,6 +572,31 @@ export function AiCoveragePage() {
       else next.add(key);
       return next;
     });
+  };
+
+  const toggleCommitDetailExpand = (key: string) => {
+    setCommitDetailExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
+
+  const loadCommitDetail = async (projectName: string, commitSha: string, gitlabProjectId: number, key: string) => {
+    setLoadingCommitDetails((prev) => new Set(prev).add(key));
+    try {
+      const result = await aiCoverageApi.getCommitDetail(projectName, commitSha, gitlabProjectId);
+      setCommitDetailsMap((prev) => new Map(prev).set(key, result));
+    } catch (e) {
+      toast.error(`获取提交详情失败: ${e instanceof Error ? e.message : String(e)}`);
+    } finally {
+      setLoadingCommitDetails((prev) => {
+        const next = new Set(prev);
+        next.delete(key);
+        return next;
+      });
+    }
   };
 
   const filteredDepartments = useMemo(() => {
@@ -664,11 +789,16 @@ export function AiCoveragePage() {
                 commitsExpanded={commitsExpanded}
                 commitsMap={commitsMap}
                 loadingCommits={loadingCommits}
+                commitDetailExpanded={commitDetailExpanded}
+                commitDetailsMap={commitDetailsMap}
+                loadingCommitDetails={loadingCommitDetails}
                 onToggleDept={toggleExpand}
                 onToggleAuthors={toggleAuthorExpand}
                 onToggleCommits={toggleCommitExpand}
+                onToggleCommitDetail={toggleCommitDetailExpand}
                 onLoadAuthors={loadAuthors}
                 onLoadCommits={loadCommits}
+                onLoadCommitDetail={loadCommitDetail}
               />
             ))
           )}

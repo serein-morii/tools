@@ -48,6 +48,62 @@ export interface AiCoverageCommit {
   ai_rate: number;
 }
 
+// Commit detail types
+export interface CommitDetail {
+  gitlab_id: string;
+  title: string;
+  author_name: string;
+  author_email: string;
+  branch: string;
+  committed_at: string;
+  web_url: string;
+  additions: number;
+  deletions: number;
+  project_name: string;
+  origin_branch: string;
+}
+
+export interface AiNote {
+  ai_lines_total: number;
+  frontmatter_ai_lines: number;
+  ai_tools: string[];
+  ai_models: string[];
+  prompts_count: number;
+  ai_source: string;
+  git_ai_version: string;
+  tool_name: string;
+  model_name: string;
+}
+
+export interface CommitStats {
+  total_additions: number;
+  excluded_additions: number;
+  effective_additions: number;
+  ai_additions: number;
+  human_additions: number;
+  ai_rate: number;
+  valid_files_count: number;
+  excluded_files_count: number;
+  diff_truncated: boolean;
+}
+
+export interface ValidFile {
+  path: string;
+  additions: number;
+  deletions: number;
+  ai_lines: number;
+  human_lines: number;
+  ai_rate: number;
+}
+
+export interface CommitCheckResponse {
+  commit: CommitDetail;
+  ai_note: AiNote;
+  stats: CommitStats;
+  excluded_files: string[];
+  valid_files: ValidFile[];
+}
+
 export const aiCoverageApi = {
   getCoverage: (startDate: string, endDate: string): Promise<AiCoverageResponse> =>
     call<AiCoverageResponse>("get_ai_coverage", { startDate, endDate }),
@@ -78,5 +134,16 @@ export const aiCoverageApi = {
       authorEmail,
       startDate,
       endDate,
+    }),
+
+  getCommitDetail: (
+    projectName: string,
+    commitSha: string,
+    gitlabProjectId: number
+  ): Promise<CommitCheckResponse> =>
+    call<CommitCheckResponse>("get_ai_commit_detail", {
+      projectName,
+      commitSha,
+      gitlabProjectId,
     }),
 };

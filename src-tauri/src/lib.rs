@@ -111,6 +111,7 @@ pub fn run() {
             commands::get_ai_coverage,
             commands::get_ai_coverage_authors,
             commands::get_ai_coverage_commits,
+            commands::get_ai_commit_detail,
         ])
         .setup(|app| {
             // Store app handle for auto-launch
