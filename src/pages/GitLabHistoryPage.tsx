@@ -351,13 +351,13 @@ function ScanDetailDialog({ item, open, onClose, gitlabUrl }: {
                   {p.walkin_metrics && (p.walkin_metrics.new_bugs > 0 || p.walkin_metrics.new_vulnerabilities > 0 || p.walkin_metrics.new_code_smells > 0) && (
                     <div className="flex items-center gap-3 text-xs mb-2">
                       {p.walkin_metrics.new_bugs > 0 && (
-                        <span className="flex items-center gap-1 text-destructive"><Bug className="h-3 w-3" />{p.walkin_metrics.new_bugs} {t("gitlab.history.newBugs")}</span>
+                        <span className="flex items-center gap-1 text-destructive"><Bug className="h-2.5 w-2.5" />{p.walkin_metrics.new_bugs} {t("gitlab.history.newBugs")}</span>
                       )}
                       {p.walkin_metrics.new_vulnerabilities > 0 && (
-                        <span className="flex items-center gap-1 text-amber-600"><ShieldAlert className="h-3 w-3" />{p.walkin_metrics.new_vulnerabilities} {t("gitlab.history.newVulnerabilities")}</span>
+                        <span className="flex items-center gap-1 text-amber-600"><ShieldAlert className="h-2.5 w-2.5" />{p.walkin_metrics.new_vulnerabilities} {t("gitlab.history.newVulnerabilities")}</span>
                       )}
                       {p.walkin_metrics.new_code_smells > 0 && (
-                        <span className="flex items-center gap-1 text-muted-foreground"><Zap className="h-3 w-3" />{p.walkin_metrics.new_code_smells} {t("gitlab.history.newCodeSmells")}</span>
+                        <span className="flex items-center gap-1 text-muted-foreground"><Zap className="h-2.5 w-2.5" />{p.walkin_metrics.new_code_smells} {t("gitlab.history.newCodeSmells")}</span>
                       )}
                     </div>
                   )}
@@ -444,30 +444,30 @@ function HistoryCard({ item, selected, onToggleSelect, onClick }: {
               type="checkbox"
               checked={selected}
               onChange={onToggleSelect}
-              className="h-4 w-4"
+              className="h-3 w-3"
               onClick={(e) => e.stopPropagation()}
             />
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
-              <Calendar className="h-5 w-5 text-muted-foreground" />
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-muted">
+              <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <span className="font-medium">{formatTimestamp(item.scan_at, i18n.language)}</span>
-                <span className="rounded-full bg-muted px-2 py-0.5 text-xs">
+                <span className="text-[10px] font-medium">{formatTimestamp(item.scan_at, i18n.language)}</span>
+                <span className="rounded-full bg-muted px-1.5 py-0.5 text-[9px]">
                   {item.scan_type === "weekly" ? t("gitlab.history.scheduledScan") : t("gitlab.history.manualScan")}
                 </span>
               </div>
-              <div className="mt-1 flex items-center gap-4 text-sm text-muted-foreground">
+              <div className="mt-1 flex items-center gap-3 text-[10px] text-muted-foreground">
                 <span>{t("gitlab.history.projects")}{item.total_projects}</span>
                 <span>{t("gitlab.history.commits")}{item.total_commits}</span>
                 <span>{t("gitlab.history.testCoverageLabel")}{coverage}% ({item.test_projects}/{item.total_projects})</span>
               </div>
             </div>
           </div>
-          <ChevronRight className="h-5 w-5 text-muted-foreground" />
+          <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
         </div>
 
-        <div className="mt-4 grid grid-cols-2 gap-4 border-t pt-4 text-sm">
+        <div className="mt-3 grid grid-cols-2 gap-3 border-t pt-3 text-[10px]">
           <div>
             <span className="text-muted-foreground">{t("gitlab.history.codeChangesLabel")}</span>
             <span className="text-emerald-600">+{item.total_lines_added.toLocaleString()}</span>
@@ -482,16 +482,16 @@ function HistoryCard({ item, selected, onToggleSelect, onClick }: {
         </div>
 
         {walkin.matched > 0 && (
-          <div className="mt-3 border-t pt-3">
-            <div className="flex items-center gap-4 text-xs text-muted-foreground">
+          <div className="mt-2 border-t pt-2">
+            <div className="flex items-center gap-3 text-[9px] text-muted-foreground">
               <span className="flex items-center gap-1">
-                <Bug className="h-3 w-3" /> Bug {walkin.totalBugs}
+                <Bug className="h-2.5 w-2.5" /> Bug {walkin.totalBugs}
               </span>
               <span className="flex items-center gap-1">
-                <ShieldAlert className="h-3 w-3" /> {t("gitlab.history.vulnerabilities")} {walkin.totalVulnerabilities}
+                <ShieldAlert className="h-2.5 w-2.5" /> {t("gitlab.history.vulnerabilities")} {walkin.totalVulnerabilities}
               </span>
               <span className="flex items-center gap-1">
-                <Zap className="h-3 w-3" /> {t("gitlab.history.codeSmells")} {walkin.totalCodeSmells}
+                <Zap className="h-2.5 w-2.5" /> {t("gitlab.history.codeSmells")} {walkin.totalCodeSmells}
               </span>
               {walkin.maxAllCoverage != null && (
                 <span>{t("gitlab.history.fullCoverageShort")} {walkin.maxAllCoverage.toFixed(2)}%</span>
@@ -504,8 +504,8 @@ function HistoryCard({ item, selected, onToggleSelect, onClick }: {
         )}
 
         {noTestProjects.length > 0 && (
-          <div className="mt-3 border-t pt-3">
-            <p className="text-sm text-muted-foreground mb-2">{t("gitlab.history.noTestProjectsLabel")}</p>
+          <div className="mt-2 border-t pt-2">
+            <p className="text-[10px] text-muted-foreground mb-1.5">{t("gitlab.history.noTestProjectsLabel")}</p>
             <div className="flex flex-wrap gap-2">
               {noTestProjects.slice(0, 5).map((p) => (
                 <span key={p.project_id} className="rounded bg-muted px-2 py-0.5 text-xs text-muted-foreground">
@@ -513,7 +513,7 @@ function HistoryCard({ item, selected, onToggleSelect, onClick }: {
                 </span>
               ))}
               {noTestProjects.length > 5 && (
-                <span className="text-xs text-muted-foreground">{t("gitlab.history.moreProjects", { count: noTestProjects.length - 5 })}</span>
+                <span className="text-[9px] text-muted-foreground">{t("gitlab.history.moreProjects", { count: noTestProjects.length - 5 })}</span>
               )}
             </div>
           </div>
