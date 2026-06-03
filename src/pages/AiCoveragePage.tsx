@@ -27,10 +27,12 @@ interface DepartmentRowProps {
   commitDetailExpanded: Set<string>;
   commitDetailsMap: Map<string, CommitCheckResponse>;
   loadingCommitDetails: Set<string>;
+  filesExpanded: Set<string>;
   onToggleDept: (name: string) => void;
   onToggleAuthors: (key: string) => void;
   onToggleCommits: (key: string) => void;
   onToggleCommitDetail: (key: string) => void;
+  onToggleFiles: (key: string) => void;
   onLoadAuthors: (dept: string, deptL2: string | null, key: string) => void;
   onLoadCommits: (dept: string, deptL2: string | null, authorEmail: string, key: string) => void;
   onLoadCommitDetail: (projectName: string, commitSha: string, gitlabProjectId: number, key: string) => void;
@@ -50,10 +52,12 @@ function DepartmentRow({
   commitDetailExpanded,
   commitDetailsMap,
   loadingCommitDetails,
+  filesExpanded,
   onToggleDept,
   onToggleAuthors,
   onToggleCommits,
   onToggleCommitDetail,
+  onToggleFiles,
   onLoadAuthors,
   onLoadCommits,
   onLoadCommitDetail,
@@ -401,7 +405,7 @@ function DepartmentRow({
                                   {commitDetail.valid_files.length > 0 && (
                                     <div className="space-y-0.5">
                                       <div className="text-[10px] text-muted-foreground mb-1">变更文件:</div>
-                                      {commitDetail.valid_files.slice(0, 10).map((file, idx) => (
+                                      {commitDetail.valid_files.slice(0, filesExpanded.has(detailKey) ? undefined : 10).map((file, idx) => (
                                         <div key={idx} className="flex items-center gap-2 text-[10px] py-0.5 hover:bg-muted/30 rounded px-1">
                                           <FileCode className="h-3 w-3 text-muted-foreground shrink-0" />
                                           <span className="truncate flex-1 text-muted-foreground">{file.path}</span>
@@ -419,9 +423,16 @@ function DepartmentRow({
                                         </div>
                                       ))}
                                       {commitDetail.valid_files.length > 10 && (
-                                        <div className="text-[10px] text-muted-foreground pl-5 py-1">
-                                          还有 {commitDetail.valid_files.length - 10} 个文件...
-                                        </div>
+                                        <button
+                                          type="button"
+                                          className="text-[10px] text-primary hover:underline pl-5 py-1 text-left"
+                                          onClick={() => onToggleFiles(detailKey)}
+                                        >
+                                          {filesExpanded.has(detailKey)
+                                            ? "收起"
+                                            : `还有 ${commitDetail.valid_files.length - 10} 个文件...`
+                                          }
+                                        </button>
                                       )}
                                     </div>
                                   )}
@@ -465,10 +476,12 @@ function DepartmentRow({
           commitDetailExpanded={commitDetailExpanded}
           commitDetailsMap={commitDetailsMap}
           loadingCommitDetails={loadingCommitDetails}
+          filesExpanded={filesExpanded}
           onToggleDept={onToggleDept}
           onToggleAuthors={onToggleAuthors}
           onToggleCommits={onToggleCommits}
           onToggleCommitDetail={onToggleCommitDetail}
+          onToggleFiles={onToggleFiles}
           onLoadAuthors={onLoadAuthors}
           onLoadCommits={onLoadCommits}
           onLoadCommitDetail={onLoadCommitDetail}
@@ -498,6 +511,7 @@ export function AiCoveragePage() {
   const [commitDetailExpanded, setCommitDetailExpanded] = useState<Set<string>>(new Set());
   const [commitDetailsMap, setCommitDetailsMap] = useState<Map<string, CommitCheckResponse>>(new Map());
   const [loadingCommitDetails, setLoadingCommitDetails] = useState<Set<string>>(new Set());
+  const [filesExpanded, setFilesExpanded] = useState<Set<string>>(new Set()); // 文件列表展开状态
 
   // Default date range: last 30 days
   const today = new Date();
@@ -639,6 +653,15 @@ export function AiCoveragePage() {
 
   const toggleCommitDetailExpand = (key: string) => {
     setCommitDetailExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
+
+  const toggleFilesExpand = (key: string) => {
+    setFilesExpanded((prev) => {
       const next = new Set(prev);
       if (next.has(key)) next.delete(key);
       else next.add(key);
@@ -855,10 +878,12 @@ export function AiCoveragePage() {
                 commitDetailExpanded={commitDetailExpanded}
                 commitDetailsMap={commitDetailsMap}
                 loadingCommitDetails={loadingCommitDetails}
+                filesExpanded={filesExpanded}
                 onToggleDept={toggleExpand}
                 onToggleAuthors={toggleAuthorExpand}
                 onToggleCommits={toggleCommitExpand}
                 onToggleCommitDetail={toggleCommitDetailExpand}
+                onToggleFiles={toggleFilesExpand}
                 onLoadAuthors={loadAuthors}
                 onLoadCommits={loadCommits}
                 onLoadCommitDetail={loadCommitDetail}
