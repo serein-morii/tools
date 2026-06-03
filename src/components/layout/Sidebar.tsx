@@ -1,30 +1,18 @@
 import { NavLink } from "react-router-dom";
-import { Bell, Settings, ChevronLeft, ChevronRight, Home, GitBranch, FileCode, Brain, Timer, StickyNote } from "lucide-react";
+import { Settings, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useSettings, useUpdateSetting, getSettingValue } from "@/lib/query/settingsQueries";
-
-const primaryItems = [
-  { to: "/home", icon: Home, labelKey: "nav.home", match: "/home", settingKey: null },
-  { to: "/gitlab", icon: GitBranch, labelKey: "nav.gitlab", match: "/gitlab", settingKey: "page_gitlab_visible" },
-  { to: "/sonar", icon: FileCode, labelKey: "nav.sonar", match: "/sonar", settingKey: "page_sonar_visible" },
-  { to: "/ai-coverage", icon: Brain, labelKey: "nav.aiCoverage", match: "/ai-coverage", settingKey: "page_ai_coverage_visible" },
-  { to: "/reminder/tasks", icon: Bell, labelKey: "nav.reminder", match: "/reminder", settingKey: "page_reminder_visible" },
-  { to: "/timer", icon: Timer, labelKey: "nav.timer", match: "/timer", settingKey: "page_timer_visible" },
-  { to: "/notes", icon: StickyNote, labelKey: "nav.notes", match: "/notes", settingKey: "page_notes_visible" },
-];
+import { getVisibleModules } from "@/config/modules";
 
 export function Sidebar() {
   const { t } = useTranslation();
   const { data: settings } = useSettings();
   const updateSetting = useUpdateSetting();
-  const [collapsed, setCollapsed] = useState(false);
-
-  useEffect(() => {
-    const saved = getSettingValue(settings, "sidebar_collapsed", "false");
-    if (saved === "true") setCollapsed(true);
-  }, [settings]);
+  const [collapsed, setCollapsed] = useState(
+    settings ? getSettingValue(settings, "sidebar_collapsed", "false") === "true" : false
+  );
 
   const toggleCollapse = () => {
     const next = !collapsed;
@@ -32,20 +20,16 @@ export function Sidebar() {
     updateSetting.mutate({ key: "sidebar_collapsed", value: next ? "true" : "false" });
   };
 
+  const visibleModules = getVisibleModules(settings).filter((m) => m.id !== "settings");
+
   const raw = getSettingValue(settings, "menu_order", "");
   const menuOrder: string[] = raw ? JSON.parse(raw) : [];
 
-  const filtered = primaryItems.filter(item => {
-    if (!item.settingKey) return true;
-    return getSettingValue(settings, item.settingKey, "true") === "true";
-  });
-
-  const visibleItems = [...filtered].sort((a, b) => {
-    if (a.to === "/home") return -1;
-    if (b.to === "/home") return 1;
-    const aId = a.to.replace("/", "").replace("/tasks", "");
-    const bId = b.to.replace("/", "").replace("/tasks", "");
-    const ai = menuOrder.indexOf(aId); const bi = menuOrder.indexOf(bId);
+  const sortedModules = [...visibleModules].sort((a, b) => {
+    if (a.id === "home") return -1;
+    if (b.id === "home") return 1;
+    const ai = menuOrder.indexOf(a.id);
+    const bi = menuOrder.indexOf(b.id);
     return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
   });
 
@@ -88,11 +72,11 @@ export function Sidebar() {
 
       {/* Navigation */}
       <nav className="flex flex-1 flex-col gap-0.5 p-1.5">
-        {visibleItems.map((item) => (
+        {sortedModules.map((mod) => (
           <NavLink
-            key={item.to}
-            to={item.to}
-            end={item.to === "/"}
+            key={mod.id}
+            to={mod.path}
+            end={mod.path === "/home"}
             className={({ isActive }) =>
               cn(
                 "group flex items-center gap-2 rounded-md px-2.5 py-1.5 text-xs font-medium transition-all duration-200",
@@ -103,8 +87,8 @@ export function Sidebar() {
               )
             }
           >
-            <item.icon className="h-4 w-4 shrink-0" />
-            {!collapsed && <span>{t(item.labelKey)}</span>}
+            <mod.icon className="h-4 w-4 shrink-0" />
+            {!collapsed && <span>{t(mod.labelKey)}</span>}
           </NavLink>
         ))}
       </nav>

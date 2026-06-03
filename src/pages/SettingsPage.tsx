@@ -13,6 +13,7 @@ import { SearchableSelect } from "@/components/ui/searchable-select";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/theme-provider";
 import { toast } from "sonner";
+import { allModules } from "@/config/modules";
 
 const LanguageSettings = lazy(() => import("@/components/settings/LanguageSettings").then((m) => ({ default: m.LanguageSettings })));
 
@@ -409,14 +410,9 @@ function ThemeButton({ active, onClick, icon: Icon, children }: ThemeButtonProps
   );
 }
 
-const PAGES = [
-  { key: "page_gitlab_visible", id: "gitlab", label: "Git 扫描", icon: GitBranch },
-  { key: "page_sonar_visible", id: "sonar", label: "单测覆盖率", icon: FileCode },
-  { key: "page_ai_coverage_visible", id: "ai-coverage", label: "AI 生成率", icon: Brain },
-  { key: "page_reminder_visible", id: "reminder", label: "智能提醒", icon: Bell },
-  { key: "page_timer_visible", id: "timer", label: "番茄钟", icon: Timer },
-  { key: "page_notes_visible", id: "notes", label: "速记", icon: StickyNote },
-];
+const PAGES = allModules
+  .filter(m => m.settingKey)
+  .map(m => ({ key: m.settingKey!, id: m.id, label: m.label, icon: m.icon }));
 
 function ReorderableMenuList({ settings, updateSetting, dragIdx, setDragIdx }: {
   settings: any; updateSetting: any; dragIdx: number | null; setDragIdx: (v: number | null) => void;
@@ -429,9 +425,12 @@ function ReorderableMenuList({ settings, updateSetting, dragIdx, setDragIdx }: {
   });
   const orderRef = useRef(order);
   const sortedRef = useRef(sorted);
-  orderRef.current = order; sortedRef.current = sorted;
   const updateRef = useRef(updateSetting);
-  updateRef.current = updateSetting;
+  useEffect(() => {
+    orderRef.current = order;
+    sortedRef.current = sorted;
+    updateRef.current = updateSetting;
+  }, [order, sorted, updateSetting]);
   const dragRef = useRef<number | null>(null);
 
   const moveUp = (idx: number) => {

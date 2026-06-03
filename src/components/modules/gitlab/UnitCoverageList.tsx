@@ -78,6 +78,11 @@ function CoverageBar({ value }: { value: number }) {
   );
 }
 
+  function SortIcon({ field, sortField, sortOrder }: { field: SortField; sortField: SortField; sortOrder: "asc" | "desc" }) {
+    if (sortField !== field) return <ArrowUpDown className="h-3 w-3 text-muted-foreground/40" />;
+    return sortOrder === "asc" ? <ArrowUp className="h-3 w-3 text-primary" /> : <ArrowDown className="h-3 w-3 text-primary" />;
+  };
+
 export function UnitCoverageList({
   startDate, endDate, onPromptGenerate,
   workspaceName: workspaceNameOverride,
@@ -170,10 +175,6 @@ export function UnitCoverageList({
     });
   }, [items, search, sortField, sortOrder]);
 
-  const SortIcon = ({ field }: { field: SortField }) => {
-    if (sortField !== field) return <ArrowUpDown className="h-3 w-3 text-muted-foreground/40" />;
-    return sortOrder === "asc" ? <ArrowUp className="h-3 w-3 text-primary" /> : <ArrowDown className="h-3 w-3 text-primary" />;
-  };
 
   if (loading) {
     return (
@@ -211,34 +212,34 @@ export function UnitCoverageList({
                 <tr className="border-b bg-muted/30">
                   <th className="px-2 py-1.5 text-left font-medium">
                     <button className="flex items-center gap-1 hover:text-foreground transition-colors" onClick={() => handleSort("projectName")}>
-                      项目 <SortIcon field="projectName" />
+                      项目 <SortIcon field="projectName" sortField={sortField} sortOrder={sortOrder} />
                     </button>
                   </th>
                   <th className="px-2 py-1.5 text-left font-medium w-16">分支</th>
                   <th className="px-2 py-1.5 text-center font-medium">
                     <button className="flex items-center gap-1 hover:text-foreground transition-colors mx-auto" onClick={() => handleSort("newCoverage")}>
-                      增量 <SortIcon field="newCoverage" />
+                      增量 <SortIcon field="newCoverage" sortField={sortField} sortOrder={sortOrder} />
                     </button>
                   </th>
                   <th className="px-2 py-1.5 text-center font-medium">
                     <button className="flex items-center gap-1 hover:text-foreground transition-colors mx-auto" onClick={() => handleSort("coverage")}>
-                      全量 <SortIcon field="coverage" />
+                      全量 <SortIcon field="coverage" sortField={sortField} sortOrder={sortOrder} />
                     </button>
                   </th>
                   <th className="px-1.5 py-1.5 text-center font-medium">
                     <button className="flex items-center gap-1 hover:text-foreground transition-colors mx-auto" onClick={() => handleSort("bugs")}>
-                      Bug <SortIcon field="bugs" />
+                      Bug <SortIcon field="bugs" sortField={sortField} sortOrder={sortOrder} />
                     </button>
                   </th>
                   <th className="px-1.5 py-1.5 text-center font-medium">
                     <button className="flex items-center gap-1 hover:text-foreground transition-colors mx-auto" onClick={() => handleSort("codeSmells")}>
-                      Smell <SortIcon field="codeSmells" />
+                      Smell <SortIcon field="codeSmells" sortField={sortField} sortOrder={sortOrder} />
                     </button>
                   </th>
                   <th className="px-1.5 py-1.5 text-center font-medium">评级</th>
                   <th className="px-1.5 py-1.5 text-center font-medium">
                     <button className="flex items-center gap-1 hover:text-foreground transition-colors mx-auto" onClick={() => handleSort("tests")}>
-                      单测 <SortIcon field="tests" />
+                      单测 <SortIcon field="tests" sortField={sortField} sortOrder={sortOrder} />
                     </button>
                   </th>
                   <th className="px-1.5 py-1.5 text-center font-medium">通过率</th>

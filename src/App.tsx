@@ -22,6 +22,11 @@ const GitLabSettingsPage = lazy(() => import("@/pages/GitLabSettingsPage").then(
 const SonarPromptPage = lazy(() => import("@/pages/SonarPromptPage").then((m) => ({ default: m.SonarPromptPage })));
 const AiCoveragePage = lazy(() => import("@/pages/AiCoveragePage").then((m) => ({ default: m.AiCoveragePage })));
 
+/** Wrap a route element with an ErrorBoundary so a crash in one page doesn't take down the whole app. */
+function withErrorBoundary(children: React.ReactNode) {
+  return <ErrorBoundary>{children}</ErrorBoundary>;
+}
+
 function PageGuard({ settingKey, children }: { settingKey: string; children: React.ReactNode }) {
   const { data: settings } = useSettings();
   const visible = getSettingValue(settings, settingKey, "true") === "true";
@@ -49,26 +54,26 @@ function App() {
         <Routes>
           <Route path="/" element={<MainLayout />}>
             <Route index element={<StartupRedirect />} />
-            <Route path="home" element={<DashboardPage />} />
+            <Route path="home" element={withErrorBoundary(<DashboardPage />)} />
             <Route path="reminder" element={<PageGuard settingKey="page_reminder_visible"><ReminderLayout /></PageGuard>}>
               <Route index element={<Navigate to="/reminder/tasks" replace />} />
-              <Route path="tasks" element={<TaskReminderPage />} />
-              <Route path="templates" element={<TemplatesPage />} />
-              <Route path="channels" element={<ChannelsPage />} />
-              <Route path="history" element={<HistoryPage />} />
-              <Route path="settings" element={<ReminderSettingsPage />} />
+              <Route path="tasks" element={withErrorBoundary(<TaskReminderPage />)} />
+              <Route path="templates" element={withErrorBoundary(<TemplatesPage />)} />
+              <Route path="channels" element={withErrorBoundary(<ChannelsPage />)} />
+              <Route path="history" element={withErrorBoundary(<HistoryPage />)} />
+              <Route path="settings" element={withErrorBoundary(<ReminderSettingsPage />)} />
             </Route>
             <Route path="gitlab" element={<PageGuard settingKey="page_gitlab_visible"><GitLabLayout /></PageGuard>}>
               <Route index element={<Navigate to="/gitlab/overview" replace />} />
-              <Route path="overview" element={<GitLabOverviewPage />} />
-              <Route path="history" element={<GitLabHistoryPage />} />
-              <Route path="settings" element={<GitLabSettingsPage />} />
+              <Route path="overview" element={withErrorBoundary(<GitLabOverviewPage />)} />
+              <Route path="history" element={withErrorBoundary(<GitLabHistoryPage />)} />
+              <Route path="settings" element={withErrorBoundary(<GitLabSettingsPage />)} />
             </Route>
-            <Route path="timer" element={<PageGuard settingKey="page_timer_visible"><PomodoroTimerPage /></PageGuard>} />
-            <Route path="sonar" element={<PageGuard settingKey="page_sonar_visible"><SonarPromptPage /></PageGuard>} />
-            <Route path="ai-coverage" element={<PageGuard settingKey="page_ai_coverage_visible"><AiCoveragePage /></PageGuard>} />
-            <Route path="notes" element={<PageGuard settingKey="page_notes_visible"><QuickNotesPage /></PageGuard>} />
-            <Route path="settings" element={<SettingsPage />} />
+            <Route path="timer" element={<PageGuard settingKey="page_timer_visible">{withErrorBoundary(<PomodoroTimerPage />)}</PageGuard>} />
+            <Route path="sonar" element={<PageGuard settingKey="page_sonar_visible">{withErrorBoundary(<SonarPromptPage />)}</PageGuard>} />
+            <Route path="ai-coverage" element={<PageGuard settingKey="page_ai_coverage_visible">{withErrorBoundary(<AiCoveragePage />)}</PageGuard>} />
+            <Route path="notes" element={<PageGuard settingKey="page_notes_visible">{withErrorBoundary(<QuickNotesPage />)}</PageGuard>} />
+            <Route path="settings" element={withErrorBoundary(<SettingsPage />)} />
           </Route>
         </Routes>
       </Suspense>

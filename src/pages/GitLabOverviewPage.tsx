@@ -174,7 +174,7 @@ function ProjectTable({ projects, gitlabUrl }: { projects: GitLabProjectResult[]
 
   // Filter and sort projects
   const filtered = useMemo(() => {
-    let result = projects.filter((p) => {
+    const result = projects.filter((p) => {
       // Text search
       if (!p.project_name.toLowerCase().includes(search.toLowerCase())) return false;
 
@@ -251,12 +251,6 @@ function ProjectTable({ projects, gitlabUrl }: { projects: GitLabProjectResult[]
     return project.walkin_metrics?.new_coverage ?? null;
   };
 
-  const SortIcon = ({ field }: { field: string }) => {
-    if (sortBy !== field) return <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground/50" />;
-    return sortOrder === "asc"
-      ? <ArrowUp className="h-3.5 w-3.5 text-primary" />
-      : <ArrowDown className="h-3.5 w-3.5 text-primary" />;
-  };
 
   return (
     <div className="p-3 pt-0">
@@ -316,7 +310,7 @@ function ProjectTable({ projects, gitlabUrl }: { projects: GitLabProjectResult[]
                 onClick={() => toggleSort("commits")}
               >
                 <div className="flex items-center justify-end gap-1">
-                  <SortIcon field="commits" />
+                  <SortIcon field="commits" sortBy={sortBy} sortOrder={sortOrder} />
                   {t("gitlab.overview.commits")}
                 </div>
               </th>
@@ -325,7 +319,7 @@ function ProjectTable({ projects, gitlabUrl }: { projects: GitLabProjectResult[]
                 onClick={() => toggleSort("lines_added")}
               >
                 <div className="flex items-center justify-end gap-1">
-                  <SortIcon field="lines_added" />
+                  <SortIcon field="lines_added" sortBy={sortBy} sortOrder={sortOrder} />
                   +/-
                 </div>
               </th>
@@ -337,7 +331,7 @@ function ProjectTable({ projects, gitlabUrl }: { projects: GitLabProjectResult[]
                   onClick={() => toggleSort("coverage")}
                 >
                   <div className="flex items-center justify-center gap-1">
-                    <SortIcon field="coverage" />
+                    <SortIcon field="coverage" sortBy={sortBy} sortOrder={sortOrder} />
                     {t("gitlab.overview.incrementalCoverage")}
                   </div>
                 </th>
@@ -709,6 +703,13 @@ function ProjectTable({ projects, gitlabUrl }: { projects: GitLabProjectResult[]
   );
 }
 
+
+  function SortIcon({ field, sortBy, sortOrder }: { field: string; sortBy: string; sortOrder: "asc" | "desc" }) {
+    if (sortBy !== field) return <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground/50" />;
+    return sortOrder === "asc"
+      ? <ArrowUp className="h-3.5 w-3.5 text-primary" />
+      : <ArrowDown className="h-3.5 w-3.5 text-primary" />;
+  }
 export function GitLabOverviewPage() {
   const { t, i18n } = useTranslation();
   const [showSetupModal, setShowSetupModal] = useState(false);

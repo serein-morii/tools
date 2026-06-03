@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -34,18 +34,13 @@ interface SettingsTabProps {
 
 export function SettingsTab({ config, onConfigChange }: SettingsTabProps) {
   const [apiBaseUrl, setApiBaseUrl] = useState(config.apiBaseUrl);
-  const [hasChanges, setHasChanges] = useState(false);
-
-  useEffect(() => {
-    setHasChanges(apiBaseUrl !== config.apiBaseUrl);
-  }, [apiBaseUrl, config.apiBaseUrl]);
+  const hasChanges = useMemo(() => apiBaseUrl !== config.apiBaseUrl, [apiBaseUrl, config.apiBaseUrl]);
 
   const handleSave = () => {
     const newConfig = { apiBaseUrl };
     saveConfig(newConfig);
     onConfigChange(newConfig);
     toast.success("配置已保存");
-    setHasChanges(false);
   };
 
   const handleReset = () => {

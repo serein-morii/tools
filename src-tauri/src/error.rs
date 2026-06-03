@@ -17,7 +17,6 @@ pub enum ToolsError {
     #[error("Task not found: {0}")]
     TaskNotFound(String),
 
-
     #[error("Channel not found: {0}")]
     ChannelNotFound(String),
 

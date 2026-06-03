@@ -59,6 +59,9 @@ export function SonarPromptPage() {
     const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "success" | "error">("idle");
 
     const [walkinForm, setWalkinForm] = useState<GitLabConfig>(defaultGitLabConfig);
+    const [pageType, setPageType] = useState(
+        () => localStorage.getItem("sonar_page_type") || "代码行"
+    );
     useEffect(() => {
         if (!config) return;
         const m = { ...config };
@@ -251,9 +254,6 @@ export function SonarPromptPage() {
     const [createTimeEnd, setCreateTimeEnd] = useState(getDefaultTime);
     const [limit, setLimit] = useState(7);
     const [author, setAuthor] = useState("");
-    const [pageType, setPageType] = useState(
-        () => localStorage.getItem("sonar_page_type") || "代码行"
-    );
 
     const { data: gitlabBranches } = useGitLabBranches(selectedProjectId);
 

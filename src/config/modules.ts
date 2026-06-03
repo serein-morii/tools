@@ -1,35 +1,110 @@
 import type { LucideIcon } from "lucide-react";
-import { Bell, Settings } from "lucide-react";
+import {
+  Bell, Settings, Home, GitBranch, FileCode, Brain, Timer, StickyNote,
+} from "lucide-react";
 
 export interface ModuleConfig {
   id: string;
+  /** Route path (used in NavLink `to`) */
   path: string;
+  /** i18n label key */
+  labelKey: string;
   label: string;
   icon: LucideIcon;
   description: string;
+  /** Settings key to control visibility, null = always visible */
+  settingKey: string | null;
 }
 
-export const modules: ModuleConfig[] = [
+export const allModules: ModuleConfig[] = [
   {
-    id: "task-reminder",
-    path: "/",
+    id: "home",
+    path: "/home",
+    labelKey: "nav.home",
+    label: "首页",
+    icon: Home,
+    description: "概览面板",
+    settingKey: null,
+  },
+  {
+    id: "gitlab",
+    path: "/gitlab",
+    labelKey: "nav.gitlab",
+    label: "GitLab",
+    icon: GitBranch,
+    description: "GitLab 代码扫描",
+    settingKey: "page_gitlab_visible",
+  },
+  {
+    id: "sonar",
+    path: "/sonar",
+    labelKey: "nav.sonar",
+    label: "Sonar",
+    icon: FileCode,
+    description: "Sonar 代码质量",
+    settingKey: "page_sonar_visible",
+  },
+  {
+    id: "ai-coverage",
+    path: "/ai-coverage",
+    labelKey: "nav.aiCoverage",
+    label: "AI 覆盖率",
+    icon: Brain,
+    description: "AI 覆盖率统计",
+    settingKey: "page_ai_coverage_visible",
+  },
+  {
+    id: "reminder",
+    path: "/reminder/tasks",
+    labelKey: "nav.reminder",
     label: "提醒",
     icon: Bell,
     description: "管理定时任务和提醒",
+    settingKey: "page_reminder_visible",
+  },
+  {
+    id: "timer",
+    path: "/timer",
+    labelKey: "nav.timer",
+    label: "计时器",
+    icon: Timer,
+    description: "专注计时",
+    settingKey: "page_timer_visible",
+  },
+  {
+    id: "notes",
+    path: "/notes",
+    labelKey: "nav.notes",
+    label: "笔记",
+    icon: StickyNote,
+    description: "快捷笔记",
+    settingKey: "page_notes_visible",
   },
   {
     id: "settings",
     path: "/settings",
+    labelKey: "nav.settings",
     label: "设置",
     icon: Settings,
     description: "应用设置和通知渠道配置",
+    settingKey: null,
   },
 ];
 
 export function getModuleById(id: string): ModuleConfig | undefined {
-  return modules.find((m) => m.id === id);
+  return allModules.find((m) => m.id === id);
 }
 
 export function getModuleByPath(path: string): ModuleConfig | undefined {
-  return modules.find((m) => m.path === path);
+  return allModules.find((m) => m.path === path);
+}
+
+export function getVisibleModules(
+  settings: Array<{ key: string; value: string }> | undefined,
+): ModuleConfig[] {
+  return allModules.filter((m) => {
+    if (!m.settingKey) return true;
+    const setting = settings?.find((s) => s.key === m.settingKey);
+    return !setting || setting.value === "true";
+  });
 }

@@ -86,11 +86,12 @@ export function UnitBoardCard({
         }
       }
 
-      let nextDate = new Date(now);
+      const nextDate = new Date(now);
       nextDate.setHours(targetHour, targetMinute, 0, 0);
 
       const weekdayNums: number[] = [];
       if (weekday === "*") {
+        // all days
       } else if (weekday === "1-5") {
         weekdayNums.push(1, 2, 3, 4, 5);
       } else if (weekday.includes(",")) {
