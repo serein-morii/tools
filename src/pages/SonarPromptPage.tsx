@@ -131,7 +131,7 @@ export function SonarPromptPage() {
         const auth = {
             csrf_token: walkinForm.walkin_csrf_token,
             project: walkinForm.walkin_project_header,
-            workspace: name,
+            workspace: ws.id,
             x_auth_token: walkinForm.walkin_x_auth_token,
         };
         try {
