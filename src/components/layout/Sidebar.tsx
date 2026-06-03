@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { Bell, Settings, ChevronLeft, ChevronRight, Home, GitBranch, FileCode } from "lucide-react";
+import { Bell, Settings, ChevronLeft, ChevronRight, Home, GitBranch, FileCode, Brain } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
@@ -8,6 +8,7 @@ const primaryItems = [
   { to: "/", icon: Home, labelKey: "nav.home", match: "/" },
   { to: "/gitlab", icon: GitBranch, labelKey: "nav.gitlab", match: "/gitlab" },
   { to: "/sonar", icon: FileCode, labelKey: "nav.sonar", match: "/sonar" },
+  { to: "/ai-coverage", icon: Brain, labelKey: "nav.aiCoverage", match: "/ai-coverage" },
   { to: "/reminder/tasks", icon: Bell, labelKey: "nav.reminder", match: "/reminder" },
 ];
 

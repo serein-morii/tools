@@ -61,7 +61,8 @@
     "notes": "Notes",
     "home": "Dashboard",
     "gitlab": "Code",
-    "sonar": "Unit Test"
+    "sonar": "Unit Test",
+    "aiCoverage": "AI Coverage"
   },
   "dashboard": {
     "title": "Dashboard",

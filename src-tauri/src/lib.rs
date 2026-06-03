@@ -108,6 +108,7 @@ pub fn run() {
             commands::sonar_get_files,
             commands::sonar_get_file_coverage,
             commands::sonar_generate_prompt,
+            commands::get_ai_coverage,
         ])
         .setup(|app| {
             // Store app handle for auto-launch
