@@ -13,6 +13,7 @@ import { toast } from "sonner";
 interface DepartmentRowProps {
   dept: AiCoverageDepartment;
   level: number;
+  parentDept?: string; // 一级部门名称，用于二级部门时传递
   expanded: Set<string>;
   authorExpanded: Set<string>;
   authorsMap: Map<string, AiCoverageAuthor[]>;
@@ -30,6 +31,7 @@ interface DepartmentRowProps {
 function DepartmentRow({
   dept,
   level,
+  parentDept,
   expanded,
   authorExpanded,
   authorsMap,
@@ -47,8 +49,8 @@ function DepartmentRow({
   const isExpanded = expanded.has(dept.name);
   const indent = level * 16;
 
-  // Key for author data: "dept|deptL2" or just "dept" for level 0
-  const authorKey = level === 0 ? dept.name : `${dept.name}|${dept.name}`;
+  // Key for author data: "dept|deptL2" for level 1, just "dept" for level 0
+  const authorKey = level === 0 ? dept.name : `${parentDept}|${dept.name}`;
   const showAuthors = authorExpanded.has(authorKey);
   const authors = authorsMap.get(authorKey) || [];
   const isLoadingAuthors = loadingAuthors.has(authorKey);
@@ -61,7 +63,13 @@ function DepartmentRow({
 
   const handleShowAuthors = () => {
     if (!showAuthors && authors.length === 0 && !isLoadingAuthors) {
-      onLoadAuthors(level === 0 ? dept.name : "", level === 0 ? null : dept.name, authorKey);
+      // level 0: 一级部门, deptL2 = null
+      // level 1: 一级部门 + 二级部门
+      onLoadAuthors(
+        level === 0 ? dept.name : parentDept || "",
+        level === 0 ? null : dept.name,
+        authorKey
+      );
     }
     onToggleAuthors(authorKey);
   };
@@ -195,7 +203,7 @@ function DepartmentRow({
                       onClick={() => {
                         if (!showCommits && commits.length === 0 && !isLoadingCommits) {
                           onLoadCommits(
-                            level === 0 ? dept.name : "",
+                            level === 0 ? dept.name : parentDept || "",
                             level === 0 ? null : dept.name,
                             author.author_email,
                             commitKey
@@ -293,6 +301,7 @@ function DepartmentRow({
           key={child.name}
           dept={child}
           level={level + 1}
+          parentDept={level === 0 ? dept.name : parentDept}
           expanded={expanded}
           authorExpanded={authorExpanded}
           authorsMap={authorsMap}
