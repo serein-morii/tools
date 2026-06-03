@@ -25,10 +25,10 @@ const quickLinks = [
   { to: "/reminder/channels", icon: Radio, label: "通知渠道", color: "text-blue-500" },
   { to: "/reminder/templates", icon: FileCode, label: "消息模板", color: "text-purple-500" },
   { to: "/reminder/history", icon: History, label: "发送历史", color: "text-cyan-500" },
-  { to: "/gitlab/overview", icon: GitBranch, label: "代码洞察", color: "text-orange-500" },
+  { to: "/gitlab/overview", icon: GitBranch, label: "Git扫描", color: "text-orange-500" },
   { to: "/gitlab/settings", icon: Settings, label: "Git 配置", color: "text-gray-500" },
-  { to: "/sonar", icon: FlaskConical, label: "单测覆盖", color: "text-emerald-500" },
-  { to: "/ai-coverage", icon: Brain, label: "AI 覆盖", color: "text-violet-500" },
+  { to: "/sonar", icon: FlaskConical, label: "单测覆盖率", color: "text-emerald-500" },
+  { to: "/ai-coverage", icon: Brain, label: "AI生成率", color: "text-violet-500" },
   { to: "/timer", icon: Timer, label: "番茄钟", color: "text-red-500" },
   { to: "/notes", icon: StickyNote, label: "速记", color: "text-yellow-500" },
   { to: "/settings", icon: Settings, label: "系统设置", color: "text-muted-foreground" },
@@ -99,9 +99,9 @@ export function DashboardPage() {
   const recentHistory = historyList.filter(h => h.executed_at).slice(0, 5);
 
   return (
-    <div className="p-4 space-y-3 max-w-[1400px] mx-auto">
+    <div className="p-3 space-y-2.5 max-w-[1400px] mx-auto">
       {/* Top Bar */}
-      <div className="flex items-center justify-between px-5 py-3 bg-muted/30 rounded-lg border">
+      <div className="flex items-center justify-between px-4 py-2 bg-muted/30 rounded-lg border">
         <div className="flex items-center gap-3">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600">
             <LayoutGrid className="h-4 w-4 text-white" />
@@ -127,9 +127,9 @@ export function DashboardPage() {
       </div>
 
       {/* Quick Links */}
-      <div className="grid grid-cols-11 gap-1.5">
+      <div className="grid grid-cols-11 gap-1">
         {quickLinks.map(link => (
-          <Link key={link.to} to={link.to} className="flex flex-col items-center gap-0.5 rounded-lg border bg-card px-2 py-2 hover:bg-muted/50 transition-colors group">
+          <Link key={link.to} to={link.to} className="flex flex-col items-center gap-0.5 rounded-md border bg-card px-1.5 py-1.5 hover:bg-muted/50 transition-colors group">
             <link.icon className={cn("h-4 w-4", link.color)} />
             <span className="text-[9px] text-muted-foreground group-hover:text-foreground leading-tight text-center">{link.label}</span>
           </Link>
@@ -137,7 +137,7 @@ export function DashboardPage() {
       </div>
 
       {/* Stats Row */}
-      <div className="grid grid-cols-6 gap-3 px-5 py-3 bg-muted/30 rounded-lg border">
+      <div className="grid grid-cols-6 gap-2 px-4 py-2 bg-muted/30 rounded-lg border">
         <StatCard icon={Bell} label="活跃任务" value={activeTasks} sub={`共 ${taskList.length}`} href="/reminder/tasks" color="text-amber-500" />
         <StatCard icon={Radio} label="通知渠道" value={activeChannels} sub={`共 ${channelList.length}`} href="/reminder/channels" color="text-blue-500" />
         <StatCard icon={CheckCircle2} label="发送成功" value={successCount} sub={`${successRate}%`} href="/reminder/history" color="text-emerald-500" />
@@ -152,7 +152,7 @@ export function DashboardPage() {
         <div className="space-y-3">
           {/* Reminder Status */}
           <Card>
-            <CardHeader className="pb-2 pt-3 px-3 flex-row items-center justify-between">
+            <CardHeader className="pb-1.5 pt-2 px-3 flex-row items-center justify-between">
               <CardTitle className="text-xs flex items-center gap-1.5">
                 <Bell className="h-3.5 w-3.5 text-amber-500" /> 智能提醒
               </CardTitle>
@@ -162,10 +162,10 @@ export function DashboardPage() {
             </CardHeader>
             <CardContent className="px-3 pb-3 pt-0 space-y-2">
               <div className="grid grid-cols-4 gap-2 text-center">
-                <div className="rounded-md bg-muted/50 p-2"><div className="text-lg font-bold">{taskList.length}</div><div className="text-[10px] text-muted-foreground">任务</div></div>
-                <div className="rounded-md bg-muted/50 p-2"><div className="text-lg font-bold text-emerald-600">{activeTasks}</div><div className="text-[10px] text-muted-foreground">已启用</div></div>
-                <div className="rounded-md bg-muted/50 p-2"><div className="text-lg font-bold">{channelList.length}</div><div className="text-[10px] text-muted-foreground">渠道</div></div>
-                <div className="rounded-md bg-muted/50 p-2"><div className="text-lg font-bold">{totalTemplates}</div><div className="text-[10px] text-muted-foreground">模板</div></div>
+                <div className="rounded bg-muted/50 p-1.5"><div className="text-base font-bold">{taskList.length}</div><div className="text-[10px] text-muted-foreground">任务</div></div>
+                <div className="rounded bg-muted/50 p-1.5"><div className="text-lg font-bold text-emerald-600">{activeTasks}</div><div className="text-[10px] text-muted-foreground">已启用</div></div>
+                <div className="rounded bg-muted/50 p-1.5"><div className="text-base font-bold">{channelList.length}</div><div className="text-[10px] text-muted-foreground">渠道</div></div>
+                <div className="rounded bg-muted/50 p-1.5"><div className="text-base font-bold">{totalTemplates}</div><div className="text-[10px] text-muted-foreground">模板</div></div>
               </div>
               {upcomingTasks.length > 0 && (
                 <div>
@@ -191,7 +191,7 @@ export function DashboardPage() {
           {/* Code Scan Summary */}
           {gitlabConfigured && latestScan && (
             <Card>
-              <CardHeader className="pb-2 pt-3 px-3 flex-row items-center justify-between">
+              <CardHeader className="pb-1.5 pt-2 px-3 flex-row items-center justify-between">
                 <CardTitle className="text-xs flex items-center gap-1.5">
                   <GitBranch className="h-3.5 w-3.5 text-orange-500" /> 代码扫描
                 </CardTitle>
@@ -236,7 +236,7 @@ export function DashboardPage() {
 
           {/* Quick Notes */}
           <Card>
-            <CardHeader className="pb-2 pt-3 px-3 flex-row items-center justify-between">
+            <CardHeader className="pb-1.5 pt-2 px-3 flex-row items-center justify-between">
               <CardTitle className="text-xs flex items-center gap-1.5">
                 <StickyNote className="h-3.5 w-3.5 text-yellow-500" /> 速记
               </CardTitle>
@@ -262,7 +262,7 @@ export function DashboardPage() {
         <div className="space-y-3">
           {/* Coverage Board */}
           <Card>
-            <CardHeader className="pb-2 pt-3 px-3 flex-row items-center justify-between">
+            <CardHeader className="pb-1.5 pt-2 px-3 flex-row items-center justify-between">
               <CardTitle className="text-xs flex items-center gap-1.5">
                 <BarChart3 className="h-3.5 w-3.5 text-violet-500" /> 团队覆盖率
               </CardTitle>
@@ -304,7 +304,7 @@ export function DashboardPage() {
 
           {/* Sonar Prompt History */}
           <Card>
-            <CardHeader className="pb-2 pt-3 px-3 flex-row items-center justify-between">
+            <CardHeader className="pb-1.5 pt-2 px-3 flex-row items-center justify-between">
               <CardTitle className="text-xs flex items-center gap-1.5">
                 <FlaskConical className="h-3.5 w-3.5 text-emerald-500" /> 单测扫描历史
               </CardTitle>
@@ -314,9 +314,9 @@ export function DashboardPage() {
             </CardHeader>
             <CardContent className="px-3 pb-3 pt-0">
               <div className="grid grid-cols-3 gap-2 text-center mb-2">
-                <div className="rounded-md bg-muted/50 p-2"><div className="text-lg font-bold">{sonarHistory.length}</div><div className="text-[10px] text-muted-foreground">记录</div></div>
-                <div className="rounded-md bg-muted/50 p-2"><div className="text-lg font-bold">{sonarHistory.reduce((s, r) => s + r.fileCount, 0)}</div><div className="text-[10px] text-muted-foreground">文件</div></div>
-                <div className="rounded-md bg-muted/50 p-2"><div className="text-lg font-bold">{sonarTemplates.length}</div><div className="text-[10px] text-muted-foreground">模板</div></div>
+                <div className="rounded bg-muted/50 p-1.5"><div className="text-base font-bold">{sonarHistory.length}</div><div className="text-[10px] text-muted-foreground">记录</div></div>
+                <div className="rounded bg-muted/50 p-1.5"><div className="text-base font-bold">{sonarHistory.reduce((s, r) => s + r.fileCount, 0)}</div><div className="text-[10px] text-muted-foreground">文件</div></div>
+                <div className="rounded bg-muted/50 p-1.5"><div className="text-base font-bold">{sonarTemplates.length}</div><div className="text-[10px] text-muted-foreground">模板</div></div>
               </div>
               {sonarHistory.length > 0 ? (
                 <div className="space-y-1">
@@ -337,7 +337,7 @@ export function DashboardPage() {
 
           {/* Recent Sends */}
           <Card>
-            <CardHeader className="pb-2 pt-3 px-3 flex-row items-center justify-between">
+            <CardHeader className="pb-1.5 pt-2 px-3 flex-row items-center justify-between">
               <CardTitle className="text-xs flex items-center gap-1.5">
                 <MessageSquare className="h-3.5 w-3.5 text-cyan-500" /> 最近发送
               </CardTitle>
@@ -366,10 +366,10 @@ export function DashboardPage() {
       </div>
 
       {/* Bottom: All-in-one quick actions */}
-      <div className="grid grid-cols-4 gap-3 px-5 py-3 bg-muted/30 rounded-lg border">
+      <div className="grid grid-cols-4 gap-2 px-4 py-2 bg-muted/30 rounded-lg border">
         <ActionCard icon={Bell} label="创建提醒" desc="设置定时推送任务" to="/reminder/tasks" />
         <ActionCard icon={GitBranch} label="代码扫描" desc="分析 GitLab 提交" to="/gitlab/overview" />
-        <ActionCard icon={FlaskConical} label="生成 Prompt" desc="Sonar → 单测提示词" to="/sonar" />
+        <ActionCard icon={FlaskConical} label="生成 Prompt" desc="覆盖率 → 单测提示词" to="/sonar" />
         <ActionCard icon={Brain} label="AI 覆盖率" desc="智能增量覆盖率追踪" to="/ai-coverage" />
       </div>
     </div>
@@ -378,20 +378,20 @@ export function DashboardPage() {
 
 function StatCard({ icon: Icon, label, value, sub, href, color }: { icon: React.ComponentType<{ className?: string }>; label: string; value: number | string; sub: string; href: string; color: string }) {
   return (
-    <Link to={href} className="rounded-lg border bg-card p-2.5 hover:bg-muted/50 transition-colors">
-      <div className="flex items-center gap-1.5 mb-1">
-        <Icon className={cn("h-3 w-3", color)} />
-        <span className="text-[10px] text-muted-foreground">{label}</span>
+    <Link to={href} className="rounded-md border bg-card p-2 hover:bg-muted/50 transition-colors">
+      <div className="flex items-center gap-1 mb-0.5">
+        <Icon className={cn("h-2.5 w-2.5", color)} />
+        <span className="text-[9px] text-muted-foreground">{label}</span>
       </div>
-      <div className="text-lg font-bold">{value}</div>
-      <div className="text-[9px] text-muted-foreground">{sub}</div>
+      <div className="text-sm font-bold">{value}</div>
+      <div className="text-[8px] text-muted-foreground">{sub}</div>
     </Link>
   );
 }
 
 function MiniBlock({ label, value, color }: { label: string; value: number | string; color?: string }) {
   return (
-    <div className="rounded-md bg-muted/50 p-1.5">
+    <div className="rounded bg-muted/50 p-1">
       <div className={cn("text-sm font-bold", color)}>{value}</div>
       <div className="text-[10px] text-muted-foreground">{label}</div>
     </div>
@@ -400,9 +400,9 @@ function MiniBlock({ label, value, color }: { label: string; value: number | str
 
 function ActionCard({ icon: Icon, label, desc, to }: { icon: React.ComponentType<{ className?: string }>; label: string; desc: string; to: string }) {
   return (
-    <Link to={to} className="flex items-center gap-3 rounded-lg border bg-card p-3 hover:bg-muted/50 transition-colors group">
-      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted group-hover:bg-background transition-colors">
-        <Icon className="h-4 w-4 text-muted-foreground" />
+    <Link to={to} className="flex items-center gap-2.5 rounded-md border bg-card p-2.5 hover:bg-muted/50 transition-colors group">
+      <div className="flex h-7 w-7 items-center justify-center rounded-md bg-muted group-hover:bg-background transition-colors">
+        <Icon className="h-3.5 w-3.5 text-muted-foreground" />
       </div>
       <div>
         <div className="text-xs font-medium">{label}</div>

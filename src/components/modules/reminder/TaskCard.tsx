@@ -92,24 +92,23 @@ export function TaskCard({ task, onEdit }: TaskCardProps) {
         priorityConfig[task.priority]?.bgClass
       )}
     >
-      <div className="p-3">
-        <div className="flex items-start gap-3">
-          {/* Icon */}
+      <div className="p-2">
+        <div className="flex items-start gap-2">
           <div
             className={cn(
-              "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors",
+              "flex h-7 w-7 shrink-0 items-center justify-center rounded-md transition-colors",
               task.enabled
                 ? "bg-gradient-to-br from-violet-500 to-indigo-600 text-white shadow-sm"
                 : "bg-muted text-muted-foreground"
             )}
           >
-            {task.enabled ? <Bell className="h-4 w-4" /> : <BellOff className="h-4 w-4" />}
+            {task.enabled ? <Bell className="h-3 w-3" /> : <BellOff className="h-3 w-3" />}
           </div>
 
           {/* Content */}
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
-              <h3 className="text-sm font-medium text-foreground truncate">{task.name}</h3>
+            <div className="flex items-center gap-1 flex-wrap mb-0.5">
+              <h3 className="text-xs font-medium text-foreground truncate">{task.name}</h3>
               {task.priority > 0 && (
                 <Badge variant="outline" className={cn("gap-0.5 text-[10px] px-1.5 py-0", priorityConfig[task.priority]?.color)}>
                   <AlertCircle className="h-2.5 w-2.5" />
@@ -124,17 +123,17 @@ export function TaskCard({ task, onEdit }: TaskCardProps) {
             </div>
 
             {task.description && (
-              <p className="text-xs text-muted-foreground mb-1 line-clamp-1">
+              <p className="text-[11px] text-muted-foreground mb-0.5 line-clamp-1">
                 {task.description}
               </p>
             )}
 
-            <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
-              <span className="flex items-center gap-1.5">
+            <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+              <span className="flex items-center gap-1">
                 <Clock className="h-3 w-3" />
                 {getCronDescription(task.cron_config, t)}
               </span>
-              <span className="flex items-center gap-1.5">
+              <span className="flex items-center gap-1">
                 {t("task.nextRunLabel")}: {formatNextRun(task.next_run_at)}
               </span>
             </div>
@@ -147,7 +146,7 @@ export function TaskCard({ task, onEdit }: TaskCardProps) {
               size="icon"
               onClick={handleTest}
               disabled={testMutation.isPending}
-              className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+              className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
               title={t("channel.testChannel")}
             >
               {testStatus === "success" ? (
@@ -175,9 +174,9 @@ export function TaskCard({ task, onEdit }: TaskCardProps) {
               variant="ghost"
               size="icon"
               onClick={() => onEdit(task.id)}
-              className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+              className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
             >
-              <Pencil className="h-3.5 w-3.5" />
+              <Pencil className="h-3 w-3" />
             </Button>
             <Button
               variant="ghost"
@@ -188,7 +187,7 @@ export function TaskCard({ task, onEdit }: TaskCardProps) {
                 isDeleting && "opacity-100 text-destructive hover:text-destructive"
               )}
             >
-              <Trash2 className="h-3.5 w-3.5" />
+              <Trash2 className="h-3 w-3" />
             </Button>
           </div>
         </div>

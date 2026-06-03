@@ -6,7 +6,7 @@ import { useSettings, useUpdateSetting, getSettingValue } from "@/lib/query/sett
 import { useQueryClient } from "@tanstack/react-query";
 import { open, save } from "@tauri-apps/plugin-dialog";
 import { invoke } from "@tauri-apps/api/core";
-import { Monitor, Moon, Sun, Power, EyeOff, MonitorUp, Download, Upload, Info, Palette, Database } from "lucide-react";
+import { Monitor, Moon, Sun, Power, EyeOff, MonitorUp, Download, Upload, Info, Palette, Database, LayoutGrid } from "lucide-react";
 import { ToggleRow } from "@/components/ui/toggle-row";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/theme-provider";
@@ -225,6 +225,47 @@ export function SettingsPage() {
             </div>
             {backupMessage && <p className="text-[11px] text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30 p-2 rounded">{backupMessage}</p>}
             {backupError && <p className="text-[11px] text-destructive bg-destructive/10 p-2 rounded">{backupError}</p>}
+          </CardContent>
+        </Card>
+
+        {/* Page Visibility */}
+        <Card className="overflow-hidden">
+          <CardHeader className="bg-muted/30 border-b py-2 px-3">
+            <div className="flex items-center gap-1.5">
+              <LayoutGrid className="h-3.5 w-3.5 text-blue-500" />
+              <CardTitle className="text-sm">页面显示</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="p-3 space-y-2">
+            {[
+              { key: "page_reminder_visible", label: "智能提醒", icon: "🔔" },
+              { key: "page_gitlab_visible", label: "Git 扫描", icon: "📊" },
+              { key: "page_sonar_visible", label: "单测覆盖率", icon: "🧪" },
+              { key: "page_ai_coverage_visible", label: "AI 生成率", icon: "🤖" },
+              { key: "page_timer_visible", label: "番茄钟", icon: "⏱️" },
+              { key: "page_notes_visible", label: "速记", icon: "📝" },
+            ].map(({ key, label, icon }) => {
+              const visible = getSettingValue(settings, key, "true") === "true";
+              return (
+                <div key={key} className="flex items-center justify-between rounded-lg border bg-card/50 p-2.5">
+                  <span className="text-xs">{icon} {label}</span>
+                  <div className="flex gap-1">
+                    <Button
+                      variant={visible ? "default" : "outline"}
+                      size="sm"
+                      className="h-6 text-[10px]"
+                      onClick={() => updateSetting.mutate({ key, value: "true" })}
+                    >显示</Button>
+                    <Button
+                      variant={!visible ? "default" : "outline"}
+                      size="sm"
+                      className="h-6 text-[10px]"
+                      onClick={() => updateSetting.mutate({ key, value: "false" })}
+                    >隐藏</Button>
+                  </div>
+                </div>
+              );
+            })}
           </CardContent>
         </Card>
 

@@ -5,6 +5,7 @@ import { ReminderLayout } from "@/components/modules/reminder/ReminderLayout";
 import { GitLabLayout } from "@/components/modules/gitlab/GitLabLayout";
 import { WalkinAuthProvider } from "@/components/modules/gitlab/WalkinAuthManager";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { useSettings, getSettingValue } from "@/lib/query/settingsQueries";
 
 const DashboardPage = lazy(() => import("@/pages/DashboardPage").then((m) => ({ default: m.DashboardPage })));
 const TaskReminderPage = lazy(() => import("@/pages/TaskReminderPage").then((m) => ({ default: m.TaskReminderPage })));
@@ -21,6 +22,13 @@ const GitLabSettingsPage = lazy(() => import("@/pages/GitLabSettingsPage").then(
 const SonarPromptPage = lazy(() => import("@/pages/SonarPromptPage").then((m) => ({ default: m.SonarPromptPage })));
 const AiCoveragePage = lazy(() => import("@/pages/AiCoveragePage").then((m) => ({ default: m.AiCoveragePage })));
 
+function PageGuard({ settingKey, children }: { settingKey: string; children: React.ReactNode }) {
+  const { data: settings } = useSettings();
+  const visible = getSettingValue(settings, settingKey, "true") === "true";
+  if (!visible) return <Navigate to="/" replace />;
+  return <>{children}</>;
+}
+
 function App() {
   return (
     <ErrorBoundary>
@@ -35,7 +43,7 @@ function App() {
         <Routes>
           <Route path="/" element={<MainLayout />}>
             <Route index element={<DashboardPage />} />
-            <Route path="reminder" element={<ReminderLayout />}>
+            <Route path="reminder" element={<PageGuard settingKey="page_reminder_visible"><ReminderLayout /></PageGuard>}>
               <Route index element={<Navigate to="/reminder/tasks" replace />} />
               <Route path="tasks" element={<TaskReminderPage />} />
               <Route path="templates" element={<TemplatesPage />} />
@@ -43,16 +51,16 @@ function App() {
               <Route path="history" element={<HistoryPage />} />
               <Route path="settings" element={<ReminderSettingsPage />} />
             </Route>
-            <Route path="gitlab" element={<GitLabLayout />}>
+            <Route path="gitlab" element={<PageGuard settingKey="page_gitlab_visible"><GitLabLayout /></PageGuard>}>
               <Route index element={<Navigate to="/gitlab/overview" replace />} />
               <Route path="overview" element={<GitLabOverviewPage />} />
               <Route path="history" element={<GitLabHistoryPage />} />
               <Route path="settings" element={<GitLabSettingsPage />} />
             </Route>
-            <Route path="timer" element={<PomodoroTimerPage />} />
-            <Route path="sonar" element={<SonarPromptPage />} />
-            <Route path="ai-coverage" element={<AiCoveragePage />} />
-            <Route path="notes" element={<QuickNotesPage />} />
+            <Route path="timer" element={<PageGuard settingKey="page_timer_visible"><PomodoroTimerPage /></PageGuard>} />
+            <Route path="sonar" element={<PageGuard settingKey="page_sonar_visible"><SonarPromptPage /></PageGuard>} />
+            <Route path="ai-coverage" element={<PageGuard settingKey="page_ai_coverage_visible"><AiCoveragePage /></PageGuard>} />
+            <Route path="notes" element={<PageGuard settingKey="page_notes_visible"><QuickNotesPage /></PageGuard>} />
             <Route path="settings" element={<SettingsPage />} />
           </Route>
         </Routes>

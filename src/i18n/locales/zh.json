@@ -61,9 +61,9 @@
     "timer": "计时",
     "notes": "笔记",
     "home": "概览",
-    "gitlab": "代码",
-    "sonar": "单测",
-    "aiCoverage": "AI覆盖"
+    "gitlab": "Git扫描",
+    "sonar": "单测覆盖率",
+    "aiCoverage": "AI生成率"
   },
   "dashboard": {
     "title": "概览",

@@ -771,7 +771,7 @@ export function SonarPromptPage() {
                             <FlaskConical className="h-3.5 w-3.5 text-primary" />
                         </div>
                         <div>
-                            <h1 className="text-sm font-medium">单测</h1>
+                            <h1 className="text-sm font-medium">单测覆盖率</h1>
                             <p className="text-xs text-muted-foreground mt-0.5">Sonar 覆盖率 → Prompt 生成</p>
                         </div>
                     </div>

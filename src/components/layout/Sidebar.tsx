@@ -1,40 +1,47 @@
 import { NavLink } from "react-router-dom";
-import { Bell, Settings, ChevronLeft, ChevronRight, Home, GitBranch, FileCode, Brain } from "lucide-react";
+import { Bell, Settings, ChevronLeft, ChevronRight, Home, GitBranch, FileCode, Brain, Timer, StickyNote } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
+import { useSettings, getSettingValue } from "@/lib/query/settingsQueries";
 
 const primaryItems = [
-  { to: "/", icon: Home, labelKey: "nav.home", match: "/" },
-  { to: "/gitlab", icon: GitBranch, labelKey: "nav.gitlab", match: "/gitlab" },
-  { to: "/sonar", icon: FileCode, labelKey: "nav.sonar", match: "/sonar" },
-  { to: "/ai-coverage", icon: Brain, labelKey: "nav.aiCoverage", match: "/ai-coverage" },
-  { to: "/reminder/tasks", icon: Bell, labelKey: "nav.reminder", match: "/reminder" },
+  { to: "/", icon: Home, labelKey: "nav.home", match: "/", settingKey: null },
+  { to: "/gitlab", icon: GitBranch, labelKey: "nav.gitlab", match: "/gitlab", settingKey: "page_gitlab_visible" },
+  { to: "/sonar", icon: FileCode, labelKey: "nav.sonar", match: "/sonar", settingKey: "page_sonar_visible" },
+  { to: "/ai-coverage", icon: Brain, labelKey: "nav.aiCoverage", match: "/ai-coverage", settingKey: "page_ai_coverage_visible" },
+  { to: "/reminder/tasks", icon: Bell, labelKey: "nav.reminder", match: "/reminder", settingKey: "page_reminder_visible" },
+  { to: "/timer", icon: Timer, labelKey: "nav.timer", match: "/timer", settingKey: "page_timer_visible" },
+  { to: "/notes", icon: StickyNote, labelKey: "nav.notes", match: "/notes", settingKey: "page_notes_visible" },
 ];
-
-const settingsItem = { to: "/settings", icon: Settings, labelKey: "nav.settings", match: "/settings" };
 
 export function Sidebar() {
   const { t } = useTranslation();
   const [collapsed, setCollapsed] = useState(false);
+  const { data: settings } = useSettings();
+
+  const visibleItems = primaryItems.filter(item => {
+    if (!item.settingKey) return true;
+    return getSettingValue(settings, item.settingKey, "true") === "true";
+  });
 
   return (
     <aside
       className={cn(
         "flex h-screen flex-col border-r bg-card/50 backdrop-blur-sm transition-all duration-300",
-        collapsed ? "w-[64px]" : "w-[200px]"
+        collapsed ? "w-[52px]" : "w-[180px]"
       )}
     >
       {/* Header */}
-      <div className="flex h-14 items-center justify-between border-b px-3">
+      <div className="flex h-11 items-center justify-between border-b px-2.5">
         {!collapsed && (
           <div className="flex items-center gap-2.5">
             <img
               src="/app-icon.png"
               alt="Dev Tools"
-              className="h-8 w-8 rounded-lg shadow-sm"
+              className="h-7 w-7 rounded-md shadow-sm"
             />
-            <span className="text-sm font-semibold text-foreground">Dev Tools</span>
+            <span className="text-xs font-semibold text-foreground">Dev Tools</span>
           </div>
         )}
         {collapsed && (
@@ -56,15 +63,15 @@ export function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex flex-1 flex-col gap-1 p-2">
-        {primaryItems.map((item) => (
+      <nav className="flex flex-1 flex-col gap-0.5 p-1.5">
+        {visibleItems.map((item) => (
           <NavLink
             key={item.to}
             to={item.to}
             end={item.to === "/"}
             className={({ isActive }) =>
               cn(
-                "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200",
+                "group flex items-center gap-2 rounded-md px-2.5 py-1.5 text-xs font-medium transition-all duration-200",
                 isActive
                   ? "bg-primary text-primary-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground hover:bg-muted",
@@ -72,19 +79,19 @@ export function Sidebar() {
               )
             }
           >
-            <item.icon className="h-5 w-5 shrink-0" />
+            <item.icon className="h-4 w-4 shrink-0" />
             {!collapsed && <span>{t(item.labelKey)}</span>}
           </NavLink>
         ))}
       </nav>
 
       {/* Settings at bottom */}
-      <div className="border-t p-2">
+      <div className="border-t p-1.5">
         <NavLink
-          to={settingsItem.to}
+          to="/settings"
           className={({ isActive }) =>
             cn(
-              "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200",
+              "group flex items-center gap-2 rounded-md px-2.5 py-1.5 text-xs font-medium transition-all duration-200",
               isActive
                 ? "bg-primary text-primary-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground hover:bg-muted",
@@ -92,8 +99,8 @@ export function Sidebar() {
             )
           }
         >
-          <settingsItem.icon className="h-5 w-5 shrink-0" />
-          {!collapsed && <span>{t(settingsItem.labelKey)}</span>}
+          <Settings className="h-4 w-4 shrink-0" />
+          {!collapsed && <span>{t("nav.settings")}</span>}
         </NavLink>
       </div>
     </aside>

@@ -67,7 +67,7 @@ export function TrendChart({ history }: TrendChartProps) {
 
   // Chart dimensions
   const chartWidth = scans.length * 30;
-  const chartHeight = 200;
+  const chartHeight = 140;
   const padding = { top: 20, right: 10, bottom: 20, left: 30 };
   const innerWidth = chartWidth - padding.left - padding.right;
   const innerHeight = chartHeight - padding.top - padding.bottom;
@@ -94,11 +94,11 @@ export function TrendChart({ history }: TrendChartProps) {
   ];
 
   return (
-    <div className="px-6 pb-4 flex-1">
-      <div className="rounded-lg border bg-card/50 p-4 h-full flex flex-col">
+    <div className="px-3 pb-3 flex-1">
+      <div className="rounded-md border bg-card/50 p-3 h-full flex flex-col">
         {/* Header */}
         <div className="mb-3 flex items-center justify-between flex-shrink-0">
-          <h4 className="text-sm font-medium">{t("gitlab.chart.trendAnalysis")}</h4>
+          <h4 className="text-xs font-medium">{t("gitlab.chart.trendAnalysis")}</h4>
           <div ref={menuRef} className="relative">
             <button
               type="button"
@@ -254,35 +254,35 @@ export function ContributorRanking({ history }: { history: GitLabScanHistory[] }
   const top5 = devStats.slice(0, 5);
 
   return (
-    <div className="px-6 pb-4 flex-1">
-      <div className="rounded-lg border bg-card/50 p-4 h-full flex flex-col">
-        <div className="mb-4 flex items-center justify-between flex-shrink-0">
-          <h4 className="text-sm font-medium">🏆 {t("gitlab.chart.contributionTop5")}</h4>
+    <div className="px-3 pb-3 flex-1">
+      <div className="rounded-md border bg-card/50 p-3 h-full flex flex-col">
+        <div className="mb-2 flex items-center justify-between flex-shrink-0">
+          <h4 className="text-xs font-medium">🏆 {t("gitlab.chart.contributionTop5")}</h4>
           <span className="text-xs text-muted-foreground">{t("gitlab.chart.rankByCodeVolume")}</span>
         </div>
-        <div className="space-y-3 flex-1">
+        <div className="space-y-2 flex-1">
           {top5.map((dev, index) => {
             const codeVolume = dev.lines_added + dev.lines_removed;
             const barWidth = (codeVolume / maxCodeVolume) * 100;
             return (
-              <div key={dev.name} className="flex items-center gap-3">
-                <span className="w-6 text-center text-lg flex-shrink-0">
+              <div key={dev.name} className="flex items-center gap-2">
+                <span className="w-4 text-center text-sm flex-shrink-0">
                   {index === 0 ? "🥇" : index === 1 ? "🥈" : "🥉"}
                 </span>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm font-medium truncate" title={dev.name}>{dev.name}</span>
+                    <span className="text-xs font-medium truncate" title={dev.name}>{dev.name}</span>
                     <span className="text-xs font-semibold text-primary ml-2 flex-shrink-0">
                       {formatNum(codeVolume)}{t("gitlab.chart.linesOfCode")}
                     </span>
                   </div>
-                  <div className="w-full bg-muted rounded-full h-2">
+                  <div className="w-full bg-muted rounded-full h-1.5">
                     <div
                       className="h-2 rounded-full bg-gradient-to-r from-primary/80 to-primary"
                       style={{ width: `${Math.max(barWidth, 5)}%` }}
                     />
                   </div>
-                  <div className="flex items-center gap-4 mt-1.5 text-xs text-muted-foreground">
+                  <div className="flex items-center gap-3 mt-1 text-[10px] text-muted-foreground">
                     <span className="flex items-center gap-0.5"><GitCommit className="h-3 w-3" />{dev.commits}{t("gitlab.chart.commitsCompact")}</span>
                     <span className="flex items-center gap-0.5 text-emerald-600"><Plus className="h-3 w-3" />{formatNum(dev.lines_added)}</span>
                     <span className="flex items-center gap-0.5 text-red-600"><Minus className="h-3 w-3" />{formatNum(dev.lines_removed)}</span>

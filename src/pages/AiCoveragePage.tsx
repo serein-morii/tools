@@ -746,7 +746,7 @@ export function AiCoveragePage() {
               <Brain className="h-3.5 w-3.5 text-primary" />
             </div>
             <div>
-              <h1 className="text-sm font-medium">AI 覆盖率</h1>
+              <h1 className="text-sm font-medium">AI生成率</h1>
               <p className="text-xs text-muted-foreground mt-0.5">
                 各部门 AI 辅助编程代码贡献统计
               </p>
@@ -820,7 +820,7 @@ export function AiCoveragePage() {
           {data && (
             <div className="grid grid-cols-5 gap-3 px-5 py-3 bg-muted/30">
               <div className="rounded-lg border bg-card p-2.5">
-                <p className="text-[10px] text-muted-foreground mb-0.5">AI 覆盖率</p>
+                <p className="text-[10px] text-muted-foreground mb-0.5">AI生成率</p>
             <p className="text-lg font-bold text-primary font-mono">
               {data.overall.ai_rate.toFixed(1)}%
             </p>

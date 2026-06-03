@@ -95,19 +95,19 @@ export function TaskReminderPage() {
   return (
     <div className="p-4">
       {/* Stats */}
-      <div className="mb-3 grid grid-cols-4 gap-3 px-5 py-3 bg-muted/30">
+      <div className="mb-3 grid grid-cols-4 gap-2 px-4 py-2 bg-muted/30 rounded-lg border">
         {[
           { icon: ListChecks, label: t("task.total") || "全部任务", value: stats.total },
           { icon: CalendarDays, label: t("task.today") || "今日", value: stats.today },
           { icon: Clock3, label: t("task.thisWeek") || "本周", value: stats.week },
           { icon: ToggleRight, label: t("task.enabled") || "已启用", value: stats.enabled },
         ].map((card) => (
-          <div key={card.label} className="rounded-lg border bg-card p-2.5">
-            <div className="flex items-center gap-2">
-              <card.icon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+          <div key={card.label} className="rounded-md border bg-card p-2">
+            <div className="flex items-center gap-1.5">
+              <card.icon className="h-3 w-3 text-muted-foreground shrink-0" />
               <div className="flex-1 min-w-0">
-                <p className="text-lg font-bold">{card.value}</p>
-                <p className="text-[10px] text-muted-foreground">{card.label}</p>
+                <span className="text-sm font-bold">{card.value}</span>
+                <p className="text-[9px] text-muted-foreground">{card.label}</p>
               </div>
             </div>
           </div>

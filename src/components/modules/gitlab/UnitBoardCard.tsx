@@ -184,20 +184,20 @@ export function UnitBoardCard({
 
   return (
     <Card className="bg-card/50">
-      <CardContent className="p-3">
-        <div className="flex items-center justify-between mb-2">
-          <h4 className="font-medium flex items-center gap-1.5 text-xs">
-            <BarChart3 className="h-3.5 w-3.5" />
+      <CardContent className="p-2.5">
+        <div className="flex items-center justify-between mb-1.5">
+          <h4 className="font-medium flex items-center gap-1 text-[11px]">
+            <BarChart3 className="h-3 w-3" />
             {t("gitlab.overview.teamCoverageBoard")}
           </h4>
           <div className="flex items-center gap-1.5">
             {lastUpdate && (
-              <span className="text-[11px] text-muted-foreground">
+              <span className="text-[10px] text-muted-foreground">
                 {lastUpdate.toLocaleTimeString()}
               </span>
             )}
             {nextRefreshTime && (
-              <span className="text-[11px] text-muted-foreground hidden sm:inline">
+              <span className="text-[10px] text-muted-foreground hidden sm:inline">
                 {nextRefreshTime.toLocaleTimeString()}
               </span>
             )}
@@ -209,36 +209,36 @@ export function UnitBoardCard({
           </div>
         </div>
         {!isLoggedIn && (
-          <p className="text-xs text-muted-foreground">{t("gitlab.overview.loginWalkinFirst")}</p>
+          <p className="text-[10px] text-muted-foreground">{t("gitlab.overview.loginWalkinFirst")}</p>
         )}
         {isLoggedIn && (!walkinDeptId || !walkinDeptName) && (
-          <p className="text-xs text-muted-foreground">{t("gitlab.overview.configureDeptFirst")}</p>
+          <p className="text-[10px] text-muted-foreground">{t("gitlab.overview.configureDeptFirst")}</p>
         )}
         {loading && (
           <div className="flex items-center gap-1.5 py-2">
-            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            <span className="text-xs text-muted-foreground">{t("gitlab.overview.loading")}</span>
+            <Loader2 className="h-3 w-3 animate-spin" />
+            <span className="text-[10px] text-muted-foreground">{t("gitlab.overview.loading")}</span>
           </div>
         )}
         {error && (
           <p className="text-xs text-destructive">{error}</p>
         )}
         {data && !loading && (
-          <div className="space-y-2">
+          <div className="space-y-1">
             {(data.xvalue || weekOptions) && (
-              <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+              <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
                 <span>{t("gitlab.overview.period")}</span>
                 {weekOptions && weekIndex != null && onWeekIndexChange ? (
                   <div className="flex items-center gap-0.5">
                     <Button
-                      variant="ghost" size="sm" className="h-5 w-5 p-0"
+                      variant="ghost" size="sm" className="h-4 w-4 p-0"
                       onClick={() => onWeekIndexChange(Math.max(weekIndex - 1, 0))}
                       disabled={weekIndex <= 0}
                     >
-                      <ChevronLeft className="h-3 w-3" />
+                      <ChevronLeft className="h-2.5 w-2.5" />
                     </Button>
                     <select
-                      className="h-5 border-0 bg-transparent text-[11px] font-medium text-foreground focus:outline-none cursor-pointer appearance-none"
+                      className="h-4 border-0 bg-transparent text-[10px] font-medium text-foreground focus:outline-none cursor-pointer appearance-none"
                       value={weekIndex}
                       onChange={(e) => onWeekIndexChange(parseInt(e.target.value))}
                     >
@@ -247,11 +247,11 @@ export function UnitBoardCard({
                       ))}
                     </select>
                     <Button
-                      variant="ghost" size="sm" className="h-5 w-5 p-0"
+                      variant="ghost" size="sm" className="h-4 w-4 p-0"
                       onClick={() => onWeekIndexChange(Math.min(weekIndex + 1, weekOptions.length - 1))}
                       disabled={weekIndex >= weekOptions.length - 1}
                     >
-                      <ChevronRight className="h-3 w-3" />
+                      <ChevronRight className="h-2.5 w-2.5" />
                     </Button>
                   </div>
                 ) : (
@@ -264,49 +264,49 @@ export function UnitBoardCard({
                 )}
               </div>
             )}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
                 <div className="text-[11px] font-medium text-muted-foreground">{t("gitlab.overview.incrementalCoverage")}</div>
-                <div className="grid grid-cols-3 gap-1.5">
+                <div className="grid grid-cols-3 gap-1">
                   {data.ynewValue != null && (
                     <div className="text-center">
-                      <div className="text-base font-bold text-primary">{data.ynewValue.toFixed(2)}%</div>
-                      <div className="text-[11px] text-muted-foreground">{t("gitlab.overview.overall")}</div>
+                      <div className="text-sm font-bold text-primary">{data.ynewValue.toFixed(2)}%</div>
+                      <div className="text-[10px] text-muted-foreground">{t("gitlab.overview.overall")}</div>
                     </div>
                   )}
                   {data.ynewLineValue != null && (
                     <div className="text-center">
-                      <div className="text-base font-bold text-primary">{data.ynewLineValue.toFixed(2)}%</div>
-                      <div className="text-[11px] text-muted-foreground">{t("gitlab.overview.line")}</div>
+                      <div className="text-sm font-bold text-primary">{data.ynewLineValue.toFixed(2)}%</div>
+                      <div className="text-[10px] text-muted-foreground">{t("gitlab.overview.line")}</div>
                     </div>
                   )}
                   {data.ynewBranchValue != null && (
                     <div className="text-center">
-                      <div className="text-base font-bold text-primary">{data.ynewBranchValue.toFixed(2)}%</div>
-                      <div className="text-[11px] text-muted-foreground">{t("gitlab.overview.condition")}</div>
+                      <div className="text-sm font-bold text-primary">{data.ynewBranchValue.toFixed(2)}%</div>
+                      <div className="text-[10px] text-muted-foreground">{t("gitlab.overview.condition")}</div>
                     </div>
                   )}
                 </div>
               </div>
-              <div className="space-y-1.5">
+              <div className="space-y-1">
                 <div className="text-[11px] font-medium text-muted-foreground">{t("gitlab.overview.fullCoverage")}</div>
-                <div className="grid grid-cols-3 gap-1.5">
+                <div className="grid grid-cols-3 gap-1">
                   {data.yallValue != null && (
                     <div className="text-center">
-                      <div className="text-base font-bold text-emerald-600">{data.yallValue.toFixed(2)}%</div>
-                      <div className="text-[11px] text-muted-foreground">{t("gitlab.overview.overall")}</div>
+                      <div className="text-sm font-bold text-emerald-600">{data.yallValue.toFixed(2)}%</div>
+                      <div className="text-[10px] text-muted-foreground">{t("gitlab.overview.overall")}</div>
                     </div>
                   )}
                   {data.yallLineValue != null && (
                     <div className="text-center">
-                      <div className="text-base font-bold text-emerald-600">{data.yallLineValue.toFixed(2)}%</div>
-                      <div className="text-[11px] text-muted-foreground">{t("gitlab.overview.line")}</div>
+                      <div className="text-sm font-bold text-emerald-600">{data.yallLineValue.toFixed(2)}%</div>
+                      <div className="text-[10px] text-muted-foreground">{t("gitlab.overview.line")}</div>
                     </div>
                   )}
                   {data.yallBranchValue != null && (
                     <div className="text-center">
-                      <div className="text-base font-bold text-emerald-600">{data.yallBranchValue.toFixed(2)}%</div>
-                      <div className="text-[11px] text-muted-foreground">{t("gitlab.overview.condition")}</div>
+                      <div className="text-sm font-bold text-emerald-600">{data.yallBranchValue.toFixed(2)}%</div>
+                      <div className="text-[10px] text-muted-foreground">{t("gitlab.overview.condition")}</div>
                     </div>
                   )}
                 </div>
@@ -315,7 +315,7 @@ export function UnitBoardCard({
           </div>
         )}
         {!data && !loading && !error && isLoggedIn && (
-          <p className="text-xs text-muted-foreground">{t("common.noData")}</p>
+          <p className="text-[10px] text-muted-foreground">{t("common.noData")}</p>
         )}
       </CardContent>
     </Card>

@@ -52,7 +52,7 @@ export function HistoryPage() {
   return (
     <div className="p-4">
       {/* Stats Grid */}
-      <div className="grid grid-cols-4 gap-2 mb-3">
+      <div className="grid grid-cols-4 gap-2 px-4 py-2 bg-muted/30 rounded-lg border mb-3">
         <StatCard
           title={t("history.all")}
           value={stats.total}
@@ -134,12 +134,12 @@ function StatCard({
       )}
       onClick={onClick}
     >
-      <CardContent className="py-2.5 px-3">
-        <div className="flex items-center gap-1.5 mb-0.5">
-          <Icon className={`h-3.5 w-3.5 ${color}`} />
-          <span className="text-xs text-muted-foreground">{title}</span>
+      <CardContent className="p-2">
+        <div className="flex items-center gap-1 mb-0.5">
+          <Icon className={`h-3 w-3 ${color}`} />
+          <span className="text-[9px] text-muted-foreground">{title}</span>
         </div>
-        <div className={`text-xl font-semibold ${color}`}>{value}</div>
+        <span className={`text-sm font-bold ${color}`}>{value}</span>
       </CardContent>
     </Card>
   );
@@ -150,14 +150,14 @@ function HistoryCard({ item }: { item: ReminderHistoryItem }) {
 
   return (
     <Card className="overflow-hidden">
-      <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2 bg-muted/30 border-b">
+      <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-1.5 pt-2 px-3 bg-muted/30 border-b">
         <div>
-          <CardTitle className="text-sm">{item.task_name}</CardTitle>
-          <div className="mt-0.5 text-[11px] text-muted-foreground">{t("history.taskId")}: {item.task_id}</div>
+          <CardTitle className="text-xs">{item.task_name}</CardTitle>
+          <div className="mt-0.5 text-[10px] text-muted-foreground">{t("history.taskId")}: {item.task_id}</div>
         </div>
         <StatusBadge status={item.status} />
       </CardHeader>
-      <CardContent className="p-3 space-y-2 text-xs">
+      <CardContent className="p-2.5 space-y-1.5 text-xs">
         <div className="grid grid-cols-2 gap-4">
           <TimeRow label={t("history.scheduledTime")} value={item.scheduled_at} />
           <TimeRow label={t("history.executedTime")} value={item.executed_at} />

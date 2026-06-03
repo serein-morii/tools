@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect, Fragment } from "react";
 import { useTranslation } from "react-i18next";
 import { RefreshCw, BarChart3, Users, GitCommit, TrendingUp, TrendingDown, MinusCircle, Inbox, GitBranch, ArrowUpDown, ArrowUp, ArrowDown, ShieldAlert, Bug, Zap, Loader2, GitMerge, ExternalLink, Shield, CheckCircle2, XCircle, Clock3, AlertTriangle, Activity, FlaskConical } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+
 import { useGitLabConfigured, useGitLabScanHistory, useTriggerGitLabScan, useGitLabConfig } from "@/lib/query/gitlabQueries";
 import { FirstTimeSetupModal } from "@/components/modules/gitlab/FirstTimeSetupModal";
 import { TrendChart, ContributorRanking } from "@/components/modules/gitlab/TrendChart";
@@ -82,25 +82,23 @@ function SummaryCards({
   ];
 
   return (
-    <div className="grid grid-cols-4 gap-3 px-5 py-3 bg-muted/30">
+    <div className="grid grid-cols-4 gap-2 px-4 py-2 bg-muted/30 rounded-lg border">
       {cards.map((card) => (
-        <Card key={card.label} className="bg-card/50">
-          <CardContent className="flex items-center gap-2 p-2.5">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-muted">
-              <card.icon className="h-3.5 w-3.5 text-muted-foreground" />
-            </div>
+        <div key={card.label} className="rounded-md border bg-card p-2">
+          <div className="flex items-center gap-1.5">
+            <card.icon className="h-3 w-3 text-muted-foreground shrink-0" />
             <div className="flex-1 min-w-0">
-              <p className="text-lg font-bold">{card.value}</p>
               <div className="flex items-center gap-1">
-                <p className="text-[10px] text-muted-foreground truncate">{card.label}</p>
+                <span className="text-sm font-bold">{card.value}</span>
                 <TrendIndicator
                   current={typeof card.value === 'string' ? parseFloat(card.value) || 0 : card.value}
                   previous={card.previousValue}
                 />
               </div>
+              <p className="text-[9px] text-muted-foreground truncate">{card.label}</p>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       ))}
     </div>
   );
@@ -261,7 +259,7 @@ function ProjectTable({ projects, gitlabUrl }: { projects: GitLabProjectResult[]
   };
 
   return (
-    <div className="p-6 pt-0">
+    <div className="p-3 pt-0">
       {/* Filters */}
       <div className="mb-3 flex flex-wrap items-center gap-2">
         <input
@@ -269,7 +267,7 @@ function ProjectTable({ projects, gitlabUrl }: { projects: GitLabProjectResult[]
           placeholder={t("common.search")}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="rounded border bg-background px-2.5 py-1 text-sm w-32"
+          className="rounded border bg-background px-2 py-1 text-xs w-28"
         />
         <CustomSelect
           value={testFilter}
@@ -308,13 +306,13 @@ function ProjectTable({ projects, gitlabUrl }: { projects: GitLabProjectResult[]
       </div>
 
       <div className="overflow-hidden rounded border">
-        <table className="w-full text-sm">
+        <table className="w-full text-xs">
           <thead className="bg-muted/50">
             <tr>
               <th className="w-8"></th>
-              <th className="px-3 py-2 text-left font-medium">{t("gitlab.overview.project")}</th>
+              <th className="px-2 py-1 text-left font-medium">{t("gitlab.overview.project")}</th>
               <th
-                className="px-3 py-2 text-right font-medium cursor-pointer hover:bg-muted/80 select-none"
+                className="px-2 py-1 text-right font-medium cursor-pointer hover:bg-muted/80 select-none"
                 onClick={() => toggleSort("commits")}
               >
                 <div className="flex items-center justify-end gap-1">
@@ -323,7 +321,7 @@ function ProjectTable({ projects, gitlabUrl }: { projects: GitLabProjectResult[]
                 </div>
               </th>
               <th
-                className="px-3 py-2 text-right font-medium cursor-pointer hover:bg-muted/80 select-none"
+                className="px-2 py-1 text-right font-medium cursor-pointer hover:bg-muted/80 select-none"
                 onClick={() => toggleSort("lines_added")}
               >
                 <div className="flex items-center justify-end gap-1">
@@ -331,11 +329,11 @@ function ProjectTable({ projects, gitlabUrl }: { projects: GitLabProjectResult[]
                   +/-
                 </div>
               </th>
-              <th className="px-3 py-2 text-center font-medium">{t("gitlab.overview.unitTest")}</th>
-              <th className="px-3 py-2 text-center font-medium">Walkin</th>
+              <th className="px-2 py-1 text-center font-medium">{t("gitlab.overview.unitTest")}</th>
+              <th className="px-2 py-1 text-center font-medium">Walkin</th>
               {hasWalkinData && (
                 <th
-                  className="px-3 py-2 text-center font-medium cursor-pointer hover:bg-muted/80 select-none"
+                  className="px-2 py-1 text-center font-medium cursor-pointer hover:bg-muted/80 select-none"
                   onClick={() => toggleSort("coverage")}
                 >
                   <div className="flex items-center justify-center gap-1">
@@ -344,7 +342,7 @@ function ProjectTable({ projects, gitlabUrl }: { projects: GitLabProjectResult[]
                   </div>
                 </th>
               )}
-              <th className="px-3 py-2 text-left font-medium">{t("gitlab.overview.contributorsFilter")}</th>
+              <th className="px-2 py-1 text-left font-medium">{t("gitlab.overview.contributorsFilter")}</th>
             </tr>
           </thead>
           <tbody className="divide-y">
@@ -361,7 +359,7 @@ function ProjectTable({ projects, gitlabUrl }: { projects: GitLabProjectResult[]
                         ▶
                       </span>
                     </td>
-                    <td className="px-3 py-2 font-medium">
+                    <td className="px-2 py-1 font-medium">
                       {gitlabUrl ? (
                         <a
                           href={`${gitlabUrl}/${project.project_name}`}
@@ -377,38 +375,38 @@ function ProjectTable({ projects, gitlabUrl }: { projects: GitLabProjectResult[]
                         project.project_name.split("/").pop()
                       )}
                     </td>
-                    <td className="px-3 py-2 text-right">{project.commits}</td>
-                    <td className="px-3 py-2 text-right">
+                    <td className="px-2 py-1 text-right">{project.commits}</td>
+                    <td className="px-2 py-1 text-right">
                       <span className="text-emerald-600">+{formatNumber(project.lines_added)}</span>
                       <span className="text-red-600 ml-1">-{formatNumber(project.lines_removed)}</span>
                     </td>
-                    <td className="px-3 py-2 text-center">
+                    <td className="px-2 py-1 text-center">
                       {project.has_test ? "✓" : <span className="text-muted-foreground">✗</span>}
                     </td>
-                    <td className="px-3 py-2 text-center">
+                    <td className="px-2 py-1 text-center">
                       {project.walkin_metrics ? "✓" : <span className="text-muted-foreground">✗</span>}
                     </td>
                     {hasWalkinData && (
-                      <td className="px-3 py-2 text-center">
+                      <td className="px-2 py-1 text-center">
                         {(() => {
                           const coverage = getMaxNewCoverage(project);
                           return coverage != null ? (
-                            <span className="text-sm font-medium">{coverage.toFixed(1)}%</span>
+                            <span className="text-xs font-medium">{coverage.toFixed(1)}%</span>
                           ) : (
                             <span className="text-muted-foreground">-</span>
                           );
                         })()}
                       </td>
                     )}
-                    <td className="px-3 py-2 text-muted-foreground text-xs">
+                    <td className="px-2 py-1 text-muted-foreground text-xs">
                       {project.contributors.slice(0, 2).join(", ")}
                       {project.contributors.length > 2 && ` +${project.contributors.length - 2}`}
                     </td>
                   </tr>
                   {isExpanded && (
                     <tr key={`${project.project_id}-detail`} className="bg-muted/20">
-                      <td colSpan={hasWalkinData ? 8 : 7} className="px-3 py-2 pl-10">
-                        <div className="text-sm space-y-3">
+                      <td colSpan={hasWalkinData ? 8 : 7} className="px-2 py-1 pl-10">
+                        <div className="text-xs space-y-2">
                           {/* Walkin quality metrics */}
                           {project.walkin_metrics && (() => {
                             // Determine current metrics to display
@@ -425,7 +423,7 @@ function ProjectTable({ projects, gitlabUrl }: { projects: GitLabProjectResult[]
                               {branches && branchNames.length > 1 ? (
                                 <div className="flex items-center gap-4 text-xs">
                                   <div className="flex items-center gap-2">
-                                    <GitBranch className="h-3.5 w-3.5 text-muted-foreground" />
+                                    <GitBranch className="h-3 w-3 text-muted-foreground" />
                                     <span className="text-muted-foreground">{t("gitlab.overview.branch")}</span>
                                     <CustomSelect
                                       value={selectedBranch || currentMetrics.branch || "master"}
@@ -443,7 +441,7 @@ function ProjectTable({ projects, gitlabUrl }: { projects: GitLabProjectResult[]
                               ) : (
                                 <div className="flex items-center gap-4 text-xs">
                                   <div className="flex items-center gap-2">
-                                    <GitBranch className="h-3.5 w-3.5 text-muted-foreground" />
+                                    <GitBranch className="h-3 w-3 text-muted-foreground" />
                                     <span className="text-muted-foreground">{t("gitlab.overview.branch")}</span>
                                     <span className="font-medium">{currentMetrics.branch || "master"}</span>
                                   </div>
@@ -458,17 +456,17 @@ function ProjectTable({ projects, gitlabUrl }: { projects: GitLabProjectResult[]
                               {/* 质量指标 */}
                               <div className="flex items-center gap-4 flex-wrap">
                                 <span className="flex items-center gap-1 text-xs">
-                                  <Bug className="h-3.5 w-3.5 text-muted-foreground" />
+                                  <Bug className="h-3 w-3 text-muted-foreground" />
                                   <span className="text-muted-foreground">Bug</span>
                                   <span className="font-medium">{currentMetrics.bugs}</span>
                                 </span>
                                 <span className="flex items-center gap-1 text-xs">
-                                  <ShieldAlert className="h-3.5 w-3.5 text-muted-foreground" />
+                                  <ShieldAlert className="h-3 w-3 text-muted-foreground" />
                                   <span className="text-muted-foreground">{t("gitlab.overview.vulnerabilities")}</span>
                                   <span className="font-medium">{currentMetrics.vulnerabilities}</span>
                                 </span>
                                 <span className="flex items-center gap-1 text-xs">
-                                  <Zap className="h-3.5 w-3.5 text-muted-foreground" />
+                                  <Zap className="h-3 w-3 text-muted-foreground" />
                                   <span className="text-muted-foreground">{t("gitlab.overview.codeSmells")}</span>
                                   <span className="font-medium">{currentMetrics.code_smells}</span>
                                 </span>
@@ -576,7 +574,7 @@ function ProjectTable({ projects, gitlabUrl }: { projects: GitLabProjectResult[]
                           {project.has_test && project.test_commits.length > 0 && (
                             <ul className="space-y-1">
                               {project.test_commits.map((commit, idx) => (
-                                <li key={idx} className="flex items-center justify-between gap-4 text-sm">
+                                <li key={idx} className="flex items-center justify-between gap-2 text-xs">
                                   <div className="flex items-center gap-2 text-muted-foreground">
                                     <span>✓</span>
                                     <span className="truncate">{commit.title}</span>
@@ -699,7 +697,7 @@ function ProjectTable({ projects, gitlabUrl }: { projects: GitLabProjectResult[]
             })}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={hasWalkinData ? 8 : 7} className="px-4 py-8 text-center text-muted-foreground">
+                <td colSpan={hasWalkinData ? 8 : 7} className="px-4 py-4 text-center text-xs text-muted-foreground">
                   {t("gitlab.overview.noMatchingProjects")}
                 </td>
               </tr>
@@ -824,9 +822,9 @@ export function GitLabOverviewPage() {
       />
 
       {/* Header */}
-      <div className="border-b px-6 py-3">
+      <div className="border-b px-4 py-2">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             {history && history.length > 0 && (
               <CustomSelect
                 value={selectedScanIndex.toString()}
@@ -838,23 +836,23 @@ export function GitLabOverviewPage() {
                 className="w-32"
               />
             )}
-            <span className="text-sm text-muted-foreground">
+            <span className="text-xs text-muted-foreground">
               {selectedHistory ? formatTimestamp(selectedHistory.scan_at) : t("gitlab.overview.noRecords")}
             </span>
             {latestWalkinDate && (
-              <span className="text-sm text-muted-foreground">
+              <span className="text-xs text-muted-foreground">
                 Walkin: {formatTimestamp(latestWalkinDate)}
               </span>
             )}
             {nextScanTime && (
-              <span className="text-sm text-muted-foreground">
+              <span className="text-xs text-muted-foreground">
                 {t("gitlab.overview.nextScan")}{nextScanTime.toLocaleDateString(i18n.language)}
               </span>
             )}
           </div>
           <div className="flex gap-2">
-            <Button size="sm" onClick={handleScan} disabled={triggerScan.isPending}>
-              <RefreshCw className={`mr-1.5 h-3.5 w-3.5 ${triggerScan.isPending ? "animate-spin" : ""}`} />
+            <Button size="sm" className="h-7 text-xs" onClick={handleScan} disabled={triggerScan.isPending}>
+              <RefreshCw className={`mr-1 h-3 w-3 ${triggerScan.isPending ? "animate-spin" : ""}`} />
               {t("gitlab.overview.scan")}
             </Button>
           </div>
@@ -866,23 +864,23 @@ export function GitLabOverviewPage() {
 
       {/* Empty State */}
       {!selectedHistory && (
-        <div className="flex flex-col items-center justify-center py-12 px-6">
-          <Inbox className="h-16 w-16 text-muted-foreground mb-4" />
-          <p className="text-lg font-medium mb-2">{t("gitlab.overview.noScanData")}</p>
-          <p className="text-sm text-muted-foreground mb-4">{t("gitlab.overview.clickToScan")}</p>
+        <div className="flex flex-col items-center justify-center py-8 px-6">
+          <Inbox className="h-10 w-10 text-muted-foreground mb-3" />
+          <p className="text-xs font-medium mb-1.5">{t("gitlab.overview.noScanData")}</p>
+          <p className="text-xs text-muted-foreground mb-3">{t("gitlab.overview.clickToScan")}</p>
         </div>
       )}
 
       {selectedHistory && (
         <>
           {/* Trend Charts + Developer Ranking */}
-          <div className="flex items-stretch mt-4">
+          <div className="flex items-stretch mt-3">
             <TrendChart history={history || []} />
             <ContributorRanking history={history || []} />
           </div>
 
           {/* Project Table */}
-          <div className="mt-4">
+          <div className="mt-3">
             <ProjectTable projects={projects} gitlabUrl={config?.url} />
           </div>
         </>
