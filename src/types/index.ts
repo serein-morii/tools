@@ -565,6 +565,14 @@ export interface WorkspaceItem {
   create_user?: string;
 }
 
+export interface RelatedProject {
+  id: string;
+  workspace_id: string;
+  name: string;
+  description?: string;
+  system_id?: string;
+}
+
 export interface GitLabScanHistory {
   id: string;
   scan_type: string;

@@ -84,6 +84,9 @@ export function SonarPromptPage() {
     const [loadingWorkspaces, setLoadingWorkspaces] = useState(false);
     // 覆盖率页面选中的工作空间（独立于配置页面的 workspace 字段）
     const [coverageWorkspace, setCoverageWorkspace] = useState<string>(() => walkinForm.walkin_workspace_name);
+    // 覆盖率页面选中的部门（根据工作空间自动获取）
+    const [coverageDeptId, setCoverageDeptId] = useState<string>("");
+    const [coverageDeptName, setCoverageDeptName] = useState<string>("");
 
     const fetchWorkspaces = useCallback(async () => {
         if (!walkinForm.walkin_url) return;
@@ -117,6 +120,26 @@ export function SonarPromptPage() {
             setCoverageWorkspace(walkinForm.walkin_workspace_name);
         }
     }, [walkinForm.walkin_workspace_name]);
+
+    // 切换工作空间时获取关联项目/部门
+    useEffect(() => {
+        if (!coverageWorkspace || !walkinForm.walkin_url || !walkinForm.walkin_csrf_token || !isLoggedIn) return;
+        const ws = workspaces.find((w) => w.name === coverageWorkspace);
+        if (!ws?.id) return;
+        const userId = userName || "";
+        const auth = {
+            csrf_token: walkinForm.walkin_csrf_token,
+            project: walkinForm.walkin_project_header,
+            workspace: walkinForm.walkin_workspace_name,
+            x_auth_token: walkinForm.walkin_x_auth_token,
+        };
+        gitlabApi.walkinFetchRelatedProjects(walkinForm.walkin_url, auth, userId, ws.id).then((projects) => {
+            if (projects.length > 0) {
+                setCoverageDeptId(projects[0].id);
+                setCoverageDeptName(projects[0].name);
+            }
+        }).catch(() => {});
+    }, [coverageWorkspace, isLoggedIn]);
 
     function generateId(): string {
         return `id-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
@@ -1512,6 +1535,8 @@ export function SonarPromptPage() {
                         <UnitBoardCard
                             config={config}
                             workspaceName={coverageWorkspace || undefined}
+                            deptId={coverageDeptId || undefined}
+                            deptName={coverageDeptName || undefined}
                             startDate={fmtDate(currentWeek.monday)}
                             endDate={fmtDate(currentWeek.sunday)}
                             weekOptions={weekOptions}
@@ -1522,6 +1547,7 @@ export function SonarPromptPage() {
                             startDate={fmtDate(currentWeek.monday)}
                             endDate={fmtDate(currentWeek.sunday)}
                             workspaceName={coverageWorkspace || undefined}
+                            deptName={coverageDeptName || undefined}
                             onPromptGenerate={handlePromptFromCoverage}
                         />
                     </div>

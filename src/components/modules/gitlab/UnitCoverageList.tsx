@@ -81,10 +81,12 @@ function CoverageBar({ value }: { value: number }) {
 export function UnitCoverageList({
   startDate, endDate, onPromptGenerate,
   workspaceName: workspaceNameOverride,
+  deptName: deptNameOverride,
 }: {
   startDate: string; endDate: string;
   onPromptGenerate?: (projectKey: string, branch: string, author: string, commitId: string) => void;
   workspaceName?: string;
+  deptName?: string;
 }) {
   const [items, setItems] = useState<UnitListItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -101,6 +103,7 @@ export function UnitCoverageList({
         return;
       }
       const ws = workspaceNameOverride || config.walkin_workspace_name;
+      const dn = deptNameOverride || config.walkin_dept_name;
       const auth = {
         csrf_token: config.walkin_csrf_token,
         project: config.walkin_project_header,
@@ -109,7 +112,7 @@ export function UnitCoverageList({
       };
 
       const data = await gitlabApi.walkinFetchUnitList(
-        config.walkin_url, auth, config.walkin_dept_name,
+        config.walkin_url, auth, dn,
         startDate, endDate, 0, 100,
       );
       setItems(data);
@@ -118,7 +121,7 @@ export function UnitCoverageList({
     } finally {
       setLoading(false);
     }
-  }, [startDate, endDate, workspaceNameOverride]);
+  }, [startDate, endDate, workspaceNameOverride, deptNameOverride]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 

@@ -966,6 +966,59 @@ impl WalkinClient {
 
         Ok(api_response.data.unwrap_or_default())
     }
+
+    /// 获取工作空间关联的项目/部门列表
+    pub async fn fetch_related_projects(&self, user_id: &str, workspace_id: &str) -> Result<Vec<RelatedProject>> {
+        let url = format!("{}/track/project/list/related", self.base_url);
+
+        log::info!("Fetching related projects: userId={}, workspaceId={}", user_id, workspace_id);
+
+        let body = serde_json::json!({
+            "userId": user_id,
+            "workspaceId": workspace_id,
+        });
+
+        let response = self.http_client
+            .post(&url)
+            .header("CSRF-TOKEN", &self.auth.csrf_token)
+            .header("PROJECT", &self.auth.project)
+            .header("WORKSPACE", &self.auth.workspace)
+            .header("X-AUTH-TOKEN", &self.auth.x_auth_token)
+            .header("Content-Type", "application/json")
+            .header("Accept", "application/json, text/plain, */*")
+            .header("Referer", &self.base_url)
+            .json(&body)
+            .send()
+            .await
+            .map_err(|e| ToolsError::Http(format!("fetch related projects failed: {}", e)))?;
+
+        if !response.status().is_success() {
+            let status = response.status();
+            let res_body = response.text().await.unwrap_or_default();
+            return Err(ToolsError::Http(format!("related projects error {}: {}", status, res_body)));
+        }
+
+        let body_text = response.text().await
+            .map_err(|e| ToolsError::Http(format!("Failed to read related projects response: {}", e)))?;
+
+        log::info!("Related projects response: {} bytes", body_text.len());
+
+        #[derive(Debug, Clone, Serialize, Deserialize)]
+        struct RelatedProjectResponse {
+            success: bool,
+            message: Option<String>,
+            data: Option<Vec<RelatedProject>>,
+        }
+
+        let api_response: RelatedProjectResponse = serde_json::from_str(&body_text)
+            .map_err(|e| ToolsError::Http(format!("Failed to parse related projects: {} - body: {}", e, body_text)))?;
+
+        if !api_response.success {
+            return Err(ToolsError::Http(format!("related projects error: {}", api_response.message.unwrap_or_default())));
+        }
+
+        Ok(api_response.data.unwrap_or_default())
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -980,4 +1033,16 @@ pub struct WorkspaceItem {
     pub update_time: Option<i64>,
     #[serde(rename = "createUser", default)]
     pub create_user: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RelatedProject {
+    pub id: String,
+    #[serde(rename = "workspaceId")]
+    pub workspace_id: String,
+    pub name: String,
+    #[serde(default)]
+    pub description: Option<String>,
+    #[serde(rename = "systemId", default)]
+    pub system_id: Option<String>,
 }

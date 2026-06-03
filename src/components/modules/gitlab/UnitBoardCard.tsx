@@ -17,6 +17,8 @@ export function UnitBoardCard({
   weekIndex,
   onWeekIndexChange,
   workspaceName: workspaceNameOverride,
+  deptId: deptIdOverride,
+  deptName: deptNameOverride,
 }: {
   config: GitLabConfig | undefined;
   onDataChange?: (data: UnitBoardData | null) => void;
@@ -26,6 +28,8 @@ export function UnitBoardCard({
   weekIndex?: number;
   onWeekIndexChange?: (index: number) => void;
   workspaceName?: string;
+  deptId?: string;
+  deptName?: string;
 }) {
   const { t } = useTranslation();
   const { isLoggedIn } = useWalkinAuth();
@@ -36,8 +40,8 @@ export function UnitBoardCard({
 
   const walkinEnabled = config?.walkin_enabled;
   const walkinUrl = config?.walkin_url;
-  const walkinDeptId = config?.walkin_dept_id;
-  const walkinDeptName = config?.walkin_dept_name;
+  const walkinDeptId = deptIdOverride || config?.walkin_dept_id;
+  const walkinDeptName = deptNameOverride || config?.walkin_dept_name;
   const csrfToken = config?.walkin_csrf_token;
   const projectHeader = config?.walkin_project_header;
   const workspaceName = workspaceNameOverride || config?.walkin_workspace_name;

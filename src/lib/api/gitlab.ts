@@ -1,5 +1,5 @@
 import { call } from "./index";
-import type { GitLabConfig, GitLabScanResult, GitLabScanHistory, CaptchaData, WalkinSigninResponse, AutoLoginResult, UnitBoardData, UnitListItem, LoginStatusResult, WorkspaceItem } from "@/types";
+import type { GitLabConfig, GitLabScanResult, GitLabScanHistory, CaptchaData, WalkinSigninResponse, AutoLoginResult, UnitBoardData, UnitListItem, LoginStatusResult, WorkspaceItem, RelatedProject } from "@/types";
 
 export interface GitLabProjectInfo {
   id: number;
@@ -56,4 +56,7 @@ export const gitlabApi = {
 
   walkinFetchWorkspaces: (url: string, auth: { csrf_token: string; project: string; workspace: string; x_auth_token: string }): Promise<WorkspaceItem[]> =>
     call<WorkspaceItem[]>("walkin_fetch_workspaces", { url, auth }),
+
+  walkinFetchRelatedProjects: (url: string, auth: { csrf_token: string; project: string; workspace: string; x_auth_token: string }, userId: string, workspaceId: string): Promise<RelatedProject[]> =>
+    call<RelatedProject[]>("walkin_fetch_related_projects", { url, auth, userId, workspaceId }),
 };
