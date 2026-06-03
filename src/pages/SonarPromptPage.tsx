@@ -166,7 +166,6 @@ export function SonarPromptPage() {
 
     // --- Tab ---
     const [activeTab, setActiveTab] = useState("coverage");
-    const [cameFromCoverage, setCameFromCoverage] = useState(false);
 
     // --- 覆盖率周期 ---
     const weekOptions = useMemo(() => getWeekOptions(24), []);
@@ -437,12 +436,7 @@ export function SonarPromptPage() {
             setSelectedCoverageIndices(new Set());
             setProcessing(false);
         } else if (step === "select") {
-            if (cameFromCoverage) {
-                setActiveTab("coverage");
-                setCameFromCoverage(false);
-            } else {
-                setStep("config");
-            }
+            setStep("config");
             setReports([]);
             setHighlightCommitId(null);
         } else {
@@ -535,7 +529,6 @@ export function SonarPromptPage() {
         if (match) setSelectedProjectId(match.id);
         const now = getDefaultTime();
         setCreateTimeEnd(now);
-        setCameFromCoverage(true);
         setActiveTab("generator");
         setStep("config");
         setReports([]);
