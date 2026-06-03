@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect, useCallback } from "react";
-import { Plus, Search, ListChecks, CalendarDays, Clock3, ToggleRight } from "lucide-react";
+import { Bell, Plus, Search, ListChecks, CalendarDays, Clock3, ToggleRight } from "lucide-react";
 import { TaskList } from "@/components/modules/reminder/TaskList";
 import { TaskEditor } from "@/components/modules/reminder/TaskEditor";
 import { Button } from "@/components/ui/button";
@@ -73,27 +73,78 @@ export function TaskReminderPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center p-12">
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-          {t("common.loading")}
+      <div className="min-h-full bg-background">
+      {/* Header */}
+      <div className="border-b px-5 py-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
+              <Bell className="h-3.5 w-3.5 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-sm font-medium">任务提醒</h1>
+              <p className="text-xs text-muted-foreground mt-0.5">管理定时任务和通知提醒</p>
+            </div>
+          </div>
         </div>
       </div>
+      <div className="mx-auto max-w-[1400px] space-y-3 px-3 py-3 animate-in fade-in duration-200">
+        <div className="flex items-center justify-center p-12">
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+            {t("common.loading")}
+          </div>
+        </div>
+      </div>
+    </div>
     );
   }
 
   if (error) {
     return (
-      <div className="p-5">
-        <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-sm text-destructive">
-          {t("task.loadError")}
+      <div className="min-h-full bg-background">
+      {/* Header */}
+      <div className="border-b px-5 py-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
+              <Bell className="h-3.5 w-3.5 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-sm font-medium">任务提醒</h1>
+              <p className="text-xs text-muted-foreground mt-0.5">管理定时任务和通知提醒</p>
+            </div>
+          </div>
         </div>
       </div>
+      <div className="mx-auto max-w-[1400px] space-y-3 px-3 py-3 animate-in fade-in duration-200">
+        <div className="p-5">
+          <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-sm text-destructive">
+            {t("task.loadError")}
+          </div>
+        </div>
+      </div>
+    </div>
     );
   }
 
   return (
-    <div className="p-4">
+    <div className="min-h-full bg-background">
+      {/* Header */}
+      <div className="border-b px-5 py-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
+              <Bell className="h-3.5 w-3.5 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-sm font-medium">任务提醒</h1>
+              <p className="text-xs text-muted-foreground mt-0.5">管理定时任务和通知提醒</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="mx-auto max-w-[1400px] space-y-3 px-3 py-3 animate-in fade-in duration-200">
       {/* Stats */}
       <div className="mb-3 grid grid-cols-4 gap-2 px-4 py-2 bg-muted/30 rounded-lg border">
         {[
@@ -159,6 +210,7 @@ export function TaskReminderPage() {
         onOpenChange={setEditorOpen}
         taskId={editingTaskId}
       />
+      </div>
     </div>
   );
 }

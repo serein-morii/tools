@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Calendar, Clock, ChevronRight, X, GitCompare, GitCommit, Plus, Minus, FolderGit2, User, Bug, ShieldAlert, Zap, BarChart3, GitMerge, ExternalLink, Activity, CheckCircle2, XCircle } from "lucide-react";
+import { Calendar, Clock, ChevronRight, X, GitCompare, GitCommit, Plus, Minus, FolderGit2, User, Bug, ShieldAlert, Zap, BarChart3, GitMerge, ExternalLink, Activity, CheckCircle2, XCircle, GitBranch } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useGitLabScanHistory, useGitLabConfig } from "@/lib/query/gitlabQueries";
@@ -723,113 +723,142 @@ export function GitLabHistoryPage() {
 
   const selectedHistory = filteredHistory.filter(h => selectedIds.includes(h.id));
   const canCompare = selectedHistory.length === 2;
+  const header = (
+    <div className="border-b px-5 py-3">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
+            <GitBranch className="h-3.5 w-3.5 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-sm font-medium">{t("gitlab.history.title")}</h1>
+            <p className="text-xs text-muted-foreground mt-0.5">{t("gitlab.history.description") || "GitLab 项目扫描历史记录"}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
 
   if (isLoading) {
     return (
-      <div className="flex h-[300px] items-center justify-center">
-        <p className="text-muted-foreground">{t("common.loading")}</p>
+      <div className="min-h-full bg-background">
+        {header}
+        <div className="mx-auto max-w-[1400px] space-y-3 px-3 py-3">
+          <div className="flex h-[300px] items-center justify-center">
+            <p className="text-muted-foreground">{t("common.loading")}</p>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (!history || history.length === 0) {
     return (
-      <div className="flex h-[300px] items-center justify-center">
-        <div className="text-center">
-          <Clock className="mx-auto h-8 w-8 text-muted-foreground mb-3" />
-          <p className="text-muted-foreground">{t("gitlab.history.noHistory")}</p>
-          <p className="text-sm text-muted-foreground mt-1">{t("gitlab.history.clickToScan")}</p>
+      <div className="min-h-full bg-background">
+        {header}
+        <div className="mx-auto max-w-[1400px] space-y-3 px-3 py-3">
+          <div className="flex h-[300px] items-center justify-center">
+            <div className="text-center">
+              <Clock className="mx-auto h-8 w-8 text-muted-foreground mb-3" />
+              <p className="text-muted-foreground">{t("gitlab.history.noHistory")}</p>
+              <p className="text-sm text-muted-foreground mt-1">{t("gitlab.history.clickToScan")}</p>
+            </div>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="p-3">
-      <div className="mb-3 flex items-center justify-between">
-        <div>
-          <h3 className="text-xs font-semibold">{t("gitlab.history.title")}</h3>
-          <p className="text-[10px] text-muted-foreground">
-            {filteredHistory.length !== history.length
-              ? t("gitlab.history.totalRecordsFiltered", { total: history.length, filtered: filteredHistory.length })
-              : t("gitlab.history.totalRecords", { count: history.length })}
-          </p>
-        </div>
-        {selectedIds.length > 0 && (
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground">{t("gitlab.history.selected", { current: selectedIds.length })}</span>
-            <Button variant="outline" size="sm" onClick={clearSelection}>
-              {t("gitlab.history.clearSelection")}
-            </Button>
+    <div className="min-h-full bg-background">
+      {header}
+      <div className="mx-auto max-w-[1400px] space-y-3 px-3 py-3 animate-in fade-in duration-200">
+        <div className="mb-3 flex items-center justify-between">
+          <div>
+            <h3 className="text-xs font-semibold">{t("gitlab.history.title")}</h3>
+            <p className="text-[10px] text-muted-foreground">
+              {filteredHistory.length !== history.length
+                ? t("gitlab.history.totalRecordsFiltered", { total: history.length, filtered: filteredHistory.length })
+                : t("gitlab.history.totalRecords", { count: history.length })}
+            </p>
           </div>
-        )}
-      </div>
-
-      <div className="mb-3 flex flex-wrap items-center gap-2">
-        <input
-          type="text"
-          placeholder={t("gitlab.history.searchPlaceholder")}
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="h-7 text-xs w-44"
-        />
-        <div className="inline-flex gap-1 rounded-lg bg-muted p-1">
-          <button
-            type="button"
-            onClick={() => setTypeFilter("all")}
-            className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${typeFilter === "all" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-          >
-            {t("gitlab.history.all")}
-          </button>
-          <button
-            type="button"
-            onClick={() => setTypeFilter("weekly")}
-            className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${typeFilter === "weekly" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-          >
-            {t("gitlab.history.scheduledScan")}
-          </button>
-          <button
-            type="button"
-            onClick={() => setTypeFilter("manual")}
-            className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${typeFilter === "manual" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-          >
-            {t("gitlab.history.manualScan")}
-          </button>
+          {selectedIds.length > 0 && (
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">{t("gitlab.history.selected", { current: selectedIds.length })}</span>
+              <Button variant="outline" size="sm" onClick={clearSelection}>
+                {t("gitlab.history.clearSelection")}
+              </Button>
+            </div>
+          )}
         </div>
-      </div>
-
-      {canCompare && (
-        <CompareView
-          left={selectedHistory[0]}
-          right={selectedHistory[1]}
-          onClose={clearSelection}
-        />
-      )}
-
-      <div className="space-y-2">
-        {filteredHistory.map((item) => (
-          <HistoryCard
-            key={item.id}
-            item={item}
-            selected={selectedIds.includes(item.id)}
-            onToggleSelect={() => toggleSelect(item.id)}
-            onClick={() => setDetailItem(item)}
+  
+        <div className="mb-3 flex flex-wrap items-center gap-2">
+          <input
+            type="text"
+            placeholder={t("gitlab.history.searchPlaceholder")}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="h-7 text-xs w-44"
           />
-        ))}
-        {filteredHistory.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-            <Clock className="h-12 w-12 mb-4" />
-            <p>{t("gitlab.history.noMatchingRecords")}</p>
+          <div className="inline-flex gap-1 rounded-lg bg-muted p-1">
+            <button
+              type="button"
+              onClick={() => setTypeFilter("all")}
+              className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${typeFilter === "all" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+            >
+              {t("gitlab.history.all")}
+            </button>
+            <button
+              type="button"
+              onClick={() => setTypeFilter("weekly")}
+              className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${typeFilter === "weekly" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+            >
+              {t("gitlab.history.scheduledScan")}
+            </button>
+            <button
+              type="button"
+              onClick={() => setTypeFilter("manual")}
+              className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${typeFilter === "manual" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+            >
+              {t("gitlab.history.manualScan")}
+            </button>
           </div>
+        </div>
+  
+        {canCompare && (
+          <CompareView
+            left={selectedHistory[0]}
+            right={selectedHistory[1]}
+            onClose={clearSelection}
+          />
         )}
+  
+        <div className="space-y-2">
+          {filteredHistory.map((item) => (
+            <HistoryCard
+              key={item.id}
+              item={item}
+              selected={selectedIds.includes(item.id)}
+              onToggleSelect={() => toggleSelect(item.id)}
+              onClick={() => setDetailItem(item)}
+            />
+          ))}
+          {filteredHistory.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+              <Clock className="h-12 w-12 mb-4" />
+              <p>{t("gitlab.history.noMatchingRecords")}</p>
+            </div>
+          )}
+        </div>
+  
+        <ScanDetailDialog
+          item={detailItem}
+          open={!!detailItem}
+          onClose={() => setDetailItem(null)}
+          gitlabUrl={config?.url}
+        />
       </div>
-
-      <ScanDetailDialog
-        item={detailItem}
-        open={!!detailItem}
-        onClose={() => setDetailItem(null)}
-        gitlabUrl={config?.url}
-      />
     </div>
   );
 }

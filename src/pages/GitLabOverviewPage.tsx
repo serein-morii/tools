@@ -928,7 +928,22 @@ export function GitLabOverviewPage() {
   }
 
   return (
-    <div className="p-3 space-y-3">
+    <div className="min-h-full bg-background">
+      {/* Header */}
+      <div className="border-b px-5 py-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
+              <BarChart3 className="h-3.5 w-3.5 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-sm font-medium">GitLab 概览</h1>
+              <p className="text-xs text-muted-foreground mt-0.5">项目代码质量与提交统计</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="mx-auto max-w-[1400px] space-y-3 px-3 py-3 animate-in fade-in duration-200">
       <ScanProgressModal
         isOpen={showProgressModal}
         onClose={() => setShowProgressModal(false)}
@@ -1044,5 +1059,7 @@ export function GitLabOverviewPage() {
         </>
       )}
     </div>
+    </div>
   );
+
 }

@@ -1,7 +1,7 @@
 import { useChannels } from "@/lib/query/channelQueries";
 import { ChannelList } from "@/components/modules/reminder/ChannelList";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, Hash } from "lucide-react";
 import { useState } from "react";
 import { ChannelEditor } from "@/components/modules/reminder/ChannelEditor";
 import { useKeyboardShortcuts } from "@/lib/useKeyboardShortcuts";
@@ -54,25 +54,40 @@ export function ChannelsPage() {
   }
 
   return (
-    <div className="p-4">
+    <div className="min-h-full bg-background">
       {/* Header */}
-      <div className="mb-3 flex items-center justify-between">
+      <div className="border-b px-5 py-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
+              <Hash className="h-3.5 w-3.5 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-sm font-medium">渠道管理</h1>
+              <p className="text-xs text-muted-foreground mt-0.5">Slack / Discord 等渠道通知配置</p>
+            </div>
+          </div>
+          <Button onClick={handleCreate} size="sm" className="gap-1.5 shadow-sm h-7 text-xs">
+            <Plus className="h-3.5 w-3.5" />
+            {t("channel.newChannel")}
+          </Button>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="mx-auto max-w-[1400px] space-y-3 px-3 py-3 animate-in fade-in duration-200">
         <p className="text-xs text-muted-foreground">
           {(channels || []).length === 0 ? t("channel.emptyList") : `${(channels || []).length} ${t("channel.pageTitle").toLowerCase()}`}
         </p>
-        <Button onClick={handleCreate} size="sm" className="gap-1.5 shadow-sm h-7 text-xs">
-          <Plus className="h-3.5 w-3.5" />
-          {t("channel.newChannel")}
-        </Button>
+
+        <ChannelList channels={channels || []} onEdit={handleEdit} />
+
+        <ChannelEditor
+          open={editorOpen}
+          onOpenChange={setEditorOpen}
+          channelId={editingChannelId}
+        />
       </div>
-
-      <ChannelList channels={channels || []} onEdit={handleEdit} />
-
-      <ChannelEditor
-        open={editorOpen}
-        onOpenChange={setEditorOpen}
-        channelId={editingChannelId}
-      />
     </div>
   );
 }
