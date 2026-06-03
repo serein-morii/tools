@@ -65,7 +65,7 @@ export function SearchableSelect({
         className={cn(
           "flex w-full items-center justify-between gap-1 rounded-md border border-input bg-background px-2 py-1 text-sm shadow-sm ring-offset-background transition-colors",
           "hover:bg-muted/50 focus:outline-none focus:ring-1 focus:ring-ring",
-          size === "sm" ? "h-7 text-[11px]" : "h-9 text-xs",
+          size === "sm" ? "h-7 text-[11px]" : "h-8 text-xs",
           isOpen && "ring-1 ring-ring bg-muted/50"
         )}
       >

@@ -13,12 +13,9 @@ export function LanguageSettings({ value, onChange }: LanguageSettingsProps) {
   const { t } = useTranslation();
 
   return (
-    <section className="space-y-2">
-      <header className="space-y-1">
-        <h3 className="text-sm font-medium">{t("settings.language")}</h3>
-        <p className="text-xs text-muted-foreground">
-          {t("settings.languageHint")}
-        </p>
+    <section className="space-y-1.5">
+      <header>
+        <h3 className="text-xs font-medium">{t("settings.language")}</h3>
       </header>
       <div className="inline-flex gap-1 rounded-md border border-border bg-background p-1">
         <LanguageButton active={value === "zh"} onClick={() => onChange("zh")}>
@@ -52,7 +49,7 @@ function LanguageButton({ active, onClick, children }: LanguageButtonProps) {
       size="sm"
       variant={active ? "default" : "ghost"}
       className={cn(
-        "min-w-[80px]",
+        "h-7 text-xs min-w-[64px]",
         active
           ? "shadow-sm"
           : "text-muted-foreground hover:text-foreground hover:bg-muted"

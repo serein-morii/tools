@@ -120,37 +120,25 @@ export function SettingsPage() {
   };
 
   return (
-    <div className="p-6 max-w-3xl">
-      {/* Header */}
-      <div className="mb-8 flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 shadow-md">
-          <Info className="h-5 w-5 text-white" />
-        </div>
-        <div>
-          <h2 className="text-xl font-semibold">{t("settings.title")}</h2>
-          <p className="text-sm text-muted-foreground">{t("settings.description")}</p>
-        </div>
-      </div>
-
-      <div className="space-y-4">
+    <div className="p-4 max-w-2xl">
+      <div className="space-y-3">
         {/* Appearance Settings */}
         <Card className="overflow-hidden">
-          <CardHeader className="bg-muted/30 border-b">
-            <div className="flex items-center gap-2">
-              <Palette className="h-4 w-4 text-violet-500" />
-              <CardTitle className="text-base">{t("settings.appearance")}</CardTitle>
+          <CardHeader className="bg-muted/30 border-b py-2 px-3">
+            <div className="flex items-center gap-1.5">
+              <Palette className="h-3.5 w-3.5 text-violet-500" />
+              <CardTitle className="text-sm">{t("settings.appearance")}</CardTitle>
             </div>
           </CardHeader>
-          <CardContent className="p-4 space-y-4">
+          <CardContent className="p-3 space-y-3">
             <LanguageSettings
               value={i18n.language as "zh" | "en" | "ja" | "ko"}
               onChange={handleLanguageChange}
             />
 
-            <section className="space-y-2">
-              <header className="space-y-1">
-                <h3 className="text-sm font-medium">{t("settings.theme")}</h3>
-                <p className="text-xs text-muted-foreground">{t("settings.themeHint")}</p>
+            <section className="space-y-1.5">
+              <header>
+                <h3 className="text-xs font-medium">{t("settings.theme")}</h3>
               </header>
               <div className="inline-flex gap-1 rounded-lg border bg-card p-1">
                 <ThemeButton
@@ -181,15 +169,15 @@ export function SettingsPage() {
 
         {/* Launch Settings */}
         <Card className="overflow-hidden">
-          <CardHeader className="bg-muted/30 border-b">
-            <div className="flex items-center gap-2">
-              <Power className="h-4 w-4 text-orange-500" />
-              <CardTitle className="text-base">{t("settings.launch")}</CardTitle>
+          <CardHeader className="bg-muted/30 border-b py-2 px-3">
+            <div className="flex items-center gap-1.5">
+              <Power className="h-3.5 w-3.5 text-orange-500" />
+              <CardTitle className="text-sm">{t("settings.launch")}</CardTitle>
             </div>
           </CardHeader>
-          <CardContent className="p-4 space-y-3">
+          <CardContent className="p-3 space-y-2">
             <ToggleRow
-              icon={<Power className="h-4 w-4 text-orange-500" />}
+              icon={<Power className="h-3.5 w-3.5 text-orange-500" />}
               title={t("settings.launchOnStartup")}
               description={autoLaunchSystemStatus ? "✓ " + t("common.enabled") : "— " + t("common.disabled")}
               checked={autoLaunch}
@@ -198,7 +186,7 @@ export function SettingsPage() {
 
             {autoLaunch && (
               <ToggleRow
-                icon={<EyeOff className="h-4 w-4 text-emerald-500" />}
+                icon={<EyeOff className="h-3.5 w-3.5 text-emerald-500" />}
                 title={t("settings.silentStartup")}
                 description={t("settings.silentStartupDescription")}
                 checked={silentStartup}
@@ -207,7 +195,7 @@ export function SettingsPage() {
             )}
 
             <ToggleRow
-              icon={<MonitorUp className="h-4 w-4 text-purple-500" />}
+              icon={<MonitorUp className="h-3.5 w-3.5 text-purple-500" />}
               title={t("settings.minimizeToTray")}
               description={t("settings.minimizeToTrayDescription")}
               checked={minimizeToTray}
@@ -218,48 +206,48 @@ export function SettingsPage() {
 
         {/* Data Management */}
         <Card className="overflow-hidden">
-          <CardHeader className="bg-muted/30 border-b">
-            <div className="flex items-center gap-2">
-              <Database className="h-4 w-4 text-emerald-500" />
-              <CardTitle className="text-base">{t("settings.dataManagement")}</CardTitle>
+          <CardHeader className="bg-muted/30 border-b py-2 px-3">
+            <div className="flex items-center gap-1.5">
+              <Database className="h-3.5 w-3.5 text-emerald-500" />
+              <CardTitle className="text-sm">{t("settings.dataManagement")}</CardTitle>
             </div>
           </CardHeader>
-          <CardContent className="p-4 space-y-4">
-            <div className="flex flex-wrap items-center gap-3">
-              <Button variant="outline" onClick={handleExport} className="gap-2">
-                <Download className="h-4 w-4" />
+          <CardContent className="p-3 space-y-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <Button variant="outline" size="sm" onClick={handleExport} className="gap-1.5 h-7 text-xs">
+                <Download className="h-3.5 w-3.5" />
                 {t("settings.exportData")}
               </Button>
-              <Button variant="outline" onClick={handleImport} className="gap-2">
-                <Upload className="h-4 w-4" />
+              <Button variant="outline" size="sm" onClick={handleImport} className="gap-1.5 h-7 text-xs">
+                <Upload className="h-3.5 w-3.5" />
                 {t("settings.importData")}
               </Button>
             </div>
-            {backupMessage && <p className="text-xs text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30 p-2 rounded">{backupMessage}</p>}
-            {backupError && <p className="text-xs text-destructive bg-destructive/10 p-2 rounded">{backupError}</p>}
+            {backupMessage && <p className="text-[11px] text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30 p-2 rounded">{backupMessage}</p>}
+            {backupError && <p className="text-[11px] text-destructive bg-destructive/10 p-2 rounded">{backupError}</p>}
           </CardContent>
         </Card>
 
         {/* About */}
         <Card className="overflow-hidden">
-          <CardHeader className="bg-muted/30 border-b">
-            <div className="flex items-center gap-2">
-              <Info className="h-4 w-4 text-muted-foreground" />
-              <CardTitle className="text-base">{t("settings.about")}</CardTitle>
+          <CardHeader className="bg-muted/30 border-b py-2 px-3">
+            <div className="flex items-center gap-1.5">
+              <Info className="h-3.5 w-3.5 text-muted-foreground" />
+              <CardTitle className="text-sm">{t("settings.about")}</CardTitle>
             </div>
           </CardHeader>
-          <CardContent className="p-4 space-y-2">
-            <div className="flex justify-between text-sm">
+          <CardContent className="p-3 space-y-1.5">
+            <div className="flex justify-between text-xs">
               <span className="text-muted-foreground">{t("settings.version")}</span>
-              <span className="font-mono">0.1.0</span>
+              <span className="font-mono">0.2.0</span>
             </div>
-            <div className="flex justify-between text-sm">
+            <div className="flex justify-between text-xs">
               <span className="text-muted-foreground">{t("settings.framework")}</span>
               <span>Tauri v2 + React 19</span>
             </div>
-            <div className="flex justify-between text-sm">
+            <div className="flex justify-between text-xs">
               <span className="text-muted-foreground">{t("settings.author")}</span>
-              <span>pengchenghui</span>
+              <span>pedro</span>
             </div>
           </CardContent>
         </Card>
@@ -283,13 +271,13 @@ function ThemeButton({ active, onClick, icon: Icon, children }: ThemeButtonProps
       size="sm"
       variant={active ? "default" : "ghost"}
       className={cn(
-        "min-w-[80px] gap-1.5",
+        "h-7 text-xs min-w-[70px] gap-1",
         active
           ? "shadow-sm"
           : "text-muted-foreground hover:text-foreground hover:bg-muted"
       )}
     >
-      <Icon className="h-3.5 w-3.5" />
+      <Icon className="h-3 w-3" />
       {children}
     </Button>
   );

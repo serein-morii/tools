@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import {
     Search, FileCode, Loader2, ChevronRight, ChevronLeft, Check,
     Trash2, RotateCcw, History, Sparkles, Clock,
@@ -84,18 +84,25 @@ export function SonarPromptPage() {
     const [loadingWorkspaces, setLoadingWorkspaces] = useState(false);
     // 覆盖率页面选中的工作空间（独立于配置页面的 workspace 字段）
     const [coverageWorkspace, setCoverageWorkspace] = useState<string>(() => walkinForm.walkin_workspace_name);
+    // 覆盖率页面选中的工作空间 UUID
+    const [coverageWorkspaceId, setCoverageWorkspaceId] = useState<string>("");
     // 覆盖率页面选中的部门（根据工作空间自动获取）
     const [coverageDeptId, setCoverageDeptId] = useState<string>("");
     const [coverageDeptName, setCoverageDeptName] = useState<string>("");
+
+    // 始终用 UUID 做 WORKSPACE 头：优先 coverageWorkspaceId，否则从列表查找
+    const resolvedWorkspaceId = coverageWorkspaceId || workspaces.find(w => w.name === coverageWorkspace)?.id || "";
+    const [coverageRefreshKey, setCoverageRefreshKey] = useState(0);
 
     const fetchWorkspaces = useCallback(async () => {
         if (!walkinForm.walkin_url) return;
         try {
             setLoadingWorkspaces(true);
+            const wsId = workspaces.find(w => w.name === walkinForm.walkin_workspace_name)?.id || walkinForm.walkin_workspace_name;
             const auth = {
                 csrf_token: walkinForm.walkin_csrf_token,
                 project: walkinForm.walkin_project_header,
-                workspace: walkinForm.walkin_workspace_name,
+                workspace: wsId,
                 x_auth_token: walkinForm.walkin_x_auth_token,
             };
             const list = await gitlabApi.walkinFetchWorkspaces(walkinForm.walkin_url, auth);
@@ -107,6 +114,11 @@ export function SonarPromptPage() {
         }
     }, [walkinForm.walkin_url, walkinForm.walkin_csrf_token, walkinForm.walkin_project_header, walkinForm.walkin_workspace_name, walkinForm.walkin_x_auth_token]);
 
+    const handleCoverageRefresh = useCallback(async () => {
+        await fetchWorkspaces();
+        setCoverageRefreshKey(k => k + 1);
+    }, [fetchWorkspaces]);
+
     // 登录后自动拉取工作空间列表
     useEffect(() => {
         if (isLoggedIn && walkinForm.walkin_url && walkinForm.walkin_csrf_token) {
@@ -114,20 +126,12 @@ export function SonarPromptPage() {
         }
     }, [isLoggedIn, walkinForm.walkin_url, walkinForm.walkin_csrf_token, fetchWorkspaces]);
 
-    // 同步 config 的 workspace 到覆盖率选中的工作空间（仅在首次有值时）
-    useEffect(() => {
-        if (!coverageWorkspace && walkinForm.walkin_workspace_name) {
-            setCoverageWorkspace(walkinForm.walkin_workspace_name);
-        }
-    }, [walkinForm.walkin_workspace_name]);
-
     // 切换工作空间时获取关联项目/部门
-    const handleCoverageWorkspaceChange = useCallback(async (name: string) => {
-        setCoverageWorkspace(name);
+    const fetchDeptForWorkspace = useCallback(async (name: string, updateCoverageState: boolean) => {
         if (!name || !walkinForm.walkin_url || !walkinForm.walkin_csrf_token || !isLoggedIn) return;
         const ws = workspaces.find((w) => w.name === name);
         if (!ws?.id) return;
-        const userId = userName || "";
+        const userId = walkinForm.ldap_profiles.find(p => p.id === walkinForm.selected_ldap_id)?.username || userName || "";
         const auth = {
             csrf_token: walkinForm.walkin_csrf_token,
             project: walkinForm.walkin_project_header,
@@ -137,17 +141,72 @@ export function SonarPromptPage() {
         try {
             const projects = await gitlabApi.walkinFetchRelatedProjects(walkinForm.walkin_url, auth, userId, ws.id);
             if (projects.length > 0) {
-                setCoverageDeptId(projects[0].id);
-                setCoverageDeptName(projects[0].name);
+                const deptId = projects[0].id;
+                const deptName = projects[0].name;
+                const updated = { ...walkinForm, walkin_workspace_name: name, walkin_workspace_id: ws.id, walkin_dept_id: deptId, walkin_dept_name: deptName, walkin_project_header: deptId };
+                setWalkinForm(updated);
+                saveConfig.mutateAsync(updated);
+                if (updateCoverageState) {
+                    setCoverageWorkspaceId(ws.id);
+                    setCoverageDeptId(deptId);
+                    setCoverageDeptName(deptName);
+                }
+                toast.success(`已切换到部门: ${deptName}`);
             } else {
-                setCoverageDeptId("");
-                setCoverageDeptName("");
+                toast.error("该工作空间下没有关联部门");
             }
-        } catch {
-            setCoverageDeptId("");
-            setCoverageDeptName("");
+        } catch (e) {
+            toast.error("获取部门失败: " + (e instanceof Error ? e.message : String(e)));
         }
-    }, [walkinForm.walkin_url, walkinForm.walkin_csrf_token, walkinForm.walkin_project_header, walkinForm.walkin_x_auth_token, isLoggedIn, userName, workspaces]);
+    }, [walkinForm, isLoggedIn, userName, workspaces, saveConfig]);
+
+    const handleCoverageWorkspaceChange = useCallback(async (name: string) => {
+        setCoverageWorkspace(name);
+        await fetchDeptForWorkspace(name, true);
+    }, [setCoverageWorkspace, fetchDeptForWorkspace]);
+
+    // 工作空间列表 + 配置就绪后：修正名称、补齐 UUID、初始化部门
+    const prevLoggedInRef = useRef(false);
+    useEffect(() => {
+        if (workspaces.length === 0 || !isLoggedIn) {
+            prevLoggedInRef.current = isLoggedIn;
+            return;
+        }
+        const justLoggedIn = isLoggedIn && !prevLoggedInRef.current;
+        prevLoggedInRef.current = isLoggedIn;
+        const wsId = walkinForm.walkin_workspace_id;
+        const wsName = walkinForm.walkin_workspace_name;
+        const ws = workspaces.find(w => w.id === wsId) || workspaces.find(w => w.name === wsName);
+        if (!ws) return;
+        let cfg = walkinForm;
+        let needSave = false;
+        if (cfg.walkin_workspace_name !== ws.name) {
+            cfg = { ...cfg, walkin_workspace_name: ws.name };
+            needSave = true;
+        }
+        if (!cfg.walkin_workspace_id || cfg.walkin_workspace_id !== ws.id) {
+            cfg = { ...cfg, walkin_workspace_id: ws.id };
+            needSave = true;
+        }
+        if (needSave) {
+            setWalkinForm(cfg);
+            saveConfig.mutateAsync(cfg);
+        }
+        if (!coverageWorkspace || coverageWorkspace !== ws.name) setCoverageWorkspace(ws.name);
+        if (!coverageWorkspaceId || coverageWorkspaceId !== ws.id) setCoverageWorkspaceId(ws.id);
+        if (cfg.walkin_dept_id && !cfg.walkin_dept_name) {
+            fetchDeptForWorkspace(ws.name, true);
+        }
+        // 重新登录后强制刷新覆盖率数据
+        if (justLoggedIn) {
+            setCoverageRefreshKey(k => k + 1);
+        }
+    }, [workspaces, isLoggedIn, walkinForm.walkin_workspace_id, walkinForm.walkin_workspace_name, walkinForm.walkin_dept_id, walkinForm.walkin_dept_name, coverageWorkspace, coverageWorkspaceId, saveConfig, fetchDeptForWorkspace]);
+
+    const handleSettingsWorkspaceChange = useCallback(async (name: string) => {
+        setWalkinForm({ ...walkinForm, walkin_workspace_name: name });
+        await fetchDeptForWorkspace(name, false);
+    }, [walkinForm, fetchDeptForWorkspace]);
 
     function generateId(): string {
         return `id-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
@@ -321,13 +380,14 @@ export function SonarPromptPage() {
     // --- Auth ---
     const getAuth = useCallback((): SonarAuth | null => {
         if (!config?.walkin_url || !config?.walkin_csrf_token) return null;
+        const wsId = config.walkin_workspace_id || workspaces.find(w => w.name === config.walkin_workspace_name)?.id || "";
         return {
             csrf_token: config.walkin_csrf_token,
             project: config.walkin_project_header,
-            workspace: config.walkin_workspace_name,
+            workspace: wsId || config.walkin_workspace_name,
             x_auth_token: config.walkin_x_auth_token,
         };
-    }, [config]);
+    }, [config, workspaces]);
 
     const persistForm = useCallback(() => {
         localStorage.setItem("sonar_project_key", projectKey);
@@ -510,6 +570,8 @@ export function SonarPromptPage() {
             setStep("config");
             setReports([]);
             setHighlightCommitId(null);
+            // 恢复扫描项目选择
+            if (!selectedProjectId && projectKey) restoreProjectFromKey(projectKey);
         } else {
             setStep("config");
         }
@@ -558,17 +620,20 @@ export function SonarPromptPage() {
     }, [fileCoverages, selectedCoverageIndices, activeTemplate]);
 
     // --- 历史操作 ---
+    const restoreProjectFromKey = useCallback((key: string) => {
+        const match = gitlabProjects?.find((p) => {
+            const last = p.path_with_namespace.split("/").pop() || p.path_with_namespace;
+            return last === key || last.includes(key) || key.includes(last);
+        });
+        if (match) setSelectedProjectId(match.id);
+    }, [gitlabProjects]);
+
     const handleLoadFromHistory = (record: SonarScanRecord) => {
         setProjectKey(record.projectKey);
         setBranch(record.branch);
         setCreateTimeEnd(record.createTimeEnd);
         setAuthor(record.author);
-        // Find and set selectedProjectId
-        const match = gitlabProjects?.find((p) => {
-            const last = p.path_with_namespace.split("/").pop() || p.path_with_namespace;
-            return last === record.projectKey || last.includes(record.projectKey) || record.projectKey.includes(last);
-        });
-        if (match) setSelectedProjectId(match.id);
+        restoreProjectFromKey(record.projectKey);
         setActiveTab("generator");
         setStep("config");
         toast.success("已加载历史配置");
@@ -593,11 +658,7 @@ export function SonarPromptPage() {
         // Pre-fill form
         setProjectKey(pk);
         setBranch(br);
-        const match = gitlabProjects?.find((p) => {
-            const last = p.path_with_namespace.split("/").pop() || p.path_with_namespace;
-            return last === pk || last.includes(pk) || pk.includes(last);
-        });
-        if (match) setSelectedProjectId(match.id);
+        restoreProjectFromKey(pk);
         const now = getDefaultTime();
         setCreateTimeEnd(now);
         setActiveTab("generator");
@@ -632,7 +693,7 @@ export function SonarPromptPage() {
         } finally {
             setLoading(false);
         }
-    }, [gitlabProjects, getAuth, config]);
+    }, [gitlabProjects, getAuth, config, restoreProjectFromKey]);
 
     // --- 模板操作 ---
     const handleStartCreate = () => {
@@ -1193,7 +1254,7 @@ export function SonarPromptPage() {
                                         )}
                                     </div>
                                     {!processing && prompt && (
-                                        <CopyButton text={prompt} size="sm" className="h-7 text-xs" showText />
+                                        <CopyButton text={prompt} size="sm" className="h-8 text-xs" showText />
                                     )}
                                 </div>
 
@@ -1357,10 +1418,10 @@ export function SonarPromptPage() {
                     </span>
                                     </div>
                                     <div className="flex gap-1.5">
-                                        <Button variant="outline" size="sm" className="h-7 text-xs" onClick={handleStartCreate}>
+                                        <Button variant="outline" size="sm" className="h-8 text-xs" onClick={handleStartCreate}>
                                             <Plus className="h-3 w-3 mr-1" /> 新建
                                         </Button>
-                                        <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={handleResetTemplates}>
+                                        <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={handleResetTemplates}>
                                             <RotateCcw className="h-3 w-3 mr-1" /> 恢复默认
                                         </Button>
                                     </div>
@@ -1463,11 +1524,11 @@ export function SonarPromptPage() {
                                                     </div>
                                                 </div>
                                                 <div className="flex gap-1 shrink-0">
-                                                    <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={(e) => { e.stopPropagation(); handleLoadFromHistory(record); }}>
+                                                    <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={(e) => { e.stopPropagation(); handleLoadFromHistory(record); }}>
                                                         <RotateCcw className="h-3 w-3 mr-1" /> 加载
                                                     </Button>
-                                                    <CopyButton text={record.prompt} variant="ghost" size="sm" className="h-7 text-xs" showText />
-                                                    <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={(e) => { e.stopPropagation(); setDeleteId(record.id); }}>
+                                                    <CopyButton text={record.prompt} variant="ghost" size="sm" className="h-8 text-xs" showText />
+                                                    <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={(e) => { e.stopPropagation(); setDeleteId(record.id); }}>
                                                         <Trash2 className="h-3 w-3" />
                                                     </Button>
                                                 </div>
@@ -1490,7 +1551,7 @@ export function SonarPromptPage() {
                                 <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={() => handleLoadFromHistory(detailRecord)}>
                                     <RotateCcw className="h-3 w-3" /> 加载配置
                                 </Button>
-                                <CopyButton text={detailRecord.prompt} variant="ghost" size="sm" className="h-7 text-xs" showText />
+                                <CopyButton text={detailRecord.prompt} variant="ghost" size="sm" className="h-8 text-xs" showText />
                             </div>
                         </div>
 
@@ -1535,16 +1596,20 @@ export function SonarPromptPage() {
                                     className="max-w-[280px]"
                                     size="md"
                                 />
-                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 shrink-0" onClick={fetchWorkspaces} disabled={loadingWorkspaces}>
-                                    <RefreshCw className={cn("h-3.5 w-3.5", loadingWorkspaces && "animate-spin")} />
+                                <Button size="sm" className="h-6 text-[10px]" onClick={handleCoverageRefresh} disabled={loadingWorkspaces}>
+                                    <RefreshCw className={cn("h-3 w-3 mr-1", loadingWorkspaces && "animate-spin")} />
+                                    刷新
                                 </Button>
                             </div>
                         )}
                         <UnitBoardCard
                             config={config}
                             workspaceName={coverageWorkspace || undefined}
+                            workspaceId={resolvedWorkspaceId || undefined}
+                            projectId={coverageDeptId || undefined}
                             deptId={coverageDeptId || undefined}
                             deptName={coverageDeptName || undefined}
+                            refreshKey={coverageRefreshKey}
                             startDate={fmtDate(currentWeek.monday)}
                             endDate={fmtDate(currentWeek.sunday)}
                             weekOptions={weekOptions}
@@ -1555,7 +1620,10 @@ export function SonarPromptPage() {
                             startDate={fmtDate(currentWeek.monday)}
                             endDate={fmtDate(currentWeek.sunday)}
                             workspaceName={coverageWorkspace || undefined}
+                            workspaceId={resolvedWorkspaceId || undefined}
+                            projectId={coverageDeptId || undefined}
                             deptName={coverageDeptName || undefined}
+                            refreshKey={coverageRefreshKey}
                             onPromptGenerate={handlePromptFromCoverage}
                         />
                     </div>
@@ -1581,39 +1649,10 @@ export function SonarPromptPage() {
 
                                 {walkinForm.walkin_enabled && (
                                     <>
-                                        <div className="grid grid-cols-2 gap-3">
-                                            <div className="space-y-1.5">
-                                                <Label className="text-xs">Walkin 地址</Label>
-                                                <Input placeholder="http://walkin.jms.com" value={walkinForm.walkin_url} onChange={(e) => setWalkinForm({ ...walkinForm, walkin_url: e.target.value })} className="h-8 text-xs" />
-                                            </div>
-                                            <div className="space-y-1.5">
-                                                <Label className="text-xs">部门名称</Label>
-                                                <Input placeholder="产品架构" value={walkinForm.walkin_dept_name} onChange={(e) => setWalkinForm({ ...walkinForm, walkin_dept_name: e.target.value })} className="h-8 text-xs" />
-                                            </div>
-                                            <div className="space-y-1.5">
-                                                <Label className="text-xs">部门 ID</Label>
-                                                <Input placeholder="a0a768d7-..." value={walkinForm.walkin_dept_id} onChange={(e) => setWalkinForm({ ...walkinForm, walkin_dept_id: e.target.value })} className="h-8 text-xs" />
-                                            </div>
-                                            <div className="space-y-1.5">
-                                                <Label className="text-xs">工作空间</Label>
-                                                {workspaces.length > 0 ? (
-                                                    <div className="flex items-center gap-2">
-                                                        <SearchableSelect
-                                                            options={workspaces.map((w) => ({ value: w.name, label: w.name, description: w.id }))}
-                                                            value={walkinForm.walkin_workspace_name}
-                                                            onChange={(v) => setWalkinForm({ ...walkinForm, walkin_workspace_name: v })}
-                                                            placeholder="选择工作空间"
-                                                            size="md"
-                                                            className="flex-1"
-                                                        />
-                                                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 shrink-0" onClick={fetchWorkspaces} disabled={loadingWorkspaces}>
-                                                            <RefreshCw className={cn("h-3.5 w-3.5", loadingWorkspaces && "animate-spin")} />
-                                                        </Button>
-                                                    </div>
-                                                ) : (
-                                                    <Input placeholder="产品架构&PMO" value={walkinForm.walkin_workspace_name} onChange={(e) => setWalkinForm({ ...walkinForm, walkin_workspace_name: e.target.value })} className="h-8 text-xs" />
-                                                )}
-                                            </div>
+                                        {/* Walkin 地址 - 全宽 */}
+                                        <div className="space-y-1.5">
+                                            <Label className="text-xs">Walkin 地址</Label>
+                                            <Input placeholder="http://walkin.jms.com" value={walkinForm.walkin_url} onChange={(e) => setWalkinForm({ ...walkinForm, walkin_url: e.target.value })} className="h-8 text-xs" />
                                         </div>
 
                                         {/* LDAP */}
@@ -1632,18 +1671,18 @@ export function SonarPromptPage() {
                                             {walkinForm.selected_ldap_id && walkinForm.ldap_profiles.filter(p => p.id === walkinForm.selected_ldap_id).map((p) => (
                                                 <div key={p.id} className="border rounded p-2 bg-muted/30 space-y-2">
                                                     <div className="flex gap-2">
-                                                        <Input placeholder="备注" value={p.label} onChange={(e) => updateLdapProfiles(walkinForm.ldap_profiles.map(lp => lp.id === p.id ? { ...lp, label: e.target.value } : lp))} className="h-7 text-xs" />
-                                                        <Button variant="destructive" size="sm" className="h-7 text-xs" onClick={() => deleteLdapProfile(p.id)} disabled={walkinForm.ldap_profiles.length <= 1}><Trash2 className="h-3 w-3" /></Button>
+                                                        <Input placeholder="备注" value={p.label} onChange={(e) => updateLdapProfiles(walkinForm.ldap_profiles.map(lp => lp.id === p.id ? { ...lp, label: e.target.value } : lp))} className="h-8 text-xs" />
+                                                        <Button variant="destructive" size="sm" className="h-8 text-xs" onClick={() => deleteLdapProfile(p.id)} disabled={walkinForm.ldap_profiles.length <= 1}><Trash2 className="h-3 w-3" /></Button>
                                                     </div>
                                                     <div className="grid grid-cols-2 gap-2">
-                                                        <Input placeholder="LDAP 用户名" value={p.username} onChange={(e) => updateLdapProfiles(walkinForm.ldap_profiles.map(lp => lp.id === p.id ? { ...lp, username: e.target.value } : lp))} className="h-7 text-xs" />
-                                                        <Input type="password" placeholder="LDAP 密码" value={p.password} onChange={(e) => updateLdapProfiles(walkinForm.ldap_profiles.map(lp => lp.id === p.id ? { ...lp, password: e.target.value } : lp))} className="h-7 text-xs" />
+                                                        <Input placeholder="LDAP 用户名" value={p.username} onChange={(e) => updateLdapProfiles(walkinForm.ldap_profiles.map(lp => lp.id === p.id ? { ...lp, username: e.target.value } : lp))} className="h-8 text-xs" />
+                                                        <Input type="password" placeholder="LDAP 密码" value={p.password} onChange={(e) => updateLdapProfiles(walkinForm.ldap_profiles.map(lp => lp.id === p.id ? { ...lp, password: e.target.value } : lp))} className="h-8 text-xs" />
                                                     </div>
                                                 </div>
                                             ))}
                                         </div>
 
-                                        {/* 登录状态 */}
+                                        {/* 登录状态 + 定时检测 */}
                                         <div className="border rounded p-3 bg-muted/30 space-y-2">
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-2">
@@ -1651,10 +1690,10 @@ export function SonarPromptPage() {
                                                     <span className="text-xs font-medium">{isLoggedIn ? `已登录: ${userName || "未知"}` : "未登录"}</span>
                                                 </div>
                                                 <div className="flex gap-1.5">
-                                                    <Button variant="outline" size="sm" className="h-7 text-xs" onClick={async () => { setIsCheckingLogin(true); try { await checkLogin(); } finally { setIsCheckingLogin(false); } }} disabled={isCheckingLogin}>
+                                                    <Button variant="outline" size="sm" className="h-8 text-xs" onClick={async () => { setIsCheckingLogin(true); try { await checkLogin(); } finally { setIsCheckingLogin(false); } }} disabled={isCheckingLogin}>
                                                         <RefreshCw className={`mr-1 h-3 w-3 ${isCheckingLogin ? "animate-spin" : ""}`} />检测
                                                     </Button>
-                                                    <Button size="sm" className="h-7 text-xs" onClick={async () => {
+                                                    <Button size="sm" className="h-8 text-xs" onClick={async () => {
                                                         const ldap = getSelectedLdap();
                                                         if (!ldap?.username || !ldap?.password) { toast.error("请先填写 LDAP 用户名和密码"); return; }
                                                         if (!walkinForm.walkin_url) { toast.error("请先填写 Walkin 地址"); return; }
@@ -1663,7 +1702,7 @@ export function SonarPromptPage() {
                                                             await startAutoLogin(ldap, { walkin_url: walkinForm.walkin_url, walkin_project_header: walkinForm.walkin_project_header, walkin_workspace_name: walkinForm.walkin_workspace_name, ldap_profiles: walkinForm.ldap_profiles, selected_ldap_id: walkinForm.selected_ldap_id });
                                                         } catch (e) { toast.error("操作失败: " + (e instanceof Error ? e.message : String(e))); }
                                                     }}>{isLoggedIn ? "重新登录" : "登录"}</Button>
-                                                    <Button variant="destructive" size="sm" className="h-7 text-xs" onClick={async () => {
+                                                    <Button variant="destructive" size="sm" className="h-8 text-xs" onClick={async () => {
                                                         const cleared = { ...walkinForm, walkin_csrf_token: "", walkin_project_header: "", walkin_x_auth_token: "" };
                                                         setWalkinForm(cleared);
                                                         try { await saveConfig.mutateAsync(cleared); toast.success("Token 已清除"); } catch (e) { toast.error("清除失败"); }
@@ -1673,33 +1712,53 @@ export function SonarPromptPage() {
                                             {walkinForm.walkin_x_auth_token && (
                                                 <p className="text-[10px] text-muted-foreground">Token: {walkinForm.walkin_x_auth_token.slice(0, 8)}...{walkinForm.walkin_x_auth_token.slice(-8)}</p>
                                             )}
-                                        </div>
-
-                                        {/* 定时检测 */}
-                                        <div className="space-y-2">
-                                            <div className="flex items-center gap-2"><Clock className="h-3.5 w-3.5 text-muted-foreground" /><Label className="text-xs">登录状态定时检测</Label></div>
-                                            <div className="flex flex-wrap gap-1.5">
-                                                {[{ v: 0, l: "关闭" }, { v: 0.5, l: "30秒" }, { v: 10, l: "10分钟" }, { v: 30, l: "30分钟" }, { v: 60, l: "1小时" }, { v: 120, l: "2小时" }, { v: 360, l: "6小时" }].map((o) => (
-                                                    <Button key={o.v} variant={loginCheckInterval === o.v ? "default" : "outline"} size="sm" className="h-6 text-xs" onClick={() => handleWalkinIntervalChange(o.v)}>{o.l}</Button>
-                                                ))}
+                                            <div className="flex items-center gap-2">
+                                                <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                                                <Label className="text-xs">定时检测</Label>
+                                                <div className="flex flex-wrap gap-1">
+                                                    {[{ v: 0, l: "关闭" }, { v: 0.5, l: "30秒" }, { v: 10, l: "10分钟" }, { v: 30, l: "30分钟" }, { v: 60, l: "1小时" }, { v: 120, l: "2小时" }, { v: 360, l: "6小时" }].map((o) => (
+                                                        <Button key={o.v} variant={loginCheckInterval === o.v ? "default" : "outline"} size="sm" className="h-6 text-xs" onClick={() => handleWalkinIntervalChange(o.v)}>{o.l}</Button>
+                                                    ))}
+                                                </div>
                                             </div>
                                         </div>
 
-                                        {/* 项目映射 */}
-                                        <div className="space-y-2">
-                                            <Label className="text-xs">项目名称映射</Label>
-                                            {walkinForm.walkin_project_mappings.map((m, idx) => (
-                                                <div key={idx} className="flex items-center gap-2">
-                                                    <Input placeholder="GitLab 项目路径" value={m.gitlab_project} onChange={(e) => { const u = [...walkinForm.walkin_project_mappings]; u[idx] = { ...u[idx], gitlab_project: e.target.value }; setWalkinForm({ ...walkinForm, walkin_project_mappings: u }); }} className="h-7 text-xs flex-1" />
-                                                    <span className="text-muted-foreground text-xs">→</span>
-                                                    <Input placeholder="Walkin 项目名" value={m.walkin_project} onChange={(e) => { const u = [...walkinForm.walkin_project_mappings]; u[idx] = { ...u[idx], walkin_project: e.target.value }; setWalkinForm({ ...walkinForm, walkin_project_mappings: u }); }} className="h-7 text-xs flex-1" />
-                                                    <X className="h-3.5 w-3.5 cursor-pointer hover:text-destructive shrink-0" onClick={() => setWalkinForm({ ...walkinForm, walkin_project_mappings: walkinForm.walkin_project_mappings.filter((_, i) => i !== idx) })} />
+                                        {/* 工作空间 + 部门 双栏 */}
+                                        {(() => {
+                                            const wsId = workspaces.find(w => w.name === walkinForm.walkin_workspace_name)?.id || "";
+                                            return (
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div className="space-y-1.5">
+                                                        <div className="flex items-center justify-between">
+                                                            <Label className="text-xs">工作空间</Label>
+                                                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={fetchWorkspaces} disabled={loadingWorkspaces}>
+                                                                <RefreshCw className={cn("h-3 w-3", loadingWorkspaces && "animate-spin")} />
+                                                            </Button>
+                                                        </div>
+                                                        {workspaces.length > 0 ? (
+                                                            <SearchableSelect
+                                                                options={workspaces.map((w) => ({ value: w.name, label: w.name, description: w.id }))}
+                                                                value={walkinForm.walkin_workspace_name}
+                                                                onChange={handleSettingsWorkspaceChange}
+                                                                placeholder="选择工作空间"
+                                                                size="md"
+                                                            />
+                                                        ) : (
+                                                            <Input placeholder="产品架构&PMO" value={walkinForm.walkin_workspace_name} onChange={(e) => setWalkinForm({ ...walkinForm, walkin_workspace_name: e.target.value })} className="h-8 text-xs" />
+                                                        )}
+                                                        <p className="text-[11px] text-muted-foreground font-mono truncate" title={wsId}>{wsId || "—"}</p>
+                                                    </div>
+                                                    <div className="space-y-1.5">
+                                                        <div className="flex items-center h-6">
+                                                            <Label className="text-xs">关联部门</Label>
+                                                        </div>
+                                                        <Input value={walkinForm.walkin_dept_name} readOnly className="h-8 text-xs bg-muted/50" />
+                                                        <p className="text-[11px] text-muted-foreground font-mono truncate" title={walkinForm.walkin_dept_id}>{walkinForm.walkin_dept_id || "—"}</p>
+                                                    </div>
                                                 </div>
-                                            ))}
-                                            <Button variant="outline" size="sm" className="h-6 text-xs" onClick={() => setWalkinForm({ ...walkinForm, walkin_project_mappings: [...walkinForm.walkin_project_mappings, { gitlab_project: "", walkin_project: "" }] })}>
-                                                <Plus className="h-3 w-3 mr-1" />添加映射
-                                            </Button>
-                                        </div>
+                                            );
+                                        })()}
+
                                     </>
                                 )}
 

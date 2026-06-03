@@ -769,6 +769,13 @@ impl WalkinClient {
     pub async fn check_login(&self) -> Result<LoginStatusResult> {
         let url = format!("{}/is-login", self.base_url);
 
+        log::info!("[walkin] check_login URL: {}", url);
+        log::info!("[walkin] check_login headers:");
+        log::info!("  CSRF-TOKEN: {}", self.auth.csrf_token);
+        log::info!("  PROJECT: {}", self.auth.project);
+        log::info!("  WORKSPACE: {}", self.auth.workspace);
+        log::info!("  X-AUTH-TOKEN: {}", self.auth.x_auth_token);
+
         let response = self.http_client
             .get(&url)
             .header("CSRF-TOKEN", &self.auth.csrf_token)
@@ -811,11 +818,21 @@ impl WalkinClient {
         let default_end = chrono::Utc::now().format("%Y-%m-%d %H:%M:%S").to_string();
         let start_date = start_date.map(|s| s.to_string()).unwrap_or(default_start);
         let end_date = end_date.map(|s| s.to_string()).unwrap_or(default_end);
-
-        log::info!("Fetching unit-board: workspace={}, deptName={}, deptId={}, start={}, end={}",
-            self.workspace_name, self.dept_name, dept_id, start_date, end_date);
-
         let app_group_flag = "按周期".to_string();
+
+        log::info!("[walkin] fetch_unit_board URL: {}", url);
+        log::info!("[walkin] fetch_unit_board query:");
+        log::info!("  deptId: {}", dept_id);
+        log::info!("  workspaceName: {}", self.workspace_name);
+        log::info!("  deptName: {}", self.dept_name);
+        log::info!("  startDateFrom: {}", start_date);
+        log::info!("  startDateTo: {}", end_date);
+        log::info!("  appGroupFlag: {}", app_group_flag);
+        log::info!("[walkin] fetch_unit_board headers:");
+        log::info!("  CSRF-TOKEN: {}", self.auth.csrf_token);
+        log::info!("  PROJECT: {}", self.auth.project);
+        log::info!("  WORKSPACE: {}", self.auth.workspace);
+        log::info!("  X-AUTH-TOKEN: {}", self.auth.x_auth_token);
         let response = self.http_client
             .get(&url)
             .query(&[
@@ -877,8 +894,19 @@ impl WalkinClient {
             self.base_url
         );
 
-        log::info!("Fetching unit-list: workspace={}, deptName={}, start={}, end={}, page={}/{}",
-            self.workspace_name, self.dept_name, created_at_start, created_at_end, page_num, page_size);
+        log::info!("[walkin] fetch_unit_list URL: {}", url);
+        log::info!("[walkin] fetch_unit_list query:");
+        log::info!("  workspaceName: {}", self.workspace_name);
+        log::info!("  deptName: {}", self.dept_name);
+        log::info!("  createdAtStart: {}", created_at_start);
+        log::info!("  createdAtEnd: {}", created_at_end);
+        log::info!("  pageNum: {}, pageSize: {}", page_num, page_size);
+        log::info!("  queryNewFlag: 1");
+        log::info!("[walkin] fetch_unit_list headers:");
+        log::info!("  CSRF-TOKEN: {}", self.auth.csrf_token);
+        log::info!("  PROJECT: {}", self.auth.project);
+        log::info!("  WORKSPACE: {}", self.auth.workspace);
+        log::info!("  X-AUTH-TOKEN: {}", self.auth.x_auth_token);
 
         let response = self.http_client
             .get(&url)
@@ -925,7 +953,13 @@ impl WalkinClient {
     pub async fn fetch_workspaces(&self) -> Result<Vec<WorkspaceItem>> {
         let url = format!("{}/project/workspace/list/userworkspace", self.base_url);
 
-        log::info!("Fetching workspaces from {}", url);
+        log::info!("[walkin] fetch_workspaces URL: {}", url);
+        log::info!("[walkin] fetch_workspaces headers:");
+        log::info!("  CSRF-TOKEN: {}", self.auth.csrf_token);
+        log::info!("  PROJECT: {}", self.auth.project);
+        log::info!("  WORKSPACE: {}", self.auth.workspace);
+        log::info!("  X-AUTH-TOKEN: {}", self.auth.x_auth_token);
+        log::info!("  Referer: {}", self.base_url);
 
         let response = self.http_client
             .get(&url)
@@ -971,12 +1005,20 @@ impl WalkinClient {
     pub async fn fetch_related_projects(&self, user_id: &str, workspace_id: &str) -> Result<Vec<RelatedProject>> {
         let url = format!("{}/track/project/list/related", self.base_url);
 
-        log::info!("Fetching related projects: userId={}, workspaceId={}", user_id, workspace_id);
-
         let body = serde_json::json!({
             "userId": user_id,
             "workspaceId": workspace_id,
         });
+
+        log::info!("[walkin] fetch_related_projects URL: {}", url);
+        log::info!("[walkin] fetch_related_projects headers:");
+        log::info!("  CSRF-TOKEN: {}", self.auth.csrf_token);
+        log::info!("  PROJECT: {}", self.auth.project);
+        log::info!("  WORKSPACE: {}", self.auth.workspace);
+        log::info!("  X-AUTH-TOKEN: {}", self.auth.x_auth_token);
+        log::info!("  Content-Type: application/json");
+        log::info!("  Referer: {}", self.base_url);
+        log::info!("[walkin] fetch_related_projects body: {}", serde_json::to_string(&body).unwrap_or_default());
 
         let response = self.http_client
             .post(&url)
@@ -995,6 +1037,7 @@ impl WalkinClient {
         if !response.status().is_success() {
             let status = response.status();
             let res_body = response.text().await.unwrap_or_default();
+            log::error!("[walkin] fetch_related_projects failed {}: {}", status, res_body);
             return Err(ToolsError::Http(format!("related projects error {}: {}", status, res_body)));
         }
 

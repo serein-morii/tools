@@ -17,8 +17,11 @@ export function UnitBoardCard({
   weekIndex,
   onWeekIndexChange,
   workspaceName: workspaceNameOverride,
+  workspaceId: workspaceIdOverride,
+  projectId: projectIdOverride,
   deptId: deptIdOverride,
   deptName: deptNameOverride,
+  refreshKey,
 }: {
   config: GitLabConfig | undefined;
   onDataChange?: (data: UnitBoardData | null) => void;
@@ -28,8 +31,11 @@ export function UnitBoardCard({
   weekIndex?: number;
   onWeekIndexChange?: (index: number) => void;
   workspaceName?: string;
+  workspaceId?: string;
+  projectId?: string;
   deptId?: string;
   deptName?: string;
+  refreshKey?: number;
 }) {
   const { t } = useTranslation();
   const { isLoggedIn } = useWalkinAuth();
@@ -43,8 +49,9 @@ export function UnitBoardCard({
   const walkinDeptId = deptIdOverride || config?.walkin_dept_id;
   const walkinDeptName = deptNameOverride || config?.walkin_dept_name;
   const csrfToken = config?.walkin_csrf_token;
-  const projectHeader = config?.walkin_project_header;
+  const projectHeaderOverride = projectIdOverride || config?.walkin_project_header;
   const workspaceName = workspaceNameOverride || config?.walkin_workspace_name;
+  const workspaceHeader = workspaceIdOverride || workspaceName;
   const xAuthToken = config?.walkin_x_auth_token;
   const scanSchedule = config?.scan_schedule || "0 9 * * 1";
 
@@ -129,12 +136,13 @@ export function UnitBoardCard({
         walkinUrl,
         {
           csrf_token: csrfToken,
-          project: projectHeader || "",
-          workspace: workspaceName || "",
+          project: projectHeaderOverride || "",
+          workspace: workspaceHeader || "",
           x_auth_token: xAuthToken,
         },
         walkinDeptId,
         walkinDeptName,
+        workspaceName,
         startDate,
         endDate,
       );
@@ -147,12 +155,11 @@ export function UnitBoardCard({
     } finally {
       setLoading(false);
     }
-  }, [canFetch, csrfToken, xAuthToken, walkinUrl, walkinDeptId, walkinDeptName, projectHeader, workspaceName, onDataChange, startDate, endDate]);
-
+  }, [canFetch, csrfToken, xAuthToken, walkinUrl, walkinDeptId, walkinDeptName, projectHeaderOverride, workspaceIdOverride, workspaceName, onDataChange, startDate, endDate, refreshKey]);
   useEffect(() => {
     if (!canFetch || !csrfToken || !xAuthToken) return;
     fetchData();
-  }, [canFetch, csrfToken, xAuthToken, walkinUrl, walkinDeptId, walkinDeptName, projectHeader, workspaceName, isLoggedIn, fetchData, startDate, endDate]);
+  }, [canFetch, csrfToken, xAuthToken, walkinUrl, walkinDeptId, walkinDeptName, projectHeaderOverride, workspaceIdOverride, workspaceName, isLoggedIn, fetchData, startDate, endDate, refreshKey]);
 
   useEffect(() => {
     if (!canFetch || !csrfToken || !xAuthToken) return;

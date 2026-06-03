@@ -42,6 +42,7 @@ export const defaultGitLabConfig: GitLabConfig = {
   walkin_dept_name: "产品架构",
   walkin_dept_id: "a0a768d7-9e8d-448c-9b79-926d84f51ea1",
   walkin_workspace_name: "产品架构&PMO",
+  walkin_workspace_id: "",
   walkin_csrf_token: "",
   walkin_project_header: "",
   walkin_x_auth_token: "",

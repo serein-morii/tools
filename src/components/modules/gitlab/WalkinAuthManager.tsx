@@ -33,6 +33,7 @@ export function WalkinAuthProvider({ children }: { children: ReactNode }) {
   const [captchaImg, setCaptchaImg] = useState<string | null>(null);
   const [captchaUuid, setCaptchaUuid] = useState("");
   const [captcha, setCaptcha] = useState("");
+  const [loginError, setLoginError] = useState("");
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [isAutoLoggingIn, setIsAutoLoggingIn] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -50,10 +51,11 @@ export function WalkinAuthProvider({ children }: { children: ReactNode }) {
       const updatedConfig = {
         ...currentConfig,
         walkin_csrf_token: tokens.csrf_token,
-        walkin_project_header: tokens.project,
-        // 保留用户配置的值，只在为空时才使用服务端返回的值
-        walkin_dept_id: currentConfig.walkin_dept_id || tokens.project,
-        walkin_workspace_name: currentConfig.walkin_workspace_name || tokens.workspace,
+        walkin_project_header: tokens.project || currentConfig.walkin_project_header,
+        walkin_dept_id: tokens.project || currentConfig.walkin_dept_id,
+        walkin_dept_name: tokens.project && tokens.project !== currentConfig.walkin_dept_id ? "" : currentConfig.walkin_dept_name,
+        walkin_workspace_id: tokens.workspace || currentConfig.walkin_workspace_id,
+        walkin_workspace_name: tokens.workspace && tokens.workspace !== currentConfig.walkin_workspace_id ? "" : currentConfig.walkin_workspace_name,
         walkin_x_auth_token: tokens.x_auth_token,
       };
       saveConfig.mutateAsync(updatedConfig).then(() => refetch());
@@ -70,7 +72,7 @@ export function WalkinAuthProvider({ children }: { children: ReactNode }) {
       const result = await gitlabApi.walkinCheckLogin(cfg.walkin_url, {
         csrf_token: cfg.walkin_csrf_token,
         project: cfg.walkin_project_header,
-        workspace: cfg.walkin_workspace_name,
+        workspace: cfg.walkin_workspace_id || cfg.walkin_workspace_name,
         x_auth_token: cfg.walkin_x_auth_token,
       });
       setIsLoggedIn(result.logged_in);
@@ -130,9 +132,8 @@ export function WalkinAuthProvider({ children }: { children: ReactNode }) {
         setCaptchaImg(result.captcha_image || null);
         setCaptchaUuid(result.captcha_uuid || "");
         setCaptcha("");
+        setLoginError(result.message || "");
         setShowCaptchaDialog(true);
-        const reason = result.message || "验证码自动识别失败";
-        toast.warning(`需要手动输入验证码: ${reason}`, { duration: 6000 });
       } else {
         const errMsg = result.message || "自动登录失败，未知原因";
         toast.error(`自动登录失败: ${errMsg}`, { duration: 6000 });
@@ -166,7 +167,7 @@ export function WalkinAuthProvider({ children }: { children: ReactNode }) {
       if (resp.success && resp.data?.csrfToken) {
         persistAuthTokens({
           csrf_token: resp.data.csrfToken,
-          project: currentConfig.walkin_project_header || "",
+          project: resp.data.lastProjectId || currentConfig.walkin_project_header || "",
           workspace: resp.data.lastWorkspaceId || currentConfig.walkin_workspace_name || "",
           x_auth_token: resp.data.sessionId || "",
         });
@@ -174,13 +175,12 @@ export function WalkinAuthProvider({ children }: { children: ReactNode }) {
         setShowCaptchaDialog(false);
         toast.success("登录成功");
       } else {
-        const errMsg = resp.message || "登录失败，服务器未返回原因";
-        toast.error(`登录失败: ${errMsg}`, { duration: 6000 });
+        const errMsg = resp.message || "登录失败";
+        setLoginError(errMsg);
         handleRefreshCaptcha();
       }
     } catch (error) {
-      const errMsg = error instanceof Error ? error.message : String(error);
-      toast.error(`登录请求异常: ${errMsg}`, { duration: 6000 });
+      setLoginError(error instanceof Error ? error.message : String(error));
       handleRefreshCaptcha();
     } finally {
       setIsLoggingIn(false);
@@ -259,6 +259,10 @@ export function WalkinAuthProvider({ children }: { children: ReactNode }) {
             </div>
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground">自动识别失败，请手动输入验证码</p>
+              <p className="text-xs text-muted-foreground/70">提示：如多次登录失败，请检查 LDAP 用户名和密码是否正确</p>
+              {loginError && (
+                <p className="text-sm text-destructive bg-destructive/10 rounded px-3 py-2">{loginError}</p>
+              )}
               {captchaImg && (
                 <div className="flex justify-center bg-muted/30 rounded p-2">
                   <img

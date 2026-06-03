@@ -81,12 +81,18 @@ function CoverageBar({ value }: { value: number }) {
 export function UnitCoverageList({
   startDate, endDate, onPromptGenerate,
   workspaceName: workspaceNameOverride,
+  workspaceId: workspaceIdOverride,
+  projectId: projectIdOverride,
   deptName: deptNameOverride,
+  refreshKey,
 }: {
   startDate: string; endDate: string;
   onPromptGenerate?: (projectKey: string, branch: string, author: string, commitId: string) => void;
   workspaceName?: string;
+  workspaceId?: string;
+  projectId?: string;
   deptName?: string;
+  refreshKey?: number;
 }) {
   const [items, setItems] = useState<UnitListItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -106,13 +112,13 @@ export function UnitCoverageList({
       const dn = deptNameOverride || config.walkin_dept_name;
       const auth = {
         csrf_token: config.walkin_csrf_token,
-        project: config.walkin_project_header,
-        workspace: ws,
+        project: projectIdOverride || config.walkin_project_header,
+        workspace: workspaceIdOverride || ws,
         x_auth_token: config.walkin_x_auth_token,
       };
 
       const data = await gitlabApi.walkinFetchUnitList(
-        config.walkin_url, auth, dn,
+        config.walkin_url, auth, dn, ws,
         startDate, endDate, 0, 100,
       );
       setItems(data);
@@ -121,9 +127,9 @@ export function UnitCoverageList({
     } finally {
       setLoading(false);
     }
-  }, [startDate, endDate, workspaceNameOverride, deptNameOverride]);
+  }, [startDate, endDate, workspaceNameOverride, deptNameOverride, projectIdOverride, workspaceIdOverride, refreshKey]);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => { fetchData(); }, [fetchData, refreshKey]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {

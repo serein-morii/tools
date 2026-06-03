@@ -45,11 +45,11 @@ export const gitlabApi = {
   walkinLdapLogin: (url: string, username: string, password: string, captcha: string, captchaUuid: string): Promise<WalkinSigninResponse> =>
     call<WalkinSigninResponse>("walkin_ldap_login", { url, username, password, captcha, captchaUuid }),
 
-  walkinFetchUnitBoard: (url: string, auth: { csrf_token: string; project: string; workspace: string; x_auth_token: string }, deptId: string, deptName: string, startDate?: string, endDate?: string): Promise<UnitBoardData | null> =>
-    call<UnitBoardData | null>("walkin_fetch_unit_board", { url, auth, deptId, deptName, startDate, endDate }),
+  walkinFetchUnitBoard: (url: string, auth: { csrf_token: string; project: string; workspace: string; x_auth_token: string }, deptId: string, deptName: string, workspaceName?: string, startDate?: string, endDate?: string): Promise<UnitBoardData | null> =>
+    call<UnitBoardData | null>("walkin_fetch_unit_board", { url, auth, deptId, deptName, workspaceName, startDate, endDate }),
 
-  walkinFetchUnitList: (url: string, auth: { csrf_token: string; project: string; workspace: string; x_auth_token: string }, deptName: string, createdAtStart: string, createdAtEnd: string, pageNum?: number, pageSize?: number): Promise<UnitListItem[]> =>
-    call<UnitListItem[]>("walkin_fetch_unit_list", { url, auth, deptName, createdAtStart, createdAtEnd, pageNum, pageSize }),
+  walkinFetchUnitList: (url: string, auth: { csrf_token: string; project: string; workspace: string; x_auth_token: string }, deptName: string, workspaceName?: string, createdAtStart?: string, createdAtEnd?: string, pageNum?: number, pageSize?: number): Promise<UnitListItem[]> =>
+    call<UnitListItem[]>("walkin_fetch_unit_list", { url, auth, deptName, workspaceName, createdAtStart, createdAtEnd, pageNum, pageSize }),
 
   walkinCheckLogin: (url: string, auth: { csrf_token: string; project: string; workspace: string; x_auth_token: string }): Promise<LoginStatusResult> =>
     call<LoginStatusResult>("walkin_check_login", { url, auth }),

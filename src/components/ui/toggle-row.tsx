@@ -18,15 +18,15 @@ export function ToggleRow({
   disabled,
 }: ToggleRowProps) {
   return (
-    <div className="flex items-center justify-between gap-4 rounded-xl border border-border bg-card/50 p-4 transition-colors hover:bg-muted/50">
-      <div className="flex items-center gap-3">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-background ring-1 ring-border">
+    <div className="flex items-center justify-between gap-3 rounded-lg border border-border bg-card/50 p-3 transition-colors hover:bg-muted/50">
+      <div className="flex items-center gap-2.5">
+        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-background ring-1 ring-border">
           {icon}
         </div>
-        <div className="space-y-1">
-          <p className="text-sm font-medium leading-none">{title}</p>
+        <div className="space-y-0.5">
+          <p className="text-xs font-medium leading-none">{title}</p>
           {description ? (
-            <p className="text-xs text-muted-foreground">{description}</p>
+            <p className="text-[11px] text-muted-foreground">{description}</p>
           ) : null}
         </div>
       </div>

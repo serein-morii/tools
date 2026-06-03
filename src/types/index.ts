@@ -354,6 +354,7 @@ export interface GitLabConfig {
   walkin_dept_name: string;
   walkin_dept_id: string;
   walkin_workspace_name: string;
+  walkin_workspace_id: string;
   walkin_csrf_token: string;
   walkin_project_header: string;
   walkin_x_auth_token: string;

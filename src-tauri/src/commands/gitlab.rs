@@ -53,6 +53,7 @@ pub struct GitLabConfig {
     pub walkin_dept_name: String,
     pub walkin_dept_id: String,
     pub walkin_workspace_name: String,
+    pub walkin_workspace_id: String,
     pub walkin_csrf_token: String,
     pub walkin_project_header: String,
     pub walkin_x_auth_token: String,
@@ -90,6 +91,7 @@ impl Default for GitLabConfig {
             walkin_dept_name: String::new(),
             walkin_dept_id: String::new(),
             walkin_workspace_name: String::new(),
+            walkin_workspace_id: String::new(),
             walkin_csrf_token: String::new(),
             walkin_project_header: String::new(),
             walkin_x_auth_token: String::new(),
@@ -179,6 +181,7 @@ fn get_gitlab_config_from_settings(conn: &rusqlite::Connection) -> Result<GitLab
         walkin_dept_name: get_setting("walkin_dept_name", "产品架构"),
         walkin_dept_id: get_setting("walkin_dept_id", "a0a768d7-9e8d-448c-9b79-926d84f51ea1"),
         walkin_workspace_name: get_setting("walkin_workspace_name", "产品架构&PMO"),
+        walkin_workspace_id: get_setting("walkin_workspace_id", ""),
         walkin_csrf_token: get_setting("walkin_csrf_token", ""),
         walkin_project_header: get_setting("walkin_project_header", ""),
         walkin_x_auth_token: get_setting("walkin_x_auth_token", ""),
@@ -231,6 +234,7 @@ fn save_gitlab_config_to_settings(conn: &rusqlite::Connection, config: &GitLabCo
     SettingsDao::upsert(conn, "walkin_dept_name", &config.walkin_dept_name)?;
     SettingsDao::upsert(conn, "walkin_dept_id", &config.walkin_dept_id)?;
     SettingsDao::upsert(conn, "walkin_workspace_name", &config.walkin_workspace_name)?;
+    SettingsDao::upsert(conn, "walkin_workspace_id", &config.walkin_workspace_id)?;
     SettingsDao::upsert(conn, "walkin_csrf_token", &config.walkin_csrf_token)?;
     SettingsDao::upsert(conn, "walkin_project_header", &config.walkin_project_header)?;
     SettingsDao::upsert(conn, "walkin_x_auth_token", &config.walkin_x_auth_token)?;
@@ -744,6 +748,7 @@ pub async fn walkin_fetch_unit_board(
     auth: WalkinAuthParams,
     dept_id: String,
     dept_name: String,
+    workspace_name: Option<String>,
     start_date: Option<String>,
     end_date: Option<String>,
 ) -> Result<Option<UnitBoardData>> {
@@ -753,7 +758,8 @@ pub async fn walkin_fetch_unit_board(
         workspace: auth.workspace.clone(),
         x_auth_token: auth.x_auth_token,
     };
-    let client = WalkinClient::new(&url, walkin_auth, dept_name, auth.workspace)?;
+    let ws_name = workspace_name.unwrap_or_else(|| auth.workspace);
+    let client = WalkinClient::new(&url, walkin_auth, dept_name, ws_name)?;
     client.fetch_unit_board(&dept_id, start_date.as_deref(), end_date.as_deref()).await
 }
 
@@ -762,6 +768,7 @@ pub async fn walkin_fetch_unit_list(
     url: String,
     auth: WalkinAuthParams,
     dept_name: String,
+    workspace_name: Option<String>,
     created_at_start: String,
     created_at_end: String,
     page_num: Option<i32>,
@@ -773,7 +780,8 @@ pub async fn walkin_fetch_unit_list(
         workspace: auth.workspace.clone(),
         x_auth_token: auth.x_auth_token,
     };
-    let client = WalkinClient::new(&url, walkin_auth, dept_name, auth.workspace)?;
+    let ws_name = workspace_name.unwrap_or_else(|| auth.workspace);
+    let client = WalkinClient::new(&url, walkin_auth, dept_name, ws_name)?;
     client.fetch_unit_list(
         &created_at_start,
         &created_at_end,

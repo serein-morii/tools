@@ -641,6 +641,58 @@ export function GitLabSettingsPage() {
         </CardContent>
       </Card>
 
+      {/* Git 和 Walkin 名称映射 */}
+      <Card className="mb-3">
+        <CardContent className="p-3 space-y-2">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium">Git 和 Walkin 名称映射</span>
+            <span className="text-xs text-muted-foreground">如果名称不一致，可通过此映射</span>
+          </div>
+          {(formData.walkin_project_mappings || []).map((m, idx) => (
+            <div key={idx} className="flex items-center gap-2">
+              <Input
+                placeholder="GitLab 项目路径"
+                value={m.gitlab_project}
+                onChange={(e) => {
+                  const u = [...(formData.walkin_project_mappings || [])];
+                  u[idx] = { ...u[idx], gitlab_project: e.target.value };
+                  setFormData({ ...formData, walkin_project_mappings: u });
+                }}
+                className="h-8 text-xs flex-1"
+              />
+              <span className="text-muted-foreground text-xs shrink-0">→</span>
+              <Input
+                placeholder="Walkin 项目名"
+                value={m.walkin_project}
+                onChange={(e) => {
+                  const u = [...(formData.walkin_project_mappings || [])];
+                  u[idx] = { ...u[idx], walkin_project: e.target.value };
+                  setFormData({ ...formData, walkin_project_mappings: u });
+                }}
+                className="h-8 text-xs flex-1"
+              />
+              <X
+                className="h-3.5 w-3.5 cursor-pointer hover:text-destructive shrink-0"
+                onClick={() => setFormData({
+                  ...formData,
+                  walkin_project_mappings: (formData.walkin_project_mappings || []).filter((_, i) => i !== idx),
+                })}
+              />
+            </div>
+          ))}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setFormData({
+              ...formData,
+              walkin_project_mappings: [...(formData.walkin_project_mappings || []), { gitlab_project: "", walkin_project: "" }],
+            })}
+          >
+            <Plus className="h-3.5 w-3.5 mr-1" />添加映射
+          </Button>
+        </CardContent>
+      </Card>
+
       {/* Save Button */}
       <div className="flex justify-end gap-4 items-center">
         <Button variant="outline" size="sm" onClick={() => setFormData(defaultConfig)}>
