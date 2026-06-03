@@ -10,7 +10,7 @@ import { ScanProgressModal } from "@/components/modules/gitlab/ScanProgressModal
 import { toast } from "sonner";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { formatTimestamp, formatNumber } from "@/lib/gitlab/format";
-import type { GitLabScanHistory, GitLabProjectResult } from "@/types";
+import type { GitLabScanHistory, GitLabProjectResult, DeveloperStat } from "@/types";
 
 function TrendIndicator({ current, previous, isPercent = false }: { current: number; previous?: number; isPercent?: boolean }) {
   if (previous === undefined) return null;
@@ -45,6 +45,8 @@ function SummaryCards({
   previous?: GitLabScanHistory;
 }) {
   const { t } = useTranslation();
+  const [expandedCard, setExpandedCard] = useState<string | null>(null);
+
   const currentContributors = useMemo(
     () => current ? JSON.parse(current.contributors || "[]").length : 0,
     [current],
@@ -53,27 +55,43 @@ function SummaryCards({
     () => previous ? JSON.parse(previous.contributors || "[]").length : undefined,
     [previous],
   );
+  const currentContributorList = useMemo(
+    () => current ? JSON.parse(current.contributors || "[]") as string[] : [],
+    [current],
+  );
+  const currentDevStats: DeveloperStat[] = useMemo(
+    () => current ? JSON.parse(current.developer_stats || "[]") : [],
+    [current],
+  );
+  const currentProjects: GitLabProjectResult[] = useMemo(
+    () => current ? JSON.parse(current.summary || "[]") : [],
+    [current],
+  );
 
   const cards = [
     {
+      id: "projects",
       icon: BarChart3,
       label: t("gitlab.overview.changedProjects"),
       value: current?.total_projects ?? 0,
       previousValue: previous?.total_projects,
     },
     {
+      id: "commits",
       icon: GitCommit,
       label: t("gitlab.overview.totalCommits"),
       value: current?.total_commits ?? 0,
       previousValue: previous?.total_commits,
     },
     {
+      id: "contributors",
       icon: Users,
       label: t("gitlab.overview.contributors"),
       value: currentContributors,
       previousValue: previousContributors,
     },
     {
+      id: "coverage",
       icon: FlaskConical,
       label: "单测覆盖项目",
       value: current?.test_projects ?? 0,
@@ -81,25 +99,119 @@ function SummaryCards({
     },
   ];
 
+  const toggleCard = (id: string) => {
+    setExpandedCard(expandedCard === id ? null : id);
+  };
+
   return (
-    <div className="grid grid-cols-4 gap-2 px-4 py-2 bg-muted/30 rounded-lg border">
-      {cards.map((card) => (
-        <div key={card.label} className="rounded-md border bg-card p-2">
-          <div className="flex items-center gap-1.5">
-            <card.icon className="h-3 w-3 text-muted-foreground shrink-0" />
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-1">
-                <span className="text-sm font-bold">{card.value}</span>
-                <TrendIndicator
-                  current={typeof card.value === 'string' ? parseFloat(card.value) || 0 : card.value}
-                  previous={card.previousValue}
-                />
+    <div className="space-y-1">
+      <div className="grid grid-cols-4 gap-2 px-4 py-2 bg-muted/30 rounded-lg border">
+        {cards.map((card) => (
+          <div
+            key={card.id}
+            className="rounded-md border bg-card p-2 cursor-pointer hover:bg-muted/50 transition-colors"
+            onClick={() => toggleCard(card.id)}
+          >
+            <div className="flex items-center gap-1.5">
+              <card.icon className="h-3 w-3 text-muted-foreground shrink-0" />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1">
+                  <span className="text-sm font-bold">{card.value}</span>
+                  <TrendIndicator
+                    current={typeof card.value === 'string' ? parseFloat(card.value) || 0 : card.value}
+                    previous={card.previousValue}
+                  />
+                </div>
+                <p className="text-[9px] text-muted-foreground truncate">{card.label}</p>
               </div>
-              <p className="text-[9px] text-muted-foreground truncate">{card.label}</p>
             </div>
           </div>
+        ))}
+      </div>
+
+      {/* 下探详情面板 */}
+      {expandedCard && current && (
+        <div className="rounded-lg border bg-card/50 p-3 animate-in fade-in slide-in-from-top-1 duration-150">
+          {expandedCard === "projects" && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                <span>项目列表 ({current.total_projects})</span>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-1.5 max-h-48 overflow-y-auto">
+                {currentProjects.map((p) => (
+                  <div key={p.project_id} className="flex items-center gap-1.5 rounded bg-muted/30 px-2 py-1">
+                    <span className="text-[10px] truncate flex-1" title={p.project_name}>{p.project_name.split("/").pop()}</span>
+                    {p.has_test && <span className="shrink-0 text-[10px] text-emerald-600 font-medium">{p.commits}c</span>}
+                    {!p.has_test && <span className="shrink-0 text-[10px] text-muted-foreground">✗</span>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          {expandedCard === "commits" && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-4 text-[10px] text-muted-foreground">
+                <span>总提交: <strong className="text-foreground">{current.total_commits}</strong></span>
+                <span>+行: <strong className="text-emerald-600">{current.total_lines_added.toLocaleString()}</strong></span>
+                <span>-行: <strong className="text-red-600">{current.total_lines_removed.toLocaleString()}</strong></span>
+              </div>
+              {currentDevStats.length > 0 && (
+                <div className="space-y-1 max-h-36 overflow-y-auto">
+                  <div className="text-[10px] text-muted-foreground">开发者贡献明细</div>
+                  {currentDevStats.slice(0, 10).map((dev, i) => (
+                    <div key={dev.name} className="flex items-center gap-2 text-[10px] bg-muted/20 rounded px-2 py-1">
+                      <span className="w-3.5 text-center shrink-0">{["🥇","🥈","🥉","4️⃣","5️⃣","6️⃣","7️⃣","8️⃣","9️⃣","🔟"][i]}</span>
+                      <span className="flex-1 truncate">{dev.name}</span>
+                      <span className="text-muted-foreground">{dev.commits} commits</span>
+                      <span className="text-emerald-600">+{dev.lines_added.toLocaleString()}</span>
+                      <span className="text-red-600">-{dev.lines_removed.toLocaleString()}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+          {expandedCard === "contributors" && (
+            <div className="space-y-2">
+              <div className="text-[10px] text-muted-foreground">
+                贡献者 ({currentContributors} 人)
+              </div>
+              <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto">
+                {currentContributorList.map((name) => (
+                  <span key={name} className="rounded-md bg-muted/50 px-2 py-0.5 text-[10px]">{name}</span>
+                ))}
+              </div>
+            </div>
+          )}
+          {expandedCard === "coverage" && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-4 text-[10px] text-muted-foreground">
+                <span>有单测: <strong className="text-emerald-600">{current.test_projects}</strong></span>
+                <span>无单测: <strong className="text-destructive">{current.total_projects - current.test_projects}</strong></span>
+                <span>覆盖率: <strong>{current.total_projects > 0 ? Math.round((current.test_projects / current.total_projects) * 100) : 0}%</strong></span>
+              </div>
+              <div className="w-full bg-muted rounded-full h-1.5">
+                <div
+                  className="h-1.5 rounded-full bg-emerald-500"
+                  style={{ width: `${current.total_projects > 0 ? (current.test_projects / current.total_projects) * 100 : 0}%` }}
+                />
+              </div>
+              <div className="space-y-1 max-h-36 overflow-y-auto">
+                <div className="text-[10px] text-muted-foreground">无单测项目</div>
+                {currentProjects.filter(p => !p.has_test).slice(0, 10).map((p) => (
+                  <div key={p.project_id} className="flex items-center text-[10px] text-muted-foreground bg-muted/20 rounded px-2 py-0.5">
+                    <span className="flex-1 truncate">{p.project_name.split("/").pop()}</span>
+                    <span>{p.commits} commits</span>
+                  </div>
+                ))}
+                {currentProjects.filter(p => !p.has_test).length > 10 && (
+                  <div className="text-[10px] text-muted-foreground text-center">...还有 {currentProjects.filter(p => !p.has_test).length - 10} 个</div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
-      ))}
+      )}
     </div>
   );
 }
@@ -879,6 +991,55 @@ export function GitLabOverviewPage() {
             <TrendChart history={history || []} />
             <ContributorRanking history={history || []} />
           </div>
+
+          {/* Trend Detail - incremental issues summary */}
+          {selectedHistory && (() => {
+            const projects: GitLabProjectResult[] = JSON.parse(selectedHistory.summary || "[]");
+            const walkinProjects = projects.filter(p => p.walkin_metrics);
+            if (walkinProjects.length === 0) return null;
+
+            let totalBugs = 0, totalVulns = 0, totalSmells = 0, totalDup = 0;
+            for (const p of walkinProjects) {
+              totalBugs += p.walkin_metrics?.bugs || 0;
+              totalVulns += p.walkin_metrics?.vulnerabilities || 0;
+              totalSmells += p.walkin_metrics?.code_smells || 0;
+              if (p.walkin_metrics?.duplicated_lines_density != null) totalDup++;
+            }
+            const avgDup = totalDup > 0
+              ? (walkinProjects.reduce((s, p) => s + (p.walkin_metrics?.duplicated_lines_density || 0), 0) / totalDup).toFixed(1)
+              : "-";
+            return (
+              <div className="mt-2 rounded-lg border bg-card/50 p-3">
+                <div className="flex items-center gap-1.5 mb-2">
+                  <ShieldAlert className="h-3 w-3 text-muted-foreground" />
+                  <span className="text-xs font-medium">Walkin 代码质量汇总</span>
+                  <span className="text-[10px] text-muted-foreground">({walkinProjects.length} 项目)</span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[10px]">
+                  <div className="rounded bg-muted/30 p-2 text-center">
+                    <Bug className="h-3 w-3 mx-auto mb-0.5 text-muted-foreground" />
+                    <div className="font-medium">{totalBugs}</div>
+                    <div className="text-muted-foreground">Bug</div>
+                  </div>
+                  <div className="rounded bg-muted/30 p-2 text-center">
+                    <ShieldAlert className="h-3 w-3 mx-auto mb-0.5 text-muted-foreground" />
+                    <div className="font-medium">{totalVulns}</div>
+                    <div className="text-muted-foreground">漏洞</div>
+                  </div>
+                  <div className="rounded bg-muted/30 p-2 text-center">
+                    <Zap className="h-3 w-3 mx-auto mb-0.5 text-muted-foreground" />
+                    <div className="font-medium">{totalSmells}</div>
+                    <div className="text-muted-foreground">异味</div>
+                  </div>
+                  <div className="rounded bg-muted/30 p-2 text-center">
+                    <BarChart3 className="h-3 w-3 mx-auto mb-0.5 text-muted-foreground" />
+                    <div className="font-medium">{avgDup}%</div>
+                    <div className="text-muted-foreground">重复率</div>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Project Table */}
           <div className="mt-3">
