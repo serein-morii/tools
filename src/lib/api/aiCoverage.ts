@@ -34,6 +34,20 @@ export interface AiCoverageAuthor {
   ai_rate: number;
 }
 
+export interface AiCoverageCommit {
+  commit_id: number;
+  gitlab_id: string;
+  short_sha: string;
+  project_name: string;
+  project_id: number;
+  project_gitlab_id: number;
+  title: string;
+  committed_at: string;
+  additions: number;
+  ai_lines: number;
+  ai_rate: number;
+}
+
 export const aiCoverageApi = {
   getCoverage: (startDate: string, endDate: string): Promise<AiCoverageResponse> =>
     call<AiCoverageResponse>("get_ai_coverage", { startDate, endDate }),
@@ -47,6 +61,21 @@ export const aiCoverageApi = {
     call<AiCoverageAuthor[]>("get_ai_coverage_authors", {
       department,
       departmentL2,
+      startDate,
+      endDate,
+    }),
+
+  getCoverageCommits: (
+    department: string,
+    departmentL2: string | null,
+    authorEmail: string,
+    startDate: string,
+    endDate: string
+  ): Promise<AiCoverageCommit[]> =>
+    call<AiCoverageCommit[]>("get_ai_coverage_commits", {
+      department,
+      departmentL2,
+      authorEmail,
       startDate,
       endDate,
     }),

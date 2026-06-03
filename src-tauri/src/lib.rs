@@ -110,6 +110,7 @@ pub fn run() {
             commands::sonar_generate_prompt,
             commands::get_ai_coverage,
             commands::get_ai_coverage_authors,
+            commands::get_ai_coverage_commits,
         ])
         .setup(|app| {
             // Store app handle for auto-launch

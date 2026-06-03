@@ -38,6 +38,21 @@ pub struct AiCoverageAuthor {
     pub ai_rate: f64,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AiCoverageCommit {
+    pub commit_id: i64,
+    pub gitlab_id: String,
+    pub short_sha: String,
+    pub project_name: String,
+    pub project_id: i64,
+    pub project_gitlab_id: i64,
+    pub title: String,
+    pub committed_at: String,
+    pub additions: i64,
+    pub ai_lines: i64,
+    pub ai_rate: f64,
+}
+
 #[tauri::command]
 pub async fn get_ai_coverage(start_date: String, end_date: String) -> Result<AiCoverageResponse, String> {
     let client = reqwest::Client::builder()
@@ -110,6 +125,53 @@ pub async fn get_ai_coverage_authors(
     }
 
     let data: Vec<AiCoverageAuthor> = resp
+        .json()
+        .await
+        .map_err(|e| format!("Parse error: {}", e))?;
+
+    Ok(data)
+}
+
+#[tauri::command]
+pub async fn get_ai_coverage_commits(
+    department: String,
+    department_l2: Option<String>,
+    author_email: String,
+    start_date: String,
+    end_date: String,
+) -> Result<Vec<AiCoverageCommit>, String> {
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(30))
+        .danger_accept_invalid_certs(true)
+        .build()
+        .map_err(|e| e.to_string())?;
+
+    let mut url = format!(
+        "http://10.24.12.40/api/ai-stats/coverage-author-commits?department={}&start_date={}&end_date={}&author_email={}",
+        urlencoding::encode(&department),
+        start_date,
+        end_date,
+        urlencoding::encode(&author_email)
+    );
+
+    if let Some(l2) = department_l2 {
+        url.push_str(&format!("&department_l2={}", urlencoding::encode(&l2)));
+    }
+
+    let resp = client
+        .get(&url)
+        .header("Accept", "application/json, text/plain, */*")
+        .header("Referer", "http://10.24.12.40/ai-stats/department")
+        .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36")
+        .send()
+        .await
+        .map_err(|e| format!("Request failed: {}", e))?;
+
+    if !resp.status().is_success() {
+        return Err(format!("API error: {}", resp.status()));
+    }
+
+    let data: Vec<AiCoverageCommit> = resp
         .json()
         .await
         .map_err(|e| format!("Parse error: {}", e))?;
