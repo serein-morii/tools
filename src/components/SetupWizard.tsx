@@ -34,7 +34,6 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
   const [connectionStatus, setConnectionStatus] = useState<"idle" | "testing" | "success" | "failed">("idle");
   const [walkinLoginStatus, setWalkinLoginStatus] = useState<"idle" | "logging" | "success" | "failed">("idle");
   const [showToken, setShowToken] = useState(false);
-  const [showPassword] = useState(false);
 
   // Captcha dialog state
   const [showCaptchaDialog, setShowCaptchaDialog] = useState(false);
@@ -68,7 +67,7 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
   }, [existingConfig]);
 
   const steps: { key: Step; title: string; icon: React.ReactNode }[] = [
-    { key: "welcome", title: "欢迎", icon: <span className="text-base">👋</span> },
+    { key: "welcome", title: "欢迎", icon: <span className="h-3.5 w-3.5 flex items-center justify-center">👋</span> },
     { key: "gitlab", title: "GitLab 代码", icon: <GitBranch className="h-3.5 w-3.5" /> },
     { key: "walkin", title: "单测覆盖率", icon: <FlaskConical className="h-3.5 w-3.5" /> },
     { key: "done", title: "完成", icon: <Check className="h-3.5 w-3.5" /> },
@@ -329,14 +328,27 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
           </div>
 
           {/* Content - fixed height for all steps */}
-          <div className="p-6 h-[180px] flex flex-col">
+          <div className="p-6 h-[220px] flex flex-col">
             {/* Welcome step */}
             {currentStep === "welcome" && (
-              <div className="flex-1 flex flex-col items-center justify-center text-center">
-                <h2 className="text-lg font-bold mb-2">欢迎使用 Dev Tools</h2>
-                <p className="text-sm text-muted-foreground">
-                  这是一个开发者工具箱，帮助您管理代码扫描、单测覆盖率等任务。让我们开始配置吧！
-                </p>
+              <div className="flex-1 flex flex-col">
+                <h2 className="text-base font-bold mb-3 text-center">欢迎使用 Dev Tools</h2>
+                <div className="flex-1 flex flex-col justify-center gap-2">
+                  <div className="flex items-center gap-3 p-2 rounded-lg border bg-muted/30">
+                    <GitBranch className="h-4 w-4 text-primary shrink-0" />
+                    <div>
+                      <p className="text-xs font-medium">GitLab 代码扫描</p>
+                      <p className="text-[10px] text-muted-foreground">扫描代码提交，检测单测覆盖情况</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 p-2 rounded-lg border bg-muted/30">
+                    <FlaskConical className="h-4 w-4 text-primary shrink-0" />
+                    <div>
+                      <p className="text-xs font-medium">Walkin 代码质量</p>
+                      <p className="text-[10px] text-muted-foreground">获取覆盖率报告，生成单测 Prompt</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
 
@@ -419,7 +431,7 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
                     <div>
                       <label className="text-xs font-medium">密码</label>
                       <Input
-                        type={showPassword ? "text" : "password"}
+                        type="password"
                         placeholder="LDAP 密码"
                         value={walkinForm.password}
                         onChange={(e) => setWalkinForm({ ...walkinForm, password: e.target.value })}
@@ -447,14 +459,23 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
 
             {/* Done step */}
             {currentStep === "done" && (
-              <div className="flex-1 flex flex-col items-center justify-center text-center">
-                <h2 className="text-lg font-bold mb-2">🎉 配置完成！</h2>
-                <p className="text-sm text-muted-foreground mb-2">
-                  您已成功完成初始配置。现在可以开始使用 Dev Tools 了！
-                </p>
-                <div className="text-xs text-muted-foreground space-y-0.5">
-                  <p>• 在 <strong>GitLab 代码</strong> 中查看代码扫描结果</p>
-                  <p>• 在 <strong>单测覆盖率</strong> 中生成单测 Prompt</p>
+              <div className="flex-1 flex flex-col">
+                <h2 className="text-base font-bold mb-3 text-center">🎉 配置完成！</h2>
+                <div className="flex-1 flex flex-col justify-center gap-2">
+                  <div className="flex items-center gap-3 p-2 rounded-lg border bg-muted/30">
+                    <Check className="h-4 w-4 text-emerald-600 shrink-0" />
+                    <div>
+                      <p className="text-xs font-medium">GitLab 代码扫描</p>
+                      <p className="text-[10px] text-muted-foreground">已配置，可查看代码扫描结果</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 p-2 rounded-lg border bg-muted/30">
+                    <Check className="h-4 w-4 text-emerald-600 shrink-0" />
+                    <div>
+                      <p className="text-xs font-medium">Walkin 代码质量</p>
+                      <p className="text-[10px] text-muted-foreground">已配置，可生成单测 Prompt</p>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
