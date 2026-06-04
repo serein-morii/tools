@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
-import { ChevronRight, ChevronLeft, GitBranch, FlaskConical, Check, SkipForward, Loader2 } from "lucide-react";
+import { ChevronRight, ChevronLeft, GitBranch, FlaskConical, Check, SkipForward, Loader2, KeyRound, Building2, FolderGit2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useGitLabConfig, useSaveGitLabConfig, useTestGitLabConnection } from "@/lib/query/gitlabQueries";
+import { gitlabApi } from "@/lib/api/gitlab";
 import { defaultGitLabConfig } from "@/lib/gitlab/defaults";
-import type { GitLabConfig } from "@/types";
+import type { GitLabConfig, WorkspaceItem } from "@/types";
 import { toast } from "sonner";
 
 const SETUP_COMPLETED_KEY = "app_setup_completed";
@@ -19,9 +20,22 @@ type Step = "welcome" | "gitlab" | "walkin" | "done";
 export function SetupWizard({ onComplete }: SetupWizardProps) {
   const [currentStep, setCurrentStep] = useState<Step>("welcome");
   const [gitlabForm, setGitlabForm] = useState<GitLabConfig>(defaultGitLabConfig);
-  const [walkinForm, setWalkinForm] = useState({ url: "", deptId: "", deptName: "", workspaceName: "" });
+  const [walkinForm, setWalkinForm] = useState({
+    url: "",
+    username: "",
+    password: "",
+  });
+  const [walkinData, setWalkinData] = useState({
+    deptId: "",
+    deptName: "",
+    workspaceId: "",
+    workspaceName: "",
+  });
+  const [workspaces, setWorkspaces] = useState<WorkspaceItem[]>([]);
   const [connectionStatus, setConnectionStatus] = useState<"idle" | "testing" | "success" | "failed">("idle");
+  const [walkinLoginStatus, setWalkinLoginStatus] = useState<"idle" | "logging" | "success" | "failed">("idle");
   const [showToken, setShowToken] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const { data: existingConfig } = useGitLabConfig();
   const saveConfig = useSaveGitLabConfig();
@@ -34,8 +48,13 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
       if (existingConfig.walkin_url) {
         setWalkinForm({
           url: existingConfig.walkin_url,
+          username: existingConfig.ldap_profiles?.[0]?.username || "",
+          password: existingConfig.ldap_profiles?.[0]?.password || "",
+        });
+        setWalkinData({
           deptId: existingConfig.walkin_dept_id || "",
           deptName: existingConfig.walkin_dept_name || "",
+          workspaceId: "",
           workspaceName: existingConfig.walkin_workspace_name || "",
         });
       }
@@ -74,6 +93,71 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
     }
   };
 
+  // Walkin login and fetch workspaces
+  const handleWalkinLogin = async () => {
+    if (!walkinForm.url || !walkinForm.username || !walkinForm.password) {
+      toast.error("请填写 Walkin 地址、用户名和密码");
+      return;
+    }
+    setWalkinLoginStatus("logging");
+    try {
+      // Auto login
+      const result = await gitlabApi.walkinAutoLogin(walkinForm.url, walkinForm.username, walkinForm.password);
+
+      if (result.success && result.csrf_token && result.x_auth_token) {
+        // Fetch workspaces
+        const auth = {
+          csrf_token: result.csrf_token,
+          project: result.project || "",
+          workspace: result.workspace || "",
+          x_auth_token: result.x_auth_token,
+        };
+
+        const workspaceList = await gitlabApi.walkinFetchWorkspaces(walkinForm.url, auth);
+        setWorkspaces(workspaceList);
+
+        // Auto select first workspace if available
+        if (workspaceList.length > 0) {
+          const firstWs = workspaceList[0];
+          setWalkinData(prev => ({
+            ...prev,
+            workspaceId: firstWs.id,
+            workspaceName: firstWs.name,
+          }));
+        }
+
+        // Store auth tokens in form
+        setGitlabForm(prev => ({
+          ...prev,
+          walkin_csrf_token: result.csrf_token || "",
+          walkin_project_header: result.project || "",
+          walkin_workspace_name: result.workspace || "",
+          walkin_x_auth_token: result.x_auth_token || "",
+          ldap_profiles: [{
+            id: "default",
+            username: walkinForm.username,
+            password: walkinForm.password,
+            label: "默认",
+          }],
+          selected_ldap_id: "default",
+        }));
+
+        setWalkinLoginStatus("success");
+        toast.success("Walkin 登录成功，已获取工作空间列表");
+      } else if (result.needs_manual_captcha) {
+        setWalkinLoginStatus("failed");
+        toast.warning("需要手动输入验证码，请稍后在设置页面完成登录");
+      } else {
+        setWalkinLoginStatus("failed");
+        toast.error(result.message || "登录失败");
+      }
+    } catch (error) {
+      setWalkinLoginStatus("failed");
+      const msg = error instanceof Error ? error.message : String(error);
+      toast.error(`登录失败: ${msg}`);
+    }
+  };
+
   const handleNext = () => {
     const idx = steps.findIndex(s => s.key === currentStep);
     if (idx < steps.length - 1) {
@@ -89,20 +173,18 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
   };
 
   const handleSkip = () => {
-    // Mark setup as completed even if skipped
     localStorage.setItem(SETUP_COMPLETED_KEY, "true");
     onComplete();
   };
 
   const handleComplete = async () => {
-    // Save all config
     const finalConfig: GitLabConfig = {
       ...gitlabForm,
       walkin_url: walkinForm.url,
-      walkin_dept_id: walkinForm.deptId,
-      walkin_dept_name: walkinForm.deptName,
-      walkin_workspace_name: walkinForm.workspaceName,
-      walkin_enabled: !!walkinForm.url,
+      walkin_dept_id: walkinData.deptId,
+      walkin_dept_name: walkinData.deptName,
+      walkin_workspace_name: walkinData.workspaceName,
+      walkin_enabled: !!walkinForm.url && walkinLoginStatus === "success",
     };
 
     try {
@@ -230,12 +312,15 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
                 <h2 className="text-lg font-semibold">Walkin 代码质量集成</h2>
               </div>
               <p className="text-sm text-muted-foreground">
-                配置 Walkin 代码质量平台连接，获取单测覆盖率等数据。此步骤可选，您可以稍后在设置中配置。
+                配置 Walkin 平台账号，登录后自动获取部门和工作空间信息。此步骤可选，您可以稍后在设置中配置。
               </p>
 
               <div className="space-y-3">
+                {/* Walkin URL */}
                 <div className="space-y-1.5">
-                  <label className="text-sm font-medium">Walkin 地址</label>
+                  <label className="text-sm font-medium flex items-center gap-1">
+                    <KeyRound className="h-3.5 w-3.5" /> Walkin 地址
+                  </label>
                   <Input
                     placeholder="http://walkin.jms.com"
                     value={walkinForm.url}
@@ -243,38 +328,112 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
                   />
                 </div>
 
+                {/* Username & Password */}
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
-                    <label className="text-sm font-medium">部门 ID</label>
+                    <label className="text-sm font-medium">用户名</label>
                     <Input
-                      placeholder="部门 ID"
-                      value={walkinForm.deptId}
-                      onChange={(e) => setWalkinForm({ ...walkinForm, deptId: e.target.value })}
+                      placeholder="LDAP 用户名"
+                      value={walkinForm.username}
+                      onChange={(e) => setWalkinForm({ ...walkinForm, username: e.target.value })}
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-sm font-medium">部门名称</label>
-                    <Input
-                      placeholder="部门名称"
-                      value={walkinForm.deptName}
-                      onChange={(e) => setWalkinForm({ ...walkinForm, deptName: e.target.value })}
-                    />
+                    <label className="text-sm font-medium">密码</label>
+                    <div className="flex gap-2">
+                      <Input
+                        type={showPassword ? "text" : "password"}
+                        placeholder="LDAP 密码"
+                        value={walkinForm.password}
+                        onChange={(e) => setWalkinForm({ ...walkinForm, password: e.target.value })}
+                        className="flex-1"
+                      />
+                      <Button variant="outline" size="sm" onClick={() => setShowPassword(!showPassword)}>
+                        {showPassword ? "隐藏" : "显示"}
+                      </Button>
+                    </div>
                   </div>
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-sm font-medium">工作空间名称</label>
-                  <Input
-                    placeholder="默认工作空间"
-                    value={walkinForm.workspaceName}
-                    onChange={(e) => setWalkinForm({ ...walkinForm, workspaceName: e.target.value })}
-                  />
+                {/* Login button */}
+                <div className="flex items-center gap-4">
+                  <Button
+                    variant="outline"
+                    onClick={handleWalkinLogin}
+                    disabled={walkinLoginStatus === "logging" || !walkinForm.url || !walkinForm.username || !walkinForm.password}
+                  >
+                    {walkinLoginStatus === "logging" && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    登录获取信息
+                  </Button>
+                  {walkinLoginStatus === "success" && (
+                    <span className="text-sm text-emerald-600 flex items-center gap-1">
+                      <Check className="h-4 w-4" /> 登录成功
+                    </span>
+                  )}
+                  {walkinLoginStatus === "failed" && (
+                    <span className="text-sm text-destructive">登录失败</span>
+                  )}
                 </div>
-              </div>
 
-              <p className="text-xs text-muted-foreground">
-                💡 登录认证将在首次使用时自动进行，请在配置后前往"单测覆盖率"页面登录。
-              </p>
+                {/* Workspace selection (after login) */}
+                {walkinLoginStatus === "success" && workspaces.length > 0 && (
+                  <div className="space-y-3 p-3 border rounded-lg bg-muted/30">
+                    <div className="space-y-1.5">
+                      <label className="text-sm font-medium flex items-center gap-1">
+                        <FolderGit2 className="h-3.5 w-3.5" /> 工作空间
+                      </label>
+                      <div className="flex flex-wrap gap-2">
+                        {workspaces.map((ws) => (
+                          <Button
+                            key={ws.id}
+                            variant={walkinData.workspaceId === ws.id ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setWalkinData({
+                              ...walkinData,
+                              workspaceId: ws.id,
+                              workspaceName: ws.name,
+                            })}
+                          >
+                            {ws.name}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1.5">
+                        <label className="text-sm font-medium flex items-center gap-1">
+                          <Building2 className="h-3.5 w-3.5" /> 部门 ID
+                        </label>
+                        <Input
+                          placeholder="自动获取或手动输入"
+                          value={walkinData.deptId}
+                          onChange={(e) => setWalkinData({ ...walkinData, deptId: e.target.value })}
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-sm font-medium">部门名称</label>
+                        <Input
+                          placeholder="自动获取或手动输入"
+                          value={walkinData.deptName}
+                          onChange={(e) => setWalkinData({ ...walkinData, deptName: e.target.value })}
+                        />
+                      </div>
+                    </div>
+
+                    <p className="text-xs text-muted-foreground">
+                      💡 已自动获取工作空间列表，请选择默认工作空间。部门信息可手动调整。
+                    </p>
+                  </div>
+                )}
+
+                {/* Manual input if login failed or skipped */}
+                {walkinLoginStatus !== "success" && (
+                  <p className="text-xs text-muted-foreground">
+                    💡 登录后自动获取工作空间和部门信息。如果验证码识别失败，可稍后在设置页面完成。
+                  </p>
+                )}
+              </div>
             </div>
           )}
 
