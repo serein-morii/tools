@@ -334,7 +334,7 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
             </div>
           </div>
 
-          <CardContent className="p-6">
+          <CardContent className="p-6 min-h-[320px]">
             {/* Welcome step */}
             {currentStep === "welcome" && (
               <div className="text-center space-y-4 py-6">
