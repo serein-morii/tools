@@ -1,0 +1,19 @@
+src/components/SetupWizard.tsx
+  s_10b01522c7aa66::t_baaa30bec25424 337
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "25837a463f28159745a688e355c4d3d821bd2af8",
+  "prompts": {},
+  "sessions": {
+    "s_10b01522c7aa66": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "17223fd4-466e-4ded-bf27-ae020f2af767",
+        "model": "astron-code-latest"
+      },
+      "human_author": "pengchenghui <pengchenghui@jtexpress.com>"
+    }
+  }
+}
