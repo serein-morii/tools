@@ -107,10 +107,12 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
 
     if (workspaceList.length > 0) {
       const firstWs = workspaceList[0];
+      const deptName = firstWs.name.split(/[-&]/)[0] || firstWs.name;
       setWalkinData(prev => ({
         ...prev,
         workspaceId: firstWs.id,
         workspaceName: firstWs.name,
+        deptName: deptName,
       }));
     }
   };
@@ -465,11 +467,16 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
                               key={ws.id}
                               variant={walkinData.workspaceId === ws.id ? "default" : "outline"}
                               size="sm"
-                              onClick={() => setWalkinData({
-                                ...walkinData,
-                                workspaceId: ws.id,
-                                workspaceName: ws.name,
-                              })}
+                              onClick={() => {
+                                // Extract dept name from workspace name (e.g., "产品架构&PMO-yl-jmsuk-lmdm-api" -> "产品架构&PMO")
+                                const deptName = ws.name.split(/[-&]/)[0] || ws.name;
+                                setWalkinData({
+                                  ...walkinData,
+                                  workspaceId: ws.id,
+                                  workspaceName: ws.name,
+                                  deptName: deptName,
+                                });
+                              }}
                             >
                               {ws.name}
                             </Button>
