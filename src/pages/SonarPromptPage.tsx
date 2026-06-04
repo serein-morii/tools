@@ -76,6 +76,19 @@ export function SonarPromptPage() {
         if (config.select_page_type) {
             setPageType(config.select_page_type);
         }
+        // 同步覆盖率页面状态
+        if (config.walkin_workspace_name) {
+            setCoverageWorkspace(config.walkin_workspace_name);
+        }
+        if (config.walkin_dept_id) {
+            setCoverageDeptId(config.walkin_dept_id);
+        }
+        if (config.walkin_dept_name) {
+            setCoverageDeptName(config.walkin_dept_name);
+        }
+        if (config.walkin_workspace_id) {
+            setCoverageWorkspaceId(config.walkin_workspace_id);
+        }
     }, [config]);
 
     const handleWalkinIntervalChange = (interval: number) => {
