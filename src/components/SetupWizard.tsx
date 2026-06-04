@@ -107,13 +107,41 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
 
     if (workspaceList.length > 0) {
       const firstWs = workspaceList[0];
-      const deptName = firstWs.name.split(/[-&]/)[0] || firstWs.name;
+      // Fetch dept info for first workspace
+      await fetchDeptForWorkspace(firstWs.id, firstWs.name, auth);
+    }
+  };
+
+  // Fetch dept info for a workspace
+  const fetchDeptForWorkspace = async (workspaceId: string, workspaceName: string, auth: { csrf_token: string; project: string; workspace: string; x_auth_token: string }) => {
+    try {
+      const projects = await gitlabApi.walkinFetchRelatedProjects(walkinForm.url, auth, walkinForm.username, workspaceId);
+      if (projects.length > 0) {
+        const deptId = projects[0].id;
+        const deptName = projects[0].name;
+        setWalkinData(prev => ({
+          ...prev,
+          workspaceId: workspaceId,
+          workspaceName: workspaceName,
+          deptId: deptId,
+          deptName: deptName,
+        }));
+        toast.success(`已切换到部门: ${deptName}`);
+      } else {
+        setWalkinData(prev => ({
+          ...prev,
+          workspaceId: workspaceId,
+          workspaceName: workspaceName,
+        }));
+        toast.warning("该工作空间下没有关联部门");
+      }
+    } catch (e) {
       setWalkinData(prev => ({
         ...prev,
-        workspaceId: firstWs.id,
-        workspaceName: firstWs.name,
-        deptName: deptName,
+        workspaceId: workspaceId,
+        workspaceName: workspaceName,
       }));
+      toast.error("获取部门失败: " + (e instanceof Error ? e.message : String(e)));
     }
   };
 
@@ -467,15 +495,15 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
                               key={ws.id}
                               variant={walkinData.workspaceId === ws.id ? "default" : "outline"}
                               size="sm"
-                              onClick={() => {
-                                // Extract dept name from workspace name (e.g., "产品架构&PMO-yl-jmsuk-lmdm-api" -> "产品架构&PMO")
-                                const deptName = ws.name.split(/[-&]/)[0] || ws.name;
-                                setWalkinData({
-                                  ...walkinData,
-                                  workspaceId: ws.id,
-                                  workspaceName: ws.name,
-                                  deptName: deptName,
-                                });
+                              onClick={async () => {
+                                // Fetch dept info for selected workspace
+                                const auth = {
+                                  csrf_token: gitlabForm.walkin_csrf_token || "",
+                                  project: gitlabForm.walkin_project_header || "",
+                                  workspace: ws.id,
+                                  x_auth_token: gitlabForm.walkin_x_auth_token || "",
+                                };
+                                await fetchDeptForWorkspace(ws.id, ws.name, auth);
                               }}
                             >
                               {ws.name}
@@ -490,23 +518,25 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
                             <Building2 className="h-3.5 w-3.5" /> 部门 ID
                           </label>
                           <Input
-                            placeholder="从团队覆盖率看板 URL 获取"
+                            placeholder="根据工作空间自动获取"
                             value={walkinData.deptId}
-                            onChange={(e) => setWalkinData({ ...walkinData, deptId: e.target.value })}
+                            disabled
+                            className="bg-muted/50"
                           />
                         </div>
                         <div className="space-y-1.5">
                           <label className="text-sm font-medium">部门名称</label>
                           <Input
-                            placeholder="根据工作空间自动填充"
+                            placeholder="根据工作空间自动获取"
                             value={walkinData.deptName}
-                            onChange={(e) => setWalkinData({ ...walkinData, deptName: e.target.value })}
+                            disabled
+                            className="bg-muted/50"
                           />
                         </div>
                       </div>
 
                       <p className="text-xs text-muted-foreground">
-                        💡 已自动获取工作空间列表，部门名称根据工作空间自动填充。部门 ID 需从 Walkin 团队覆盖率看板 URL 中获取。
+                        💡 选择工作空间后自动获取对应的部门信息。
                       </p>
                     </div>
                   )}
