@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useState, useEffect } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { ReminderLayout } from "@/components/modules/reminder/ReminderLayout";
@@ -6,6 +6,7 @@ import { GitLabLayout } from "@/components/modules/gitlab/GitLabLayout";
 import { WalkinAuthProvider } from "@/components/modules/gitlab/WalkinAuthManager";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useSettings, getSettingValue } from "@/lib/query/settingsQueries";
+import { SetupWizard, useNeedsSetup } from "@/components/SetupWizard";
 
 const DashboardPage = lazy(() => import("@/pages/DashboardPage").then((m) => ({ default: m.DashboardPage })));
 const TaskReminderPage = lazy(() => import("@/pages/TaskReminderPage").then((m) => ({ default: m.TaskReminderPage })));
@@ -41,6 +42,40 @@ function StartupRedirect() {
 }
 
 function App() {
+  const [showSetup, setShowSetup] = useState(false);
+  const [checkedSetup, setCheckedSetup] = useState(false);
+
+  // Check if setup is needed on mount
+  useEffect(() => {
+    const needsSetup = useNeedsSetup();
+    setShowSetup(needsSetup);
+    setCheckedSetup(true);
+  }, []);
+
+  const handleSetupComplete = () => {
+    setShowSetup(false);
+  };
+
+  // Don't render main app until we've checked setup status
+  if (!checkedSetup) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      </div>
+    );
+  }
+
+  // Show setup wizard if needed
+  if (showSetup) {
+    return (
+      <ErrorBoundary>
+        <WalkinAuthProvider>
+          <SetupWizard onComplete={handleSetupComplete} />
+        </WalkinAuthProvider>
+      </ErrorBoundary>
+    );
+  }
+
   return (
     <ErrorBoundary>
       <WalkinAuthProvider>
