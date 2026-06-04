@@ -112,7 +112,7 @@ export function TrendChart({ history }: TrendChartProps) {
                   <line x1={padding.left} y1={y} x2={padding.left + drawingWidth} y2={y} stroke="hsl(var(--border))" strokeWidth="0.5" />
                   {/* Y-axis labels (commits on left, coverage on right) */}
                   <text x={padding.left - 4} y={y + 3} textAnchor="end" fontSize="7" fill="hsl(var(--muted-foreground))">
-                    {commitTicks[4 - i]}
+                    {formatAxisNum(commitTicks[4 - i])}
                   </text>
                   {hasCoverage && (
                     <text x={padding.left + drawingWidth + 4} y={y + 3} textAnchor="start" fontSize="7" fill="hsl(var(--muted-foreground))">
@@ -259,6 +259,13 @@ export function ContributorRanking({ history }: { history: GitLabScanHistory[] }
 }
 
 function formatNum(num: number): string {
+  if (num >= 1000000) return (num / 1000000).toFixed(1) + "M";
   if (num >= 1000) return (num / 1000).toFixed(1) + "k";
+  return num.toString();
+}
+
+function formatAxisNum(num: number): string {
+  if (num >= 1000000) return (num / 1000000).toFixed(1) + "M";
+  if (num >= 1000) return (num / 1000).toFixed(0) + "k";
   return num.toString();
 }
