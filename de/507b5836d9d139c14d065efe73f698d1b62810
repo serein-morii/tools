@@ -1,0 +1,19 @@
+src/components/SetupWizard.tsx
+  s_10b01522c7aa66::t_62a092e392c97a 2,4,9,34,38,72-75,106,110,231,242,248,250,315,319,330,337,340-345,351-354,356-362,369-372,383,385,389-391,393-396,399-406,414-417,419-428,435-439,446-459,462-464,470,473-480,482-547,554-563,567,570,573-575,581-582,587,589,593,595,599-600,605,617,620-621,623,625,631,646-647,651-655,676
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "de507b5836d9d139c14d065efe73f698d1b62810",
+  "prompts": {},
+  "sessions": {
+    "s_10b01522c7aa66": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "17223fd4-466e-4ded-bf27-ae020f2af767",
+        "model": "astron-code-latest"
+      },
+      "human_author": "pengchenghui <pengchenghui@jtexpress.com>"
+    }
+  }
+}
