@@ -58,9 +58,9 @@ export function TrendChart({ history }: TrendChartProps) {
   const hasCoverage = scans.some(s => getNewCoverage(s) != null);
 
   // Use responsive SVG width (100%) instead of fixed pixel width
-  const chartHeight = 120;
-  const padding = { top: 14, right: 24, bottom: 18, left: 32 };
-  const drawingWidth = 200 - padding.left - padding.right;
+  const chartHeight = 100;
+  const padding = { top: 10, right: 20, bottom: 14, left: 28 };
+  const drawingWidth = 180 - padding.left - padding.right;
 
   // Sample commits for y-axis ticks (4 evenly spaced values)
   const commitTicks = [0, Math.round(maxCommits / 4), Math.round(maxCommits / 2), Math.round(maxCommits * 3 / 4), maxCommits];
@@ -103,7 +103,7 @@ export function TrendChart({ history }: TrendChartProps) {
         </div>
 
         <div className="flex-1 min-h-0">
-          <svg viewBox={`0 0 ${200} ${chartHeight}`} preserveAspectRatio="none" className="w-full h-full">
+          <svg viewBox={`0 0 ${180} ${chartHeight}`} preserveAspectRatio="none" className="w-full h-full">
             {/* Grid lines (4 horizontal) */}
             {[0, 1, 2, 3, 4].map(i => {
               const y = padding.top + (i / 4) * (chartHeight - padding.top - padding.bottom);
@@ -111,11 +111,11 @@ export function TrendChart({ history }: TrendChartProps) {
                 <g key={`grid-${i}`}>
                   <line x1={padding.left} y1={y} x2={padding.left + drawingWidth} y2={y} stroke="hsl(var(--border))" strokeWidth="0.5" />
                   {/* Y-axis labels (commits on left, coverage on right) */}
-                  <text x={padding.left - 4} y={y + 3} textAnchor="end" fontSize="7" fill="hsl(var(--muted-foreground))">
+                  <text x={padding.left - 3} y={y + 2} textAnchor="end" fontSize="5" fill="hsl(var(--muted-foreground))">
                     {formatAxisNum(commitTicks[4 - i])}
                   </text>
                   {hasCoverage && (
-                    <text x={padding.left + drawingWidth + 4} y={y + 3} textAnchor="start" fontSize="7" fill="hsl(var(--muted-foreground))">
+                    <text x={padding.left + drawingWidth + 3} y={y + 2} textAnchor="start" fontSize="5" fill="hsl(var(--muted-foreground))">
                       {(4 - i) * 25}%
                     </text>
                   )}
@@ -156,10 +156,10 @@ export function TrendChart({ history }: TrendChartProps) {
             )}
 
             {/* X-axis date labels (first, middle, last) */}
-            <text x={padding.left} y={chartHeight - 2} fontSize="6" fill="hsl(var(--muted-foreground))">
+            <text x={padding.left} y={chartHeight - 1} fontSize="5" fill="hsl(var(--muted-foreground))">
               {new Date(scans[0].scan_at).toLocaleDateString("zh-CN", { month: "numeric", day: "numeric" })}
             </text>
-            <text x={padding.left + drawingWidth} y={chartHeight - 2} fontSize="6" fill="hsl(var(--muted-foreground))" textAnchor="end">
+            <text x={padding.left + drawingWidth} y={chartHeight - 1} fontSize="5" fill="hsl(var(--muted-foreground))" textAnchor="end">
               {new Date(scans[scans.length - 1].scan_at).toLocaleDateString("zh-CN", { month: "numeric", day: "numeric" })}
             </text>
           </svg>
