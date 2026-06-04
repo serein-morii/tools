@@ -58,8 +58,8 @@ export function TrendChart({ history }: TrendChartProps) {
   const hasCoverage = scans.some(s => getNewCoverage(s) != null);
 
   // Use responsive SVG width (100%) instead of fixed pixel width
-  const chartHeight = 120;
-  const padding = { top: 14, right: 24, bottom: 18, left: 32 };
+  const chartHeight = 90;
+  const padding = { top: 10, right: 24, bottom: 14, left: 32 };
   const drawingWidth = 200 - padding.left - padding.right;
 
   // Sample commits for y-axis ticks (4 evenly spaced values)
@@ -74,7 +74,7 @@ export function TrendChart({ history }: TrendChartProps) {
   return (
     <div className="flex-1 min-w-0">
       <div className="rounded-md border bg-card/50 p-3 h-full flex flex-col">
-        <div className="mb-2 flex items-center justify-between flex-shrink-0">
+        <div className="mb-1.5 flex items-center justify-between flex-shrink-0">
           <h4 className="text-xs font-medium">{t("gitlab.chart.trendAnalysis")}</h4>
           <div ref={menuRef} className="relative">
             <button
@@ -111,11 +111,11 @@ export function TrendChart({ history }: TrendChartProps) {
                 <g key={`grid-${i}`}>
                   <line x1={padding.left} y1={y} x2={padding.left + drawingWidth} y2={y} stroke="hsl(var(--border))" strokeWidth="0.5" />
                   {/* Y-axis labels (commits on left, coverage on right) */}
-                  <text x={padding.left - 4} y={y + 3} textAnchor="end" fontSize="7" fill="hsl(var(--muted-foreground))">
+                  <text x={padding.left - 4} y={y + 3} textAnchor="end" fontSize="5" fill="hsl(var(--muted-foreground))">
                     {commitTicks[4 - i]}
                   </text>
                   {hasCoverage && (
-                    <text x={padding.left + drawingWidth + 4} y={y + 3} textAnchor="start" fontSize="7" fill="hsl(var(--muted-foreground))">
+                    <text x={padding.left + drawingWidth + 4} y={y + 3} textAnchor="start" fontSize="5" fill="hsl(var(--muted-foreground))">
                       {(4 - i) * 25}%
                     </text>
                   )}
@@ -221,15 +221,15 @@ export function ContributorRanking({ history }: { history: GitLabScanHistory[] }
   return (
     <div className="flex-1 min-w-0">
       <div className="rounded-md border bg-card/50 p-3 h-full flex flex-col">
-        <div className="mb-2 flex items-center justify-between flex-shrink-0">
+        <div className="mb-1.5 flex items-center justify-between flex-shrink-0">
           <h4 className="text-xs font-medium">🏆 {t("gitlab.chart.contributionTop5")}</h4>
         </div>
-        <div className="space-y-1.5 flex-1">
+        <div className="space-y-1 flex-1 overflow-auto">
           {top5.map((dev, index) => {
             const codeVolume = dev.lines_added + dev.lines_removed;
             const barWidth = (codeVolume / maxCodeVolume) * 100;
             return (
-              <div key={dev.name} className="flex items-center gap-1.5">
+              <div key={dev.name} className="flex items-center gap-1">
                 <span className="w-3.5 text-center text-xs flex-shrink-0">
                   {index === 0 ? "🥇" : index === 1 ? "🥈" : "🥉"}
                 </span>

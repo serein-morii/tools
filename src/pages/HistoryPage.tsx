@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { AlertCircle, CheckCircle2, Clock, Clock3, Loader2 } from "lucide-react";
+import { AlertCircle, CheckCircle2, Clock3, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ReminderActionPanel } from "@/components/modules/reminder/ReminderActionPanel";
@@ -50,21 +50,7 @@ export function HistoryPage() {
   }
 
   return (
-    <div className="min-h-full bg-background">
-      {/* Header */}
-      <div className="border-b px-5 py-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
-              <Clock className="h-3.5 w-3.5 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-sm font-medium">提醒历史</h1>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div className="mx-auto max-w-[1400px] space-y-3 px-3 py-3 animate-in fade-in duration-200">
+    <div className="p-4">
       {/* Stats Grid */}
       <div className="grid grid-cols-4 gap-2 px-4 py-2 bg-muted/30 rounded-lg border mb-3">
         <StatCard
@@ -118,7 +104,6 @@ export function HistoryPage() {
           ))}
         </div>
       )}
-      </div>
     </div>
   );
 }

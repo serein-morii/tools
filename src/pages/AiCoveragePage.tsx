@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import {
   Brain, ChevronRight, ChevronDown, Users, GitCommit, Code2,
   Calendar, RefreshCw, Search, ChevronLeft, User, Trophy,
-  GitBranch, ExternalLink, Loader2, FileCode, Settings
+  GitBranch, ExternalLink, Loader2, FileCode
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,8 +15,8 @@ import { toast } from "sonner";
 import { SettingsTab, getConfig, type AiCoverageConfig } from "@/components/modules/aiCoverage/SettingsTab";
 
 const tabs = [
-  { key: "coverage", label: "生成率", icon: Brain },
-  { key: "settings", label: "配置", icon: Settings },
+  { key: "coverage", label: "生成率" },
+  { key: "settings", label: "配置" },
 ] as const;
 
 interface DepartmentRowProps {
@@ -738,36 +738,33 @@ export function AiCoveragePage() {
 
   return (
     <div className="min-h-full bg-background">
-      {/* Header */}
-      <div className="border-b px-5 py-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
-              <Brain className="h-3.5 w-3.5 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-sm font-medium">AI 生成率</h1>
-            </div>
+      <div className="p-3">
+        <div className="mb-3 flex items-center justify-between">
+          <div>
+            <h3 className="text-xs font-semibold">AI 生成率</h3>
+            <p className="text-[10px] text-muted-foreground">覆盖率趋势与分析</p>
           </div>
-          <div className="inline-flex gap-1 rounded-lg bg-muted p-0.5">
+        </div>
+        <div className="mb-3">
+          <div className="inline-flex gap-1 rounded-lg bg-muted p-1">
             {tabs.map((tab) => (
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
                 className={cn(
-                  "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all",
+                  "px-2 py-1 rounded-md text-[10px] font-medium transition-colors",
                   activeTab === tab.key
                     ? "bg-background text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
-                <tab.icon className="h-3.5 w-3.5" />
                 {tab.label}
               </button>
             ))}
           </div>
         </div>
       </div>
+
 
       {/* Tab Content */}
       {activeTab === "settings" ? (

@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
-import { Plus, Search, StickyNote, Pin, Trash2, Check, Copy, Download, Palette, Hash, CheckSquare, Square, X } from "lucide-react";
+import { Plus, Search, Pin, Trash2, Check, Copy, Download, Palette, Hash, CheckSquare, Square, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -138,20 +138,7 @@ export function QuickNotesPage() {
   if (error) return <div className="p-6"><div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-sm text-destructive">{t("common.error")}</div></div>;
 
   return (
-    <div className="min-h-full bg-background">
-      <div className="border-b px-5 py-3 mb-3">
-        <div className="flex items-center gap-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-amber-500 to-orange-600">
-            <StickyNote className="h-3.5 w-3.5 text-white" />
-          </div>
-          <div>
-            <h2 className="text-sm font-medium">{t("notes.title")}</h2>
-            <p className="text-xs text-muted-foreground">{t("notes.description")}</p>
-          </div>
-        </div>
-      </div>
-
-      <div className="mx-auto max-w-[1400px] space-y-3 px-3 py-3 animate-in fade-in duration-200">
+    <div className="p-4 max-w-4xl mx-auto">
       {/* Stats + Actions Row */}
       <div className="grid grid-cols-4 gap-2 px-4 py-2 bg-muted/30 rounded-lg border mb-3">
         <div className="rounded-md bg-card p-2"><div className="text-[9px] text-muted-foreground">笔记</div><div className="text-sm font-bold">{noteList.length}</div></div>
@@ -266,7 +253,6 @@ export function QuickNotesPage() {
           )}
         </div>
       )}
-      </div>
     </div>
   );
 }
