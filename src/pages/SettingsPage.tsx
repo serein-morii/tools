@@ -6,7 +6,7 @@ import { useSettings, useUpdateSetting, getSettingValue } from "@/lib/query/sett
 import { useQueryClient } from "@tanstack/react-query";
 import { open, save } from "@tauri-apps/plugin-dialog";
 import { invoke } from "@tauri-apps/api/core";
-import { Monitor, Moon, Sun, Power, EyeOff, MonitorUp, Download, Upload, Info, Palette, Database, LayoutGrid, GripVertical, ChevronUp, ChevronDown, RotateCcw, Home, AlertTriangle, Bell, GitBranch, FileCode, Brain, Timer, StickyNote } from "lucide-react";
+import { Monitor, Moon, Sun, Power, EyeOff, MonitorUp, Download, Upload, Info, Palette, Database, LayoutGrid, GripVertical, ChevronUp, ChevronDown, RotateCcw, Home, AlertTriangle, Bell, GitBranch, FileCode, Brain, Timer, StickyNote, Rocket } from "lucide-react";
 import { ToggleRow } from "@/components/ui/toggle-row";
 import { Switch } from "@/components/ui/switch";
 import { SearchableSelect } from "@/components/ui/searchable-select";
@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/theme-provider";
 import { toast } from "sonner";
 import { allModules } from "@/config/modules";
+import { resetSetup } from "@/components/SetupWizard";
 
 const LanguageSettings = lazy(() => import("@/components/settings/LanguageSettings").then((m) => ({ default: m.LanguageSettings })));
 
@@ -290,6 +291,20 @@ export function SettingsPage() {
             </div>
           </CardHeader>
           <CardContent className="p-3 space-y-2">
+            <div className="flex items-center justify-between rounded-lg border bg-card/50 p-2.5">
+              <div>
+                <p className="text-xs font-medium">重新打开引导页</p>
+                <p className="text-[10px] text-muted-foreground">重新配置 GitLab 和 Walkin 连接</p>
+              </div>
+              <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => {
+                if (window.confirm("确定要重新打开引导页吗？应用将重新加载。")) {
+                  resetSetup();
+                  window.location.reload();
+                }
+              }}>
+                <Rocket className="h-3 w-3 mr-1" />打开引导
+              </Button>
+            </div>
             <div className="flex items-center justify-between rounded-lg border bg-card/50 p-2.5">
               <div>
                 <p className="text-xs font-medium">重置所有配置</p>
