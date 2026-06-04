@@ -123,16 +123,16 @@ export function SonarPromptPage() {
         setCoverageRefreshKey(k => k + 1);
     }, [fetchWorkspaces]);
 
-    // 登录后自动拉取工作空间列表
+    // 有 token 时自动拉取工作空间列表
     useEffect(() => {
-        if (isLoggedIn && walkinForm.walkin_url && walkinForm.walkin_csrf_token) {
+        if (walkinForm.walkin_url && walkinForm.walkin_csrf_token && walkinForm.walkin_x_auth_token) {
             fetchWorkspaces();
         }
-    }, [isLoggedIn, walkinForm.walkin_url, walkinForm.walkin_csrf_token, fetchWorkspaces]);
+    }, [walkinForm.walkin_url, walkinForm.walkin_csrf_token, walkinForm.walkin_x_auth_token, fetchWorkspaces]);
 
     // 切换工作空间时获取关联项目/部门
     const fetchDeptForWorkspace = useCallback(async (name: string, updateCoverageState: boolean) => {
-        if (!name || !walkinForm.walkin_url || !walkinForm.walkin_csrf_token || !isLoggedIn) return;
+        if (!name || !walkinForm.walkin_url || !walkinForm.walkin_csrf_token) return;
         const ws = workspaces.find((w) => w.name === name);
         if (!ws?.id) return;
         const userId = walkinForm.ldap_profiles.find(p => p.id === walkinForm.selected_ldap_id)?.username || userName || "";
@@ -162,7 +162,7 @@ export function SonarPromptPage() {
         } catch (e) {
             toast.error("获取部门失败: " + (e instanceof Error ? e.message : String(e)));
         }
-    }, [walkinForm, isLoggedIn, userName, workspaces, saveConfig]);
+    }, [walkinForm, userName, workspaces, saveConfig]);
 
     const handleCoverageWorkspaceChange = useCallback(async (name: string) => {
         setCoverageWorkspace(name);
