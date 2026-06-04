@@ -293,20 +293,6 @@ export function SettingsPage() {
           <CardContent className="p-3 space-y-2">
             <div className="flex items-center justify-between rounded-lg border bg-card/50 p-2.5">
               <div>
-                <p className="text-xs font-medium">重新打开引导页</p>
-                <p className="text-[10px] text-muted-foreground">重新配置 GitLab 和 Walkin 连接</p>
-              </div>
-              <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => {
-                if (window.confirm("确定要重新打开引导页吗？应用将重新加载。")) {
-                  resetSetup();
-                  window.location.reload();
-                }
-              }}>
-                <Rocket className="h-3 w-3 mr-1" />打开引导
-              </Button>
-            </div>
-            <div className="flex items-center justify-between rounded-lg border bg-card/50 p-2.5">
-              <div>
                 <p className="text-xs font-medium">重置所有配置</p>
                 <p className="text-[10px] text-muted-foreground">恢复所有设置项到默认值，保留数据</p>
               </div>
@@ -322,38 +308,6 @@ export function SettingsPage() {
             </div>
             <div className="flex items-center justify-between rounded-lg border bg-card/50 p-2.5">
               <div>
-                <p className="text-xs font-medium">清除全部提醒任务</p>
-                <p className="text-[10px] text-muted-foreground">删除所有提醒任务，不可恢复</p>
-              </div>
-              <Button variant="destructive" size="sm" className="h-7 text-xs" onClick={() => {
-                if (window.confirm("确定删除所有提醒任务？此操作不可撤销。")) {
-                  invoke("clear_all_tasks").then(() => {
-                    queryClient.invalidateQueries();
-                    toast.success("所有任务已删除");
-                  }).catch(e => toast.error("删除失败: " + e));
-                }
-              }}>
-                <RotateCcw className="h-3 w-3 mr-1" />清除任务
-              </Button>
-            </div>
-            <div className="flex items-center justify-between rounded-lg border bg-card/50 p-2.5">
-              <div>
-                <p className="text-xs font-medium">清除全部速记</p>
-                <p className="text-[10px] text-muted-foreground">删除所有速记，不可恢复</p>
-              </div>
-              <Button variant="destructive" size="sm" className="h-7 text-xs" onClick={() => {
-                if (window.confirm("确定删除所有速记？此操作不可撤销。")) {
-                  invoke("clear_all_notes").then(() => {
-                    queryClient.invalidateQueries();
-                    toast.success("所有速记已删除");
-                  }).catch(e => toast.error("删除失败: " + e));
-                }
-              }}>
-                <RotateCcw className="h-3 w-3 mr-1" />清除速记
-              </Button>
-            </div>
-            <div className="flex items-center justify-between rounded-lg border bg-card/50 p-2.5">
-              <div>
                 <p className="text-xs font-medium">清除本地缓存</p>
                 <p className="text-[10px] text-muted-foreground">清除所有本地缓存数据，建议重启应用</p>
               </div>
@@ -365,6 +319,32 @@ export function SettingsPage() {
                 }
               }}>
                 <RotateCcw className="h-3 w-3 mr-1" />清除缓存
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Setup Wizard */}
+        <Card className="overflow-hidden">
+          <CardHeader className="bg-muted/30 border-b py-2 px-3">
+            <div className="flex items-center gap-1.5">
+              <Rocket className="h-3.5 w-3.5 text-primary" />
+              <CardTitle className="text-sm">配置引导</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="p-3">
+            <div className="flex items-center justify-between rounded-lg border bg-card/50 p-2.5">
+              <div>
+                <p className="text-xs font-medium">重新打开引导页</p>
+                <p className="text-[10px] text-muted-foreground">重新配置 GitLab 和 Walkin 连接</p>
+              </div>
+              <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => {
+                if (window.confirm("确定要重新打开引导页吗？应用将重新加载。")) {
+                  resetSetup();
+                  window.location.reload();
+                }
+              }}>
+                <Rocket className="h-3 w-3 mr-1" />打开引导
               </Button>
             </div>
           </CardContent>
