@@ -490,7 +490,7 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
                             <Building2 className="h-3.5 w-3.5" /> 部门 ID
                           </label>
                           <Input
-                            placeholder="自动获取或手动输入"
+                            placeholder="从团队覆盖率看板 URL 获取"
                             value={walkinData.deptId}
                             onChange={(e) => setWalkinData({ ...walkinData, deptId: e.target.value })}
                           />
@@ -498,7 +498,7 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
                         <div className="space-y-1.5">
                           <label className="text-sm font-medium">部门名称</label>
                           <Input
-                            placeholder="自动获取或手动输入"
+                            placeholder="根据工作空间自动填充"
                             value={walkinData.deptName}
                             onChange={(e) => setWalkinData({ ...walkinData, deptName: e.target.value })}
                           />
@@ -506,7 +506,7 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
                       </div>
 
                       <p className="text-xs text-muted-foreground">
-                        💡 已自动获取工作空间列表，请选择默认工作空间。部门信息可手动调整。
+                        💡 已自动获取工作空间列表，部门名称根据工作空间自动填充。部门 ID 需从 Walkin 团队覆盖率看板 URL 中获取。
                       </p>
                     </div>
                   )}
