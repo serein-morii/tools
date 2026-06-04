@@ -334,16 +334,14 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
             </div>
           </div>
 
-          <CardContent className="p-6 min-h-[320px]">
+          <CardContent className="p-6 min-h-[280px]">
             {/* Welcome step */}
             {currentStep === "welcome" && (
-              <div className="text-center space-y-4 py-6">
-                <div className="text-5xl mb-4">🚀</div>
-                <h2 className="text-2xl font-bold">欢迎使用 Dev Tools</h2>
-                <p className="text-muted-foreground max-w-md mx-auto">
-                  这是一个开发者工具箱，帮助您管理代码扫描、单测覆盖率等任务。
-                  <br />
-                  让我们开始配置吧！
+              <div className="text-center space-y-3 py-4">
+                <div className="text-3xl">🚀</div>
+                <h2 className="text-xl font-bold">欢迎使用 Dev Tools</h2>
+                <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                  这是一个开发者工具箱，帮助您管理代码扫描、单测覆盖率等任务。让我们开始配置吧！
                 </p>
               </div>
             )}
@@ -553,13 +551,13 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
 
             {/* Done step */}
             {currentStep === "done" && (
-              <div className="text-center space-y-4 py-6">
-                <div className="text-5xl mb-4">🎉</div>
-                <h2 className="text-2xl font-bold">配置完成！</h2>
-                <p className="text-muted-foreground max-w-md mx-auto">
+              <div className="text-center space-y-3 py-4">
+                <div className="text-3xl">🎉</div>
+                <h2 className="text-xl font-bold">配置完成！</h2>
+                <p className="text-sm text-muted-foreground max-w-md mx-auto">
                   您已成功完成初始配置。现在可以开始使用 Dev Tools 了！
                 </p>
-                <div className="flex flex-col gap-2 text-sm text-muted-foreground">
+                <div className="flex flex-col gap-1.5 text-xs text-muted-foreground">
                   <p>• 在 <strong>GitLab 代码</strong> 中查看代码扫描结果</p>
                   <p>• 在 <strong>单测覆盖率</strong> 中生成单测 Prompt</p>
                   <p>• 随时可在 <strong>设置</strong> 中修改配置</p>
