@@ -2,14 +2,6 @@ use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use crate::error::{Result, ToolsError};
 
-/// 获取 RSA 公钥响应
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct PublicKeyResponse {
-    pub success: bool,
-    pub message: Option<String>,
-    pub data: Option<serde_json::Value>,
-}
-
 /// 从 is-login 接口获取 RSA 公钥（免登录）
 pub async fn get_public_key(base_url: &str) -> Result<String> {
     let url = format!("{}/is-login", base_url.trim_end_matches('/'));
