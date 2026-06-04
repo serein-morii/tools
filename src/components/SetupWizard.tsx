@@ -533,7 +533,7 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
                 <div className="text-xs text-muted-foreground space-y-1">
                   <p>• 在 <strong>GitLab 代码</strong> 中查看代码扫描结果</p>
                   <p>• 在 <strong>单测覆盖率</strong> 中生成单测 Prompt</p>
-                  <p>• 随时可在 <strong>设置</strong> 中修改配置</p>
+                  <p>• 随时可在 <strong>各模块配置</strong> 中修改配置</p>
                 </div>
               </div>
             )}
