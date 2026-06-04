@@ -27,6 +27,8 @@ export function SettingsPage() {
   const [backupError, setBackupError] = useState<string | null>(null);
   const [autoLaunchSystemStatus, setAutoLaunchSystemStatus] = useState<boolean>(false);
   const [dragIdx, setDragIdx] = useState<number | null>(null);
+  const [showDangerZone, setShowDangerZone] = useState(false);
+  const [dangerAction, setDangerAction] = useState<"resetConfig" | "clearCache" | null>(null);
   const { theme, setTheme } = useTheme();
 
   const autoLaunch = getSettingValue(settings, "auto_launch", "false") === "true";
@@ -282,48 +284,6 @@ export function SettingsPage() {
           </CardContent>
         </Card>
 
-        {/* Reset & Clear */}
-        <Card className="overflow-hidden border-destructive/30">
-          <CardHeader className="bg-destructive/5 border-b border-destructive/20 py-2 px-3">
-            <div className="flex items-center gap-1.5">
-              <AlertTriangle className="h-3.5 w-3.5 text-destructive" />
-              <CardTitle className="text-sm text-destructive">危险操作</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent className="p-3 space-y-2">
-            <div className="flex items-center justify-between rounded-lg border bg-card/50 p-2.5">
-              <div>
-                <p className="text-xs font-medium">重置所有配置</p>
-                <p className="text-[10px] text-muted-foreground">恢复所有设置项到默认值，保留数据</p>
-              </div>
-              <Button variant="destructive" size="sm" className="h-7 text-xs" onClick={() => {
-                if (window.confirm("确定重置所有设置？此操作不可撤销，将恢复全部配置到默认值。")) {
-                  (settings || []).forEach(s => updateSetting.mutate({ key: s.key, value: "" }));
-                  queryClient.invalidateQueries();
-                  toast.success("所有设置已重置");
-                }
-              }}>
-                <RotateCcw className="h-3 w-3 mr-1" />重置配置
-              </Button>
-            </div>
-            <div className="flex items-center justify-between rounded-lg border bg-card/50 p-2.5">
-              <div>
-                <p className="text-xs font-medium">清除本地缓存</p>
-                <p className="text-[10px] text-muted-foreground">清除所有本地缓存数据，建议重启应用</p>
-              </div>
-              <Button variant="destructive" size="sm" className="h-7 text-xs" onClick={() => {
-                if (window.confirm("确定清除所有本地缓存？")) {
-                  localStorage.clear(); sessionStorage.clear();
-                  queryClient.clear();
-                  toast.success("缓存已清除，建议重启应用");
-                }
-              }}>
-                <RotateCcw className="h-3 w-3 mr-1" />清除缓存
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Setup Wizard */}
         <Card className="overflow-hidden">
           <CardHeader className="bg-muted/30 border-b py-2 px-3">
@@ -349,6 +309,93 @@ export function SettingsPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Reset & Clear - Collapsible */}
+        <Card className="overflow-hidden border-destructive/30">
+          <button
+            type="button"
+            className="w-full bg-destructive/5 border-b border-destructive/20 py-2 px-3 flex items-center justify-between hover:bg-destructive/10 transition-colors"
+            onClick={() => setShowDangerZone(!showDangerZone)}
+          >
+            <div className="flex items-center gap-1.5">
+              <AlertTriangle className="h-3.5 w-3.5 text-destructive" />
+              <CardTitle className="text-sm text-destructive">危险操作</CardTitle>
+              <span className="text-[10px] text-muted-foreground ml-1">（点击展开）</span>
+            </div>
+            <ChevronDown className={cn("h-4 w-4 text-destructive transition-transform", showDangerZone && "rotate-180")} />
+          </button>
+          {showDangerZone && (
+            <CardContent className="p-3 space-y-2">
+              <div className="flex items-center justify-between rounded-lg border bg-card/50 p-2.5">
+                <div>
+                  <p className="text-xs font-medium">重置所有配置</p>
+                  <p className="text-[10px] text-muted-foreground">恢复所有设置项到默认值，保留数据</p>
+                </div>
+                <Button variant="destructive" size="sm" className="h-7 text-xs" onClick={() => {
+                  setDangerAction("resetConfig");
+                }}>
+                  <RotateCcw className="h-3 w-3 mr-1" />重置配置
+                </Button>
+              </div>
+              <div className="flex items-center justify-between rounded-lg border bg-card/50 p-2.5">
+                <div>
+                  <p className="text-xs font-medium">清除本地缓存</p>
+                  <p className="text-[10px] text-muted-foreground">清除所有本地缓存数据，建议重启应用</p>
+                </div>
+                <Button variant="destructive" size="sm" className="h-7 text-xs" onClick={() => {
+                  setDangerAction("clearCache");
+                }}>
+                  <RotateCcw className="h-3 w-3 mr-1" />清除缓存
+                </Button>
+              </div>
+            </CardContent>
+          )}
+        </Card>
+
+        {/* Danger Action Confirmation Dialog */}
+        {dangerAction && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+            <Card className="w-[360px] mx-4 shadow-2xl">
+              <CardHeader className="bg-destructive/10 border-b py-3 px-4">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="h-5 w-5 text-destructive" />
+                  <CardTitle className="text-base text-destructive">确认操作</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className="p-4">
+                <p className="text-sm text-muted-foreground mb-4">
+                  {dangerAction === "resetConfig"
+                    ? "确定要重置所有设置吗？此操作不可撤销，将恢复全部配置到默认值。"
+                    : "确定要清除所有本地缓存吗？建议重启应用。"}
+                </p>
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" size="sm" onClick={() => setDangerAction(null)}>
+                    取消
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => {
+                      if (dangerAction === "resetConfig") {
+                        (settings || []).forEach(s => updateSetting.mutate({ key: s.key, value: "" }));
+                        queryClient.invalidateQueries();
+                        toast.success("所有设置已重置");
+                      } else if (dangerAction === "clearCache") {
+                        localStorage.clear();
+                        sessionStorage.clear();
+                        queryClient.clear();
+                        toast.success("缓存已清除，建议重启应用");
+                      }
+                      setDangerAction(null);
+                    }}
+                  >
+                    确认
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         {/* About */}
         <Card className="overflow-hidden">
