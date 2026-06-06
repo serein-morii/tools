@@ -574,6 +574,16 @@ pub struct UnitListItem {
     pub new_line_coverage: Option<String>,
     /// 增量条件覆盖率
     pub new_condition_coverage: Option<String>,
+    // 全量条件/分支覆盖详情
+    pub conditions_to_cover: Option<i64>,
+    pub uncovered_conditions: Option<i64>,
+    // 增量行覆盖详情
+    pub new_lines_to_cover: Option<i64>,
+    pub new_line_cover: Option<i64>,
+    pub new_un_line_cover: Option<i64>,
+    // 增量条件/分支覆盖详情
+    pub new_condition_to_cover: Option<i64>,
+    pub new_un_condition_to_cover: Option<i64>,
     pub bugs: Option<i64>,
     pub new_bugs: Option<i64>,
     pub vulnerabilities: Option<i64>,

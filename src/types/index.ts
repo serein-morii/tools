@@ -455,6 +455,16 @@ export interface UnitListItem {
   branchCoverage: string | null;
   newLineCoverage: string | null;
   newConditionCoverage: string | null;
+  // 全量条件/分支覆盖详情
+  conditionsToCover: number | null;
+  uncoveredConditions: number | null;
+  // 增量行覆盖详情
+  newLinesToCover: number | null;
+  newLineCover: number | null;
+  newUnLineCover: number | null;
+  // 增量条件/分支覆盖详情
+  newConditionToCover: number | null;
+  newUnConditionToCover: number | null;
   bugs: number | null;
   newBugs: number | null;
   vulnerabilities: number | null;
