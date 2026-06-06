@@ -1,0 +1,35 @@
+src/types/index.ts
+  s_e4d1e9beeba44a::t_038ca7c55fa17c 458-467
+src-tauri/src/services/walkin/client.rs
+  s_e4d1e9beeba44a::t_5c9f4130ac8aad 577-586
+src/components/modules/gitlab/UnitCoverageList.tsx
+  s_e4d1e9beeba44a::t_c701bab7279ae5 10,81-92,94,96-156,158,163,165-166,170-244,246-263,345-346,393,401,404,406,409,414,419-420,425-426,428-435,447
+  s_e4d1e9beeba44a::t_5e4f91689866c2 93,95
+  s_e4d1e9beeba44a::t_cc9fd4cff8a31d 160
+  s_e4d1e9beeba44a::t_e5b904f4eb4924 161-162,169
+  s_e4d1e9beeba44a::t_b532cd1f5d3b72 164
+  s_e4d1e9beeba44a::t_955c2920c7c46b 167
+  s_e4d1e9beeba44a::t_ba6fb46f59d320 168
+  s_e4d1e9beeba44a::t_3d2e9170f1087b 394
+  s_e4d1e9beeba44a::t_e14c3682aedb85 159
+  s_e4d1e9beeba44a::t_2c94ef11c295b2 399
+  s_e4d1e9beeba44a::t_e41aac7c5bb584 427
+  s_e4d1e9beeba44a::t_4bc9d510c5c75f 245
+  s_e4d1e9beeba44a::t_954bc493c18198 441
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "9a93c44a2105b5361e47faabaccd1a4067c63416",
+  "prompts": {},
+  "sessions": {
+    "s_e4d1e9beeba44a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3bad9193-e60b-491a-8796-627d83b43414",
+        "model": "deepseek-v4-pro"
+      },
+      "human_author": "pengchenghui <pengchenghui@jtexpress.com>"
+    }
+  }
+}
