@@ -1,11 +1,19 @@
-# Tools
+# Dev Tools
 
-一个跨平台桌面工具集，基于 Tauri v2 + React 19 构建，集成任务提醒、GitLab 代码扫描、专注计时、快捷笔记等功能。
+一个跨平台桌面开发者工具集，基于 Tauri v2 + React 19 构建，集成代码扫描、单测覆盖率分析、任务提醒、专注计时、快捷笔记等功能。
 
 ## 功能特性
 
+### 🚀 首次配置引导
+- 应用首次启动自动进入配置引导页
+- 分步引导配置 GitLab 连接和 Walkin 代码质量平台
+- GitLab 步骤支持连接测试
+- Walkin 步骤支持自动登录获取工作空间和部门信息
+- 验证码手动输入支持
+- 支持跳过，稍后在设置中配置
+
 ### 📊 概览面板
-- 三大模块状态一览：提醒任务、通知渠道、GitLab 代码扫描
+- 四大模块状态一览：提醒任务、通知渠道、GitLab 代码扫描、AI 生成率
 - 可展开查看详情：任务列表、渠道分类、流水线统计、贡献排名、质量评级
 - 全局刷新按钮
 
@@ -42,10 +50,24 @@
   - 两次扫描对比视图
   - 扫描详情弹窗：流水线统计、开发者 MR 贡献、项目详情
 - **Walkin 集成**：
-  - LDAP 自动登录，验证码自动识别
+  - RSA 公钥加密登录，验证码自动识别
   - 代码质量数据：Bug、漏洞、异味、重复率
   - 增量/全量覆盖率（综合、行、条件）
   - 质量评级：可靠性、安全性、可维护性
+
+### 🧪 单测覆盖率
+- Walkin 代码质量数据对接
+- 工作空间和部门自动获取
+- 团队覆盖率看板数据展示
+- 单测提交记录追踪
+- 单测 Prompt 生成：根据未覆盖代码行自动生成单测提示词
+- 模板管理：可复用的 Prompt 模板
+- 生成历史记录
+
+### 🤖 AI 生成率
+- AI 代码生成率统计
+- 按作者维度分析
+- 提交详情查看
 
 ### 📝 消息模板
 - 可复用的消息模板
@@ -74,22 +96,27 @@
 - 多语言支持（中文、英文、日语、韩语）
 - 开机自启动（可选静默启动）
 - 最小化到托盘
+- 菜单页面排序与显隐控制
+- 启动页选择
 - 数据备份与恢复
+- 配置引导重新打开
+- 危险操作区域（重置配置、清除缓存，带二次确认）
 
 ## 技术栈
 
-- **前端**: React 19 + TypeScript + TailwindCSS + shadcn/ui
+- **前端**: React 19 + TypeScript + Vite + TailwindCSS + shadcn/ui
 - **后端**: Rust + Tauri v2 + SQLite
 - **状态管理**: TanStack Query
 - **国际化**: react-i18next（4 语言：中/英/日/韩）
+- **加密**: RSA 公钥加密（Walkin 登录）
 
 ## 安装
 
 ### 前置要求
 
 - Node.js 18+
-- Rust 1.70+
-- pnpm/npm/yarn
+- Rust 1.77.2+
+- pnpm
 
 ### 开发环境
 
@@ -99,18 +126,26 @@ git clone https://github.com/serein-morii/tools.git
 cd tools
 
 # 安装依赖
-npm install
+pnpm install
 
 # 启动开发模式
-npm run tauri dev
+pnpm tauri dev
 ```
 
 ### 构建
 
 ```bash
 # 构建生产版本
-npm run tauri build
+pnpm tauri build
 ```
+
+### 支持平台
+
+| 平台 | 安装包格式 |
+|------|-----------|
+| Windows | MSI, NSIS |
+| macOS | DMG |
+| Linux | DEB, AppImage |
 
 ## 项目结构
 
@@ -119,26 +154,48 @@ tools/
 ├── src/                        # React 前端代码
 │   ├── components/
 │   │   ├── modules/
-│   │   │   ├── gitlab/         # GitLab 模块组件
-│   │   │   └── reminder/       # 提醒模块组件
-│   │   ├── layout/             # 布局组件（侧边栏等）
-│   │   └── ui/                 # 通用 UI 组件
-│   ├── pages/                  # 页面组件
+│   │   │   ├── gitlab/         # GitLab 模块组件（扫描、Walkin 认证、覆盖率）
+│   │   │   ├── reminder/       # 提醒模块组件（任务、渠道、模板）
+│   │   │   └── aiCoverage/     # AI 生成率模块组件
+│   │   ├── layout/             # 布局组件（侧边栏、主布局）
+│   │   ├── settings/           # 设置组件（语言设置等）
+│   │   └── ui/                 # 通用 UI 组件（shadcn/ui）
+│   ├── pages/                  # 14 个页面组件
+│   ├── config/                 # 模块配置
 │   ├── lib/
-│   │   ├── api/                # API 调用
+│   │   ├── api/                # API 调用（GitLab、Sonar）
 │   │   ├── query/              # TanStack Query hooks
-│   │   └── gitlab/             # GitLab 工具函数
-│   ├── i18n/locales/           # 国际化翻译文件
+│   │   ├── gitlab/             # GitLab 工具函数
+│   │   └── sonar/              # Sonar 工具函数（历史、模板）
+│   ├── i18n/locales/           # 国际化翻译文件（zh/en/ja/ko）
 │   └── types/                  # TypeScript 类型定义
 ├── src-tauri/                  # Rust 后端代码
 │   ├── src/
-│   │   ├── commands/           # Tauri 命令
+│   │   ├── commands/           # Tauri 命令（GitLab、AI Coverage、Sonar 等）
 │   │   ├── database/           # SQLite 数据访问层
-│   │   ├── services/           # 业务服务（调度器等）
+│   │   ├── services/           # 业务服务
+│   │   │   ├── walkin/         # Walkin 客户端（登录、覆盖率、RSA 加密）
+│   │   │   ├── sonar/          # Sonar 客户端
+│   │   │   └── scheduler/      # 定时任务调度器
 │   │   └── error.rs            # 错误处理
-│   └── capabilities/           # Tauri 权限配置
+│   ├── capabilities/           # Tauri 权限配置
+│   ├── migrations/             # 数据库迁移
+│   └── tauri.conf.json         # Tauri 应用配置
 └── package.json
 ```
+
+## 模块说明
+
+| 模块 | 路由 | 说明 |
+|------|------|------|
+| 概览 | `/home` | 四大模块状态总览 |
+| GitLab 代码 | `/gitlab` | 代码扫描、覆盖率分析、Walkin 集成 |
+| 单测覆盖率 | `/sonar` | 单测覆盖率查看、Prompt 生成 |
+| AI 生成率 | `/ai-coverage` | AI 代码生成率统计 |
+| 智能提醒 | `/reminder` | 任务提醒、通知渠道、消息模板 |
+| 番茄钟 | `/timer` | 专注计时 |
+| 速记 | `/notes` | 快捷笔记 |
+| 设置 | `/settings` | 系统设置 |
 
 ## Cron 表达式支持
 
