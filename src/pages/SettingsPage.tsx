@@ -453,7 +453,7 @@ function ThemeButton({ active, onClick, icon: Icon, children }: ThemeButtonProps
 
 const PAGES = allModules
   .filter(m => m.settingKey)
-  .map(m => ({ key: m.settingKey!, id: m.id, label: m.label, icon: m.icon }));
+  .map(m => ({ key: m.settingKey!, id: m.id, label: m.label, labelKey: m.labelKey, icon: m.icon }));
 
 function ReorderableMenuList({ settings, updateSetting, dragIdx, setDragIdx }: {
   settings: any; updateSetting: any; dragIdx: number | null; setDragIdx: (v: number | null) => void;
@@ -572,7 +572,7 @@ function MenuItemRow({
   onPointerDown, onPointerMove, onPointerUp, itemClass, moveUp, moveDown, sortedLength,
 }: {
   idx: number;
-  page: { id: string; key: string; label: string; icon: React.ComponentType<{ className?: string }> };
+  page: { id: string; key: string; label: string; labelKey: string; icon: React.ComponentType<{ className?: string }> };
   visible: boolean;
   settings: any;
   updateSetting: any;
@@ -584,22 +584,24 @@ function MenuItemRow({
   moveDown: (idx: number) => void;
   sortedLength: number;
 }) {
+  const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const customLabelKey = `menu_label_${page.id}`;
   const customLabel = getSettingValue(settings, customLabelKey, "");
-  const displayLabel = customLabel || page.label;
+  const defaultLabel = t(page.labelKey);
+  const displayLabel = customLabel || defaultLabel;
 
   const startEdit = () => {
-    setDraft(customLabel || page.label);
+    setDraft(customLabel || defaultLabel);
     setEditing(true);
     setTimeout(() => inputRef.current?.select(), 0);
   };
 
   const commit = () => {
     const next = draft.trim();
-    if (next && next !== page.label) {
+    if (next && next !== defaultLabel) {
       updateSetting.mutate({ key: customLabelKey, value: next });
     } else if (!next) {
       updateSetting.mutate({ key: customLabelKey, value: "" });
