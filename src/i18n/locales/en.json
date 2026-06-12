@@ -48,7 +48,8 @@
       "justNow": "Just now",
       "hoursAgo": "hours ago",
       "daysAgo": "days ago"
-    }
+    },
+    "error": "Load failed"
   },
   "nav": {
     "tasks": "Tasks",
@@ -213,7 +214,8 @@
     "deleteSuccess": "Template deleted",
     "deleteFailed": "Delete failed",
     "deleteTitle": "Delete Template",
-    "deleteDescription": "Are you sure you want to delete this template? This action cannot be undone."
+    "deleteDescription": "Are you sure you want to delete this template? This action cannot be undone.",
+    "varMonthWeek": "Month week (1st Mon / last Fri / 3rd last day)"
   },
   "channel": {
     "newChannel": "New Channel",
@@ -413,7 +415,6 @@
     "historyLabel": "History",
     "settingsLabel": "Settings",
     "settings": {
-      "title": "Settings",
       "invalidExpression": "Invalid expression",
       "everyNMinutes": "Every {{interval}} minutes",
       "everyNHours": "Every {{interval}} hours",

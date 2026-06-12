@@ -48,7 +48,8 @@
       "justNow": "방금",
       "hoursAgo": "시간 전",
       "daysAgo": "일 전"
-    }
+    },
+    "error": "로드 실패"
   },
   "nav": {
     "tasks": "작업",
@@ -59,7 +60,8 @@
     "reminder": "알림",
     "home": "대시보드",
     "gitlab": "코드",
-    "sonar": "단위 테스트"
+    "sonar": "단위 테스트",
+    "aiCoverage": "AI 커버리지"
   },
   "dashboard": {
     "title": "대시보드",
@@ -207,7 +209,13 @@
     "deleteSuccess": "템플릿 삭제 완료",
     "deleteFailed": "삭제 실패",
     "deleteTitle": "템플릿 삭제",
-    "deleteDescription": "이 템플릿을 삭제하시겠습니까? 이 작업은 취소할 수 없습니다."
+    "deleteDescription": "이 템플릿을 삭제하시겠습니까? 이 작업은 취소할 수 없습니다.",
+    "varDescription": "작업 설명",
+    "varWeekdayNum": "요일 번호 (1)",
+    "varMonthWeek": "월의 주차 (다음 달 3주차의 월요일 1 / 이번 달 1일 / 이번 달 마지막 3일)",
+    "varWeekOfMonth": "월의 몇 번째 주 (3)",
+    "varDayOfMonth": "월의 몇 번째 날 (13)",
+    "varDaysRemaining": "남은 일수 (18)"
   },
   "channel": {
     "newChannel": "새 채널",

@@ -48,7 +48,8 @@
       "justNow": "たった今",
       "hoursAgo": "時間前",
       "daysAgo": "日前"
-    }
+    },
+    "error": "読み込み失敗"
   },
   "nav": {
     "tasks": "タスク",
@@ -59,7 +60,8 @@
     "reminder": "リマインダー",
     "home": "ダッシュボード",
     "gitlab": "コード",
-    "sonar": "単体テスト"
+    "sonar": "単体テスト",
+    "aiCoverage": "AI カバレッジ"
   },
   "dashboard": {
     "title": "ダッシュボード",
@@ -207,7 +209,13 @@
     "deleteSuccess": "テンプレート削除完了",
     "deleteFailed": "削除失敗",
     "deleteTitle": "テンプレート削除",
-    "deleteDescription": "このテンプレートを削除しますか？この操作は取り消せません。"
+    "deleteDescription": "このテンプレートを削除しますか？この操作は取り消せません。",
+    "varDescription": "タスク説明",
+    "varWeekdayNum": "曜日番号（1）",
+    "varMonthWeek": "月の週（来月第3週の月曜1/今月1日/今月の最後の3日）",
+    "varWeekOfMonth": "月の第何週（3）",
+    "varDayOfMonth": "月の何日目（13）",
+    "varDaysRemaining": "残り日数（18）"
   },
   "channel": {
     "newChannel": "新規チャンネル",
