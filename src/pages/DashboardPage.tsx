@@ -15,6 +15,7 @@ import {
 import { Link } from "react-router-dom";
 import { useState, useEffect, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import type { UnitBoardData, DeveloperStat } from "@/types";
 import { cn } from "@/lib/utils";
 import { useWalkinAuth } from "@/components/modules/gitlab/WalkinAuthManager";
@@ -40,7 +41,8 @@ export function DashboardPage() {
   const { data: gitlabHistory } = useGitLabScanHistory(5);
   const { data: gitlabConfigured } = useGitLabConfigured();
   const { data: gitlabConfig } = useGitLabConfig();
-  const { isLoggedIn } = useWalkinAuth();
+  const { isLoggedIn, userName } = useWalkinAuth();
+  const { t, i18n } = useTranslation();
   const [unitBoardData, setUnitBoardData] = useState<UnitBoardData | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [sonarHistory] = useState(() => getSonarHistory());
@@ -107,19 +109,27 @@ export function DashboardPage() {
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <h2 className="text-sm font-semibold">Dev Tools</h2>
-                <span className="text-[10px] text-muted-foreground font-normal">— {
-                  currentTime.getHours() < 6 ? "夜深了，注意休息 🌙" :
-                  currentTime.getHours() < 9 ? "早上好，新的一天 ☀️" :
-                  currentTime.getHours() < 12 ? "上午好，效率满满 💪" :
-                  currentTime.getHours() < 14 ? "中午好，别忘了休息 🍵" :
-                  currentTime.getHours() < 18 ? "下午好，继续加油 🚀" :
-                  currentTime.getHours() < 22 ? "晚上好，收尾工作 ✨" : "夜深了，注意休息 🌙"
-                }</span>
+                <h2 className="text-sm font-semibold">
+                  {isLoggedIn && userName ? userName : t("dashboard.welcome")}
+                </h2>
+                {(() => {
+                  const h = currentTime.getHours();
+                  const key = h < 6 ? "greetingLateNight" :
+                              h < 9 ? "greetingMorning" :
+                              h < 12 ? "greetingForenoon" :
+                              h < 14 ? "greetingNoon" :
+                              h < 18 ? "greetingAfternoon" :
+                              h < 22 ? "greetingEvening" : "greetingLateNight";
+                  return (
+                    <span className="text-[10px] text-muted-foreground font-normal">
+                      — {t(`dashboard.${key}`)}
+                    </span>
+                  );
+                })()}
               </div>
               <p className="text-[10px] text-muted-foreground">
-                {currentTime.toLocaleDateString("zh-CN", { year: "numeric", month: "long", day: "numeric", weekday: "long" })}
-                {" · "}{currentTime.toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" })}
+                {currentTime.toLocaleDateString(i18n.language, { year: "numeric", month: "long", day: "numeric", weekday: "long" })}
+                {" · "}{currentTime.toLocaleTimeString(i18n.language, { hour: "2-digit", minute: "2-digit" })}
               </p>
             </div>
           </div>
