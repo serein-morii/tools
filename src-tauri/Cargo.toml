@@ -1,6 +1,6 @@
 [package]
 name = "tools"
-version = "0.2.0"
+version = "0.2.1"
 description = "Tools - 桌面工具箱"
 authors = ["pengchenghui"]
 license = "MIT"
