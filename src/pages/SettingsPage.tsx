@@ -6,10 +6,11 @@ import { useSettings, useUpdateSetting, getSettingValue } from "@/lib/query/sett
 import { useQueryClient } from "@tanstack/react-query";
 import { open, save } from "@tauri-apps/plugin-dialog";
 import { invoke } from "@tauri-apps/api/core";
-import { Monitor, Moon, Sun, Power, EyeOff, MonitorUp, Download, Upload, Info, Palette, Database, LayoutGrid, GripVertical, ChevronUp, ChevronDown, RotateCcw, Home, AlertTriangle, Bell, GitBranch, FileCode, Brain, Rocket } from "lucide-react";
+import { Monitor, Moon, Sun, Power, EyeOff, MonitorUp, Download, Upload, Info, Palette, Database, LayoutGrid, GripVertical, ChevronUp, ChevronDown, RotateCcw, Home, AlertTriangle, Bell, GitBranch, FileCode, Brain, Rocket, Pencil, Check, X } from "lucide-react";
 import { ToggleRow } from "@/components/ui/toggle-row";
 import { Switch } from "@/components/ui/switch";
 import { SearchableSelect } from "@/components/ui/searchable-select";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/theme-provider";
 import { toast } from "sonner";
@@ -545,30 +546,142 @@ function ReorderableMenuList({ settings, updateSetting, dragIdx, setDragIdx }: {
       {sorted.map((page, idx) => {
         const visible = getSettingValue(settings, page.key, "true") === "true";
         return (
-          <div
+          <MenuItemRow
             key={page.id}
-            data-menu-item={idx}
-            onPointerDown={(e) => onPointerDown(e, idx)}
+            idx={idx}
+            page={page}
+            visible={visible}
+            settings={settings}
+            updateSetting={updateSetting}
+            onPointerDown={onPointerDown}
             onPointerMove={onPointerMove}
             onPointerUp={onPointerUp}
-            className={itemClass(idx, visible)}
-            style={{ touchAction: "none" }}
-          >
-            <GripVertical className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0 cursor-grab active:cursor-grabbing" />
-            <div className="flex flex-col gap-0.5 shrink-0">
-              <button onClick={(e) => { e.stopPropagation(); moveUp(idx); }} disabled={idx === 0} className="h-3 w-4 flex items-center justify-center text-muted-foreground hover:text-foreground disabled:opacity-30"><ChevronUp className="h-2.5 w-2.5" /></button>
-              <button onClick={(e) => { e.stopPropagation(); moveDown(idx); }} disabled={idx === sorted.length - 1} className="h-3 w-4 flex items-center justify-center text-muted-foreground hover:text-foreground disabled:opacity-30"><ChevronDown className="h-2.5 w-2.5" /></button>
-            </div>
-            <div className="flex items-center gap-1.5 flex-1 text-xs">
-              <page.icon className="h-3.5 w-3.5 text-muted-foreground" />{page.label}
-            </div>
-            <Switch
-              checked={visible}
-              onCheckedChange={(checked) => updateSetting.mutate({ key: page.key, value: checked ? "true" : "false" })}
-            />
-          </div>
+            itemClass={itemClass}
+            moveUp={moveUp}
+            moveDown={moveDown}
+            sortedLength={sorted.length}
+          />
         );
       })}
+    </div>
+  );
+}
+
+function MenuItemRow({
+  idx, page, visible, settings, updateSetting,
+  onPointerDown, onPointerMove, onPointerUp, itemClass, moveUp, moveDown, sortedLength,
+}: {
+  idx: number;
+  page: { id: string; key: string; label: string; icon: React.ComponentType<{ className?: string }> };
+  visible: boolean;
+  settings: any;
+  updateSetting: any;
+  onPointerDown: (e: React.PointerEvent, idx: number) => void;
+  onPointerMove: (e: React.PointerEvent) => void;
+  onPointerUp: (e: React.PointerEvent) => void;
+  itemClass: (idx: number, visible: boolean) => string;
+  moveUp: (idx: number) => void;
+  moveDown: (idx: number) => void;
+  sortedLength: number;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+  const customLabelKey = `menu_label_${page.id}`;
+  const customLabel = getSettingValue(settings, customLabelKey, "");
+  const displayLabel = customLabel || page.label;
+
+  const startEdit = () => {
+    setDraft(customLabel || page.label);
+    setEditing(true);
+    setTimeout(() => inputRef.current?.select(), 0);
+  };
+
+  const commit = () => {
+    const next = draft.trim();
+    if (next && next !== page.label) {
+      updateSetting.mutate({ key: customLabelKey, value: next });
+    } else if (!next) {
+      updateSetting.mutate({ key: customLabelKey, value: "" });
+    }
+    setEditing(false);
+  };
+
+  const cancel = () => {
+    setEditing(false);
+  };
+
+  const reset = () => {
+    updateSetting.mutate({ key: customLabelKey, value: "" });
+    toast.success("已重置为默认名称");
+  };
+
+  return (
+    <div
+      data-menu-item={idx}
+      onPointerDown={(e) => onPointerDown(e, idx)}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      className={itemClass(idx, visible)}
+      style={{ touchAction: "none" }}
+    >
+      <GripVertical className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0 cursor-grab active:cursor-grabbing" />
+      <div className="flex flex-col gap-0.5 shrink-0">
+        <button onClick={(e) => { e.stopPropagation(); moveUp(idx); }} disabled={idx === 0} className="h-3 w-4 flex items-center justify-center text-muted-foreground hover:text-foreground disabled:opacity-30"><ChevronUp className="h-2.5 w-2.5" /></button>
+        <button onClick={(e) => { e.stopPropagation(); moveDown(idx); }} disabled={idx === sortedLength - 1} className="h-3 w-4 flex items-center justify-center text-muted-foreground hover:text-foreground disabled:opacity-30"><ChevronDown className="h-2.5 w-2.5" /></button>
+      </div>
+      <div className="flex items-center gap-1.5 flex-1 min-w-0">
+        <page.icon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+        {editing ? (
+          <Input
+            ref={inputRef}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") { e.preventDefault(); commit(); }
+              if (e.key === "Escape") { e.preventDefault(); cancel(); }
+            }}
+            onBlur={commit}
+            onClick={(e) => e.stopPropagation()}
+            onPointerDown={(e) => e.stopPropagation()}
+            className="h-6 text-xs flex-1 min-w-0"
+            maxLength={20}
+          />
+        ) : (
+          <span className="text-xs truncate" title={displayLabel}>{displayLabel}</span>
+        )}
+      </div>
+      {editing ? (
+        <div className="flex gap-1 shrink-0">
+          <button onClick={(e) => { e.stopPropagation(); commit(); }} className="h-6 w-6 flex items-center justify-center text-emerald-600 hover:bg-muted rounded"><Check className="h-3 w-3" /></button>
+          <button onClick={(e) => { e.stopPropagation(); cancel(); }} className="h-6 w-6 flex items-center justify-center text-muted-foreground hover:bg-muted rounded"><X className="h-3 w-3" /></button>
+        </div>
+      ) : (
+        <div className="flex gap-1 shrink-0">
+          {customLabel ? (
+            <button
+              onClick={(e) => { e.stopPropagation(); reset(); }}
+              onPointerDown={(e) => e.stopPropagation()}
+              className="h-6 w-6 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted rounded transition-colors"
+              title="重置为默认"
+            >
+              <RotateCcw className="h-3 w-3" />
+            </button>
+          ) : null}
+          <button
+            onClick={(e) => { e.stopPropagation(); startEdit(); }}
+            onPointerDown={(e) => e.stopPropagation()}
+            className="h-6 w-6 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted rounded transition-colors"
+            title="重命名"
+          >
+            <Pencil className="h-3 w-3" />
+          </button>
+        </div>
+      )}
+      <Switch
+        checked={visible}
+        onCheckedChange={(checked) => updateSetting.mutate({ key: page.key, value: checked ? "true" : "false" })}
+      />
     </div>
   );
 }

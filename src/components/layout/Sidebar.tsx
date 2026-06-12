@@ -72,25 +72,29 @@ export function Sidebar() {
 
       {/* Navigation */}
       <nav className="flex flex-1 flex-col gap-0.5 p-1.5">
-        {sortedModules.map((mod) => (
-          <NavLink
-            key={mod.id}
-            to={mod.path}
-            end={mod.path === "/home"}
-            className={({ isActive }) =>
-              cn(
-                "group flex items-center gap-2 rounded-md px-2.5 py-1.5 text-xs font-medium transition-all duration-200",
-                isActive
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted",
-                collapsed && "justify-center px-2"
-              )
-            }
-          >
-            <mod.icon className="h-4 w-4 shrink-0" />
-            {!collapsed && <span>{t(mod.labelKey)}</span>}
-          </NavLink>
-        ))}
+        {sortedModules.map((mod) => {
+          const customLabel = getSettingValue(settings, `menu_label_${mod.id}`, "");
+          const label = customLabel || t(mod.labelKey);
+          return (
+            <NavLink
+              key={mod.id}
+              to={mod.path}
+              end={mod.path === "/home"}
+              className={({ isActive }) =>
+                cn(
+                  "group flex items-center gap-2 rounded-md px-2.5 py-1.5 text-xs font-medium transition-all duration-200",
+                  isActive
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted",
+                  collapsed && "justify-center px-2"
+                )
+              }
+            >
+              <mod.icon className="h-4 w-4 shrink-0" />
+              {!collapsed && <span className="truncate" title={label}>{label}</span>}
+            </NavLink>
+          );
+        })}
       </nav>
 
       {/* Settings at bottom */}
