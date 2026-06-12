@@ -1,0 +1,21 @@
+src/pages/SettingsPage.tsx
+  s_e4d1e9beeba44a::t_4ba310db26fd62 604
+  s_e4d1e9beeba44a::t_a64a5045976f76 575,587,593-594,597
+  s_e4d1e9beeba44a::t_e27bc7d02eb5d2 456
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "e75cbfca5320ec24d712cd9716fd287da01626c4",
+  "prompts": {},
+  "sessions": {
+    "s_e4d1e9beeba44a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3bad9193-e60b-491a-8796-627d83b43414",
+        "model": "minimax-m3"
+      },
+      "human_author": "pengchenghui <pengchenghui@jtexpress.com>"
+    }
+  }
+}
