@@ -1,30 +1,17 @@
 import type { GitLabConfig, TokenProfile, LdapProfile } from "@/types";
 
-// Default token profiles
-export const defaultTokenProfiles: TokenProfile[] = [
-  { id: "token-1", token: "yTeXMdEjKoKqvG8ay8VQ", label: "孙强" },
-  { id: "token-2", token: "Kf8mydzuhw2xDwmhsmM4", label: "海兵" },
-];
+// Default token profiles (凭据清空，构建时不带默认账号)
+export const defaultTokenProfiles: TokenProfile[] = [];
 
-// Default LDAP profiles
-export const defaultLdapProfiles: LdapProfile[] = [
-  {
-    id: "ldap-1",
-    username: "RZIK2v1KpNwUBXbpUq6Y/q//pPyfduF0wI66SBF1t3eHTTRekeAvJki8Yhs0C66rtQINbJ8K7a77VYFe7WiBqQ6QOesNt2rN+xb3SWI7/0/KdcI1JJ4wjgiULKxjCVO99TBV0lW9pPzT9wPOb5/AmK5aiZthNxGrBRmzsyGIcMk=",
-    password: "X7ONsfMYenLAdZua6Fj+9l1ZdptEPNHM1l+nMZ8RL+X9vUZyfsxyf+/0zLYCeQhsnAyf3D863PGBqcgXBMBrUI/MRH/VLo44rmrGHZ5WL9kQNSk492t5CqSkeBcU8JeLTF4exYxsYLq4JLDlnYQMZfBC02U+3lwmaaICKxXk4ag=",
-    label: "承辉"
-  },
-];
+// Default LDAP profiles (凭据清空，构建时不带默认账号)
+export const defaultLdapProfiles: LdapProfile[] = [];
 
 // Default selected token IDs (multi-select)
-export const defaultSelectedTokenIds: string[] = ["token-1", "token-2"];
+export const defaultSelectedTokenIds: string[] = [];
 
 export const defaultGitLabConfig: GitLabConfig = {
   url: "http://code.jms.com",
   auth_type: "token",
-  selected_token_id: "token-1",
-  selected_token_ids: defaultSelectedTokenIds,
-  selected_ldap_id: "ldap-1",
   token_profiles: defaultTokenProfiles,
   ldap_profiles: defaultLdapProfiles,
   filter_mode: "include",
