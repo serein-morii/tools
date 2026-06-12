@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Bell, Radio, CheckCircle2, GitBranch, BarChart3, RefreshCw,
   FlaskConical, FileCode, Brain,
-  ArrowRight, LayoutGrid, Settings, MessageSquare, History,
+  ArrowRight, LayoutGrid, Settings, MessageSquare, History, Cog,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState, useEffect, useCallback } from "react";
@@ -27,8 +27,8 @@ const quickLinks = [
   { to: "/reminder/history", icon: History, label: "发送历史", color: "text-cyan-500" },
   { to: "/gitlab/overview", icon: GitBranch, label: "Git扫描", color: "text-orange-500" },
   { to: "/gitlab/settings", icon: Settings, label: "Git 配置", color: "text-gray-500" },
-  { to: "/sonar", icon: FlaskConical, label: "单测覆盖率", color: "text-emerald-500" },
-  { to: "/ai-coverage", icon: Brain, label: "AI生成率", color: "text-violet-500" },
+  { to: "/sonar", icon: FlaskConical, label: "单测覆盖率", color: "text-emerald-500", settingsTo: "/sonar" },
+  { to: "/ai-coverage", icon: Brain, label: "AI生成率", color: "text-violet-500", settingsTo: "/ai-coverage" },
   { to: "/settings", icon: Settings, label: "系统设置", color: "text-muted-foreground" },
 ];
 
@@ -163,10 +163,22 @@ export function DashboardPage() {
       {/* Quick Links */}
       <div className="grid grid-cols-11 gap-1">
         {quickLinks.map(link => (
-          <Link key={link.to} to={link.to} className="flex flex-col items-center gap-0.5 rounded-md border bg-card px-1.5 py-1.5 hover:bg-muted/50 transition-colors group">
-            <link.icon className={cn("h-4 w-4", link.color)} />
-            <span className="text-[9px] text-muted-foreground group-hover:text-foreground leading-tight text-center">{link.label}</span>
-          </Link>
+          <div key={link.to} className="relative group">
+            <Link to={link.to} className="flex flex-col items-center gap-0.5 rounded-md border bg-card px-1.5 py-1.5 hover:bg-muted/50 transition-colors">
+              <link.icon className={cn("h-4 w-4", link.color)} />
+              <span className="text-[9px] text-muted-foreground group-hover:text-foreground leading-tight text-center">{link.label}</span>
+            </Link>
+            {"settingsTo" in link && link.settingsTo && (
+              <Link
+                to={link.settingsTo}
+                title="设置"
+                onClick={(e) => e.stopPropagation()}
+                className="absolute top-0.5 right-0.5 h-4 w-4 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <Cog className="h-2.5 w-2.5" />
+              </Link>
+            )}
+          </div>
         ))}
       </div>
 
