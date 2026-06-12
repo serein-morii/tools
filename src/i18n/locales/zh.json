@@ -66,6 +66,13 @@
   "dashboard": {
     "title": "概览",
     "description": "查看应用整体状态",
+    "welcome": "Dev Tools",
+    "greetingMorning": "早安",
+    "greetingForenoon": "上午好",
+    "greetingNoon": "中午好",
+    "greetingAfternoon": "下午好",
+    "greetingEvening": "晚上好",
+    "greetingLateNight": "夜深了",
     "successRate": "成功率",
     "available": "可用",
     "upcoming": "本周即将执行",

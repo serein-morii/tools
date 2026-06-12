@@ -66,6 +66,13 @@
   "dashboard": {
     "title": "ダッシュボード",
     "description": "アプリの全体状態",
+    "welcome": "Dev Tools",
+    "greetingMorning": "おはようございます",
+    "greetingForenoon": "おはようございます",
+    "greetingNoon": "こんにちは",
+    "greetingAfternoon": "こんにちは",
+    "greetingEvening": "こんばんは",
+    "greetingLateNight": "夜遅く",
     "successRate": "成功率",
     "available": "利用可能",
     "upcoming": "今週の予定タスク",

@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   Brain, ChevronRight, ChevronDown, Users, GitCommit, Code2,
   Calendar, RefreshCw, Search, ChevronLeft, User, Trophy,
@@ -498,7 +499,11 @@ function DepartmentRow({
 }
 
 export function AiCoveragePage() {
-  const [activeTab, setActiveTab] = useState<"coverage" | "settings">("coverage");
+  const [searchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState<"coverage" | "settings">(() => {
+    const tab = searchParams.get("tab");
+    return tab === "settings" ? "settings" : "coverage";
+  });
   const [config, setConfig] = useState<AiCoverageConfig>(getConfig);
 
   const [data, setData] = useState<AiCoverageResponse | null>(null);

@@ -66,6 +66,13 @@
   "dashboard": {
     "title": "Dashboard",
     "description": "Overview of your app status",
+    "welcome": "Dev Tools",
+    "greetingMorning": "Good morning",
+    "greetingForenoon": "Good morning",
+    "greetingNoon": "Good noon",
+    "greetingAfternoon": "Good afternoon",
+    "greetingEvening": "Good evening",
+    "greetingLateNight": "Good night",
     "successRate": "Success Rate",
     "available": "available",
     "upcoming": "Upcoming Tasks (This Week)",

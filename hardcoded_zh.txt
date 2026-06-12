@@ -1,0 +1,658 @@
+src\components\SetupWizard.tsx:72:     { key: "welcome", title: "欢迎", icon: <span className="h-4 w-4 flex items-center justify-center text-sm">👋</span> },
+src\components\SetupWizard.tsx:73:     { key: "gitlab", title: "GitLab 代码", icon: <GitBranch className="h-4 w-4" /> },
+src\components\SetupWizard.tsx:74:     { key: "walkin", title: "单测覆盖率", icon: <FlaskConical className="h-4 w-4" /> },
+src\components\SetupWizard.tsx:75:     { key: "done", title: "完成", icon: <Check className="h-4 w-4" /> },
+src\components\SetupWizard.tsx:82:       toast.error("请输入 GitLab 服务器地址");
+src\components\SetupWizard.tsx:92:         toast.success("GitLab 连接成功");
+src\components\SetupWizard.tsx:94:         toast.error("GitLab 连接失败");
+src\components\SetupWizard.tsx:99:       toast.error(`连接失败: ${msg}`);
+src\components\SetupWizard.tsx:128:         toast.success(`已切换到部门: ${deptName}`);
+src\components\SetupWizard.tsx:135:         toast.warning("该工作空间下没有关联部门");
+src\components\SetupWizard.tsx:143:       toast.error("获取部门失败: " + (e instanceof Error ? e.message : String(e)));
+src\components\SetupWizard.tsx:168:         label: "默认",
+src\components\SetupWizard.tsx:174:     toast.success("Walkin 登录成功，已获取工作空间列表");
+src\components\SetupWizard.tsx:186:       toast.error("刷新验证码失败");
+src\components\SetupWizard.tsx:193:       toast.error("请输入验证码");
+src\components\SetupWizard.tsx:210:         toast.error(resp.message || "登录失败");
+src\components\SetupWizard.tsx:215:       toast.error(`登录失败: ${msg}`);
+src\components\SetupWizard.tsx:225:       toast.error("请填写 Walkin 地址、用户名和密码");
+src\components\SetupWizard.tsx:251:         toast.warning("需要手动输入验证码");
+src\components\SetupWizard.tsx:254:         toast.error(result.message || "登录失败");
+src\components\SetupWizard.tsx:259:       toast.error(`登录失败: ${msg}`);
+src\components\SetupWizard.tsx:298:       toast.error(`保存配置失败: ${msg}`);
+src\components\SetupWizard.tsx:338:                 <h2 className="text-lg font-bold mb-2">欢迎使用 Dev Tools</h2>
+src\components\SetupWizard.tsx:340:                   这是一个开发者工具箱，帮助您管理代码扫描、单测覆盖率等任务。
+src\components\SetupWizard.tsx:345:                     <span>GitLab 扫描</span>
+src\components\SetupWizard.tsx:349:                     <span>覆盖率分析</span>
+src\components\SetupWizard.tsx:353:                     <span>Prompt 生成</span>
+src\components\SetupWizard.tsx:364:                   <h2 className="text-sm font-semibold">GitLab 连接配置</h2>
+src\components\SetupWizard.tsx:366:                 <p className="text-xs text-muted-foreground">配置 GitLab 服务器连接，用于扫描代码提交、检测单测覆盖情况。</p>
+src\components\SetupWizard.tsx:370:                     <label className="text-xs font-medium">服务器地址</label>
+src\components\SetupWizard.tsx:384:                         placeholder="输入 GitLab Private Token"
+src\components\SetupWizard.tsx:389:                             : [{ id: "default", token: e.target.value, label: "默认" }];
+src\components\SetupWizard.tsx:395:                         {showToken ? "隐藏" : "显示"}
+src\components\SetupWizard.tsx:398:                     <p className="text-xs text-muted-foreground mt-1">💡 在 GitLab 设置 → Access Tokens 中生成</p>
+src\components\SetupWizard.tsx:404:                       测试连接
+src\components\SetupWizard.tsx:406:                     {connectionStatus === "success" && <span className="text-xs text-emerald-600 flex items-center gap-1"><Check className="h-3 w-3" /> 连接成功</sp
+src\components\SetupWizard.tsx:407:                     {connectionStatus === "failed" && <span className="text-xs text-destructive">连接失败</span>}
+src\components\SetupWizard.tsx:418:                   <h2 className="text-sm font-semibold">Walkin 代码质量集成</h2>
+src\components\SetupWizard.tsx:420:                 <p className="text-xs text-muted-foreground">配置 Walkin 平台账号，登录后自动获取部门和工作空间信息。此步骤可选，您可以稍后在设置中配置。</p>
+src\components\SetupWizard.tsx:424:                     <label className="text-xs font-medium flex items-center gap-1"><KeyRound className="h-3 w-3" /> Walkin 地址</label>
+src\components\SetupWizard.tsx:435:                       <label className="text-xs font-medium">用户名</label>
+src\components\SetupWizard.tsx:437:                         placeholder="LDAP 用户名"
+src\components\SetupWizard.tsx:444:                       <label className="text-xs font-medium">密码</label>
+src\components\SetupWizard.tsx:448:                           placeholder="LDAP 密码"
+src\components\SetupWizard.tsx:454:                           {showPassword ? "隐藏" : "显示"}
+src\components\SetupWizard.tsx:469:                       登录获取信息
+src\components\SetupWizard.tsx:471:                     {walkinLoginStatus === "success" && <span className="text-xs text-emerald-600 flex items-center gap-1"><Check className="h-3 w-3" /> 登录成功</s
+src\components\SetupWizard.tsx:472:                     {walkinLoginStatus === "failed" && <span className="text-xs text-destructive">登录失败</span>}
+src\components\SetupWizard.tsx:479:                         <label className="text-xs font-medium flex items-center gap-1"><FolderGit2 className="h-3 w-3" /> 工作空间</label>
+src\components\SetupWizard.tsx:505:                           <label className="text-xs font-medium flex items-center gap-1"><Building2 className="h-3 w-3" /> 部门 ID</label>
+src\components\SetupWizard.tsx:509:                           <label className="text-xs font-medium">部门名称</label>
+src\components\SetupWizard.tsx:514:                       <p className="text-xs text-muted-foreground">💡 选择工作空间后自动获取对应的部门信息</p>
+src\components\SetupWizard.tsx:519:                     <p className="text-xs text-muted-foreground">💡 登录后自动获取工作空间和部门信息。如果验证码识别失败，可稍后在设置页面完成。</p>
+src\components\SetupWizard.tsx:529:                 <h2 className="text-lg font-bold mb-2">配置完成！</h2>
+src\components\SetupWizard.tsx:531:                   您已成功完成初始配置。现在可以开始使用 Dev Tools 了！
+src\components\SetupWizard.tsx:534:                   <p>• 在 <strong>GitLab 代码</strong> 中查看代码扫描结果</p>
+src\components\SetupWizard.tsx:535:                   <p>• 在 <strong>单测覆盖率</strong> 中生成单测 Prompt</p>
+src\components\SetupWizard.tsx:536:                   <p>• 随时可在 <strong>各模块配置</strong> 中修改配置</p>
+src\components\SetupWizard.tsx:548:                   跳过，稍后设置
+src\components\SetupWizard.tsx:556:                   上一步
+src\components\SetupWizard.tsx:561:                   开始配置
+src\components\SetupWizard.tsx:567:                   下一步
+src\components\SetupWizard.tsx:574:                   完成配置
+src\components\SetupWizard.tsx:579:                   开始使用
+src\components\SetupWizard.tsx:594:                 <h3 className="font-medium text-sm">Walkin 验证码</h3>
+src\components\SetupWizard.tsx:596:               <p className="text-xs text-muted-foreground mt-1">自动识别失败，请手动输入验证码</p>
+src\components\SetupWizard.tsx:603:                     alt="验证码"
+src\components\SetupWizard.tsx:606:                     title="点击刷新验证码"
+src\components\SetupWizard.tsx:614:                   placeholder="输入验证码"
+src\components\SetupWizard.tsx:625:                 <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setShowCaptchaDialog(false)} disabled={isCaptchaLoggingIn}>取消</Button
+src\components\SetupWizard.tsx:628:                   确认登录
+src\components\modules\aiCoverage\SettingsTab.tsx:43:     toast.success("配置已保存");
+src\components\modules\aiCoverage\SettingsTab.tsx:54:           <h2 className="text-sm font-medium">API 配置</h2>
+src\components\modules\aiCoverage\SettingsTab.tsx:56:             配置 AI 覆盖率统计 API 的基础地址
+src\components\modules\aiCoverage\SettingsTab.tsx:62:             <Label htmlFor="apiBaseUrl" className="text-xs">API 基础地址</Label>
+src\components\modules\aiCoverage\SettingsTab.tsx:71:               默认值: {DEFAULT_API_BASE_URL}
+src\components\modules\aiCoverage\SettingsTab.tsx:83:             保存配置
+src\components\modules\aiCoverage\SettingsTab.tsx:91:             恢复默认
+src\components\modules\gitlab\GitLabLayout.tsx:10:     { to: "/gitlab/overview", label: t("gitlab.overviewLabel", "概览"), icon: BarChart3 },
+src\components\modules\gitlab\GitLabLayout.tsx:11:     { to: "/gitlab/history", label: t("gitlab.historyLabel", "历史"), icon: History },
+src\components\modules\gitlab\GitLabLayout.tsx:12:     { to: "/gitlab/settings", label: t("gitlab.settingsLabel", "配置"), icon: Settings },
+src\components\modules\gitlab\UnitCoverageList.tsx:173:       {/* 增量-综合 */}
+src\components\modules\gitlab\UnitCoverageList.tsx:177:       {/* 增量-行覆盖 */}
+src\components\modules\gitlab\UnitCoverageList.tsx:181:       {/* 增量-条件 */}
+src\components\modules\gitlab\UnitCoverageList.tsx:185:       {/* 全量-综合 */}
+src\components\modules\gitlab\UnitCoverageList.tsx:189:       {/* 全量-行覆盖 */}
+src\components\modules\gitlab\UnitCoverageList.tsx:193:       {/* 全量-条件 */}
+src\components\modules\gitlab\UnitCoverageList.tsx:221:           <RatingBadge rating={item.reliabilityRating} label="可靠性" />
+src\components\modules\gitlab\UnitCoverageList.tsx:222:           <RatingBadge rating={item.securityRating} label="安全性" />
+src\components\modules\gitlab\UnitCoverageList.tsx:223:           <RatingBadge rating={item.maintainabilityRating} label="可维护性" />
+src\components\modules\gitlab\UnitCoverageList.tsx:292:         toast.error("请先配置 Walkin 登录信息");
+src\components\modules\gitlab\UnitCoverageList.tsx:310:       toast.error("获取覆盖率数据失败: " + (e instanceof Error ? e.message : String(e)));
+src\components\modules\gitlab\UnitCoverageList.tsx:364:         <span className="ml-2 text-sm text-muted-foreground">加载中...</span>
+src\components\modules\gitlab\UnitCoverageList.tsx:378:             placeholder="搜索项目名、分支、触发人..."
+src\components\modules\gitlab\UnitCoverageList.tsx:383:           共 {filteredAndSorted.length} 个应用
+src\components\modules\gitlab\UnitCoverageList.tsx:396:                       项目 <SortIcon field="projectName" sortField={sortField} sortOrder={sortOrder} />
+src\components\modules\gitlab\UnitCoverageList.tsx:401:                       增量覆盖率 <SortIcon field="newCoverage" sortField={sortField} sortOrder={sortOrder} />
+src\components\modules\gitlab\UnitCoverageList.tsx:406:                       全量覆盖率 <SortIcon field="coverage" sortField={sortField} sortOrder={sortOrder} />
+src\components\modules\gitlab\UnitCoverageList.tsx:419:                   <th className="px-1 py-1 text-center font-medium" rowSpan={2}>评级</th>
+src\components\modules\gitlab\UnitCoverageList.tsx:422:                       单测 <SortIcon field="tests" sortField={sortField} sortOrder={sortOrder} />
+src\components\modules\gitlab\UnitCoverageList.tsx:425:                   <th className="px-1 py-1 text-center font-medium" rowSpan={2}>通过率</th>
+src\components\modules\gitlab\UnitCoverageList.tsx:426:                   <th className="px-1 py-1 text-center font-medium" rowSpan={2}>重复率</th>
+src\components\modules\gitlab\UnitCoverageList.tsx:427:                   <th className="px-1 py-1 text-center font-medium sticky right-0 bg-muted/50 z-10" rowSpan={2}>操作</th>
+src\components\modules\gitlab\UnitCoverageList.tsx:430:                   <th className="px-1.5 py-0.5 text-center text-[10px] font-normal text-muted-foreground">综合</th>
+src\components\modules\gitlab\UnitCoverageList.tsx:431:                   <th className="px-1.5 py-0.5 text-center text-[10px] font-normal text-muted-foreground">行覆盖</th>
+src\components\modules\gitlab\UnitCoverageList.tsx:432:                   <th className="px-1.5 py-0.5 text-center text-[10px] font-normal text-muted-foreground">条件</th>
+src\components\modules\gitlab\UnitCoverageList.tsx:433:                   <th className="px-1.5 py-0.5 text-center text-[10px] font-normal text-muted-foreground">综合</th>
+src\components\modules\gitlab\UnitCoverageList.tsx:434:                   <th className="px-1.5 py-0.5 text-center text-[10px] font-normal text-muted-foreground">行覆盖</th>
+src\components\modules\gitlab\UnitCoverageList.tsx:435:                   <th className="px-1.5 py-0.5 text-center text-[10px] font-normal text-muted-foreground">条件</th>
+src\components\modules\gitlab\UnitCoverageList.tsx:442:                       暂无覆盖率数据
+src\components\modules\gitlab\WalkinAuthManager.tsx:68:       toast.error("Walkin 未配置或 Token 为空");
+src\components\modules\gitlab\WalkinAuthManager.tsx:81:         toast.success(`✓ 已登录: ${result.user_name || "未知"}`);
+src\components\modules\gitlab\WalkinAuthManager.tsx:83:         toast.error("✗ 未登录 Walkin");
+src\components\modules\gitlab\WalkinAuthManager.tsx:88:       toast.error("✗ Walkin 登录检测失败");
+src\components\modules\gitlab\WalkinAuthManager.tsx:106:       toast.error("请先配置 Walkin 地址");
+src\components\modules\gitlab\WalkinAuthManager.tsx:113:       toast.error("请先配置 LDAP 用户名和密码");
+src\components\modules\gitlab\WalkinAuthManager.tsx:130:         toast.success("Walkin 自动登录成功");
+src\components\modules\gitlab\WalkinAuthManager.tsx:138:         const errMsg = result.message || "自动登录失败，未知原因";
+src\components\modules\gitlab\WalkinAuthManager.tsx:139:         toast.error(`自动登录失败: ${errMsg}`, { duration: 6000 });
+src\components\modules\gitlab\WalkinAuthManager.tsx:143:       toast.error(`自动登录异常: ${errMsg}`, { duration: 6000 });
+src\components\modules\gitlab\WalkinAuthManager.tsx:153:       toast.error("配置未加载");
+src\components\modules\gitlab\WalkinAuthManager.tsx:160:       toast.error("请输入验证码");
+src\components\modules\gitlab\WalkinAuthManager.tsx:176:         toast.success("登录成功");
+src\components\modules\gitlab\WalkinAuthManager.tsx:178:         const errMsg = resp.message || "登录失败";
+src\components\modules\gitlab\WalkinAuthManager.tsx:199:       toast.error("刷新验证码失败");
+src\components\modules\gitlab\WalkinAuthManager.tsx:217:           toast.warning("Walkin 登录已过期，正在尝试重新登录...");
+src\components\modules\gitlab\WalkinAuthManager.tsx:237:         toast.info("检测到未登录，正在自动登录 Walkin...");
+src\components\modules\gitlab\WalkinAuthManager.tsx:252:       {/* 验证码弹窗 */}
+src\components\modules\gitlab\WalkinAuthManager.tsx:258:               <h3 className="font-medium">Walkin 验证码</h3>
+src\components\modules\gitlab\WalkinAuthManager.tsx:261:               <p className="text-sm text-muted-foreground">自动识别失败，请手动输入验证码</p>
+src\components\modules\gitlab\WalkinAuthManager.tsx:262:               <p className="text-xs text-muted-foreground/70">提示：如多次登录失败，请检查 LDAP 用户名和密码是否正确</p>
+src\components\modules\gitlab\WalkinAuthManager.tsx:270:                     alt="验证码"
+src\components\modules\gitlab\WalkinAuthManager.tsx:273:                     title="点击刷新验证码"
+src\components\modules\gitlab\WalkinAuthManager.tsx:278:                 <Input value={captcha} onChange={(e) => setCaptcha(e.target.value)} placeholder="输入验证码" autoFocus disabled={isLoggingIn} onKeyDown={(e) => e.key
+src\components\modules\gitlab\WalkinAuthManager.tsx:282:                 <Button variant="outline" size="sm" onClick={() => setShowCaptchaDialog(false)} disabled={isLoggingIn}>取消</Button>
+src\components\modules\gitlab\WalkinAuthManager.tsx:283:                 <Button size="sm" onClick={handleCaptchaLogin} disabled={isLoggingIn || !captcha}>{isLoggingIn && <Loader2 className="mr-2 h-4 w-4 animate-spin"
+src\components\modules\gitlab\WalkinAuthManager.tsx:290:       {/* 自动登录中的提示 */}
+src\components\modules\gitlab\WalkinAuthManager.tsx:294:           <span className="text-sm">正在自动登录 Walkin...</span>
+src\components\modules\gitlab\WalkinLoginDialog.tsx:28:       toast.error("请输入用户名和密码");
+src\components\modules\gitlab\WalkinLoginDialog.tsx:32:       toast.error("请先配置 Walkin 地址");
+src\components\modules\gitlab\WalkinLoginDialog.tsx:37:     setStatusText("正在获取验证码并自动识别...");
+src\components\modules\gitlab\WalkinLoginDialog.tsx:52:         toast.success("自动登录成功！");
+src\components\modules\gitlab\WalkinLoginDialog.tsx:61:         toast.warning("自动识别失败，请手动输入验证码");
+src\components\modules\gitlab\WalkinLoginDialog.tsx:63:         toast.error(result.message || "登录失败");
+src\components\modules\gitlab\WalkinLoginDialog.tsx:66:       toast.error("登录失败: " + (error instanceof Error ? error.message : String(error)));
+src\components\modules\gitlab\WalkinLoginDialog.tsx:80:       toast.error("刷新验证码失败");
+src\components\modules\gitlab\WalkinLoginDialog.tsx:86:       toast.error("请输入验证码");
+src\components\modules\gitlab\WalkinLoginDialog.tsx:101:         toast.success("登录成功！");
+src\components\modules\gitlab\WalkinLoginDialog.tsx:104:         toast.error(resp.message || "登录失败，请检查验证码");
+src\components\modules\gitlab\WalkinLoginDialog.tsx:108:       toast.error("登录失败: " + (error instanceof Error ? error.message : String(error)));
+src\components\modules\gitlab\WalkinLoginDialog.tsx:120:           <h3 className="font-medium">Walkin LDAP 登录</h3>
+src\components\modules\gitlab\WalkinLoginDialog.tsx:125:             <label className="text-sm font-medium">用户名</label>
+src\components\modules\gitlab\WalkinLoginDialog.tsx:129:               placeholder="LDAP 用户名"
+src\components\modules\gitlab\WalkinLoginDialog.tsx:134:             <label className="text-sm font-medium">密码</label>
+src\components\modules\gitlab\WalkinLoginDialog.tsx:139:               placeholder="LDAP 密码"
+src\components\modules\gitlab\WalkinLoginDialog.tsx:156:                 <span className="text-sm text-muted-foreground">验证码 (自动识别失败，请手动输入)</span>
+src\components\modules\gitlab\WalkinLoginDialog.tsx:164:                   alt="验证码"
+src\components\modules\gitlab\WalkinLoginDialog.tsx:167:                   title="点击刷新验证码"
+src\components\modules\gitlab\WalkinLoginDialog.tsx:174:                   placeholder="输入验证码"
+src\components\modules\gitlab\WalkinLoginDialog.tsx:185:               取消
+src\components\modules\gitlab\WalkinLoginDialog.tsx:190:                 验证登录
+src\components\modules\gitlab\WalkinLoginDialog.tsx:195:                 自动登录
+src\components\modules\reminder\ChannelCard.tsx:100:                 ) : channel.last_test_result?.includes("发送成功") ? (
+src\components\modules\reminder\CronEditor.tsx:224:           {/* 时间设置 - 对 nth_weekday 和 last_day 都需要 */}
+src\components\modules\reminder\ReminderLayout.tsx:14:     { to: "/reminder/settings", label: "配置", icon: Settings },
+src\components\modules\reminder\TaskCard.tsx:19:     return cronConfigStr || "自定义时间";
+src\components\ui\copy-button.tsx:33:           {showText && "已复制"}
+src\components\ui\copy-button.tsx:38:           {showText && "复制"}
+src\components\ui\searchable-select.tsx:26:   placeholder = "请选择",
+src\components\ui\searchable-select.tsx:29:   emptyMessage = "无匹配项",
+src\components\ui\searchable-select.tsx:99:                 placeholder="搜索..."
+src\config\modules.ts:24:     label: "首页",
+src\config\modules.ts:26:     description: "概览面板",
+src\config\modules.ts:35:     description: "GitLab 代码扫描",
+src\config\modules.ts:44:     description: "Sonar 代码质量",
+src\config\modules.ts:51:     label: "AI 覆盖率",
+src\config\modules.ts:53:     description: "AI 覆盖率统计",
+src\config\modules.ts:60:     label: "提醒",
+src\config\modules.ts:62:     description: "管理定时任务和提醒",
+src\config\modules.ts:69:     label: "设置",
+src\config\modules.ts:71:     description: "应用设置和通知渠道配置",
+src\lib\cron.ts:85:       errors.push("时间不能为空");
+src\lib\cron.ts:88:       errors.push("请选择星期几");
+src\lib\cron.ts:91:       errors.push("请选择日期");
+src\lib\cron.ts:97:       errors.push("Cron 表达式不能为空");
+src\lib\cron.ts:105:           errors.push("请配置第 N 个星期几");
+src\lib\cron.ts:110:           errors.push("请配置间隔时间");
+src\lib\cron.ts:136:           const weekdays = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
+src\lib\cron.ts:137:           desc = `每${weekdays[dayOfWeek ?? 0]} ${timeStr}`;
+src\lib\cron.ts:148:           const months = ["一月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "十一月", "十二月"];
+src\lib\cron.ts:149:           desc = `每年${months[month ?? 0]} ${dayOfMonth} 日 ${timeStr}`;
+src\lib\cron.ts:163:           const unitName = t ? t(`cron.${interval.unit}`) : { minutes: "分钟", hours: "小时", days: "天", weeks: "周" }[interval.unit];
+src\lib\cron.ts:166:             : `每 ${interval.value} ${unitName}，从 ${interval.startTime} 开始`;
+src\lib\cron.ts:172:           const nthName = t ? [t("cron.everyMonth"), t("cron.nth1"), t("cron.nth2"), t("cron.nth3"), t("cron.nth4"), t("cron.nth5")][nthWeekday.nth] : ["", "第 1
+src\lib\cron.ts:175:             : ["周一", "周二", "周三", "周四", "周五", "周六", "周日"][nthWeekday.weekday];
+src\lib\cron.ts:180:               : ["一月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "十一月", "十二月"][nthWeekday.month - 1];
+src\lib\cron.ts:200:               const nthStr = `倒数第${lastDay.nth}天`;
+src\lib\cron.ts:202:                 const months = ["一月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "十一月", "十二月"];
+src\lib\cron.ts:203:                 desc = `每年${months[lastDay.month - 1]}${nthStr}`;
+src\lib\cron.ts:205:                 desc = `每月${nthStr}`;
+src\lib\cron.ts:209:             const typeName = t ? t("cron.lastWorkday") : "最后一个工作日";
+src\lib\cron.ts:213:                 : ["一月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "十一月", "十二月"][lastDay.month - 1];
+src\lib\cron.ts:219:             const typeName = t ? t("cron.lastFriday") : "最后一个周五";
+src\lib\cron.ts:223:                 : ["一月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "十一月", "十二月"][lastDay.month - 1];
+src\lib\cron.ts:229:             const typeName = t ? t("cron.lastDayOfMonth") : "最后一天";
+src\lib\cron.ts:236:         desc = t ? t("cron.special") : "自定义偏移日期";
+src\lib\cron.ts:246:       : `高级: ${config.advanced.expression}${endConditionStr ? `，${endConditionStr}` : ""}`;
+src\lib\cron.ts:249:   return t ? t("cron.special") : "自定义时间";
+src\lib\cron.ts:261:         : `执行 ${config.endCondition.occurrences ?? 10} 次后结束`;
+src\lib\cron.ts:265:         : `${config.endCondition.untilDate} 后结束`;
+src\lib\gitlab\defaults.ts:19:   test_keywords: ["单测", "测试", "用例", "test", "spec"],
+src\lib\gitlab\defaults.ts:29:   walkin_dept_name: "产品架构",
+src\lib\gitlab\defaults.ts:31:   walkin_workspace_name: "产品架构&PMO",
+src\lib\gitlab\defaults.ts:37:   select_page_type: "代码行",
+src\lib\gitlab\format.ts:10:   if (hours < 1) return "刚刚";
+src\lib\gitlab\format.ts:11:   if (hours < 24) return `${hours}小时前`;
+src\lib\gitlab\format.ts:13:   if (days < 7) return `${days}天前`;
+src\lib\sonar\templates.ts:11: const DEFAULT_CONTENT = `请根据 Sonar 覆盖率报告，为以下 Java 类补充单元测试。
+src\lib\sonar\templates.ts:15: 要求：
+src\lib\sonar\templates.ts:17: - 不允许修改业务代码
+src\lib\sonar\templates.ts:18: - 覆盖正常 / 异常 / 边界
+src\lib\sonar\templates.ts:19: - 行覆盖率 ≥ 90%
+src\lib\sonar\templates.ts:20: - 分支覆盖率 ≥ 90%
+src\lib\sonar\templates.ts:21: - 读取idea工作空间的maven配置
+src\lib\sonar\templates.ts:22: - 保证本地测试通过
+src\lib\sonar\templates.ts:24: 重点：不要只按行号写测试，要分析完整逻辑路径。
+src\lib\sonar\templates.ts:29:   name: "默认模板",
+src\pages\AiCoveragePage.tsx:18:   { key: "coverage", label: "生成率", icon: Brain },
+src\pages\AiCoveragePage.tsx:19:   { key: "settings", label: "配置", icon: Settings },
+src\pages\AiCoveragePage.tsx:25:   parentDept?: string; // 一级部门名称，用于二级部门时传递
+src\pages\AiCoveragePage.tsx:162:             人员
+src\pages\AiCoveragePage.tsx:176:               暂无人员数据
+src\pages\AiCoveragePage.tsx:259:                           暂无提交数据
+src\pages\AiCoveragePage.tsx:355:                                       查看完整提交
+src\pages\AiCoveragePage.tsx:380:                                       <span className="text-muted-foreground">文件:</span>
+src\pages\AiCoveragePage.tsx:392:                                       <span className="text-muted-foreground">人工</span>
+src\pages\AiCoveragePage.tsx:396:                                       <span className="text-muted-foreground">删除</span>
+src\pages\AiCoveragePage.tsx:399:                                       <span className="text-muted-foreground">AI率:</span>
+src\pages\AiCoveragePage.tsx:413:                                       <div className="text-[9px] text-muted-foreground mb-0.5">变更文件:</div>
+src\pages\AiCoveragePage.tsx:438:                                             ? "收起"
+src\pages\AiCoveragePage.tsx:439:                                             : `还有 ${commitDetail.valid_files.length - 10} 个文件...`
+src\pages\AiCoveragePage.tsx:449:                                       排除: {commitDetail.excluded_files.slice(0, 5).join(", ")}
+src\pages\AiCoveragePage.tsx:450:                                       {commitDetail.excluded_files.length > 5 && ` 等 ${commitDetail.excluded_files.length} 个`}
+src\pages\AiCoveragePage.tsx:523:   const [filesExpanded, setFilesExpanded] = useState<Set<string>>(new Set()); // 文件列表展开状态
+src\pages\AiCoveragePage.tsx:537:     { label: "近7天", start: -7, end: 0 },
+src\pages\AiCoveragePage.tsx:538:     { label: "近30天", start: -30, end: 0 },
+src\pages\AiCoveragePage.tsx:539:     { label: "近90天", start: -90, end: 0 },
+src\pages\AiCoveragePage.tsx:540:     { label: "本月", start: "month", end: 0 },
+src\pages\AiCoveragePage.tsx:541:     { label: "上月", start: "lastMonth", end: "lastMonthEnd" },
+src\pages\AiCoveragePage.tsx:583:       toast.error(`获取数据失败: ${e instanceof Error ? e.message : String(e)}`);
+src\pages\AiCoveragePage.tsx:600:       toast.error(`获取人员数据失败: ${e instanceof Error ? e.message : String(e)}`);
+src\pages\AiCoveragePage.tsx:622:       toast.error(`获取提交数据失败: ${e instanceof Error ? e.message : String(e)}`);
+src\pages\AiCoveragePage.tsx:687:       toast.error(`获取提交详情失败: ${e instanceof Error ? e.message : String(e)}`);
+src\pages\AiCoveragePage.tsx:749:               <h1 className="text-sm font-medium">AI 生成率</h1>
+src\pages\AiCoveragePage.tsx:813:                 查询
+src\pages\AiCoveragePage.tsx:821:                   <p className="text-[10px] text-muted-foreground mb-1">AI 生成率</p>
+src\pages\AiCoveragePage.tsx:827:                   <p className="text-[10px] text-muted-foreground mb-1">总代码行</p>
+src\pages\AiCoveragePage.tsx:833:                   <p className="text-[10px] text-muted-foreground mb-1">AI 代码行</p>
+src\pages\AiCoveragePage.tsx:839:                   <p className="text-[10px] text-muted-foreground mb-1">总提交数</p>
+src\pages\AiCoveragePage.tsx:845:                   <p className="text-[10px] text-muted-foreground mb-1">AI 提交数</p>
+src\pages\AiCoveragePage.tsx:863:                     placeholder="搜索部门..."
+src\pages\AiCoveragePage.tsx:869:                   展开全部
+src\pages\AiCoveragePage.tsx:872:                   收起全部
+src\pages\AiCoveragePage.tsx:877:                   共 {data.departments.length} 个部门
+src\pages\AiCoveragePage.tsx:884:               <span className="flex-1">部门 / 团队</span>
+src\pages\AiCoveragePage.tsx:885:               <span className="w-20 text-right">代码行</span>
+src\pages\AiCoveragePage.tsx:886:               <span className="w-14 text-right">覆盖率</span>
+src\pages\AiCoveragePage.tsx:899:                   <p className="text-xs">暂无数据</p>
+src\pages\ChannelsPage.tsx:66:               <h1 className="text-sm font-medium">渠道管理</h1>
+src\pages\DashboardPage.tsx:23:   { to: "/reminder/tasks", icon: Bell, label: "提醒任务", color: "text-amber-500" },
+src\pages\DashboardPage.tsx:24:   { to: "/reminder/channels", icon: Radio, label: "通知渠道", color: "text-blue-500" },
+src\pages\DashboardPage.tsx:25:   { to: "/reminder/templates", icon: FileCode, label: "消息模板", color: "text-purple-500" },
+src\pages\DashboardPage.tsx:26:   { to: "/reminder/history", icon: History, label: "发送历史", color: "text-cyan-500" },
+src\pages\DashboardPage.tsx:27:   { to: "/gitlab/overview", icon: GitBranch, label: "Git扫描", color: "text-orange-500" },
+src\pages\DashboardPage.tsx:28:   { to: "/gitlab/settings", icon: Settings, label: "Git 配置", color: "text-gray-500" },
+src\pages\DashboardPage.tsx:29:   { to: "/sonar", icon: FlaskConical, label: "单测覆盖率", color: "text-emerald-500" },
+src\pages\DashboardPage.tsx:30:   { to: "/ai-coverage", icon: Brain, label: "AI生成率", color: "text-violet-500" },
+src\pages\DashboardPage.tsx:31:   { to: "/settings", icon: Settings, label: "系统设置", color: "text-muted-foreground" },
+src\pages\DashboardPage.tsx:112:                   currentTime.getHours() < 6 ? "夜深了，注意休息 🌙" :
+src\pages\DashboardPage.tsx:113:                   currentTime.getHours() < 9 ? "早上好，新的一天 ☀️" :
+src\pages\DashboardPage.tsx:114:                   currentTime.getHours() < 12 ? "上午好，效率满满 💪" :
+src\pages\DashboardPage.tsx:115:                   currentTime.getHours() < 14 ? "中午好，别忘了休息 🍵" :
+src\pages\DashboardPage.tsx:116:                   currentTime.getHours() < 18 ? "下午好，继续加油 🚀" :
+src\pages\DashboardPage.tsx:117:                   currentTime.getHours() < 22 ? "晚上好，收尾工作 ✨" : "夜深了，注意休息 🌙"
+src\pages\DashboardPage.tsx:130:                 扫描 {sonarHistory.length}
+src\pages\DashboardPage.tsx:142:                 {isLoggedIn ? "Walkin 在线" : "Walkin 离线"}
+src\pages\DashboardPage.tsx:147:               刷新
+src\pages\DashboardPage.tsx:165:         <StatCard icon={Bell} label="活跃任务" value={activeTasks} sub={`共 ${taskList.length}`} href="/reminder/tasks" color="text-amber-500" />
+src\pages\DashboardPage.tsx:166:         <StatCard icon={Radio} label="通知渠道" value={activeChannels} sub={`共 ${channelList.length}`} href="/reminder/channels" color="text-blue-500" />
+src\pages\DashboardPage.tsx:167:         <StatCard icon={CheckCircle2} label="发送成功" value={successCount} sub={`${successRate}%`} href="/reminder/history" color="text-emerald-500" />
+src\pages\DashboardPage.tsx:168:         <StatCard icon={FlaskConical} label="扫描记录" value={sonarHistory.length} sub={`${sonarHistory.reduce((s, r) => s + r.fileCount, 0)} 文件`} href="/sonar" col
+src\pages\DashboardPage.tsx:169:         <StatCard icon={GitBranch} label="变更项目" value={gitlabConfigured ? gitlabProjects : "-"} sub={gitlabConfigured ? `${gitlabCommits} commits` : "未配置"} href
+src\pages\DashboardPage.tsx:180:                 <Bell className="h-3.5 w-3.5 text-amber-500" /> 智能提醒
+src\pages\DashboardPage.tsx:183:                 全部 <ArrowRight className="h-2.5 w-2.5" />
+src\pages\DashboardPage.tsx:188:                 <div className="rounded bg-muted/50 p-1.5"><div className="text-base font-bold">{taskList.length}</div><div className="text-[10px] text-muted-fo
+src\pages\DashboardPage.tsx:189:                 <div className="rounded bg-muted/50 p-1.5"><div className="text-lg font-bold text-emerald-600">{activeTasks}</div><div className="text-[10px] te
+src\pages\DashboardPage.tsx:190:                 <div className="rounded bg-muted/50 p-1.5"><div className="text-base font-bold">{channelList.length}</div><div className="text-[10px] text-muted
+src\pages\DashboardPage.tsx:191:                 <div className="rounded bg-muted/50 p-1.5"><div className="text-base font-bold">{totalTemplates}</div><div className="text-[10px] text-muted-for
+src\pages\DashboardPage.tsx:195:                   <div className="text-[10px] text-muted-foreground mb-1.5">未来 7 天</div>
+src\pages\DashboardPage.tsx:207:                 <Link to="/reminder/tasks" className="flex-1 text-center text-[10px] border rounded px-2 py-1 hover:bg-muted transition-colors">管理任务</Link>
+src\pages\DashboardPage.tsx:208:                 <Link to="/reminder/channels" className="flex-1 text-center text-[10px] border rounded px-2 py-1 hover:bg-muted transition-colors">管理渠道</Link>
+src\pages\DashboardPage.tsx:209:                 <Link to="/reminder/templates" className="flex-1 text-center text-[10px] border rounded px-2 py-1 hover:bg-muted transition-colors">管理模板</Link>
+src\pages\DashboardPage.tsx:219:                   <GitBranch className="h-3.5 w-3.5 text-orange-500" /> 代码扫描
+src\pages\DashboardPage.tsx:222:                   详情 <ArrowRight className="h-2.5 w-2.5" />
+src\pages\DashboardPage.tsx:226:                 <div className="text-[10px] text-muted-foreground">最近扫描: {new Date(latestScan.scan_at).toLocaleString("zh-CN")}</div>
+src\pages\DashboardPage.tsx:228:                   <MiniBlock label="项目" value={latestScan.total_projects} />
+src\pages\DashboardPage.tsx:229:                   <MiniBlock label="提交" value={latestScan.total_commits} />
+src\pages\DashboardPage.tsx:230:                   <MiniBlock label="贡献者" value={gitlabContributors} />
+src\pages\DashboardPage.tsx:234:                   <MiniBlock label="流水线" value={`${latestScan.pipeline_success}/${latestScan.pipeline_total}`} color="text-emerald-600" />
+src\pages\DashboardPage.tsx:235:                   <MiniBlock label="+行" value={formatLines(latestScan.total_lines_added)} color="text-emerald-600" />
+src\pages\DashboardPage.tsx:236:                   <MiniBlock label="-行" value={formatLines(latestScan.total_lines_removed)} color="text-destructive" />
+src\pages\DashboardPage.tsx:245:                         <div className="text-[10px] text-muted-foreground mb-1">Top 贡献者</div>
+src\pages\DashboardPage.tsx:269:                 <BarChart3 className="h-3.5 w-3.5 text-violet-500" /> 团队覆盖率
+src\pages\DashboardPage.tsx:272:                 单测 <ArrowRight className="h-2.5 w-2.5" />
+src\pages\DashboardPage.tsx:280:                       <div className="text-[10px] text-muted-foreground mb-1">增量覆盖率</div>
+src\pages\DashboardPage.tsx:282:                         {unitBoardData.ynewValue != null && <MiniBlock label="综合" value={`${unitBoardData.ynewValue.toFixed(1)}%`} color="text-primary" />}
+src\pages\DashboardPage.tsx:283:                         {unitBoardData.ynewLineValue != null && <MiniBlock label="行" value={`${unitBoardData.ynewLineValue.toFixed(1)}%`} color="text-primary" /
+src\pages\DashboardPage.tsx:284:                         {unitBoardData.ynewBranchValue != null && <MiniBlock label="分支" value={`${unitBoardData.ynewBranchValue.toFixed(1)}%`} color="text-prima
+src\pages\DashboardPage.tsx:288:                       <div className="text-[10px] text-muted-foreground mb-1">全量覆盖率</div>
+src\pages\DashboardPage.tsx:290:                         {unitBoardData.yallValue != null && <MiniBlock label="综合" value={`${unitBoardData.yallValue.toFixed(1)}%`} color="text-emerald-600" />}
+src\pages\DashboardPage.tsx:291:                         {unitBoardData.yallLineValue != null && <MiniBlock label="行" value={`${unitBoardData.yallLineValue.toFixed(1)}%`} color="text-emerald-60
+src\pages\DashboardPage.tsx:292:                         {unitBoardData.yallBranchValue != null && <MiniBlock label="分支" value={`${unitBoardData.yallBranchValue.toFixed(1)}%`} color="text-emera
+src\pages\DashboardPage.tsx:298:                 <p className="text-[10px] text-muted-foreground text-center py-3">暂无覆盖率数据</p>
+src\pages\DashboardPage.tsx:301:                 <Link to="/sonar" className="flex-1 text-center text-[10px] border rounded px-2 py-1 hover:bg-muted transition-colors">单测覆盖</Link>
+src\pages\DashboardPage.tsx:302:                 <Link to="/ai-coverage" className="flex-1 text-center text-[10px] border rounded px-2 py-1 hover:bg-muted transition-colors">AI 覆盖</Link>
+src\pages\DashboardPage.tsx:311:                 <FlaskConical className="h-3.5 w-3.5 text-emerald-500" /> 单测扫描历史
+src\pages\DashboardPage.tsx:314:                 生成 <ArrowRight className="h-2.5 w-2.5" />
+src\pages\DashboardPage.tsx:319:                 <div className="rounded bg-muted/50 p-1.5"><div className="text-base font-bold">{sonarHistory.length}</div><div className="text-[10px] text-mute
+src\pages\DashboardPage.tsx:320:                 <div className="rounded bg-muted/50 p-1.5"><div className="text-base font-bold">{sonarHistory.reduce((s, r) => s + r.fileCount, 0)}</div><div cl
+src\pages\DashboardPage.tsx:321:                 <div className="rounded bg-muted/50 p-1.5"><div className="text-base font-bold">{sonarTemplates.length}</div><div className="text-[10px] text-mu
+src\pages\DashboardPage.tsx:329:                       <span className="text-muted-foreground">{record.fileCount} 文件</span>
+src\pages\DashboardPage.tsx:335:                 <p className="text-[10px] text-muted-foreground text-center py-2">暂无扫描记录</p>
+src\pages\DashboardPage.tsx:344:                 <MessageSquare className="h-3.5 w-3.5 text-cyan-500" /> 最近发送
+src\pages\DashboardPage.tsx:347:                 历史 <ArrowRight className="h-2.5 w-2.5" />
+src\pages\DashboardPage.tsx:363:                 <p className="text-[10px] text-muted-foreground text-center py-2">暂无发送记录</p>
+src\pages\DashboardPage.tsx:372:         <ActionCard icon={Bell} label="创建提醒" desc="设置定时推送任务" to="/reminder/tasks" />
+src\pages\DashboardPage.tsx:373:         <ActionCard icon={GitBranch} label="代码扫描" desc="分析 GitLab 提交" to="/gitlab/overview" />
+src\pages\DashboardPage.tsx:374:         <ActionCard icon={FlaskConical} label="生成 Prompt" desc="覆盖率 → 单测提示词" to="/sonar" />
+src\pages\DashboardPage.tsx:375:         <ActionCard icon={Brain} label="AI 覆盖率" desc="智能增量覆盖率追踪" to="/ai-coverage" />
+src\pages\GitLabOverviewPage.tsx:96:       label: "单测覆盖项目",
+src\pages\GitLabOverviewPage.tsx:132:       {/* 下探详情面板 */}
+src\pages\GitLabOverviewPage.tsx:138:                 <span>项目列表 ({current.total_projects})</span>
+src\pages\GitLabOverviewPage.tsx:154:                 <span>总提交: <strong className="text-foreground">{current.total_commits}</strong></span>
+src\pages\GitLabOverviewPage.tsx:155:                 <span>+行: <strong className="text-emerald-600">{current.total_lines_added.toLocaleString()}</strong></span>
+src\pages\GitLabOverviewPage.tsx:156:                 <span>-行: <strong className="text-red-600">{current.total_lines_removed.toLocaleString()}</strong></span>
+src\pages\GitLabOverviewPage.tsx:160:                   <div className="text-[10px] text-muted-foreground">开发者贡献明细</div>
+src\pages\GitLabOverviewPage.tsx:177:                 贡献者 ({currentContributors} 人)
+src\pages\GitLabOverviewPage.tsx:189:                 <span>有单测: <strong className="text-emerald-600">{current.test_projects}</strong></span>
+src\pages\GitLabOverviewPage.tsx:190:                 <span>无单测: <strong className="text-destructive">{current.total_projects - current.test_projects}</strong></span>
+src\pages\GitLabOverviewPage.tsx:191:                 <span>覆盖率: <strong>{current.total_projects > 0 ? Math.round((current.test_projects / current.total_projects) * 100) : 0}%</strong></span>
+src\pages\GitLabOverviewPage.tsx:200:                 <div className="text-[10px] text-muted-foreground">无单测项目</div>
+src\pages\GitLabOverviewPage.tsx:208:                   <div className="text-[10px] text-muted-foreground text-center">...还有 {currentProjects.filter(p => !p.has_test).length - 10} 个</div>
+src\pages\GitLabOverviewPage.tsx:528:                               {/* 分支选择器 + 分析时间 */}
+src\pages\GitLabOverviewPage.tsx:562:                               {/* 质量指标 */}
+src\pages\GitLabOverviewPage.tsx:940:               <h1 className="text-sm font-medium">GitLab 概览</h1>
+src\pages\GitLabOverviewPage.tsx:1027:                   <span className="text-xs font-medium">Walkin 代码质量汇总</span>
+src\pages\GitLabOverviewPage.tsx:1028:                   <span className="text-[10px] text-muted-foreground">({walkinProjects.length} 项目)</span>
+src\pages\GitLabOverviewPage.tsx:1039:                     <div className="text-muted-foreground">漏洞</div>
+src\pages\GitLabOverviewPage.tsx:1044:                     <div className="text-muted-foreground">异味</div>
+src\pages\GitLabOverviewPage.tsx:1049:                     <div className="text-muted-foreground">重复率</div>
+src\pages\GitLabSettingsPage.tsx:30:   if (parts.length !== 5) return "无效表达式";
+src\pages\GitLabSettingsPage.tsx:37:     return `每 ${interval} 分钟`;
+src\pages\GitLabSettingsPage.tsx:43:     return `每 ${interval} 小时`;
+src\pages\GitLabSettingsPage.tsx:47:   const timeStr = `${hour === "*" ? "每小时" : `${hour}时`}${min === "*" ? "" : `${min}分`}`;
+src\pages\GitLabSettingsPage.tsx:51:     "0": "周日",
+src\pages\GitLabSettingsPage.tsx:52:     "1": "周一",
+src\pages\GitLabSettingsPage.tsx:53:     "2": "周二",
+src\pages\GitLabSettingsPage.tsx:54:     "3": "周三",
+src\pages\GitLabSettingsPage.tsx:55:     "4": "周四",
+src\pages\GitLabSettingsPage.tsx:56:     "5": "周五",
+src\pages\GitLabSettingsPage.tsx:57:     "6": "周六",
+src\pages\GitLabSettingsPage.tsx:58:     "*": "每天",
+src\pages\GitLabSettingsPage.tsx:59:     "1-5": "工作日",
+src\pages\GitLabSettingsPage.tsx:60:     "0,6": "周末",
+src\pages\GitLabSettingsPage.tsx:72:     return `${weekdayMap[weekday] || "每天"} ${hours}`;
+src\pages\GitLabSettingsPage.tsx:80:       return `每天 ${hour}:${min.padStart(2, "0")}`;
+src\pages\GitLabSettingsPage.tsx:111:         <label className="text-xs font-medium">Token 配置（可多选）</label>
+src\pages\GitLabSettingsPage.tsx:113:           <Plus className="h-3.5 w-3.5 mr-1" /> 新增
+src\pages\GitLabSettingsPage.tsx:142:                   placeholder="备注/标签"
+src\pages\GitLabSettingsPage.tsx:154:                   {showToken ? "隐藏" : "显示"}
+src\pages\GitLabSettingsPage.tsx:167:                 placeholder="输入 GitLab Private Token"
+src\pages\GitLabSettingsPage.tsx:180:         💡 已选择 {selectedIds.length} 个账号，扫描时会合并所有账号的项目（重复项目只取一个）
+src\pages\GitLabSettingsPage.tsx:205:           migratedConfig.token_profiles = [{ id: "token-legacy", token: config.token, label: "默认" }];
+src\pages\GitLabSettingsPage.tsx:228:       errors.url = "服务器地址不能为空";
+src\pages\GitLabSettingsPage.tsx:230:       errors.url = "请输入有效的URL地址（如 http://code.jms.com）";
+src\pages\GitLabSettingsPage.tsx:357:       {/* GitLab连接配置 */}
+src\pages\GitLabSettingsPage.tsx:362:             <span className="text-sm font-medium">GitLab 连接配置</span>
+src\pages\GitLabSettingsPage.tsx:365:             <label className="text-xs font-medium">服务器地址</label>
+src\pages\GitLabSettingsPage.tsx:399:               测试连接
+src\pages\GitLabSettingsPage.tsx:403:                 <CheckCircle className="h-4 w-4" /> 连接成功
+src\pages\GitLabSettingsPage.tsx:408:                 <XCircle className="h-4 w-4" /> 连接失败
+src\pages\GitLabSettingsPage.tsx:415:       {/* 项目过滤配置 */}
+src\pages\GitLabSettingsPage.tsx:418:           <span className="text-sm font-medium">项目过滤配置</span>
+src\pages\GitLabSettingsPage.tsx:420:             <label className="text-xs font-medium">过滤模式</label>
+src\pages\GitLabSettingsPage.tsx:427:                 包含模式
+src\pages\GitLabSettingsPage.tsx:434:                 排除模式
+src\pages\GitLabSettingsPage.tsx:441:                 全部项目
+src\pages\GitLabSettingsPage.tsx:447:             <label className="text-xs font-medium">项目列表</label>
+src\pages\GitLabSettingsPage.tsx:461:                 placeholder="添加项目名称"
+src\pages\GitLabSettingsPage.tsx:474:       {/* 单测检测配置 */}
+src\pages\GitLabSettingsPage.tsx:477:           <span className="text-sm font-medium">单测检测配置</span>
+src\pages\GitLabSettingsPage.tsx:479:             <label className="text-xs font-medium">检测关键词</label>
+src\pages\GitLabSettingsPage.tsx:493:                 placeholder="添加关键词"
+src\pages\GitLabSettingsPage.tsx:506:       {/* 定时扫描配置 */}
+src\pages\GitLabSettingsPage.tsx:512:               <span className="text-sm font-medium">定时扫描配置</span>
+src\pages\GitLabSettingsPage.tsx:520:           {/* 快捷选择 */}
+src\pages\GitLabSettingsPage.tsx:522:             <label className="text-xs font-medium">快捷选择</label>
+src\pages\GitLabSettingsPage.tsx:525:                 { cron: "0 9 * * 1", label: "每周一 09:00" },
+src\pages\GitLabSettingsPage.tsx:526:                 { cron: "0 9 * * 1-5", label: "工作日 09:00" },
+src\pages\GitLabSettingsPage.tsx:527:                 { cron: "0 9,18 * * 1-5", label: "工作日 09:00, 18:00" },
+src\pages\GitLabSettingsPage.tsx:528:                 { cron: "0 9 * * *", label: "每天 09:00" },
+src\pages\GitLabSettingsPage.tsx:529:                 { cron: "0 9,12,18 * * *", label: "每天 09:00, 12:00, 18:00" },
+src\pages\GitLabSettingsPage.tsx:530:                 { cron: "0 */2 * * *", label: "每 2 小时" },
+src\pages\GitLabSettingsPage.tsx:531:                 { cron: "0 */4 * * *", label: "每 4 小时" },
+src\pages\GitLabSettingsPage.tsx:532:                 { cron: "0 */6 * * *", label: "每 6 小时" },
+src\pages\GitLabSettingsPage.tsx:533:                 { cron: "*/30 * * * *", label: "每 30 分钟" },
+src\pages\GitLabSettingsPage.tsx:547:           {/* 自定义时间 */}
+src\pages\GitLabSettingsPage.tsx:550:               <label className="text-xs font-medium">Cron 表达式</label>
+src\pages\GitLabSettingsPage.tsx:559:               <label className="text-xs font-medium">扫描范围</label>
+src\pages\GitLabSettingsPage.tsx:566:                   本周
+src\pages\GitLabSettingsPage.tsx:573:                   最近N天
+src\pages\GitLabSettingsPage.tsx:581:               <label className="text-xs font-medium">天数</label>
+src\pages\GitLabSettingsPage.tsx:593:           {/* 当前配置预览 */}
+src\pages\GitLabSettingsPage.tsx:595:             <span className="font-medium">当前配置:</span>
+src\pages\GitLabSettingsPage.tsx:604:       {/* 推送配置 */}
+src\pages\GitLabSettingsPage.tsx:607:           <span className="text-sm font-medium">通知推送配置</span>
+src\pages\GitLabSettingsPage.tsx:609:             <label className="text-xs font-medium">推送渠道</label>
+src\pages\GitLabSettingsPage.tsx:611:               请到 <span className="font-medium">提醒 - 渠道</span> 中配置通知渠道
+src\pages\GitLabSettingsPage.tsx:637:                 <p className="text-sm text-muted-foreground">暂无可用的通知渠道</p>
+src\pages\GitLabSettingsPage.tsx:644:       {/* Git 和 Walkin 名称映射 */}
+src\pages\GitLabSettingsPage.tsx:648:             <span className="text-sm font-medium">Git 和 Walkin 名称映射</span>
+src\pages\GitLabSettingsPage.tsx:649:             <span className="text-xs text-muted-foreground">如果名称不一致，可通过此映射</span>
+src\pages\GitLabSettingsPage.tsx:654:                 placeholder="GitLab 项目路径"
+src\pages\GitLabSettingsPage.tsx:665:                 placeholder="Walkin 项目名"
+src\pages\GitLabSettingsPage.tsx:691:             <Plus className="h-3.5 w-3.5 mr-1" />添加映射
+src\pages\GitLabSettingsPage.tsx:699:           还原默认
+src\pages\GitLabSettingsPage.tsx:705:           {saveStatus === "success" ? "已保存" : saveStatus === "error" ? "保存失败" : "保存配置"}
+src\pages\HistoryPage.tsx:62:               <h1 className="text-sm font-medium">提醒历史</h1>
+src\pages\SettingsPage.tsx:221:               <CardTitle className="text-sm">启动页</CardTitle>
+src\pages\SettingsPage.tsx:225:             <p className="text-[10px] text-muted-foreground mb-2">选择打开应用时默认显示的页面</p>
+src\pages\SettingsPage.tsx:230:                 { value: "/home", label: "概览", icon: Home },
+src\pages\SettingsPage.tsx:231:                 { value: "/reminder/tasks", label: "智能提醒", icon: Bell },
+src\pages\SettingsPage.tsx:232:                 { value: "/gitlab/overview", label: "Git 扫描", icon: GitBranch },
+src\pages\SettingsPage.tsx:233:                 { value: "/sonar", label: "单测覆盖率", icon: FileCode },
+src\pages\SettingsPage.tsx:234:                 { value: "/ai-coverage", label: "AI 生成率", icon: Brain },
+src\pages\SettingsPage.tsx:236:               placeholder="选择启动页"
+src\pages\SettingsPage.tsx:248:                 <CardTitle className="text-sm">菜单与页面</CardTitle>
+src\pages\SettingsPage.tsx:291:               <CardTitle className="text-sm">配置引导</CardTitle>
+src\pages\SettingsPage.tsx:297:                 <p className="text-xs font-medium">重新打开引导页</p>
+src\pages\SettingsPage.tsx:298:                 <p className="text-[10px] text-muted-foreground">重新配置 GitLab 和 Walkin 连接</p>
+src\pages\SettingsPage.tsx:301:                 if (window.confirm("确定要重新打开引导页吗？应用将重新加载。")) {
+src\pages\SettingsPage.tsx:306:                 <Rocket className="h-3 w-3 mr-1" />打开引导
+src\pages\SettingsPage.tsx:321:               <CardTitle className="text-sm text-destructive">危险操作</CardTitle>
+src\pages\SettingsPage.tsx:322:               <span className="text-[10px] text-muted-foreground ml-1">（点击展开）</span>
+src\pages\SettingsPage.tsx:330:                   <p className="text-xs font-medium">重置所有配置</p>
+src\pages\SettingsPage.tsx:331:                   <p className="text-[10px] text-muted-foreground">恢复所有设置项到默认值，保留数据</p>
+src\pages\SettingsPage.tsx:336:                   <RotateCcw className="h-3 w-3 mr-1" />重置配置
+src\pages\SettingsPage.tsx:341:                   <p className="text-xs font-medium">清除本地缓存</p>
+src\pages\SettingsPage.tsx:342:                   <p className="text-[10px] text-muted-foreground">清除所有本地缓存数据，建议重启应用</p>
+src\pages\SettingsPage.tsx:347:                   <RotateCcw className="h-3 w-3 mr-1" />清除缓存
+src\pages\SettingsPage.tsx:361:                   <CardTitle className="text-base text-destructive">确认操作</CardTitle>
+src\pages\SettingsPage.tsx:367:                     ? "确定要重置所有设置吗？此操作不可撤销，将恢复全部配置到默认值。"
+src\pages\SettingsPage.tsx:368:                     : "确定要清除所有本地缓存吗？建议重启应用。"}
+src\pages\SettingsPage.tsx:372:                     取消
+src\pages\SettingsPage.tsx:381:                         toast.success("所有设置已重置");
+src\pages\SettingsPage.tsx:386:                         toast.success("缓存已清除，建议重启应用");
+src\pages\SettingsPage.tsx:391:                     确认
+src\pages\SettingsPage.tsx:542:           <Home className="h-3.5 w-3.5 text-muted-foreground" />概览
+src\pages\SettingsPage.tsx:618:     toast.success("已重置为默认名称");
+src\pages\SettingsPage.tsx:668:               title="重置为默认"
+src\pages\SettingsPage.tsx:677:             title="重命名"
+src\pages\SonarPromptPage.tsx:40:     { key: "coverage", label: "覆盖率", icon: FlaskConical },
+src\pages\SonarPromptPage.tsx:41:     { key: "generator", label: "Prompt 生成", icon: Zap },
+src\pages\SonarPromptPage.tsx:42:     { key: "template", label: "模板管理", icon: FileText },
+src\pages\SonarPromptPage.tsx:43:     { key: "history", label: "生成历史", icon: BarChart3 },
+src\pages\SonarPromptPage.tsx:44:     { key: "settings", label: "配置", icon: Settings },
+src\pages\SonarPromptPage.tsx:63:         () => localStorage.getItem("sonar_page_type") || "代码行"
+src\pages\SonarPromptPage.tsx:171:                 toast.success(`已切换到部门: ${deptName}`);
+src\pages\SonarPromptPage.tsx:173:                 toast.error("该工作空间下没有关联部门");
+src\pages\SonarPromptPage.tsx:176:             toast.error("获取部门失败: " + (e instanceof Error ? e.message : String(e)));
+src\pages\SonarPromptPage.tsx:349:                     aVal = pageType === "条件"
+src\pages\SonarPromptPage.tsx:352:                     bVal = pageType === "条件"
+src\pages\SonarPromptPage.tsx:357:                     aVal = pageType === "条件"
+src\pages\SonarPromptPage.tsx:360:                     bVal = pageType === "条件"
+src\pages\SonarPromptPage.tsx:416:             toast.error("请先配置 Walkin 登录信息");
+src\pages\SonarPromptPage.tsx:420:             toast.error("请填写截止时间");
+src\pages\SonarPromptPage.tsx:432:             const filtered = data.filter((r) => r.reportType === "增量");
+src\pages\SonarPromptPage.tsx:436:                 toast.warning("没有符合条件的增量报告");
+src\pages\SonarPromptPage.tsx:439:             toast.error(`获取报告失败: ${e instanceof Error ? e.message : String(e)}`);
+src\pages\SonarPromptPage.tsx:464:             toast.error(`获取文件失败: ${e instanceof Error ? e.message : String(e)}`);
+src\pages\SonarPromptPage.tsx:492:                 toast.error(`获取文件失败: ${e instanceof Error ? e.message : String(e)}`);
+src\pages\SonarPromptPage.tsx:534:                     noCoverageFiles.push(selectedFiles[i].path + " (加载失败)");
+src\pages\SonarPromptPage.tsx:557:                 setPrompt("没有找到需要补充单测的代码区域。");
+src\pages\SonarPromptPage.tsx:562:                 toast.warning(`${noCoverageFiles.length} 个文件无未覆盖区域:\n${noCoverageFiles.join('\n')}`, { duration: 5000 });
+src\pages\SonarPromptPage.tsx:565:             toast.error(`生成失败: ${e instanceof Error ? e.message : String(e)}`);
+src\pages\SonarPromptPage.tsx:629:             setPrompt("没有选中任何文件。");
+src\pages\SonarPromptPage.tsx:653:         toast.success("已加载历史配置");
+src\pages\SonarPromptPage.tsx:660:         toast.success("已删除");
+src\pages\SonarPromptPage.tsx:667:         toast.success("已清空");
+src\pages\SonarPromptPage.tsx:689:             toast.error("请先配置 Walkin 登录信息");
+src\pages\SonarPromptPage.tsx:699:             const filtered = data.filter((r) => r.reportType === "增量");
+src\pages\SonarPromptPage.tsx:703:                 toast.warning("没有符合条件的增量报告");
+src\pages\SonarPromptPage.tsx:706:             toast.error(`获取报告失败: ${e instanceof Error ? e.message : String(e)}`);
+src\pages\SonarPromptPage.tsx:758:         toast.success("已设为默认");
+src\pages\SonarPromptPage.tsx:764:         toast.success("已恢复默认");
+src\pages\SonarPromptPage.tsx:788:                             <h1 className="text-sm font-medium">单测覆盖率</h1>
+src\pages\SonarPromptPage.tsx:813:                 {/* ===== Tab: Prompt 生成 ===== */}
+src\pages\SonarPromptPage.tsx:816:                         {/* Overview stats - 单行紧凑 */}
+src\pages\SonarPromptPage.tsx:819:                                 { icon: History, label: "扫描记录", value: history.length },
+src\pages\SonarPromptPage.tsx:820:                                 { icon: FileText, label: "模板", value: templates.length },
+src\pages\SonarPromptPage.tsx:821:                                 { icon: BarChart3, label: "项目", value: gitlabProjects?.length ?? 0 },
+src\pages\SonarPromptPage.tsx:831:                   上次: <span className="font-mono tabular-nums">{formatTime(history[0].createdAt)}</span>
+src\pages\SonarPromptPage.tsx:839:                                 { key: "config", label: "配置参数" },
+src\pages\SonarPromptPage.tsx:840:                                 { key: "select", label: "选择报告" },
+src\pages\SonarPromptPage.tsx:841:                                 { key: "selectFiles", label: "选择文件" },
+src\pages\SonarPromptPage.tsx:842:                                 { key: "result", label: "生成结果" },
+src\pages\SonarPromptPage.tsx:876:                         {/* Step 1: 配置 */}
+src\pages\SonarPromptPage.tsx:881:                                         <Label className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">扫描项目 *</Label>
+src\pages\SonarPromptPage.tsx:886:                                             placeholder="搜索或选择"
+src\pages\SonarPromptPage.tsx:887:                                             emptyMessage="无匹配"
+src\pages\SonarPromptPage.tsx:891:                                         <Label className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">分支</Label>
+src\pages\SonarPromptPage.tsx:896:                                             placeholder="选择分支"
+src\pages\SonarPromptPage.tsx:900:                                         <Label className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">截止时间 *</Label>
+src\pages\SonarPromptPage.tsx:909:                                         <Label className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">数量限制</Label>
+src\pages\SonarPromptPage.tsx:919:                                 {/* 高级选项 */}
+src\pages\SonarPromptPage.tsx:932:                                         高级
+src\pages\SonarPromptPage.tsx:939:                                             <Label className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">邮箱过滤</Label>
+src\pages\SonarPromptPage.tsx:944:                                                 placeholder="留空则不过滤"
+src\pages\SonarPromptPage.tsx:950:                                 {/* 配置摘要 */}
+src\pages\SonarPromptPage.tsx:958:                                         <span className="text-muted-foreground">最近 {limit} 条</span>
+src\pages\SonarPromptPage.tsx:980:                                         获取增量报告
+src\pages\SonarPromptPage.tsx:986:                         {/* Step 2: 选择报告 */}
+src\pages\SonarPromptPage.tsx:998:                                         <span className="text-sm font-semibold">选择增量报告</span>
+src\pages\SonarPromptPage.tsx:1011:                                         <p className="text-sm font-medium">没有符合条件的报告</p>
+src\pages\SonarPromptPage.tsx:1034:                                                                 <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">当前</s
+src\pages\SonarPromptPage.tsx:1050:                         {/* Step 3: 选择文件 */}
+src\pages\SonarPromptPage.tsx:1062:                                         <span className="text-sm font-semibold">选择类文件</span>
+src\pages\SonarPromptPage.tsx:1074:                                 {/* 扫描类型和排序 - 始终展示 */}
+src\pages\SonarPromptPage.tsx:1077:                                         <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">类型</span>
+src\pages\SonarPromptPage.tsx:1080:                                             onClick={() => handlePageTypeChange("代码行")}
+src\pages\SonarPromptPage.tsx:1083:                                                 pageType === "代码行" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:bg-muted hover:tex
+src\pages\SonarPromptPage.tsx:1086:                                             代码行
+src\pages\SonarPromptPage.tsx:1090:                                             onClick={() => handlePageTypeChange("条件")}
+src\pages\SonarPromptPage.tsx:1093:                                                 pageType === "条件" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:bg-muted hover:text
+src\pages\SonarPromptPage.tsx:1096:                                             条件
+src\pages\SonarPromptPage.tsx:1099:                                         <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">排序</span>
+src\pages\SonarPromptPage.tsx:1101:                                             { key: "uncovered", label: "未覆盖" },
+src\pages\SonarPromptPage.tsx:1102:                                             { key: "coverage", label: "覆盖率" },
+src\pages\SonarPromptPage.tsx:1103:                                             ...(pageType === "代码行" ? [{ key: "newCovered", label: "新增" }] : []),
+src\pages\SonarPromptPage.tsx:1104:                                             { key: "path", label: "路径" },
+src\pages\SonarPromptPage.tsx:1137:                                                     全选
+src\pages\SonarPromptPage.tsx:1147:                                         <p className="text-xs text-muted-foreground">正在获取文件列表...</p>
+src\pages\SonarPromptPage.tsx:1152:                                         <p className="text-sm font-medium">没有符合条件的文件</p>
+src\pages\SonarPromptPage.tsx:1177:                                                             {pageType === "代码行" && (
+src\pages\SonarPromptPage.tsx:1199:                                                             {pageType === "条件" && (
+src\pages\SonarPromptPage.tsx:1211:                                                                         <span className="font-mono tabular-nums">{f.totalConditions} 条件</span>
+src\pages\SonarPromptPage.tsx:1229:                                                 返回
+src\pages\SonarPromptPage.tsx:1238:                                                 生成 Prompt ({selectedFileKeys.size})
+src\pages\SonarPromptPage.tsx:1246:                         {/* Step 4: 结果 */}
+src\pages\SonarPromptPage.tsx:1249:                                 {/* 顶部操作栏 */}
+src\pages\SonarPromptPage.tsx:1274:                                 {/* 生成中状态 */}
+src\pages\SonarPromptPage.tsx:1281:                                                     <span className="font-medium">正在分析文件覆盖...</span>
+src\pages\SonarPromptPage.tsx:1295:                                 {/* 覆盖文件列表 */}
+src\pages\SonarPromptPage.tsx:1310:                                             <span className="text-sm font-semibold">单测未覆盖区域</span>
+src\pages\SonarPromptPage.tsx:1320:                                                     重新生成
+src\pages\SonarPromptPage.tsx:1351:                                 {/* 生成的 Prompt */}
+src\pages\SonarPromptPage.tsx:1357:                                                 <span className="text-sm font-semibold">生成的 Prompt</span>
+src\pages\SonarPromptPage.tsx:1363:                         模板: {activeTemplate?.name || "默认"}
+src\pages\SonarPromptPage.tsx:1378:                 {/* ===== Tab: 模板管理 ===== */}
+src\pages\SonarPromptPage.tsx:1381:                         {/* 编辑/创建表单 */}
+src\pages\SonarPromptPage.tsx:1388:                         {isCreating ? "新建模板" : "编辑模板"}
+src\pages\SonarPromptPage.tsx:1395:                                             取消
+src\pages\SonarPromptPage.tsx:1399:                                         <Label className="text-xs">模板名称</Label>
+src\pages\SonarPromptPage.tsx:1404:                                             placeholder="输入模板名称"
+src\pages\SonarPromptPage.tsx:1408:                                         <Label className="text-xs">模板内容</Label>
+src\pages\SonarPromptPage.tsx:1416:                                         保存模板
+src\pages\SonarPromptPage.tsx:1422:                         {/* 模板列表 */}
+src\pages\SonarPromptPage.tsx:1428:                                         <span className="text-sm font-medium">模板列表</span>
+src\pages\SonarPromptPage.tsx:1435:                                             <Plus className="h-3 w-3 mr-1" /> 新建
+src\pages\SonarPromptPage.tsx:1438:                                             <RotateCcw className="h-3 w-3 mr-1" /> 恢复默认
+src\pages\SonarPromptPage.tsx:1453:                                                 title={tpl.isDefault ? "当前默认" : "设为默认"}
+src\pages\SonarPromptPage.tsx:1470:                               默认
+src\pages\SonarPromptPage.tsx:1496:                 {/* ===== Tab 3: 生成历史 ===== */}
+src\pages\SonarPromptPage.tsx:1501:                                 <span className="text-xs text-muted-foreground">共 {history.length} 条记录</span>
+src\pages\SonarPromptPage.tsx:1503:                                     <Trash2 className="h-3 w-3 mr-1" /> 清空全部
+src\pages\SonarPromptPage.tsx:1514:                                     <p className="text-sm font-medium">暂无生成历史</p>
+src\pages\SonarPromptPage.tsx:1515:                                     <p className="text-xs text-muted-foreground mt-1">生成 Prompt 后将自动保存</p>
+src\pages\SonarPromptPage.tsx:1538:                                                         <RotateCcw className="h-3 w-3 mr-1" /> 加载
+src\pages\SonarPromptPage.tsx:1558:                                 <RotateCcw className="h-3 w-3" /> 返回列表
+src\pages\SonarPromptPage.tsx:1562:                                     <RotateCcw className="h-3 w-3" /> 加载配置
+src\pages\SonarPromptPage.tsx:1571:                                     <div><span className="text-muted-foreground">项目：</span><span className="font-medium">{detailRecord.projectKey}</span></div>
+src\pages\SonarPromptPage.tsx:1572:                                     <div><span className="text-muted-foreground">分支：</span><span className="font-medium">{detailRecord.branch}</span></div>
+src\pages\SonarPromptPage.tsx:1573:                                     <div><span className="text-muted-foreground">截止时间：</span><span className="font-medium">{formatDateTime(detailRecord.createTi
+src\pages\SonarPromptPage.tsx:1574:                                     <div><span className="text-muted-foreground">作者过滤：</span><span className="font-medium">{detailRecord.author || "—"}</span></
+src\pages\SonarPromptPage.tsx:1575:                                     <div><span className="text-muted-foreground">文件数：</span><span className="font-medium">{detailRecord.fileCount}</span></div>
+src\pages\SonarPromptPage.tsx:1576:                                     <div><span className="text-muted-foreground">生成时间：</span><span className="font-medium">{formatTime(detailRecord.createdAt)}<
+src\pages\SonarPromptPage.tsx:1584:                                     <span className="text-xs font-medium">Prompt 内容</span>
+src\pages\SonarPromptPage.tsx:1595:                 {/* ===== Tab 1: 覆盖率 ===== */}
+src\pages\SonarPromptPage.tsx:1600:                                 <span className="text-xs text-muted-foreground shrink-0">工作空间</span>
+src\pages\SonarPromptPage.tsx:1605:                                     placeholder="选择工作空间"
+src\pages\SonarPromptPage.tsx:1611:                                     刷新
+src\pages\SonarPromptPage.tsx:1642:                 {/* ===== Tab 5: 配置 ===== */}
+src\pages\SonarPromptPage.tsx:1649:                                     <span className="text-sm font-medium">Walkin 代码质量集成</span>
+src\pages\SonarPromptPage.tsx:1653:                                     <label className="text-xs font-medium">启用</label>
+src\pages\SonarPromptPage.tsx:1655:                                         <Button variant={walkinForm.walkin_enabled ? "default" : "outline"} size="sm" onClick={() => setWalkinForm({ ...walkinFo
+src\pages\SonarPromptPage.tsx:1656:                                         <Button variant={!walkinForm.walkin_enabled ? "default" : "outline"} size="sm" onClick={() => setWalkinForm({ ...walkinF
+src\pages\SonarPromptPage.tsx:1662:                                         {/* Walkin 地址 - 全宽 */}
+src\pages\SonarPromptPage.tsx:1664:                                             <Label className="text-xs">Walkin 地址</Label>
+src\pages\SonarPromptPage.tsx:1671:                                                 <Label className="text-xs">LDAP 配置</Label>
+src\pages\SonarPromptPage.tsx:1672:                                                 <Button variant="outline" size="sm" className="h-6 text-xs" onClick={addLdapProfile}><Plus className="h-3 w-3 mr
+src\pages\SonarPromptPage.tsx:1684:                                                         <Input placeholder="备注" value={p.label} onChange={(e) => updateLdapProfiles(walkinForm.ldap_profiles.map
+src\pages\SonarPromptPage.tsx:1688:                                                         <Input placeholder="LDAP 用户名" value={p.username} onChange={(e) => updateLdapProfiles(walkinForm.ldap_pro
+src\pages\SonarPromptPage.tsx:1689:                                                         <Input type="password" placeholder="LDAP 密码" value={p.password} onChange={(e) => updateLdapProfiles(walk
+src\pages\SonarPromptPage.tsx:1695:                                         {/* 登录状态 + 定时检测 */}
+src\pages\SonarPromptPage.tsx:1700:                                                     <span className="text-xs font-medium">{isLoggedIn ? `已登录: ${userName || "未知"}` : "未登录"}</span>
+src\pages\SonarPromptPage.tsx:1704:                                                         <RefreshCw className={`mr-1 h-3 w-3 ${isCheckingLogin ? "animate-spin" : ""}`} />检测
+src\pages\SonarPromptPage.tsx:1708:                                                         if (!ldap?.username || !ldap?.password) { toast.error("请先填写 LDAP 用户名和密码"); return; }
+src\pages\SonarPromptPage.tsx:1709:                                                         if (!walkinForm.walkin_url) { toast.error("请先填写 Walkin 地址"); return; }
+src\pages\SonarPromptPage.tsx:1713:                                                         } catch (e) { toast.error("操作失败: " + (e instanceof Error ? e.message : String(e))); }
+src\pages\SonarPromptPage.tsx:1714:                                                     }}>{isLoggedIn ? "重新登录" : "登录"}</Button>
+src\pages\SonarPromptPage.tsx:1718:                                                         try { await saveConfig.mutateAsync(cleared); toast.success("Token 已清除"); } catch (e) { toast.error("清除失败
+src\pages\SonarPromptPage.tsx:1719:                                                     }}>清除Token</Button>
+src\pages\SonarPromptPage.tsx:1727:                                                 <Label className="text-xs">定时检测</Label>
+src\pages\SonarPromptPage.tsx:1729:                                                     {[{ v: 0, l: "关闭" }, { v: 0.5, l: "30秒" }, { v: 10, l: "10分钟" }, { v: 30, l: "30分钟" }, { v: 60, l: "1小时" }, 
+src\pages\SonarPromptPage.tsx:1736:                                         {/* 工作空间 + 部门 双栏 */}
+src\pages\SonarPromptPage.tsx:1743:                                                             <Label className="text-xs">工作空间</Label>
+src\pages\SonarPromptPage.tsx:1753:                                                                 placeholder="选择工作空间"
+src\pages\SonarPromptPage.tsx:1757:                                                             <Input placeholder="产品架构&PMO" value={walkinForm.walkin_workspace_name} onChange={(e) => setWalkinFor
+src\pages\SonarPromptPage.tsx:1763:                                                             <Label className="text-xs">关联部门</Label>
+src\pages\SonarPromptPage.tsx:1780:                                         {saveStatus === "success" ? "已保存" : saveStatus === "error" ? "保存失败" : "保存配置"}
+src\pages\SonarPromptPage.tsx:1792:                     <span className="text-xs">确定删除这条记录？</span>
+src\pages\SonarPromptPage.tsx:1793:                     <Button size="sm" variant="destructive" className="h-6 text-xs" onClick={() => deleteId && handleDeleteRecord(deleteId)}>删除</Button>
+src\pages\SonarPromptPage.tsx:1794:                     <Button size="sm" variant="outline" className="h-6 text-xs" onClick={() => setDeleteId(null)}>取消</Button>
+src\pages\SonarPromptPage.tsx:1799:                     <span className="text-xs">确定清空所有历史？</span>
+src\pages\SonarPromptPage.tsx:1800:                     <Button size="sm" variant="destructive" className="h-6 text-xs" onClick={handleClearHistory}>清空</Button>
+src\pages\SonarPromptPage.tsx:1801:                     <Button size="sm" variant="outline" className="h-6 text-xs" onClick={() => setShowClearConfirm(false)}>取消</Button>
+src\pages\SonarPromptPage.tsx:1806:                     <span className="text-xs">确定删除这个模板？</span>
+src\pages\SonarPromptPage.tsx:1807:                     <Button size="sm" variant="destructive" className="h-6 text-xs" onClick={() => deleteTemplateId && handleDeleteTemplate(deleteTemplateId)}>删
+src\pages\SonarPromptPage.tsx:1808:                     <Button size="sm" variant="outline" className="h-6 text-xs" onClick={() => setDeleteTemplateId(null)}>取消</Button>
+src\pages\TaskReminderPage.tsx:85:               <h1 className="text-sm font-medium">任务提醒</h1>
+src\pages\TaskReminderPage.tsx:113:               <h1 className="text-sm font-medium">任务提醒</h1>
+src\pages\TaskReminderPage.tsx:139:               <h1 className="text-sm font-medium">任务提醒</h1>
+src\pages\TaskReminderPage.tsx:148:           { icon: ListChecks, label: t("task.total") || "全部任务", value: stats.total },
+src\pages\TaskReminderPage.tsx:149:           { icon: CalendarDays, label: t("task.today") || "今日", value: stats.today },
+src\pages\TaskReminderPage.tsx:150:           { icon: Clock3, label: t("task.thisWeek") || "本周", value: stats.week },
+src\pages\TaskReminderPage.tsx:151:           { icon: ToggleRight, label: t("task.enabled") || "已启用", value: stats.enabled },
+src\pages\TemplatesPage.tsx:97:               <h1 className="text-sm font-medium">模板管理</h1>
+src\pages\TemplatesPage.tsx:102:             新建模板
+src\types\index.ts:15:     time?: string;  // 时间设置，用于 nth_weekday 和 last_day
+src\types\index.ts:18:       weekday: number;  // 1=周一, 2=周二, ..., 7=周日
+src\types\index.ts:19:       month: number;    // 0=每月, 1-12=特定月份
+src\types\index.ts:22:       type: "last_nth" | "last_workday" | "last_friday" | "day" | "weekday" | "friday";  // 兼容新旧格式
+src\types\index.ts:23:       nth?: number;     // 倒数第N天
+src\types\index.ts:24:       month: number;    // 0=每月, 1-12=特定月份
+src\types\index.ts:316:   label: string; // 备注/标签
+src\types\index.ts:324:   label: string; // 备注/标签
+
+Total: 656

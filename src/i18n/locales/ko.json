@@ -66,6 +66,13 @@
   "dashboard": {
     "title": "대시보드",
     "description": "앱 전체 상태 보기",
+    "welcome": "Dev Tools",
+    "greetingMorning": "좋은 아침입니다",
+    "greetingForenoon": "좋은 아침입니다",
+    "greetingNoon": "안녕하세요",
+    "greetingAfternoon": "안녕하세요",
+    "greetingEvening": "좋은 저녁입니다",
+    "greetingLateNight": "밤이 깊었네요",
     "successRate": "성공률",
     "available": "사용 가능",
     "upcoming": "이번 주 예정 작업",

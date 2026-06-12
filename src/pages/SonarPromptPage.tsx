@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
     Search, FileCode, Loader2, ChevronRight, ChevronLeft, Check,
     Trash2, RotateCcw, History, Sparkles, Clock,
@@ -309,7 +310,8 @@ export function SonarPromptPage() {
     const [detailRecord, setDetailRecord] = useState<SonarScanRecord | null>(null);
 
     // --- Tab ---
-    const [activeTab, setActiveTab] = useState("coverage");
+    const [searchParams] = useSearchParams();
+    const [activeTab, setActiveTab] = useState(() => searchParams.get("tab") || "coverage");
 
     // --- 覆盖率周期 ---
     const weekOptions = useMemo(() => getWeekOptions(24), []);

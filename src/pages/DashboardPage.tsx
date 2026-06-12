@@ -27,8 +27,8 @@ const quickLinks = [
   { to: "/reminder/history", icon: History, label: "发送历史", color: "text-cyan-500" },
   { to: "/gitlab/overview", icon: GitBranch, label: "Git扫描", color: "text-orange-500" },
   { to: "/gitlab/settings", icon: Settings, label: "Git 配置", color: "text-gray-500" },
-  { to: "/sonar", icon: FlaskConical, label: "单测覆盖率", color: "text-emerald-500", settingsTo: "/sonar" },
-  { to: "/ai-coverage", icon: Brain, label: "AI生成率", color: "text-violet-500", settingsTo: "/ai-coverage" },
+  { to: "/sonar", icon: FlaskConical, label: "单测覆盖率", color: "text-emerald-500", settingsTo: "/sonar?tab=settings" },
+  { to: "/ai-coverage", icon: Brain, label: "AI生成率", color: "text-violet-500", settingsTo: "/ai-coverage?tab=settings" },
   { to: "/settings", icon: Settings, label: "系统设置", color: "text-muted-foreground" },
 ];
 
@@ -320,8 +320,18 @@ export function DashboardPage() {
                 <p className="text-[10px] text-muted-foreground text-center py-3">暂无覆盖率数据</p>
               )}
               <div className="flex gap-1.5 mt-2">
-                <Link to="/sonar" className="flex-1 text-center text-[10px] border rounded px-2 py-1 hover:bg-muted transition-colors">单测覆盖</Link>
-                <Link to="/ai-coverage" className="flex-1 text-center text-[10px] border rounded px-2 py-1 hover:bg-muted transition-colors">AI 覆盖</Link>
+                <div className="relative group flex-1">
+                  <Link to="/sonar" className="block text-center text-[10px] border rounded px-2 py-1 hover:bg-muted transition-colors">单测覆盖</Link>
+                  <Link to="/sonar?tab=settings" title="设置" className="absolute top-0.5 right-0.5 h-4 w-4 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Cog className="h-2.5 w-2.5" />
+                  </Link>
+                </div>
+                <div className="relative group flex-1">
+                  <Link to="/ai-coverage" className="block text-center text-[10px] border rounded px-2 py-1 hover:bg-muted transition-colors">AI 覆盖</Link>
+                  <Link to="/ai-coverage?tab=settings" title="设置" className="absolute top-0.5 right-0.5 h-4 w-4 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Cog className="h-2.5 w-2.5" />
+                  </Link>
+                </div>
               </div>
             </CardContent>
           </Card>
