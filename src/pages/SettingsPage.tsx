@@ -407,7 +407,7 @@ export function SettingsPage() {
           <CardContent className="p-3 space-y-1.5">
             <div className="flex justify-between text-xs">
               <span className="text-muted-foreground">{t("settings.version")}</span>
-              <span className="font-mono">0.2.0</span>
+              <span className="font-mono">{__APP_VERSION__}</span>
             </div>
             <div className="flex justify-between text-xs">
               <span className="text-muted-foreground">{t("settings.framework")}</span>
