@@ -6,7 +6,7 @@ import { useSettings, useUpdateSetting, getSettingValue } from "@/lib/query/sett
 import { useQueryClient } from "@tanstack/react-query";
 import { open, save } from "@tauri-apps/plugin-dialog";
 import { invoke } from "@tauri-apps/api/core";
-import { Monitor, Moon, Sun, Power, EyeOff, MonitorUp, Download, Upload, Info, Palette, Database, LayoutGrid, GripVertical, ChevronUp, ChevronDown, RotateCcw, Home, AlertTriangle, Bell, GitBranch, FileCode, Brain, Timer, StickyNote, Rocket } from "lucide-react";
+import { Monitor, Moon, Sun, Power, EyeOff, MonitorUp, Download, Upload, Info, Palette, Database, LayoutGrid, GripVertical, ChevronUp, ChevronDown, RotateCcw, Home, AlertTriangle, Bell, GitBranch, FileCode, Brain, Rocket } from "lucide-react";
 import { ToggleRow } from "@/components/ui/toggle-row";
 import { Switch } from "@/components/ui/switch";
 import { SearchableSelect } from "@/components/ui/searchable-select";
@@ -231,8 +231,6 @@ export function SettingsPage() {
                 { value: "/gitlab/overview", label: "Git 扫描", icon: GitBranch },
                 { value: "/sonar", label: "单测覆盖率", icon: FileCode },
                 { value: "/ai-coverage", label: "AI 生成率", icon: Brain },
-                { value: "/timer", label: "番茄钟", icon: Timer },
-                { value: "/notes", label: "速记", icon: StickyNote },
               ]}
               placeholder="选择启动页"
               size="md"

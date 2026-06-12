@@ -28,16 +28,9 @@ function TrayEventListener() {
           navigate("/reminder/tasks");
           window.dispatchEvent(new CustomEvent("tray-new-task"));
           break;
-        case "new-note":
-          navigate("/notes");
-          window.dispatchEvent(new CustomEvent("tray-new-note"));
-          break;
         case "scan":
           navigate("/gitlab/overview");
           window.dispatchEvent(new CustomEvent("tray-scan"));
-          break;
-        case "timer":
-          navigate("/timer");
           break;
         case "dashboard":
           navigate("/");

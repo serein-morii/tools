@@ -1,6 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import {
-  Bell, Settings, Home, GitBranch, FileCode, Brain, Timer, StickyNote,
+  Bell, Settings, Home, GitBranch, FileCode, Brain,
 } from "lucide-react";
 
 export interface ModuleConfig {
@@ -61,24 +61,6 @@ export const allModules: ModuleConfig[] = [
     icon: Bell,
     description: "管理定时任务和提醒",
     settingKey: "page_reminder_visible",
-  },
-  {
-    id: "timer",
-    path: "/timer",
-    labelKey: "nav.timer",
-    label: "计时器",
-    icon: Timer,
-    description: "专注计时",
-    settingKey: "page_timer_visible",
-  },
-  {
-    id: "notes",
-    path: "/notes",
-    labelKey: "nav.notes",
-    label: "笔记",
-    icon: StickyNote,
-    description: "快捷笔记",
-    settingKey: "page_notes_visible",
   },
   {
     id: "settings",

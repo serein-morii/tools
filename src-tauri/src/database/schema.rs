@@ -93,16 +93,6 @@ pub fn init_schema(conn: &Connection) -> Result<()> {
             value           TEXT NOT NULL
         );
 
-        -- Quick Notes table
-        CREATE TABLE IF NOT EXISTS quick_notes (
-            id              TEXT PRIMARY KEY,
-            content         TEXT NOT NULL,
-            color           TEXT DEFAULT 'default',
-            pinned          INTEGER NOT NULL DEFAULT 0,
-            created_at      INTEGER NOT NULL,
-            updated_at      INTEGER NOT NULL
-        );
-
         -- GitLab Scan History table
         CREATE TABLE IF NOT EXISTS gitlab_scan_history (
             id                  TEXT PRIMARY KEY,

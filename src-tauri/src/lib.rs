@@ -84,13 +84,6 @@ pub fn run() {
             commands::export_backup,
             commands::import_backup,
             commands::write_text_file,
-            commands::get_notes,
-            commands::get_note,
-            commands::create_note,
-            commands::update_note,
-            commands::delete_note,
-            commands::clear_all_notes,
-            commands::search_notes,
             commands::get_gitlab_config,
             commands::save_gitlab_config,
             commands::test_gitlab_connection,
@@ -128,9 +121,7 @@ pub fn run() {
             // Build tray menu
             let show_item = MenuItem::with_id(app, "show", "显示窗口", true, None::<&str>)?;
             let new_task_item = MenuItem::with_id(app, "new_task", "新建任务", true, None::<&str>)?;
-            let new_note_item = MenuItem::with_id(app, "new_note", "新建笔记", true, None::<&str>)?;
             let scan_item = MenuItem::with_id(app, "scan", "扫描代码", true, None::<&str>)?;
-            let timer_item = MenuItem::with_id(app, "timer", "专注计时", true, None::<&str>)?;
             let dashboard_item = MenuItem::with_id(app, "dashboard", "打开概览", true, None::<&str>)?;
             let settings_item = MenuItem::with_id(app, "settings", "打开设置", true, None::<&str>)?;
             let quit_item = MenuItem::with_id(app, "quit", "退出", true, None::<&str>)?;
@@ -138,10 +129,8 @@ pub fn run() {
                 .item(&show_item)
                 .separator()
                 .item(&new_task_item)
-                .item(&new_note_item)
                 .item(&scan_item)
                 .separator()
-                .item(&timer_item)
                 .item(&dashboard_item)
                 .item(&settings_item)
                 .separator()
@@ -171,20 +160,6 @@ pub fn run() {
                             window.show().unwrap();
                             window.set_focus().unwrap();
                             let _ = window.emit("tray-action", "scan");
-                        }
-                    }
-                    "new_note" => {
-                        if let Some(window) = app.get_webview_window("main") {
-                            window.show().unwrap();
-                            window.set_focus().unwrap();
-                            let _ = window.emit("tray-action", "new-note");
-                        }
-                    }
-                    "timer" => {
-                        if let Some(window) = app.get_webview_window("main") {
-                            window.show().unwrap();
-                            window.set_focus().unwrap();
-                            let _ = window.emit("tray-action", "timer");
                         }
                     }
                     "dashboard" => {

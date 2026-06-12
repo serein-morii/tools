@@ -3,14 +3,13 @@ import { useChannels } from "@/lib/query/channelQueries";
 import { useTemplates } from "@/lib/query/templateQueries";
 import { useReminderHistory } from "@/lib/query/reminderQueries";
 import { useGitLabScanHistory, useGitLabConfigured, useGitLabConfig } from "@/lib/query/gitlabQueries";
-import { useNotes } from "@/lib/query/noteQueries";
 import { gitlabApi } from "@/lib/api/gitlab";
 import { getHistory as getSonarHistory } from "@/lib/sonar/history";
 import { getTemplates } from "@/lib/sonar/templates";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Bell, Radio, CheckCircle2, GitBranch, BarChart3, RefreshCw,
-  FlaskConical, FileCode, Brain, Timer, StickyNote,
+  FlaskConical, FileCode, Brain,
   ArrowRight, LayoutGrid, Settings, MessageSquare, History,
 } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -29,8 +28,6 @@ const quickLinks = [
   { to: "/gitlab/settings", icon: Settings, label: "Git 配置", color: "text-gray-500" },
   { to: "/sonar", icon: FlaskConical, label: "单测覆盖率", color: "text-emerald-500" },
   { to: "/ai-coverage", icon: Brain, label: "AI生成率", color: "text-violet-500" },
-  { to: "/timer", icon: Timer, label: "番茄钟", color: "text-red-500" },
-  { to: "/notes", icon: StickyNote, label: "速记", color: "text-yellow-500" },
   { to: "/settings", icon: Settings, label: "系统设置", color: "text-muted-foreground" },
 ];
 
@@ -43,7 +40,6 @@ export function DashboardPage() {
   const { data: gitlabHistory } = useGitLabScanHistory(5);
   const { data: gitlabConfigured } = useGitLabConfigured();
   const { data: gitlabConfig } = useGitLabConfig();
-  const { data: notes } = useNotes();
   const { isLoggedIn } = useWalkinAuth();
   const [unitBoardData, setUnitBoardData] = useState<UnitBoardData | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -80,7 +76,6 @@ export function DashboardPage() {
   const taskList = tasks || [];
   const channelList = channels || [];
   const historyList = history || [];
-  const noteList = notes || [];
   const activeTasks = taskList.filter(t => t.enabled).length;
   const activeChannels = channelList.filter(c => c.enabled).length;
   const totalTemplates = (templates || []).length;
@@ -140,10 +135,6 @@ export function DashboardPage() {
                   Git {gitlabProjects}
                 </span>
               )}
-              <span className="inline-flex items-center gap-1 text-[9px] bg-background/80 rounded-full px-2 py-0.5">
-                <span className="h-1 w-1 rounded-full bg-yellow-500" />
-                速记 {noteList.length}
-              </span>
               <span className={cn("inline-flex items-center gap-1 text-[9px] bg-background/80 rounded-full px-2 py-0.5",
                 isLoggedIn ? "" : "text-muted-foreground"
               )}>
@@ -170,13 +161,12 @@ export function DashboardPage() {
       </div>
 
       {/* Stats Row */}
-      <div className="grid grid-cols-6 gap-2 px-4 py-2 bg-muted/30 rounded-lg border">
+      <div className="grid grid-cols-5 gap-2 px-4 py-2 bg-muted/30 rounded-lg border">
         <StatCard icon={Bell} label="活跃任务" value={activeTasks} sub={`共 ${taskList.length}`} href="/reminder/tasks" color="text-amber-500" />
         <StatCard icon={Radio} label="通知渠道" value={activeChannels} sub={`共 ${channelList.length}`} href="/reminder/channels" color="text-blue-500" />
         <StatCard icon={CheckCircle2} label="发送成功" value={successCount} sub={`${successRate}%`} href="/reminder/history" color="text-emerald-500" />
         <StatCard icon={FlaskConical} label="扫描记录" value={sonarHistory.length} sub={`${sonarHistory.reduce((s, r) => s + r.fileCount, 0)} 文件`} href="/sonar" color="text-cyan-500" />
         <StatCard icon={GitBranch} label="变更项目" value={gitlabConfigured ? gitlabProjects : "-"} sub={gitlabConfigured ? `${gitlabCommits} commits` : "未配置"} href="/gitlab/overview" color="text-orange-500" />
-        <StatCard icon={StickyNote} label="速记" value={noteList.filter(n => n.pinned).length} sub={`共 ${noteList.length}`} href="/notes" color="text-yellow-500" />
       </div>
 
       {/* Two Column Layout */}
@@ -267,28 +257,7 @@ export function DashboardPage() {
             </Card>
           )}
 
-          {/* Quick Notes */}
-          <Card>
-            <CardHeader className="pb-1.5 pt-2 px-3 flex-row items-center justify-between">
-              <CardTitle className="text-xs flex items-center gap-1.5">
-                <StickyNote className="h-3.5 w-3.5 text-yellow-500" /> 速记
-              </CardTitle>
-              <Link to="/notes" className="text-[10px] text-muted-foreground hover:text-foreground flex items-center gap-0.5">
-                全部 <ArrowRight className="h-2.5 w-2.5" />
-              </Link>
-            </CardHeader>
-            <CardContent className="px-3 pb-3 pt-0">
-              {noteList.filter(n => n.pinned).length > 0 ? (
-                <div className="space-y-1">
-                  {noteList.filter(n => n.pinned).slice(0, 3).map(note => (
-                    <div key={note.id} className="text-xs bg-muted/30 rounded px-2 py-1.5 line-clamp-2 border-l-2" style={{ borderLeftColor: note.color || "#e2e8f0" }}>{note.content}</div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-[10px] text-muted-foreground text-center py-2">暂无置顶速记</p>
-              )}
-            </CardContent>
-          </Card>
+          {/* Quick Notes removed */}
         </div>
 
         {/* Right Column */}

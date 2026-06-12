@@ -57,8 +57,6 @@
     "history": "履歴",
     "settings": "設定",
     "reminder": "リマインダー",
-    "timer": "タイマー",
-    "notes": "ノート",
     "home": "ダッシュボード",
     "gitlab": "コード",
     "sonar": "単体テスト"
@@ -778,31 +776,5 @@
       "rank": "順位",
       "contributor": "貢献者"
     }
-  },
-  "timer": {
-    "title": "集中タイマー",
-    "description": "ポモドーロ手法で集中力を向上",
-    "focus": "集中",
-    "shortBreak": "短休憩",
-    "longBreak": "長休憩",
-    "sessions": "完了セッション",
-    "totalTime": "集中時間",
-    "minutes": "分",
-    "start": "開始",
-    "pause": "停止",
-    "reset": "リセット",
-    "placeholder": "タイマーモジュールのプレースホルダー。カウントダウン、ポモドーロタイマーなどに対応予定。"
-  },
-  "notes": {
-    "title": "クイックノート",
-    "description": "アイデアを素早く記録",
-    "placeholder": "アイデアを入力... (Cmd+Enter で保存)",
-    "search": "ノートを検索...",
-    "empty": "ノートがありません。アイデアを記録しましょう！",
-    "noResults": "一致するノートが見つかりません",
-    "pinned": "ピン留め済み",
-    "unpinned": "ピン留め",
-    "other": "その他のノート",
-    "deleteConfirm": "このノートを削除しますか？"
   }
 }

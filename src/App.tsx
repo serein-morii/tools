@@ -14,8 +14,6 @@ const TemplatesPage = lazy(() => import("@/pages/TemplatesPage").then((m) => ({ 
 const ChannelsPage = lazy(() => import("@/pages/ChannelsPage").then((m) => ({ default: m.ChannelsPage })));
 const HistoryPage = lazy(() => import("@/pages/HistoryPage").then((m) => ({ default: m.HistoryPage })));
 const ReminderSettingsPage = lazy(() => import("@/pages/ReminderSettingsPage").then((m) => ({ default: m.ReminderSettingsPage })));
-const PomodoroTimerPage = lazy(() => import("@/pages/PomodoroTimerPage").then((m) => ({ default: m.PomodoroTimerPage })));
-const QuickNotesPage = lazy(() => import("@/pages/QuickNotesPage").then((m) => ({ default: m.QuickNotesPage })));
 const SettingsPage = lazy(() => import("@/pages/SettingsPage").then((m) => ({ default: m.SettingsPage })));
 const GitLabOverviewPage = lazy(() => import("@/pages/GitLabOverviewPage").then((m) => ({ default: m.GitLabOverviewPage })));
 const GitLabHistoryPage = lazy(() => import("@/pages/GitLabHistoryPage").then((m) => ({ default: m.GitLabHistoryPage })));
@@ -104,10 +102,8 @@ function App() {
               <Route path="history" element={withErrorBoundary(<GitLabHistoryPage />)} />
               <Route path="settings" element={withErrorBoundary(<GitLabSettingsPage />)} />
             </Route>
-            <Route path="timer" element={<PageGuard settingKey="page_timer_visible">{withErrorBoundary(<PomodoroTimerPage />)}</PageGuard>} />
             <Route path="sonar" element={<PageGuard settingKey="page_sonar_visible">{withErrorBoundary(<SonarPromptPage />)}</PageGuard>} />
             <Route path="ai-coverage" element={<PageGuard settingKey="page_ai_coverage_visible">{withErrorBoundary(<AiCoveragePage />)}</PageGuard>} />
-            <Route path="notes" element={<PageGuard settingKey="page_notes_visible">{withErrorBoundary(<QuickNotesPage />)}</PageGuard>} />
             <Route path="settings" element={withErrorBoundary(<SettingsPage />)} />
           </Route>
         </Routes>
