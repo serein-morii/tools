@@ -36,33 +36,33 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        "flex h-screen flex-col border-r bg-card/50 backdrop-blur-sm transition-all duration-300",
-        collapsed ? "w-[52px]" : "w-[180px]"
+        "flex h-screen flex-col border-r bg-card/50 backdrop-blur-sm transition-all duration-300 ease-out",
+        collapsed ? "w-14" : "w-[200px]"
       )}
     >
       {/* Header */}
-      <div className="flex h-11 items-center justify-between border-b px-2.5">
+      <div className="flex h-12 items-center justify-between border-b px-3">
         {!collapsed && (
           <div className="flex items-center gap-2.5">
             <img
               src="/app-icon.png"
               alt="Dev Tools"
-              className="h-7 w-7 rounded-md shadow-sm"
+              className="h-7 w-7 rounded-lg shadow-sm ring-1 ring-border/50"
             />
-            <span className="text-xs font-semibold text-foreground">Dev Tools</span>
+            <span className="text-sm font-semibold tracking-tight">Dev Tools</span>
           </div>
         )}
         {collapsed && (
           <img
             src="/app-icon.png"
             alt="Dev Tools"
-            className="h-8 w-8 rounded-lg shadow-sm mx-auto"
+            className="h-8 w-8 rounded-lg shadow-sm ring-1 ring-border/50 mx-auto"
           />
         )}
         <button
           onClick={toggleCollapse}
           className={cn(
-            "flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors",
+            "flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-150",
             collapsed && "absolute right-2"
           )}
         >
@@ -71,7 +71,7 @@ export function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex flex-1 flex-col gap-0.5 p-1.5">
+      <nav className="flex flex-1 flex-col gap-1 p-2">
         {sortedModules.map((mod) => {
           const customLabel = getSettingValue(settings, `menu_label_${mod.id}`, "");
           const label = customLabel || t(mod.labelKey);
@@ -82,7 +82,7 @@ export function Sidebar() {
               end={mod.path === "/home"}
               className={({ isActive }) =>
                 cn(
-                  "group flex items-center gap-2 rounded-md px-2.5 py-1.5 text-xs font-medium transition-all duration-200",
+                  "group flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium transition-all duration-150",
                   isActive
                     ? "bg-primary text-primary-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground hover:bg-muted",
@@ -90,7 +90,7 @@ export function Sidebar() {
                 )
               }
             >
-              <mod.icon className="h-4 w-4 shrink-0" />
+              <mod.icon className="h-[18px] w-[18px] shrink-0" />
               {!collapsed && <span className="truncate" title={label}>{label}</span>}
             </NavLink>
           );
@@ -98,12 +98,12 @@ export function Sidebar() {
       </nav>
 
       {/* Settings at bottom */}
-      <div className="border-t p-1.5">
+      <div className="border-t p-2">
         <NavLink
           to="/settings"
           className={({ isActive }) =>
             cn(
-              "group flex items-center gap-2 rounded-md px-2.5 py-1.5 text-xs font-medium transition-all duration-200",
+              "group flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium transition-all duration-150",
               isActive
                 ? "bg-primary text-primary-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground hover:bg-muted",
@@ -111,7 +111,7 @@ export function Sidebar() {
             )
           }
         >
-          <Settings className="h-4 w-4 shrink-0" />
+          <Settings className="h-[18px] w-[18px] shrink-0" />
           {!collapsed && <span>{t("nav.settings")}</span>}
         </NavLink>
       </div>

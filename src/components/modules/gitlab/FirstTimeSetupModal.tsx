@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link2, Loader2, CheckCircle, XCircle } from "lucide-react";
+import { Link2, Loader2, CheckCircle, XCircle, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useSaveGitLabConfig, useTestGitLabConnection } from "@/lib/query/gitlabQueries";
 import { toast } from "sonner";
 import { defaultGitLabConfig } from "@/lib/gitlab/defaults";
@@ -18,6 +19,7 @@ export function FirstTimeSetupModal({ onComplete, onSkip }: FirstTimeSetupModalP
   const { t } = useTranslation();
   const [formData, setFormData] = useState<GitLabConfig>(defaultGitLabConfig);
   const [showToken, setShowToken] = useState(false);
+  const [showWalkinPassword, setShowWalkinPassword] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<"idle" | "testing" | "success" | "failed">("idle");
 
   const saveConfig = useSaveGitLabConfig();
@@ -62,7 +64,7 @@ export function FirstTimeSetupModal({ onComplete, onSkip }: FirstTimeSetupModalP
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <Card className="w-full max-w-md mx-4">
+      <Card className="w-full max-w-lg mx-4">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Link2 className="h-5 w-5" />
@@ -73,69 +75,85 @@ export function FirstTimeSetupModal({ onComplete, onSkip }: FirstTimeSetupModalP
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Step 1: Server */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium">{t("gitlab.setup.step1Label")}</label>
-            <Input
-              placeholder="http://code.jms.com"
-              value={formData.url}
-              onChange={(e) => setFormData({ ...formData, url: e.target.value })}
-            />
-          </div>
+          {/* GitLab 连接配置 */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <Link2 className="h-4 w-4" />
+              GitLab 连接配置
+            </div>
 
-          {/* Step 2: Auth */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium">{t("gitlab.setup.step2Label")}</label>
-            <div className="flex gap-2">
-              <Button
-                variant={formData.auth_type === "token" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setFormData({ ...formData, auth_type: "token" })}
-              >
-                {t("gitlab.setup.tokenRecommended")}
-              </Button>
-              <Button
-                variant={formData.auth_type === "password" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setFormData({ ...formData, auth_type: "password" })}
-              >
-                {t("gitlab.setup.usernamePassword")}
-              </Button>
+            <div className="space-y-1.5">
+              <Label className="text-xs">服务器地址</Label>
+              <Input
+                value={formData.url}
+                onChange={(e) => setFormData({ ...formData, url: e.target.value })}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs">认证方式</Label>
+              <div className="flex gap-2">
+                <Button
+                  variant={formData.auth_type === "token" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setFormData({ ...formData, auth_type: "token" })}
+                >
+                  Private Token（推荐）
+                </Button>
+                <Button
+                  variant={formData.auth_type === "password" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setFormData({ ...formData, auth_type: "password" })}
+                >
+                  用户名/密码
+                </Button>
+              </div>
             </div>
 
             {formData.auth_type === "token" ? (
-              <div className="flex gap-2 mt-2">
-                <Input
-                  type={showToken ? "text" : "password"}
-                  placeholder={t("gitlab.setup.inputTokenPlaceholder")}
-                  value={formData.token || ""}
-                  onChange={(e) => setFormData({ ...formData, token: e.target.value })}
-                />
-                <Button variant="outline" size="sm" onClick={() => setShowToken(!showToken)}>
-                  {showToken ? t("common.hide") : t("common.show")}
-                </Button>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Private Token</Label>
+                <div className="flex gap-2">
+                  <Input
+                    type={showToken ? "text" : "password"}
+                    placeholder="请输入 Private Token"
+                    value={formData.token || ""}
+                    onChange={(e) => setFormData({ ...formData, token: e.target.value })}
+                    className="flex-1"
+                  />
+                  <Button variant="outline" size="sm" onClick={() => setShowToken(!showToken)}>
+                    {showToken ? t("common.hide") : t("common.show")}
+                  </Button>
+                </div>
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-2 mt-2">
-                <Input
-                  placeholder={t("gitlab.setup.username")}
-                  value={formData.username || ""}
-                  onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                />
-                <Input
-                  type="password"
-                  placeholder={t("gitlab.setup.password")}
-                  value={formData.password || ""}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                />
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1.5">
+                  <Label className="text-xs">用户名</Label>
+                  <Input
+                    placeholder="请输入用户名"
+                    value={formData.username || ""}
+                    onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">密码</Label>
+                  <Input
+                    type="password"
+                    placeholder="请输入密码"
+                    value={formData.password || ""}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  />
+                </div>
               </div>
             )}
+
             <p className="text-xs text-muted-foreground">
-              💡 {t("gitlab.setup.tokenHint")}
+              💡 Private Token 可在 GitLab 用户设置 → Access Tokens 中创建
             </p>
           </div>
 
-          {/* Test Connection */}
+          {/* 测试连接 */}
           <div className="flex items-center gap-4">
             <Button variant="outline" onClick={handleTest} disabled={connectionStatus === "testing" || !formData.url}>
               {connectionStatus === "testing" ? (
@@ -155,7 +173,72 @@ export function FirstTimeSetupModal({ onComplete, onSkip }: FirstTimeSetupModalP
             )}
           </div>
 
-          {/* Actions */}
+          {/* Walkin 代码质量集成 */}
+          <div className="space-y-3 pt-3 border-t">
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <Shield className="h-4 w-4" />
+              Walkin 代码质量集成
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs">Walkin 地址</Label>
+              <Input
+                value={formData.walkin_url || ""}
+                onChange={(e) => setFormData({ ...formData, walkin_url: e.target.value })}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1.5">
+                <Label className="text-xs">用户名</Label>
+                <Input
+                  placeholder="请输入用户名"
+                  value={formData.walkin_username || ""}
+                  onChange={(e) => setFormData({ ...formData, walkin_username: e.target.value })}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">密码</Label>
+                <div className="flex gap-1">
+                  <Input
+                    type={showWalkinPassword ? "text" : "password"}
+                    placeholder="请输入密码"
+                    value={formData.walkin_password || ""}
+                    onChange={(e) => setFormData({ ...formData, walkin_password: e.target.value })}
+                    className="flex-1"
+                  />
+                  <Button variant="outline" size="sm" onClick={() => setShowWalkinPassword(!showWalkinPassword)}>
+                    {showWalkinPassword ? t("common.hide") : t("common.show")}
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1.5">
+                <Label className="text-xs">部门 ID</Label>
+                <Input
+                  placeholder="请输入部门 ID"
+                  value={formData.walkin_dept_id || ""}
+                  onChange={(e) => setFormData({ ...formData, walkin_dept_id: e.target.value })}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">部门名称</Label>
+                <Input
+                  placeholder="请输入部门名称"
+                  value={formData.walkin_dept_name || ""}
+                  onChange={(e) => setFormData({ ...formData, walkin_dept_name: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <p className="text-xs text-muted-foreground">
+              💡 Walkin 用于获取代码质量数据和覆盖率统计
+            </p>
+          </div>
+
+          {/* 操作按钮 */}
           <div className="flex justify-between pt-4 border-t">
             <Button variant="ghost" onClick={onSkip}>
               {t("common.skip")}

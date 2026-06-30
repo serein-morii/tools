@@ -12,6 +12,9 @@ export const defaultSelectedTokenIds: string[] = [];
 export const defaultGitLabConfig: GitLabConfig = {
   url: "http://code.jms.com",
   auth_type: "token",
+  token: "", // Private Token 空着让用户填
+  username: "",
+  password: "",
   token_profiles: defaultTokenProfiles,
   ldap_profiles: defaultLdapProfiles,
   filter_mode: "include",
@@ -24,11 +27,11 @@ export const defaultGitLabConfig: GitLabConfig = {
   scan_range_days: 7,
   walkin_enabled: true,
   walkin_url: "http://walkin.jms.com",
-  walkin_username: "",
-  walkin_password: "",
-  walkin_dept_name: "产品架构",
-  walkin_dept_id: "a0a768d7-9e8d-448c-9b79-926d84f51ea1",
-  walkin_workspace_name: "产品架构&PMO",
+  walkin_username: "", // 用户名空着让用户填
+  walkin_password: "", // 密码空着让用户填
+  walkin_dept_name: "",
+  walkin_dept_id: "",
+  walkin_workspace_name: "",
   walkin_workspace_id: "",
   walkin_csrf_token: "",
   walkin_project_header: "",

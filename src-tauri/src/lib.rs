@@ -1,4 +1,4 @@
-mod commands;
+pub mod commands;
 mod database;
 mod error;
 mod services;
@@ -10,6 +10,7 @@ use tauri::Manager;
 use tauri::Emitter;
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 use tauri::menu::{MenuBuilder, MenuItem};
+use tauri::image::Image;
 
 // Global app handle for auto-launch
 static APP_HANDLE: once_cell::sync::Lazy<Mutex<Option<tauri::AppHandle>>> = once_cell::sync::Lazy::new(|| Mutex::new(None));
@@ -191,17 +192,34 @@ pub fn run() {
                     }
                 });
 
+            // Load dedicated tray icon (32x32 PNG designed for system tray)
+            // Falls back to default window icon if the tray icon is not found
+            let tray_icon_path = if cfg!(debug_assertions) {
+                // In dev mode, the icon is in src-tauri/icons
+                std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("icons/tray-icon.png")
+            } else {
+                // In production, the icon is bundled as a resource
+                std::path::PathBuf::from("icons/tray-icon.png")
+            };
+
+            let tray_icon = load_tray_icon(&tray_icon_path)
+                .or_else(|| app.default_window_icon().cloned());
+
             #[cfg(target_os = "macos")]
             {
-                if let Some(icon) = app.default_window_icon() {
-                    tray.icon(icon.clone()).icon_as_template(true).build(app)?;
+                if let Some(icon) = tray_icon {
+                    tray.icon(icon).icon_as_template(true).build(app)?;
+                } else {
+                    tray.build(app)?;
                 }
             }
 
             #[cfg(not(target_os = "macos"))]
             {
-                if let Some(icon) = app.default_window_icon() {
-                    tray.icon(icon.clone()).build(app)?;
+                if let Some(icon) = tray_icon {
+                    tray.icon(icon).build(app)?;
+                } else {
+                    tray.build(app)?;
                 }
             }
 
@@ -241,4 +259,14 @@ pub fn run() {
         })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+
+/// Load a dedicated tray icon from a PNG file.
+/// Uses the `image` crate to decode the PNG, then constructs a tauri Image.
+fn load_tray_icon(path: &std::path::Path) -> Option<Image<'static>> {
+    let bytes = std::fs::read(path).ok()?;
+    let img = image::load_from_memory(&bytes).ok()?;
+    let rgba = img.to_rgba8();
+    let (width, height) = rgba.dimensions();
+    Some(Image::new_owned(rgba.into_raw(), width, height))
 }

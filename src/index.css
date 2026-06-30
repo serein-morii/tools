@@ -4,121 +4,124 @@
 
 @layer base {
   :root {
-    /* Clean neutral theme - aligned with git-ai-studio */
+    /* Modern clean theme with subtle warmth */
     --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
+    --foreground: 222 47% 11%;
 
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
-    --card-elevated: 240 4.8% 97%;
+    --card-foreground: 222 47% 11%;
+    --card-elevated: 210 40% 98%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
+    --popover-foreground: 222 47% 11%;
 
-    --primary: 210 100% 56%;
+    /* Primary: Vibrant blue with personality */
+    --primary: 221 83% 53%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 10% 3.9%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222 47% 11%;
 
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
 
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 10% 3.9%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222 47% 11%;
 
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 210 100% 56%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 221 83% 53%;
 
-    --radius: 0.625rem;
-    --radius-sm: calc(var(--radius) * 0.6);
-    --radius-md: calc(var(--radius) * 0.8);
+    /* Rounded corners - softer, more modern */
+    --radius: 0.75rem;
+    --radius-sm: calc(var(--radius) * 0.5);
+    --radius-md: calc(var(--radius) * 0.75);
     --radius-lg: var(--radius);
-    --radius-xl: calc(var(--radius) * 1.4);
+    --radius-xl: calc(var(--radius) * 1.25);
+    --radius-2xl: calc(var(--radius) * 1.5);
 
-    /* Semantic data/status colors - git-ai-studio style */
-    --ai: 210 100% 56%;
+    /* Semantic data/status colors - vibrant and accessible */
+    --ai: 221 83% 53%;
     --ai-foreground: 0 0% 100%;
-    --ai-muted: 210 100% 56% / 0.12;
+    --ai-muted: 221 83% 53% / 0.12;
 
     --human: 160 84% 39%;
     --human-foreground: 0 0% 100%;
     --human-muted: 160 84% 39% / 0.12;
 
-    --success: 162 63% 41%;
+    --success: 142 76% 36%;
     --success-foreground: 0 0% 100%;
-    --success-muted: 162 63% 41% / 0.12;
+    --success-muted: 142 76% 36% / 0.12;
 
     --warning: 38 92% 50%;
     --warning-foreground: 20 14% 10%;
     --warning-muted: 38 92% 50% / 0.12;
 
-    --danger: 346 77% 50%;
+    --danger: 0 84% 60%;
     --danger-foreground: 0 0% 100%;
-    --danger-muted: 346 77% 50% / 0.12;
+    --danger-muted: 0 84% 60% / 0.12;
 
-    --info: 210 100% 56%;
+    --info: 199 89% 48%;
     --info-foreground: 0 0% 100%;
-    --info-muted: 210 100% 56% / 0.12;
+    --info-muted: 199 89% 48% / 0.12;
 
     /* Custom properties */
-    --sidebar-width: 240px;
-    --sidebar-width-collapsed: 64px;
+    --sidebar-width: 200px;
+    --sidebar-width-collapsed: 56px;
   }
 
   .dark {
-    --background: 240 5% 12%;
-    --foreground: 0 0% 98%;
+    --background: 222 47% 6%;
+    --foreground: 210 40% 98%;
 
-    --card: 240 5% 16%;
-    --card-foreground: 0 0% 98%;
-    --card-elevated: 240 5% 20%;
+    --card: 222 47% 8%;
+    --card-foreground: 210 40% 98%;
+    --card-elevated: 222 47% 12%;
 
-    --popover: 240 5% 16%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 222 47% 8%;
+    --popover-foreground: 210 40% 98%;
 
-    --primary: 210 100% 54%;
+    --primary: 221 83% 56%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 240 5% 18%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 222 47% 14%;
+    --secondary-foreground: 210 40% 98%;
 
-    --muted: 240 5% 18%;
-    --muted-foreground: 240 5% 64.9%;
+    --muted: 222 47% 14%;
+    --muted-foreground: 215 20% 65%;
 
-    --accent: 240 5% 18%;
-    --accent-foreground: 0 0% 98%;
+    --accent: 222 47% 14%;
+    --accent-foreground: 210 40% 98%;
 
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 240 5% 24%;
-    --input: 240 5% 24%;
-    --ring: 210 100% 54%;
+    --border: 222 47% 18%;
+    --input: 222 47% 18%;
+    --ring: 221 83% 56%;
 
     /* Semantic colors - dark mode */
-    --ai: 210 100% 54%;
-    --ai-muted: 210 100% 54% / 0.15;
+    --ai: 221 83% 56%;
+    --ai-muted: 221 83% 56% / 0.15;
 
     --human: 160 84% 45%;
     --human-muted: 160 84% 45% / 0.15;
 
-    --success: 162 63% 50%;
-    --success-muted: 162 63% 50% / 0.15;
+    --success: 142 76% 42%;
+    --success-muted: 142 76% 42% / 0.15;
 
     --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 98%;
+    --warning-foreground: 210 40% 98%;
     --warning-muted: 38 92% 50% / 0.15;
 
-    --danger: 346 77% 55%;
-    --danger-muted: 346 77% 55% / 0.15;
+    --danger: 0 72% 55%;
+    --danger-muted: 0 72% 55% / 0.15;
 
-    --info: 210 100% 54%;
-    --info-muted: 210 100% 54% / 0.15;
+    --info: 199 89% 48%;
+    --info-muted: 199 89% 48% / 0.15;
   }
 }
 
@@ -132,6 +135,7 @@
     font-feature-settings: "rlig" 1, "calt" 1;
     font-size: 14px;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.5;
   }
 
   /* Smooth scrolling */
@@ -139,10 +143,10 @@
     scroll-behavior: smooth;
   }
 
-  /* Custom scrollbar */
+  /* Refined scrollbar */
   ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 6px;
+    height: 6px;
   }
 
   ::-webkit-scrollbar-track {
@@ -150,12 +154,17 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background: hsl(var(--muted-foreground) / 0.3);
-    border-radius: 4px;
+    background: hsl(var(--muted-foreground) / 0.25);
+    border-radius: 999px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: hsl(var(--muted-foreground) / 0.5);
+    background: hsl(var(--muted-foreground) / 0.4);
+  }
+
+  /* Better focus states */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-primary ring-offset-2 ring-offset-background;
   }
 }
 
@@ -185,19 +194,75 @@
 
   .bg-card-elevated { background-color: hsl(var(--card-elevated)); }
 
-  /* Ring effect for cards - softer than shadow in dark mode */
-  .ring-card {
-    @apply ring-1 ring-border/40;
+  /* Modern card styling */
+  .card-modern {
+    @apply rounded-xl border bg-card shadow-sm;
   }
 
-  /* Interactive hover state */
-  .interactive-hover {
-    @apply transition-colors duration-150 hover:border-primary/40 hover:bg-card-elevated;
+  /* Card hover effect */
+  .card-interactive {
+    @apply card-modern transition-all duration-200 hover:border-primary/30 hover:shadow-md;
+  }
+
+  /* Glassmorphism panel for headers */
+  .glass-panel {
+    @apply bg-card/80 backdrop-blur-md border-b;
+  }
+
+  /* Page header styling */
+  .page-header {
+    @apply glass-panel px-5 py-3;
+  }
+
+  /* Section spacing */
+  .section-spacing {
+    @apply mx-auto max-w-[1400px] space-y-4 px-4 py-4;
+  }
+
+  /* Compact section spacing */
+  .section-spacing-compact {
+    @apply mx-auto max-w-[1400px] space-y-3 px-4 py-3;
+  }
+
+  /* Modern button base */
+  .btn-modern {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-lg font-medium transition-all duration-200;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2;
+    @apply disabled:pointer-events-none disabled:opacity-50;
+  }
+
+  /* Status badge */
+  .status-badge {
+    @apply inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium;
+  }
+
+  /* Stat card */
+  .stat-card {
+    @apply rounded-xl border bg-card p-4 transition-all duration-200 hover:border-primary/20 hover:shadow-sm;
+  }
+
+  /* Compact stat card */
+  .stat-card-compact {
+    @apply rounded-lg border bg-card p-2.5 transition-all duration-200 hover:border-primary/20;
+  }
+
+  /* Input field styling */
+  .input-modern {
+    @apply flex h-8 w-full rounded-lg border bg-background px-3 text-sm;
+    @apply transition-all duration-150;
+    @apply placeholder:text-muted-foreground;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-0 focus-visible:border-primary;
+    @apply disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   /* Compact table header */
   .table-header-compact {
-    @apply bg-muted/30 text-[10px] uppercase tracking-wider text-muted-foreground;
+    @apply bg-muted/30 text-[11px] uppercase tracking-wider text-muted-foreground;
+  }
+
+  /* Hover row effect */
+  .row-hover {
+    @apply transition-colors duration-150 hover:bg-muted/50;
   }
 }
 

@@ -6,7 +6,7 @@ import { useSettings, useUpdateSetting, getSettingValue } from "@/lib/query/sett
 import { useQueryClient } from "@tanstack/react-query";
 import { open, save } from "@tauri-apps/plugin-dialog";
 import { invoke } from "@tauri-apps/api/core";
-import { Monitor, Moon, Sun, Power, EyeOff, MonitorUp, Download, Upload, Info, Palette, Database, LayoutGrid, GripVertical, ChevronUp, ChevronDown, RotateCcw, Home, AlertTriangle, Bell, GitBranch, FileCode, Brain, Rocket, Pencil, Check, X } from "lucide-react";
+import { Monitor, Moon, Sun, Power, EyeOff, MonitorUp, Download, Upload, Info, Palette, Database, LayoutGrid, GripVertical, ChevronUp, ChevronDown, RotateCcw, Home, AlertTriangle, Bell, GitBranch, FileCode, Brain, Rocket, Pencil, Check, X, Settings } from "lucide-react";
 import { ToggleRow } from "@/components/ui/toggle-row";
 import { Switch } from "@/components/ui/switch";
 import { SearchableSelect } from "@/components/ui/searchable-select";
@@ -44,10 +44,22 @@ export function SettingsPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center p-12">
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-          {t("common.loading")}
+      <div className="min-h-full">
+        <div className="page-header">
+          <div className="flex items-center gap-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+              <Settings className="h-4 w-4 text-primary" />
+            </div>
+            <h1 className="text-base font-semibold tracking-tight">{t("nav.settings")}</h1>
+          </div>
+        </div>
+        <div className="section-spacing">
+          <div className="flex items-center justify-center p-12">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+              {t("common.loading")}
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -55,9 +67,19 @@ export function SettingsPage() {
 
   if (error) {
     return (
-      <div className="p-6">
-        <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-sm text-destructive">
-          {t("common.error")}
+      <div className="min-h-full">
+        <div className="page-header">
+          <div className="flex items-center gap-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+              <Settings className="h-4 w-4 text-primary" />
+            </div>
+            <h1 className="text-base font-semibold tracking-tight">{t("nav.settings")}</h1>
+          </div>
+        </div>
+        <div className="section-spacing">
+          <div className="rounded-xl border border-destructive/50 bg-destructive/10 p-4 text-sm text-destructive">
+            {t("common.error")}
+          </div>
         </div>
       </div>
     );
@@ -129,25 +151,36 @@ export function SettingsPage() {
   };
 
   return (
-    <div className="p-4 max-w-2xl">
-      <div className="space-y-3">
+    <div className="min-h-full">
+      <div className="page-header">
+        <div className="flex items-center gap-3">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+            <Settings className="h-4 w-4 text-primary" />
+          </div>
+          <h1 className="text-base font-semibold tracking-tight">{t("nav.settings")}</h1>
+        </div>
+      </div>
+      <div className="section-spacing">
+        <div className="max-w-2xl space-y-4">
         {/* Appearance Settings */}
-        <Card className="overflow-hidden">
-          <CardHeader className="bg-muted/30 border-b py-2 px-3">
-            <div className="flex items-center gap-1.5">
-              <Palette className="h-3.5 w-3.5 text-violet-500" />
-              <CardTitle className="text-sm">{t("settings.appearance")}</CardTitle>
+        <Card className="card-modern overflow-hidden">
+          <CardHeader className="bg-muted/30 border-b py-3 px-4">
+            <div className="flex items-center gap-2">
+              <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-violet-500/10">
+                <Palette className="h-3.5 w-3.5 text-violet-500" />
+              </div>
+              <CardTitle className="text-sm font-semibold">{t("settings.appearance")}</CardTitle>
             </div>
           </CardHeader>
-          <CardContent className="p-3 space-y-3">
+          <CardContent className="p-4 space-y-4">
             <LanguageSettings
               value={i18n.language as "zh" | "en" | "ja" | "ko"}
               onChange={handleLanguageChange}
             />
 
-            <section className="space-y-1.5">
+            <section className="space-y-2">
               <header>
-                <h3 className="text-xs font-medium">{t("settings.theme")}</h3>
+                <h3 className="text-sm font-medium">{t("settings.theme")}</h3>
               </header>
               <div className="inline-flex gap-1 rounded-lg border bg-card p-1">
                 <ThemeButton
@@ -177,14 +210,16 @@ export function SettingsPage() {
         </Card>
 
         {/* Launch Settings */}
-        <Card className="overflow-hidden">
-          <CardHeader className="bg-muted/30 border-b py-2 px-3">
-            <div className="flex items-center gap-1.5">
-              <Power className="h-3.5 w-3.5 text-orange-500" />
-              <CardTitle className="text-sm">{t("settings.launch")}</CardTitle>
+        <Card className="card-modern overflow-hidden">
+          <CardHeader className="bg-muted/30 border-b py-3 px-4">
+            <div className="flex items-center gap-2">
+              <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-orange-500/10">
+                <Power className="h-3.5 w-3.5 text-orange-500" />
+              </div>
+              <CardTitle className="text-sm font-semibold">{t("settings.launch")}</CardTitle>
             </div>
           </CardHeader>
-          <CardContent className="p-3 space-y-2">
+          <CardContent className="p-4 space-y-3">
             <ToggleRow
               icon={<Power className="h-3.5 w-3.5 text-orange-500" />}
               title={t("settings.launchOnStartup")}
@@ -240,16 +275,18 @@ export function SettingsPage() {
         </Card>
 
         {/* Page Visibility + Ordering */}
-        <Card className="overflow-hidden">
-          <CardHeader className="bg-muted/30 border-b py-2 px-3">
+        <Card className="card-modern overflow-hidden">
+          <CardHeader className="bg-muted/30 border-b py-3 px-4">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5">
-                <LayoutGrid className="h-3.5 w-3.5 text-blue-500" />
-                <CardTitle className="text-sm">菜单与页面</CardTitle>
+              <div className="flex items-center gap-2">
+                <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-blue-500/10">
+                  <LayoutGrid className="h-3.5 w-3.5 text-blue-500" />
+                </div>
+                <CardTitle className="text-sm font-semibold">菜单与页面</CardTitle>
               </div>
             </div>
           </CardHeader>
-          <CardContent className="p-3">
+          <CardContent className="p-4">
             <ReorderableMenuList
               settings={settings}
               updateSetting={updateSetting}
@@ -260,91 +297,95 @@ export function SettingsPage() {
         </Card>
 
         {/* Data Management */}
-        <Card className="overflow-hidden">
-          <CardHeader className="bg-muted/30 border-b py-2 px-3">
-            <div className="flex items-center gap-1.5">
-              <Database className="h-3.5 w-3.5 text-emerald-500" />
-              <CardTitle className="text-sm">{t("settings.dataManagement")}</CardTitle>
+        <Card className="card-modern overflow-hidden">
+          <CardHeader className="bg-muted/30 border-b py-3 px-4">
+            <div className="flex items-center gap-2">
+              <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-500/10">
+                <Database className="h-3.5 w-3.5 text-emerald-500" />
+              </div>
+              <CardTitle className="text-sm font-semibold">{t("settings.dataManagement")}</CardTitle>
             </div>
           </CardHeader>
-          <CardContent className="p-3 space-y-3">
+          <CardContent className="p-4 space-y-3">
             <div className="flex flex-wrap items-center gap-2">
-              <Button variant="outline" size="sm" onClick={handleExport} className="gap-1.5 h-7 text-xs">
-                <Download className="h-3.5 w-3.5" />
+              <Button variant="outline" size="sm" onClick={handleExport} className="gap-1.5">
+                <Download className="h-4 w-4" />
                 {t("settings.exportData")}
               </Button>
-              <Button variant="outline" size="sm" onClick={handleImport} className="gap-1.5 h-7 text-xs">
-                <Upload className="h-3.5 w-3.5" />
+              <Button variant="outline" size="sm" onClick={handleImport} className="gap-1.5">
+                <Upload className="h-4 w-4" />
                 {t("settings.importData")}
               </Button>
             </div>
-            {backupMessage && <p className="text-[11px] text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30 p-2 rounded">{backupMessage}</p>}
-            {backupError && <p className="text-[11px] text-destructive bg-destructive/10 p-2 rounded">{backupError}</p>}
+            {backupMessage && <p className="text-xs text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30 p-3 rounded-lg">{backupMessage}</p>}
+            {backupError && <p className="text-xs text-destructive bg-destructive/10 p-3 rounded-lg">{backupError}</p>}
           </CardContent>
         </Card>
 
         {/* Setup Wizard */}
-        <Card className="overflow-hidden">
-          <CardHeader className="bg-muted/30 border-b py-2 px-3">
-            <div className="flex items-center gap-1.5">
-              <Rocket className="h-3.5 w-3.5 text-primary" />
-              <CardTitle className="text-sm">配置引导</CardTitle>
+        <Card className="card-modern overflow-hidden">
+          <CardHeader className="bg-muted/30 border-b py-3 px-4">
+            <div className="flex items-center gap-2">
+              <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-primary/10">
+                <Rocket className="h-3.5 w-3.5 text-primary" />
+              </div>
+              <CardTitle className="text-sm font-semibold">配置引导</CardTitle>
             </div>
           </CardHeader>
-          <CardContent className="p-3">
-            <div className="flex items-center justify-between rounded-lg border bg-card/50 p-2.5">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between rounded-xl border bg-card p-4">
               <div>
-                <p className="text-xs font-medium">重新打开引导页</p>
-                <p className="text-[10px] text-muted-foreground">重新配置 GitLab 和 Walkin 连接</p>
+                <p className="text-sm font-medium">重新打开引导页</p>
+                <p className="text-xs text-muted-foreground mt-0.5">重新配置 GitLab 和 Walkin 连接</p>
               </div>
-              <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => {
+              <Button variant="outline" size="sm" onClick={() => {
                 if (window.confirm("确定要重新打开引导页吗？应用将重新加载。")) {
                   resetSetup();
                   window.location.reload();
                 }
               }}>
-                <Rocket className="h-3 w-3 mr-1" />打开引导
+                <Rocket className="h-4 w-4 mr-1.5" />打开引导
               </Button>
             </div>
           </CardContent>
         </Card>
 
         {/* Reset & Clear - Collapsible */}
-        <Card className="overflow-hidden border-destructive/30">
+        <Card className="card-modern overflow-hidden border-destructive/30">
           <button
             type="button"
-            className="w-full bg-destructive/5 border-b border-destructive/20 py-2 px-3 flex items-center justify-between hover:bg-destructive/10 transition-colors"
+            className="w-full bg-destructive/5 border-b border-destructive/20 py-3 px-4 flex items-center justify-between hover:bg-destructive/10 transition-colors"
             onClick={() => setShowDangerZone(!showDangerZone)}
           >
-            <div className="flex items-center gap-1.5">
-              <AlertTriangle className="h-3.5 w-3.5 text-destructive" />
-              <CardTitle className="text-sm text-destructive">危险操作</CardTitle>
-              <span className="text-[10px] text-muted-foreground ml-1">（点击展开）</span>
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-destructive" />
+              <CardTitle className="text-sm font-semibold text-destructive">危险操作</CardTitle>
+              <span className="text-xs text-muted-foreground ml-1">（点击展开）</span>
             </div>
             <ChevronDown className={cn("h-4 w-4 text-destructive transition-transform", showDangerZone && "rotate-180")} />
           </button>
           {showDangerZone && (
-            <CardContent className="p-3 space-y-2">
-              <div className="flex items-center justify-between rounded-lg border bg-card/50 p-2.5">
+            <CardContent className="p-4 space-y-3">
+              <div className="flex items-center justify-between rounded-xl border bg-card p-4">
                 <div>
-                  <p className="text-xs font-medium">重置所有配置</p>
-                  <p className="text-[10px] text-muted-foreground">恢复所有设置项到默认值，保留数据</p>
+                  <p className="text-sm font-medium">重置所有配置</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">恢复所有设置项到默认值，保留数据</p>
                 </div>
-                <Button variant="destructive" size="sm" className="h-7 text-xs" onClick={() => {
+                <Button variant="destructive" size="sm" onClick={() => {
                   setDangerAction("resetConfig");
                 }}>
-                  <RotateCcw className="h-3 w-3 mr-1" />重置配置
+                  <RotateCcw className="h-4 w-4 mr-1.5" />重置配置
                 </Button>
               </div>
-              <div className="flex items-center justify-between rounded-lg border bg-card/50 p-2.5">
+              <div className="flex items-center justify-between rounded-xl border bg-card p-4">
                 <div>
-                  <p className="text-xs font-medium">清除本地缓存</p>
-                  <p className="text-[10px] text-muted-foreground">清除所有本地缓存数据，建议重启应用</p>
+                  <p className="text-sm font-medium">清除本地缓存</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">清除所有本地缓存数据，建议重启应用</p>
                 </div>
-                <Button variant="destructive" size="sm" className="h-7 text-xs" onClick={() => {
+                <Button variant="destructive" size="sm" onClick={() => {
                   setDangerAction("clearCache");
                 }}>
-                  <RotateCcw className="h-3 w-3 mr-1" />清除缓存
+                  <RotateCcw className="h-4 w-4 mr-1.5" />清除缓存
                 </Button>
               </div>
             </CardContent>
@@ -354,26 +395,25 @@ export function SettingsPage() {
         {/* Danger Action Confirmation Dialog */}
         {dangerAction && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-            <Card className="w-[360px] mx-4 shadow-2xl">
-              <CardHeader className="bg-destructive/10 border-b py-3 px-4">
+            <Card className="w-[400px] mx-4 shadow-2xl">
+              <CardHeader className="bg-destructive/10 border-b py-4 px-5">
                 <div className="flex items-center gap-2">
                   <AlertTriangle className="h-5 w-5 text-destructive" />
-                  <CardTitle className="text-base text-destructive">确认操作</CardTitle>
+                  <CardTitle className="text-lg font-semibold text-destructive">确认操作</CardTitle>
                 </div>
               </CardHeader>
-              <CardContent className="p-4">
-                <p className="text-sm text-muted-foreground mb-4">
+              <CardContent className="p-5">
+                <p className="text-sm text-muted-foreground mb-5">
                   {dangerAction === "resetConfig"
                     ? "确定要重置所有设置吗？此操作不可撤销，将恢复全部配置到默认值。"
                     : "确定要清除所有本地缓存吗？建议重启应用。"}
                 </p>
                 <div className="flex justify-end gap-2">
-                  <Button variant="outline" size="sm" onClick={() => setDangerAction(null)}>
+                  <Button variant="outline" onClick={() => setDangerAction(null)}>
                     取消
                   </Button>
                   <Button
                     variant="destructive"
-                    size="sm"
                     onClick={() => {
                       if (dangerAction === "resetConfig") {
                         (settings || []).forEach(s => updateSetting.mutate({ key: s.key, value: "" }));
@@ -397,28 +437,31 @@ export function SettingsPage() {
         )}
 
         {/* About */}
-        <Card className="overflow-hidden">
-          <CardHeader className="bg-muted/30 border-b py-2 px-3">
-            <div className="flex items-center gap-1.5">
-              <Info className="h-3.5 w-3.5 text-muted-foreground" />
-              <CardTitle className="text-sm">{t("settings.about")}</CardTitle>
+        <Card className="card-modern overflow-hidden">
+          <CardHeader className="bg-muted/30 border-b py-3 px-4">
+            <div className="flex items-center gap-2">
+              <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-muted">
+                <Info className="h-3.5 w-3.5 text-muted-foreground" />
+              </div>
+              <CardTitle className="text-sm font-semibold">{t("settings.about")}</CardTitle>
             </div>
           </CardHeader>
-          <CardContent className="p-3 space-y-1.5">
-            <div className="flex justify-between text-xs">
+          <CardContent className="p-4 space-y-2">
+            <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">{t("settings.version")}</span>
-              <span className="font-mono">{__APP_VERSION__}</span>
+              <span className="font-mono font-medium">{__APP_VERSION__}</span>
             </div>
-            <div className="flex justify-between text-xs">
+            <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">{t("settings.framework")}</span>
-              <span>Tauri v2 + React 19</span>
+              <span className="font-medium">Tauri v2 + React 19</span>
             </div>
-            <div className="flex justify-between text-xs">
+            <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">{t("settings.author")}</span>
-              <span>Pedro</span>
+              <span className="font-medium">Pedro</span>
             </div>
           </CardContent>
         </Card>
+        </div>
       </div>
     </div>
   );
@@ -439,13 +482,13 @@ function ThemeButton({ active, onClick, icon: Icon, children }: ThemeButtonProps
       size="sm"
       variant={active ? "default" : "ghost"}
       className={cn(
-        "h-7 text-xs min-w-[70px] gap-1",
+        "min-w-[80px] gap-1.5",
         active
           ? "shadow-sm"
           : "text-muted-foreground hover:text-foreground hover:bg-muted"
       )}
     >
-      <Icon className="h-3 w-3" />
+      <Icon className="h-4 w-4" />
       {children}
     </Button>
   );

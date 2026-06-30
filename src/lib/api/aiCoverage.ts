@@ -4,6 +4,11 @@ export interface AiCoverageOverall {
   ai_rate: number;
   total_lines: number;
   ai_lines: number;
+  test_lines: number;
+  test_ai_lines: number;
+  non_test_lines: number;
+  non_test_ai_lines: number;
+  non_test_ai_rate: number;
   total_commits: number;
   commits_with_ai: number;
 }
@@ -12,11 +17,17 @@ export interface AiCoverageDepartment {
   name: string;
   total_lines: number;
   ai_lines: number;
+  test_lines: number;
+  test_ai_lines: number;
+  non_test_lines: number;
+  non_test_ai_lines: number;
+  non_test_ai_rate: number;
   total_commits: number;
   commits_with_ai: number;
   contributor_count: number;
   ai_rate: number;
-  children?: AiCoverageDepartment[];
+  department_l3?: string | null;
+  children?: AiCoverageDepartment[] | null;
 }
 
 export interface AiCoverageResponse {
@@ -30,8 +41,13 @@ export interface AiCoverageAuthor {
   total_commits: number;
   total_lines: number;
   ai_lines: number;
+  test_lines: number;
+  test_ai_lines: number;
+  non_test_lines: number;
+  non_test_ai_lines: number;
   commits_with_ai: number;
   ai_rate: number;
+  non_test_ai_rate: number;
 }
 
 export interface AiCoverageCommit {
@@ -45,7 +61,12 @@ export interface AiCoverageCommit {
   committed_at: string;
   additions: number;
   ai_lines: number;
+  test_additions: number;
+  test_ai_lines: number;
+  non_test_lines: number;
+  non_test_ai_lines: number;
   ai_rate: number;
+  non_test_ai_rate: number;
 }
 
 // Commit detail types
@@ -87,6 +108,12 @@ export interface CommitStats {
   diff_truncated: boolean;
 }
 
+export interface ExcludedFile {
+  path: string;
+  additions: number;
+  deletions: number;
+}
+
 export interface ValidFile {
   path: string;
   additions: number;
@@ -100,7 +127,7 @@ export interface CommitCheckResponse {
   commit: CommitDetail;
   ai_note: AiNote;
   stats: CommitStats;
-  excluded_files: string[];
+  excluded_files: ExcludedFile[];
   valid_files: ValidFile[];
 }
 

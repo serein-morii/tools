@@ -502,8 +502,6 @@ fn get_gitlab_config_from_settings(conn: &rusqlite::Connection) -> Result<GitLab
             .unwrap_or_else(|| {
                 // Default token profiles
                 vec![
-                    TokenProfile { id: "token-1".to_string(), token: "yTeXMdEjKoKqvG8ay8VQ".to_string(), label: "孙强".to_string() },
-                    TokenProfile { id: "token-2".to_string(), token: "Kf8mydzuhw2xDwmhsmM4".to_string(), label: "海兵".to_string() },
                 ]
             })
     };
@@ -515,12 +513,6 @@ fn get_gitlab_config_from_settings(conn: &rusqlite::Connection) -> Result<GitLab
             .unwrap_or_else(|| {
                 // Default LDAP profiles
                 vec![
-                    LdapProfile {
-                        id: "ldap-1".to_string(),
-                        username: "RZIK2v1KpNwUBXbpUq6Y/q//pPyfduF0wI66SBF1t3eHTTRekeAvJki8Yhs0C66rtQINbJ8K7a77VYFe7WiBqQ6QOesNt2rN+xb3SWI7/0/KdcI1JJ4wjgiULKxjCVO99TBV0lW9pPzT9wPOb5/AmK5aiZthNxGrBRmzsyGIcMk=".to_string(),
-                        password: "X7ONsfMYenLAdZua6Fj+9l1ZdptEPNHM1l+nMZ8RL+X9vUZyfsxyf+/0zLYCeQhsnAyf3D863PGBqcgXBMBrUI/MRH/VLo44rmrGHZ5WL9kQNSk492t5CqSkeBcU8JeLTF4exYxsYLq4JLDlnYQMZfBC02U+3lwmaaICKxXk4ag=".to_string(),
-                        label: "承辉".to_string(),
-                    },
                 ]
             })
     };

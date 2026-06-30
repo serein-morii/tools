@@ -67,8 +67,7 @@ impl Default for GitLabConfig {
             url: String::new(),
             auth_type: "token".to_string(),
             token_profiles: vec![
-                TokenProfile { id: "token-1".to_string(), token: "yTeXMdEjKoKqvG8ay8VQ".to_string(), label: "孙强".to_string() },
-                TokenProfile { id: "token-2".to_string(), token: "Kf8mydzuhw2xDwmhsmM4".to_string(), label: "海兵".to_string() },
+
             ],
             selected_token_ids: vec!["token-1".to_string(), "token-2".to_string()],
             ldap_profiles: vec![],
@@ -137,8 +136,7 @@ fn get_gitlab_config_from_settings(conn: &rusqlite::Connection) -> Result<GitLab
             .find(|s| s.key == "gitlab_token_profiles")
             .and_then(|s| serde_json::from_str(&s.value).ok())
             .unwrap_or_else(|| vec![
-                TokenProfile { id: "token-1".to_string(), token: "yTeXMdEjKoKqvG8ay8VQ".to_string(), label: "孙强".to_string() },
-                TokenProfile { id: "token-2".to_string(), token: "Kf8mydzuhw2xDwmhsmM4".to_string(), label: "海兵".to_string() },
+
             ])
     };
 

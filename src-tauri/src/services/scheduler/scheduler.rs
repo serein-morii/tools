@@ -64,26 +64,24 @@ impl EndCondition {
 
 /// Calculate next run time based on special date config
 fn get_special_next_run(task: &Task) -> Result<Option<i64>> {
+    // First, try to parse as JSON config
     let cron_config: CronConfig = match serde_json::from_str(&task.cron_config) {
-        Ok(config) => {
-            log::debug!("Parsed cron_config for task {}: {:?}", task.id, config);
-            config
-        },
-        Err(e) => {
-            log::error!("Failed to parse cron_config for task {}: {}", task.id, e);
+        Ok(config) => config,
+        Err(_) => {
+            // Not a special config (might be empty or simple cron) - return None to fall back to standard cron
             return Ok(None);
         }
     };
 
     // Check if this is a special mode
     if cron_config.mode != Some("special".to_string()) {
-        log::debug!("Task {} is not special mode: {:?}", task.id, cron_config.mode);
         return Ok(None);
     }
 
-    let special = cron_config.special.ok_or_else(|| {
-        crate::error::ToolsError::InvalidCron("缺少特殊日期配置".to_string())
-    })?;
+    let special = match cron_config.special {
+        Some(s) => s,
+        None => return Ok(None),  // No special config - fall back to standard cron
+    };
 
     log::debug!("Special config for task {}: type={:?}, nth_weekday={:?}, last_day={:?}, time={:?}",
         task.id, special.type_, special.nth_weekday, special.last_day, special.time);
@@ -91,13 +89,17 @@ fn get_special_next_run(task: &Task) -> Result<Option<i64>> {
     // 获取时间设置，默认 "09:00"
     let time = special.time.as_deref().unwrap_or("09:00");
 
-    let type_ = special.type_.unwrap_or_default();
+    let type_ = match special.type_ {
+        Some(t) => t,
+        None => return Ok(None),  // No type specified - fall back to standard cron
+    };
 
     match type_.as_str() {
         "nth_weekday" => {
-            let nth_weekday = special.nth_weekday.ok_or_else(|| {
-                crate::error::ToolsError::InvalidCron("缺少第N周配置".to_string())
-            })?;
+            let nth_weekday = match special.nth_weekday {
+                Some(n) => n,
+                None => return Ok(None),  // Missing config - fall back
+            };
             let nth = nth_weekday.nth.unwrap_or(1);
             let weekday = nth_weekday.weekday.unwrap_or(1);
             let month = nth_weekday.month;
@@ -105,9 +107,10 @@ fn get_special_next_run(task: &Task) -> Result<Option<i64>> {
             get_nth_weekday_of_month(nth, weekday, month, time).map(Some)
         }
         "last_day" => {
-            let last_day = special.last_day.ok_or_else(|| {
-                crate::error::ToolsError::InvalidCron("缺少月末配置".to_string())
-            })?;
+            let last_day = match special.last_day {
+                Some(l) => l,
+                None => return Ok(None),  // Missing config - fall back
+            };
             let day_type = last_day.type_.unwrap_or_default();
             let nth = last_day.nth.unwrap_or(1);
             let month = last_day.month;
@@ -115,7 +118,7 @@ fn get_special_next_run(task: &Task) -> Result<Option<i64>> {
             match day_type.as_str() {
                 "last_nth" => get_nth_last_day_of_month(nth, month, time).map(Some),
                 "last_workday" => get_last_workday_of_month(month, time).map(Some),
-                "last_friday" => get_nth_weekday_of_month(4, 5, month, time).map(Some), // 周五是weekday=5
+                "last_friday" => get_nth_weekday_of_month(4, 5, month, time).map(Some),
                 // 兼容旧配置
                 "day" => get_nth_last_day_of_month(nth, month, time).map(Some),
                 "weekday" => get_last_workday_of_month(month, time).map(Some),
@@ -131,6 +134,7 @@ pub fn start_scheduler(db: Arc<Database>) {
     thread::spawn(move || {
         let rt = tokio::runtime::Runtime::new().unwrap();
         rt.block_on(async {
+            log::info!("Reminder scheduler started, checking every 10 seconds");
             let mut interval = tokio::time::interval(Duration::from_secs(10));
 
             loop {
@@ -225,10 +229,16 @@ fn update_task_next_runs(db: &Arc<Database>) -> Result<()> {
                         }
                     }
                 }
-                Err(e) => {
-                    log::error!("Special date error for task {}: {}", task.id, e);
-                    let default_next = Utc::now().timestamp_millis() + 24 * 60 * 60 * 1000;
-                    Some(default_next)
+                Err(_) => {
+                    // Special config error - fall back to standard cron
+                    match get_next_run_time(&task.cron_expr) {
+                        Ok(time) => time,
+                        Err(e) => {
+                            log::error!("Invalid cron for task {}: {}", task.id, e);
+                            let default_next = Utc::now().timestamp_millis() + 24 * 60 * 60 * 1000;
+                            Some(default_next)
+                        }
+                    }
                 }
             };
 
@@ -268,13 +278,35 @@ fn create_upcoming_reminders(db: &Arc<Database>) -> Result<()> {
         }
 
         if let Some(next_run) = task.next_run_at {
-            // If next_run_at is in the past, update it to the next valid time
+            // If next_run_at is in the past, this means the scheduler missed the execution window
+            // We need to either:
+            // 1. Create a reminder for the past time (so execute_pending_reminders can fire it)
+            // 2. Then update next_run_at to the next future time
             if next_run <= now {
-                // First try special date calculation
+                // Check if reminder already exists for this past time
+                let conn = db.conn().lock().unwrap();
+                let exists: bool = conn.query_row(
+                    "SELECT COUNT(*) > 0 FROM reminders WHERE task_id = ?1 AND scheduled_at = ?2",
+                    rusqlite::params![task.id, next_run],
+                    |row| row.get(0),
+                )?;
+                drop(conn);
+
+                if !exists {
+                    // Create reminder for the missed time so it can be executed
+                    let conn = db.conn().lock().unwrap();
+                    ReminderDao::create(&conn, CreateReminderRequest {
+                        task_id: task.id.clone(),
+                        scheduled_at: next_run,
+                    })?;
+                    log::info!("Created overdue reminder for task {} at {}", task.id, next_run);
+                    drop(conn);
+                }
+
+                // Now calculate the next future run time
                 let new_next_run = match get_special_next_run(&task) {
                     Ok(Some(time)) => Some(time),
                     Ok(None) => {
-                        // Fall back to standard cron
                         match get_next_run_time(&task.cron_expr) {
                             Ok(time) => time,
                             Err(e) => {
@@ -300,8 +332,6 @@ fn create_upcoming_reminders(db: &Arc<Database>) -> Result<()> {
                             rusqlite::params![new_time, task.id],
                         )?;
                         log::info!("Updated expired next_run_at for task {} to {}", task.id, new_time);
-                        drop(conn);
-                        continue;
                     }
                     None => {
                         log::warn!("No next run time for task {}, disabling", task.id);
@@ -310,10 +340,9 @@ fn create_upcoming_reminders(db: &Arc<Database>) -> Result<()> {
                             "UPDATE tasks SET enabled = 0, status = 'completed' WHERE id = ?1",
                             rusqlite::params![task.id],
                         )?;
-                        drop(conn);
-                        continue;
                     }
                 }
+                continue;
             }
 
             if next_run > now && next_run <= lookahead {
@@ -344,6 +373,10 @@ async fn execute_pending_reminders(db: &Arc<Database>) -> Result<()> {
     let conn = db.conn().lock().unwrap();
     let reminders = ReminderDao::get_pending(&conn)?;
     drop(conn);
+
+    if !reminders.is_empty() {
+        log::info!("Found {} pending reminders to execute", reminders.len());
+    }
 
     for reminder in reminders {
         // Get task info

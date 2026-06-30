@@ -778,31 +778,31 @@ export function SonarPromptPage() {
     };
 
     return (
-        <div className="min-h-full bg-background">
+        <div className="min-h-full">
             {/* Header */}
-            <div className="border-b px-5 py-3">
+            <div className="page-header">
                 <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
-                            <FlaskConical className="h-3.5 w-3.5 text-primary" />
+                    <div className="flex items-center gap-3">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+                            <FlaskConical className="h-4 w-4 text-primary" />
                         </div>
                         <div>
-                            <h1 className="text-sm font-medium">单测覆盖率</h1>
+                            <h1 className="text-base font-semibold tracking-tight">单测覆盖率</h1>
                         </div>
                     </div>
-                    <div className="inline-flex gap-1 rounded-lg bg-muted p-0.5">
+                    <div className="inline-flex gap-1 rounded-lg bg-muted p-1">
                         {tabs.map((tab) => (
                             <button
                                 key={tab.key}
                                 onClick={() => setActiveTab(tab.key)}
                                 className={cn(
-                                    "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all",
+                                    "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-all duration-150",
                                     activeTab === tab.key
                                         ? "bg-background text-foreground shadow-sm"
-                                        : "text-muted-foreground hover:text-foreground"
+                                        : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                                 )}
                             >
-                                <tab.icon className="h-3.5 w-3.5" />
+                                <tab.icon className="h-4 w-4" />
                                 {tab.label}
                             </button>
                         ))}
@@ -814,29 +814,29 @@ export function SonarPromptPage() {
             <div className="animate-in">
                 {/* ===== Tab: Prompt 生成 ===== */}
                 {activeTab === "generator" && (
-                    <div className="mx-auto max-w-[1400px] space-y-3 px-3 py-3 animate-in fade-in duration-200">
+                    <div className="section-spacing-compact animate-in fade-in duration-200">
                         {/* Overview stats - 单行紧凑 */}
-                        <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                        <div className="flex items-center gap-6 text-sm text-muted-foreground">
                             {[
                                 { icon: History, label: "扫描记录", value: history.length },
                                 { icon: FileText, label: "模板", value: templates.length },
                                 { icon: BarChart3, label: "项目", value: gitlabProjects?.length ?? 0 },
                             ].map((stat) => (
-                                <span key={stat.label} className="flex items-center gap-1.5">
-                  <stat.icon className="h-3.5 w-3.5" />
-                  <span className="font-mono tabular-nums">{stat.value}</span>
+                                <span key={stat.label} className="flex items-center gap-2">
+                  <stat.icon className="h-4 w-4" />
+                  <span className="font-mono tabular-nums font-medium">{stat.value}</span>
                   <span>{stat.label}</span>
                 </span>
                             ))}
                             {history.length > 0 && (
-                                <span className="flex items-center gap-1.5 text-muted-foreground/80">
+                                <span className="flex items-center gap-2 text-muted-foreground/80">
                   上次: <span className="font-mono tabular-nums">{formatTime(history[0].createdAt)}</span>
                 </span>
                             )}
                         </div>
 
                         {/* Step indicator */}
-                        <div className="flex items-center gap-2 text-xs">
+                        <div className="flex items-center gap-2 text-sm">
                             {[
                                 { key: "config", label: "配置参数" },
                                 { key: "select", label: "选择报告" },
@@ -850,7 +850,7 @@ export function SonarPromptPage() {
                                     <div key={s.key} className="flex items-center gap-1.5">
                     <span
                         className={cn(
-                            "inline-flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold",
+                            "inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold",
                             isActive
                                 ? "bg-primary text-primary-foreground"
                                 : isCompleted

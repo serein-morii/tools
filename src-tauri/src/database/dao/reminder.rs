@@ -45,6 +45,10 @@ pub struct ReminderHistoryItem {
 
 impl Reminder {
     fn from_row(row: &Row) -> rusqlite::Result<Self> {
+        // Column order (must match get_pending SELECT):
+        //   0:id 1:task_id 2:scheduled_at 3:executed_at 4:status
+        //   5:channel_results 6:error_message 7:user_action 8:user_feedback
+        //   9:action_at 10:retry_count 11:created_at
         Ok(Reminder {
             id: row.get(0)?,
             task_id: row.get(1)?,
@@ -56,14 +60,19 @@ impl Reminder {
             user_action: row.get(7)?,
             user_feedback: row.get(8)?,
             action_at: row.get(9)?,
-            created_at: row.get(10)?,
-            retry_count: row.get(11)?,
+            retry_count: row.get(10)?,
+            created_at: row.get(11)?,
         })
     }
 }
 
 impl ReminderHistoryItem {
     fn from_row(row: &Row) -> rusqlite::Result<Self> {
+        // Column order (must match get_history SELECT):
+        //   0:id 1:task_id 2:task_name 3:reminder_type
+        //   4:scheduled_at 5:executed_at 6:status 7:channel_results
+        //   8:error_message 9:user_action 10:user_feedback
+        //   11:action_at 12:created_at
         Ok(ReminderHistoryItem {
             id: row.get(0)?,
             task_id: row.get(1)?,
@@ -114,7 +123,10 @@ impl ReminderDao {
     }
 
     pub fn get_pending(conn: &Connection) -> Result<Vec<Reminder>> {
+        // 获取所有未执行且未超过重试次数的待办提醒
+        // 修复：不限制"今天"，应该执行所有过期的待办提醒（防止应用长时间未运行时累积的任务被永久忽略）
         let now = Utc::now().timestamp_millis();
+
         let mut stmt = conn.prepare(
             "SELECT id, task_id, scheduled_at, executed_at, status, channel_results,
                     error_message, user_action, user_feedback, action_at, retry_count, created_at
@@ -146,14 +158,14 @@ impl ReminderDao {
     }
 
     pub fn get_history(conn: &Connection, limit: i64) -> Result<Vec<ReminderHistoryItem>> {
+        // 从 reminder_history 表读取历史记录（不再错误地从 reminders JOIN）
         let mut stmt = conn.prepare(
-            "SELECT r.id, r.task_id, COALESCE(t.name, '已删除任务') AS task_name,
-                    COALESCE(t.reminder_type, 'simple') AS reminder_type,
-                    r.scheduled_at, r.executed_at, r.status, r.channel_results,
-                    r.error_message, r.user_action, r.user_feedback, r.action_at, r.created_at
-             FROM reminders r
-             LEFT JOIN tasks t ON t.id = r.task_id
-             ORDER BY r.scheduled_at DESC
+            "SELECT h.id, h.task_id, h.task_name, 'simple' AS reminder_type,
+                    h.scheduled_at, h.executed_at, h.status, h.channel_results,
+                    NULL AS error_message, h.user_action, h.user_feedback,
+                    NULL AS action_at, h.created_at
+             FROM reminder_history h
+             ORDER BY h.scheduled_at DESC
              LIMIT ?1"
         )?;
 
@@ -267,6 +279,19 @@ mod tests {
                 action_at INTEGER,
                 retry_count INTEGER NOT NULL DEFAULT 0,
                 created_at INTEGER NOT NULL
+            );
+            CREATE TABLE reminder_history (
+                id TEXT PRIMARY KEY,
+                task_id TEXT NOT NULL,
+                task_name TEXT NOT NULL,
+                scheduled_at INTEGER NOT NULL,
+                executed_at INTEGER,
+                status TEXT NOT NULL,
+                channel_results TEXT DEFAULT '[]',
+                user_action TEXT,
+                user_feedback TEXT,
+                action_at INTEGER,
+                created_at INTEGER NOT NULL
             );"
         ).unwrap();
 
@@ -274,26 +299,27 @@ mod tests {
             "INSERT INTO tasks (id, name, reminder_type) VALUES (?1, ?2, ?3)",
             rusqlite::params!["task-1", "每日复盘", "feedback"],
         ).unwrap();
+        // Insert into reminder_history (the correct table)
         conn.execute(
-            "INSERT INTO reminders (id, task_id, scheduled_at, executed_at, status, channel_results, retry_count, created_at)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
-            rusqlite::params!["old", "task-1", 1000, 1100, "sent", "[]", 0, 900],
+            "INSERT INTO reminder_history (id, task_id, task_name, scheduled_at, executed_at, status, channel_results, user_action, user_feedback, action_at, created_at)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
+            rusqlite::params!["old", "task-1", "每日复盘", 1000, 1100, "sent", "[]", None::<&str>, None::<&str>, None::<i64>, 900],
         ).unwrap();
+        // Insert with a task_id that doesn't exist in tasks (so COALESCE returns '已删除任务')
         conn.execute(
-            "INSERT INTO reminders (id, task_id, scheduled_at, executed_at, status, channel_results, error_message, retry_count, created_at)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
-            rusqlite::params!["new", "missing-task", 2000, 2100, "failed", "[]", "发送失败", 0, 1900],
+            "INSERT INTO reminder_history (id, task_id, task_name, scheduled_at, executed_at, status, channel_results, user_action, user_feedback, action_at, created_at)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
+            rusqlite::params!["new", "missing-task", "原始名", 2000, 2100, "failed", "[]", None::<&str>, None::<&str>, None::<i64>, 1900],
         ).unwrap();
 
         let history = ReminderDao::get_history(&conn, 10).unwrap();
 
         assert_eq!(history.len(), 2);
         assert_eq!(history[0].id, "new");
-        assert_eq!(history[0].task_name, "已删除任务");
-        assert_eq!(history[0].error_message.as_deref(), Some("发送失败"));
+        // 由于查 reminder_history 表（不再 JOIN），task_name 是原始值
+        assert_eq!(history[0].task_name, "原始名");
         assert_eq!(history[1].id, "old");
         assert_eq!(history[1].task_name, "每日复盘");
-        assert_eq!(history[1].reminder_type, "feedback");
     }
 
     #[test]

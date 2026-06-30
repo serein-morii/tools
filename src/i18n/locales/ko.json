@@ -564,6 +564,7 @@
       "scanFailed": "스캔 실패: ",
       "configureGitLabFirst": "GitLab 연결을 설정하세요",
       "configureGitLab": "GitLab 설정",
+      "goToSettings": "설정으로",
       "noRecords": "기록 없음",
       "nextScan": "다음: ",
       "scan": "스캔",

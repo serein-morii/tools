@@ -564,6 +564,7 @@
       "scanFailed": "スキャン失敗: ",
       "configureGitLabFirst": "GitLab接続を設定してください",
       "configureGitLab": "GitLab設定",
+      "goToSettings": "設定へ",
       "noRecords": "記録なし",
       "nextScan": "次回: ",
       "scan": "スキャン",

@@ -564,6 +564,7 @@
       "scanFailed": "Scan failed: ",
       "configureGitLabFirst": "Please configure GitLab connection first",
       "configureGitLab": "Configure GitLab",
+      "goToSettings": "Go to Settings",
       "noRecords": "No records",
       "nextScan": "Next: ",
       "scan": "Scan",
