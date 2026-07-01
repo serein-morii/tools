@@ -5,7 +5,7 @@ import {
     Trash2, RotateCcw, History, Sparkles, Clock,
     Plus, Star, Pencil, AlertCircle, Zap, FileText, BarChart3, SlidersHorizontal,
     CheckSquare, Square, FlaskConical, Settings, Shield, XCircle, CheckCircle, RefreshCw, X,
-    ArrowUp, ArrowDown, FolderGit2,
+    ArrowUp, ArrowDown, FolderGit2, Layers,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,6 +35,26 @@ function getDefaultTime() {
     const now = new Date();
     now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
     return now.toISOString().slice(0, 16);
+}
+
+/** Merge two SonarFile arrays by key: line files + condition files, deduplicate, keep both sets of fields.
+ *  When the same key exists in both, condition-specific fields are merged into the line entry.
+ *  When a key only exists in one side, it's kept as-is. */
+function mergeLineAndConditionFiles(lineFiles: SonarFile[], condFiles: SonarFile[]): SonarFile[] {
+    const map = new Map<string, SonarFile>();
+    for (const f of lineFiles) map.set(f.key, { ...f });
+    for (const f of condFiles) {
+        const existing = map.get(f.key);
+        if (existing) {
+            // 只合并条件特有字段，不覆盖代码行已有字段（避免 undefined 覆盖有效值）
+            if (f.coverageConditions != null) existing.coverageConditions = f.coverageConditions;
+            if (f.totalConditions != null) existing.totalConditions = f.totalConditions;
+            if (f.uncoveredConditions != null) existing.uncoveredConditions = f.uncoveredConditions;
+        } else {
+            map.set(f.key, { ...f });
+        }
+    }
+    return Array.from(map.values());
 }
 
 const tabs = [
@@ -348,20 +368,28 @@ export function SonarPromptPage() {
                 case "path":
                     return sortOrder === "asc" ? a.path.localeCompare(b.path) : b.path.localeCompare(a.path);
                 case "coverage":
-                    aVal = pageType === "条件"
-                        ? (a.coverageConditions ?? 0)
-                        : (a.coverage ?? 0);
-                    bVal = pageType === "条件"
-                        ? (b.coverageConditions ?? 0)
-                        : (b.coverage ?? 0);
+                    // "混合"类型：综合代码行 + 条件覆盖率（取较低值作为瓶颈）
+                    if (pageType === "混合") {
+                        const aLine = a.coverage ?? 0;
+                        const aCond = a.coverageConditions ?? 0;
+                        const bLine = b.coverage ?? 0;
+                        const bCond = b.coverageConditions ?? 0;
+                        aVal = Math.min(aLine, aCond);
+                        bVal = Math.min(bLine, bCond);
+                    } else {
+                        aVal = pageType === "条件" ? (a.coverageConditions ?? 0) : (a.coverage ?? 0);
+                        bVal = pageType === "条件" ? (b.coverageConditions ?? 0) : (b.coverage ?? 0);
+                    }
                     break;
                 case "uncovered":
-                    aVal = pageType === "条件"
-                        ? (a.uncoveredConditions ?? 0)
-                        : (a.uncoveredLines ?? 0);
-                    bVal = pageType === "条件"
-                        ? (b.uncoveredConditions ?? 0)
-                        : (b.uncoveredLines ?? 0);
+                    // "混合"：综合未覆盖（行 + 条件）
+                    if (pageType === "混合") {
+                        aVal = (a.uncoveredLines ?? 0) + (a.uncoveredConditions ?? 0);
+                        bVal = (b.uncoveredLines ?? 0) + (b.uncoveredConditions ?? 0);
+                    } else {
+                        aVal = pageType === "条件" ? (a.uncoveredConditions ?? 0) : (a.uncoveredLines ?? 0);
+                        bVal = pageType === "条件" ? (b.uncoveredConditions ?? 0) : (b.uncoveredLines ?? 0);
+                    }
                     break;
                 case "newCovered":
                     aVal = a.newCoveredLines ?? 0;
@@ -444,6 +472,41 @@ export function SonarPromptPage() {
         }
     };
 
+    // --- 加载文件列表（支持"混合"类型：合并两次请求的结果） ---
+    const loadFiles = async (
+        projectKey: string,
+        br: string,
+        reportId: string,
+        requestType: string,
+    ): Promise<SonarFile[]> => {
+        const auth = getAuth();
+        if (!auth || !config?.walkin_url) return [];
+
+        if (requestType !== "混合") {
+            // 普通类型：单次请求
+            return await sonarApi.getFiles(
+                config.walkin_url, auth,
+                projectKey, br, reportId, requestType,
+            );
+        }
+
+        // "混合"类型：并行请求"代码行"和"条件"，按 key 去重合并
+        const [lineFiles, condFiles] = await Promise.all([
+            sonarApi.getFiles(config.walkin_url, auth, projectKey, br, reportId, "代码行")
+                .catch((e) => {
+                    toast.error(`获取代码行失败: ${e instanceof Error ? e.message : String(e)}`);
+                    return [] as SonarFile[];
+                }),
+            sonarApi.getFiles(config.walkin_url, auth, projectKey, br, reportId, "条件")
+                .catch((e) => {
+                    toast.error(`获取条件失败: ${e instanceof Error ? e.message : String(e)}`);
+                    return [] as SonarFile[];
+                }),
+        ]);
+
+        return mergeLineAndConditionFiles(lineFiles, condFiles);
+    };
+
     // --- 选择报告并获取文件列表 ---
     const handleSelectReport = async (report: SonarReport) => {
         const auth = getAuth();
@@ -454,9 +517,10 @@ export function SonarPromptPage() {
         setStep("selectFiles");
 
         try {
-            const files = await sonarApi.getFiles(
-                config.walkin_url, auth,
-                report.projectKey || "", report.branch || branch, report.id,
+            const files = await loadFiles(
+                report.projectKey || "",
+                report.branch || branch,
+                report.id,
                 pageType,
             );
 
@@ -477,14 +541,12 @@ export function SonarPromptPage() {
 
         // 如果已经在 selectFiles 步骤且有选中的报告，重新获取文件列表
         if (step === "selectFiles" && selectedReport) {
-            const auth = getAuth();
-            if (!auth || !config?.walkin_url) return;
-
             setLoadingFiles(true);
             try {
-                const files = await sonarApi.getFiles(
-                    config.walkin_url, auth,
-                    selectedReport.projectKey || "", selectedReport.branch || branch, selectedReport.id,
+                const files = await loadFiles(
+                    selectedReport.projectKey || "",
+                    selectedReport.branch || branch,
+                    selectedReport.id,
                     newPageType,
                 );
 
@@ -505,35 +567,70 @@ export function SonarPromptPage() {
         const auth = getAuth();
         if (!auth) return;
 
+        const isMixed = pageType === "混合";
         setProcessing(true);
         setStep("result");
 
         try {
             const selectedFiles = sonarFiles.filter(f => selectedFileKeys.has(f.key));
-            setProgress({ current: 0, total: selectedFiles.length });
+            // 混合模式：每个文件请求两次（代码行 + 条件），所以要显示 2x 进度
+            const totalOps = isMixed ? selectedFiles.length * 2 : selectedFiles.length;
+            setProgress({ current: 0, total: totalOps });
 
             const coverages: FileCoverage[] = [];
             const noCoverageFiles: string[] = [];
-            console.log("Selected files count:", selectedFiles.length, "Keys:", [...selectedFileKeys]);
+            console.log("Selected files count:", selectedFiles.length, "mixed:", isMixed);
             for (let i = 0; i < selectedFiles.length; i++) {
-                setProgress({ current: i + 1, total: selectedFiles.length });
-                console.log(`Processing file ${i + 1}/${selectedFiles.length}:`, selectedFiles[i].key, selectedFiles[i].path);
+                const f = selectedFiles[i];
                 try {
-                    const cov = await sonarApi.getFileCoverage(
-                        config.walkin_url, auth,
-                        selectedReport.projectKey || "", selectedReport.branch || branch,
-                        selectedFiles[i].key, selectedFiles[i].path, author,
-                        pageType,
-                    );
-                    console.log(`File ${selectedFiles[i].path} ranges:`, cov.ranges.length);
-                    if (cov.ranges.length > 0) {
-                        coverages.push(cov);
+                    if (isMixed) {
+                        // 混合模式：并行请求代码行 + 条件，合并 ranges
+                        setProgress({ current: i * 2 + 1, total: totalOps });
+                        const [lineCov, condCov] = await Promise.all([
+                            sonarApi.getFileCoverage(config.walkin_url, auth, selectedReport.projectKey || "", selectedReport.branch || branch, f.key, f.path, author, "代码行")
+                                .catch((e) => { console.warn(`Line coverage failed: ${f.path}`, e); return null; }),
+                            sonarApi.getFileCoverage(config.walkin_url, auth, selectedReport.projectKey || "", selectedReport.branch || branch, f.key, f.path, author, "条件")
+                                .catch((e) => { console.warn(`Condition coverage failed: ${f.path}`, e); return null; }),
+                        ]);
+                        setProgress({ current: i * 2 + 2, total: totalOps });
+
+                        // 合并 ranges，去重（同一 start-end 只保留一份）
+                        const mergedRanges: { start: number; end: number }[] = [];
+                        const seen = new Set<string>();
+                        const addRanges = (ranges: { start: number; end: number }[]) => {
+                            for (const r of ranges) {
+                                const sig = `${r.start}-${r.end}`;
+                                if (!seen.has(sig)) {
+                                    seen.add(sig);
+                                    mergedRanges.push(r);
+                                }
+                            }
+                        };
+                        if (lineCov) addRanges(lineCov.ranges);
+                        if (condCov) addRanges(condCov.ranges);
+
+                        if (mergedRanges.length > 0) {
+                            coverages.push({ path: f.path, ranges: mergedRanges });
+                        } else {
+                            noCoverageFiles.push(f.path);
+                        }
                     } else {
-                        noCoverageFiles.push(selectedFiles[i].path);
+                        setProgress({ current: i + 1, total: totalOps });
+                        const cov = await sonarApi.getFileCoverage(
+                            config.walkin_url, auth,
+                            selectedReport.projectKey || "", selectedReport.branch || branch,
+                            f.key, f.path, author,
+                            pageType,
+                        );
+                        if (cov.ranges.length > 0) {
+                            coverages.push(cov);
+                        } else {
+                            noCoverageFiles.push(f.path);
+                        }
                     }
                 } catch (e) {
-                    console.warn(`Failed: ${selectedFiles[i].path}`, e);
-                    noCoverageFiles.push(selectedFiles[i].path + " (加载失败)");
+                    console.warn(`Failed: ${f.path}`, e);
+                    noCoverageFiles.push(f.path + " (加载失败)");
                 }
             }
             console.log("Final coverages count:", coverages.length, "No coverage files:", noCoverageFiles);
@@ -1097,12 +1194,24 @@ export function SonarPromptPage() {
                                         >
                                             条件
                                         </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => handlePageTypeChange("混合")}
+                                            className={cn(
+                                                "inline-flex h-6 items-center rounded-md px-2 text-[11px] font-medium transition-colors gap-1",
+                                                pageType === "混合" ? "bg-primary/15 text-primary shadow-sm" : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                                            )}
+                                            title="并行请求代码行 + 条件，按文件 key 合并去重"
+                                        >
+                                            <Layers className="h-3 w-3" />
+                                            代码行+条件
+                                        </button>
                                         <div className="w-px h-4 bg-border mx-1" />
                                         <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">排序</span>
                                         {[
                                             { key: "uncovered", label: "未覆盖" },
                                             { key: "coverage", label: "覆盖率" },
-                                            ...(pageType === "代码行" ? [{ key: "newCovered", label: "新增" }] : []),
+                                            ...(pageType === "代码行" || pageType === "混合" ? [{ key: "newCovered", label: "新增" }] : []),
                                             { key: "path", label: "路径" },
                                         ].map((sort) => (
                                             <button
@@ -1214,6 +1323,37 @@ export function SonarPromptPage() {
                                                                     )}
                                                                     {f.uncoveredConditions !== undefined && f.uncoveredConditions > 0 && (
                                                                         <span className="font-mono tabular-nums text-rose-500">-{f.uncoveredConditions}</span>
+                                                                    )}
+                                                                </>
+                                                            )}
+                                                            {pageType === "混合" && (
+                                                                <>
+                                                                    {f.coverage !== undefined && f.coverage !== null && (
+                                                                        <span className={cn(
+                                                                            "font-mono tabular-nums font-medium",
+                                                                            f.coverage >= 80 ? "text-primary" :
+                                                                                f.coverage >= 50 ? "text-amber-600" : "text-rose-500"
+                                                                        )}>
+                                      行 {f.coverage.toFixed(1)}%
+                                    </span>
+                                                                    )}
+                                                                    {f.coverageConditions !== undefined && f.coverageConditions !== null && (
+                                                                        <span className={cn(
+                                                                            "font-mono tabular-nums font-medium",
+                                                                            f.coverageConditions >= 80 ? "text-primary" :
+                                                                                f.coverageConditions >= 50 ? "text-amber-600" : "text-rose-500"
+                                                                        )}>
+                                      条件 {f.coverageConditions.toFixed(1)}%
+                                    </span>
+                                                                    )}
+                                                                    {f.uncoveredLines !== undefined && f.uncoveredLines > 0 && (
+                                                                        <span className="font-mono tabular-nums text-rose-500">-{f.uncoveredLines}</span>
+                                                                    )}
+                                                                    {f.uncoveredConditions !== undefined && f.uncoveredConditions > 0 && (
+                                                                        <span className="font-mono tabular-nums text-rose-500">-{f.uncoveredConditions} 条件</span>
+                                                                    )}
+                                                                    {f.newCoveredLines !== undefined && f.newCoveredLines > 0 && (
+                                                                        <span className="font-mono tabular-nums text-primary">+{f.newCoveredLines}</span>
                                                                     )}
                                                                 </>
                                                             )}
