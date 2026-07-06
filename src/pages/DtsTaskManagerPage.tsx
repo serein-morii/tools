@@ -359,19 +359,19 @@ export function DtsTaskManagerPage() {
                 type="button"
                 onClick={() => setShowConfigDropdown(!showConfigDropdown)}
                 className={cn(
-                  "flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all",
+                  "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all",
                   activeConfigName
                     ? "bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20"
                     : "bg-amber-500/10 text-amber-700 hover:bg-amber-500/20"
                 )}
               >
                 {activeConfigName ? (
-                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  <CheckCircle2 className="h-4 w-4" />
                 ) : (
-                  <AlertCircle className="h-3.5 w-3.5" />
+                  <AlertCircle className="h-4 w-4" />
                 )}
-                <span className="truncate max-w-[100px]">{activeConfigName || "未配置"}</span>
-                <ChevronDown className="h-3 w-3 shrink-0" />
+                <span className="truncate max-w-[120px]">{activeConfigName || "未配置"}</span>
+                <ChevronDown className="h-3.5 w-3.5 shrink-0" />
               </button>
 
               {showConfigDropdown && (
