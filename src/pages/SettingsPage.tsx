@@ -6,7 +6,7 @@ import { useSettings, useUpdateSetting, getSettingValue } from "@/lib/query/sett
 import { useQueryClient } from "@tanstack/react-query";
 import { open, save } from "@tauri-apps/plugin-dialog";
 import { invoke } from "@tauri-apps/api/core";
-import { Monitor, Moon, Sun, Power, EyeOff, MonitorUp, Download, Upload, Info, Palette, Database, LayoutGrid, GripVertical, ChevronUp, ChevronDown, RotateCcw, Home, AlertTriangle, Bell, GitBranch, FileCode, Brain, Rocket, Pencil, Check, X, Settings } from "lucide-react";
+import { Monitor, Moon, Sun, Power, EyeOff, MonitorUp, Download, Upload, Info, Palette, Database, LayoutGrid, GripVertical, ChevronUp, ChevronDown, RotateCcw, Home, AlertTriangle, Bell, GitBranch, FileCode, Brain, Rocket, Pencil, Check, X, Settings, Sparkles, ArrowRight } from "lucide-react";
 import { ToggleRow } from "@/components/ui/toggle-row";
 import { Switch } from "@/components/ui/switch";
 import { SearchableSelect } from "@/components/ui/searchable-select";
@@ -16,11 +16,13 @@ import { useTheme } from "@/components/theme-provider";
 import { toast } from "sonner";
 import { allModules } from "@/config/modules";
 import { resetSetup } from "@/components/SetupWizard";
+import { useNavigate } from "react-router-dom";
 
 const LanguageSettings = lazy(() => import("@/components/settings/LanguageSettings").then((m) => ({ default: m.LanguageSettings })));
 
 export function SettingsPage() {
   const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
   const { data: settings, isLoading, error } = useSettings();
   const updateSetting = useUpdateSetting();
   const queryClient = useQueryClient();
@@ -162,6 +164,29 @@ export function SettingsPage() {
       </div>
       <div className="section-spacing">
         <div className="max-w-2xl space-y-4">
+
+        {/* 功能介绍入口 - 精美卡片 */}
+        <button
+          className="w-full text-left group relative overflow-hidden rounded-xl border-2 border-dashed border-primary/20 bg-gradient-to-r from-primary/5 via-transparent to-primary/5 p-5 transition-all hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5"
+          onClick={() => navigate("/features")}
+        >
+          <div className="flex items-center gap-4">
+            <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-md group-hover:scale-105 transition-transform">
+              <Sparkles className="h-7 w-7" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <h3 className="text-base font-semibold">功能介绍</h3>
+                <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">v0.2.3</span>
+              </div>
+              <p className="text-sm text-muted-foreground line-clamp-1">
+                GitLab扫描 · Sonar覆盖率 · AI统计 · DTS管理 · 智能提醒
+              </p>
+            </div>
+            <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
+          </div>
+        </button>
+
         {/* Appearance Settings */}
         <Card className="card-modern overflow-hidden">
           <CardHeader className="bg-muted/30 border-b py-3 px-4">

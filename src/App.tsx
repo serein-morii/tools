@@ -9,6 +9,7 @@ import { useSettings, getSettingValue } from "@/lib/query/settingsQueries";
 import { SetupWizard, useNeedsSetup } from "@/components/SetupWizard";
 
 const DashboardPage = lazy(() => import("@/pages/DashboardPage").then((m) => ({ default: m.DashboardPage })));
+const FeaturesPage = lazy(() => import("@/pages/FeaturesPage").then((m) => ({ default: m.FeaturesPage })));
 const TaskReminderPage = lazy(() => import("@/pages/TaskReminderPage").then((m) => ({ default: m.TaskReminderPage })));
 const TemplatesPage = lazy(() => import("@/pages/TemplatesPage").then((m) => ({ default: m.TemplatesPage })));
 const ChannelsPage = lazy(() => import("@/pages/ChannelsPage").then((m) => ({ default: m.ChannelsPage })));
@@ -89,6 +90,7 @@ function App() {
           <Route path="/" element={<MainLayout />}>
             <Route index element={<StartupRedirect />} />
             <Route path="home" element={withErrorBoundary(<DashboardPage />)} />
+            <Route path="features" element={withErrorBoundary(<FeaturesPage />)} />
             <Route path="reminder" element={<PageGuard settingKey="page_reminder_visible"><ReminderLayout /></PageGuard>}>
               <Route index element={<Navigate to="/reminder/tasks" replace />} />
               <Route path="tasks" element={withErrorBoundary(<TaskReminderPage />)} />

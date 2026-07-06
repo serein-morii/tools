@@ -59,6 +59,7 @@
     "settings": "设置",
     "reminder": "智能提醒",
     "home": "概览",
+    "features": "功能介绍",
     "gitlab": "Git扫描",
     "sonar": "单测覆盖率",
     "aiCoverage": "AI生成率",
