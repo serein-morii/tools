@@ -1,0 +1,38 @@
+src-tauri/Cargo.toml
+  s_9bff109a0d5276::t_d4847b5312648e 3
+src/pages/SettingsPage.tsx
+  s_9bff109a0d5276::t_c9b45b8099511c 19,25
+  s_9bff109a0d5276::t_f5e26697e577e5 9
+  s_9bff109a0d5276::t_0b35f554c941a0 167-189
+src/pages/FeaturesPage.tsx
+  s_9bff109a0d5276::t_90d9f6863226f6 3-4,11-15,22,45,66,189,194-196,203-207,213-214,248,259-262,265-268,271-275,278-279,308-310,313,326,330-331,342-346
+  s_9bff109a0d5276::t_de9455bee4069a 1
+  s_9bff109a0d5276::t_750dfa283ff6fb 5,8,10
+  s_9bff109a0d5276::t_453e74c6b77000 9,16-21,23-26,30-44,46-51,53-61,64-65,67-102,104-185,187,190-193,197-202,208-211,215-216,228-238,240-247,249-258,263-264,269,276,280-289,291-293,297-298,300-307,311-312,314-325,327-329,336,339-341
+  s_9bff109a0d5276::t_0cd7a61ade64d3 103
+  s_9bff109a0d5276::t_02470cb8ca2920 2,6-7,27-29,52,62-63,186,188,212,217-227,239,270,277,290,294-296,299,332-335,337-338
+package.json
+  s_9bff109a0d5276::t_c3949fd64a594f 3
+src-tauri/tauri.conf.json
+  s_9bff109a0d5276::t_ed941e874035bb 4
+src/App.tsx
+  s_9bff109a0d5276::t_0aad00bf329ce7 12,93
+src/i18n/locales/zh.json
+  s_9bff109a0d5276::t_295fad43629a4e 62
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "3951a8abd7a68018bd4b587bfe862d3f1b8c54f1",
+  "prompts": {},
+  "sessions": {
+    "s_9bff109a0d5276": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "27f96207-2220-4ad0-9d71-50e165db8da5",
+        "model": "xopglm5"
+      },
+      "human_author": "pengchenghui <pengchenghui@jtexpress.com>"
+    }
+  }
+}
