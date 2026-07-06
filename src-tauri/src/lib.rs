@@ -111,6 +111,29 @@ pub fn run() {
             commands::get_ai_coverage_authors,
             commands::get_ai_coverage_commits,
             commands::get_ai_commit_detail,
+            commands::dts_list_configs,
+            commands::dts_get_config,
+            commands::dts_get_active_config,
+            commands::dts_save_config,
+            commands::dts_delete_config,
+            commands::dts_activate_config,
+            commands::dts_test_connection,
+            commands::dts_fetch_token,
+            commands::dts_list_tasks,
+            commands::dts_start_task,
+            commands::dts_stop_task,
+            commands::dts_delete_task,
+            commands::dts_rename_task,
+            commands::dts_reset_offset,
+            commands::dts_list_environments,
+            commands::dts_list_flush,
+            commands::dts_create_flush,
+            commands::dts_start_flush,
+            commands::dts_delete_flush,
+            commands::dts_batch_op,
+            commands::dts_batch_rename,
+            commands::dts_batch_create_flush,
+            commands::dts_batch_flush_op,
         ])
         .setup(|app| {
             // Store app handle for auto-launch
@@ -255,6 +278,7 @@ pub fn run() {
                         .build(),
                 )?;
             }
+
             Ok(())
         })
         .run(tauri::generate_context!())

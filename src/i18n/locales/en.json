@@ -61,7 +61,8 @@
     "home": "Dashboard",
     "gitlab": "Code",
     "sonar": "Unit Test",
-    "aiCoverage": "AI Coverage"
+    "aiCoverage": "AI Coverage",
+    "dts": "DTS Tasks"
   },
   "dashboard": {
     "title": "Dashboard",

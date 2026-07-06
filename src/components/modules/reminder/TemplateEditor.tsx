@@ -95,58 +95,53 @@ export function TemplateEditor({ open, onOpenChange, templateId }: TemplateEdito
             </Dialog.Close>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-3">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="template-name" className="text-xs">{t("template.templateName")}</Label>
+              <Label htmlFor="template-name">{t("template.templateName")}</Label>
               <Input
                 id="template-name"
                 value={form.name}
                 onChange={(event) => setForm({ ...form, name: event.target.value })}
-                className="h-7 text-xs"
                 required
               />
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="template-description" className="text-xs">{t("template.description")}</Label>
+              <Label htmlFor="template-description">{t("template.description")}</Label>
               <Input
                 id="template-description"
                 value={form.description}
                 onChange={(event) => setForm({ ...form, description: event.target.value })}
-                className="h-7 text-xs"
               />
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="template-category" className="text-xs">{t("template.category")}</Label>
+              <Label htmlFor="template-category">{t("template.category")}</Label>
               <Input
                 id="template-category"
                 value={form.category}
                 onChange={(event) => setForm({ ...form, category: event.target.value })}
-                className="h-7 text-xs"
                 required
               />
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="template-title" className="text-xs">{t("template.titleTemplate")}</Label>
+              <Label htmlFor="template-title">{t("template.titleTemplate")}</Label>
               <Input
                 id="template-title"
                 value={form.title_template}
                 onChange={(event) => setForm({ ...form, title_template: event.target.value })}
-                className="h-7 text-xs"
                 required
               />
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="template-body" className="text-xs">{t("template.bodyTemplate")}</Label>
+              <Label htmlFor="template-body">{t("template.bodyTemplate")}</Label>
               <Textarea
                 id="template-body"
                 value={form.body_template}
                 onChange={(event) => setForm({ ...form, body_template: event.target.value })}
                 rows={5}
-                className="text-xs"
                 required
               />
               <div className="text-[11px] text-muted-foreground space-y-1">
@@ -166,7 +161,7 @@ export function TemplateEditor({ open, onOpenChange, templateId }: TemplateEdito
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs">{t("template.defaultTime")}</Label>
+              <Label>{t("template.defaultTime")}</Label>
               <CronEditor
                 value={form.cron_config}
                 onChange={(cronExpr, cronConfig) => setForm({ ...form, default_cron: cronExpr, cron_config: cronConfig })}
@@ -174,10 +169,10 @@ export function TemplateEditor({ open, onOpenChange, templateId }: TemplateEdito
             </div>
 
             <div className="flex justify-end gap-2 pt-3">
-              <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={() => onOpenChange(false)}>
+              <Button type="button" variant="outline" size="sm" onClick={() => onOpenChange(false)}>
                 {t("common.cancel")}
               </Button>
-              <Button type="submit" size="sm" className="h-7 text-xs" disabled={createTemplate.isPending || updateTemplate.isPending}>
+              <Button type="submit" size="sm" disabled={createTemplate.isPending || updateTemplate.isPending}>
                 {t("common.save")}
               </Button>
             </div>

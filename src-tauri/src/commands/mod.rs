@@ -7,6 +7,7 @@ pub mod backup;
 pub mod gitlab;
 pub mod sonar;
 pub mod ai_coverage;
+pub mod dts;
 
 pub use task::*;
 pub use channel::*;
@@ -17,3 +18,4 @@ pub use backup::*;
 pub use gitlab::*;
 pub use sonar::*;
 pub use ai_coverage::*;
+pub use dts::*;

@@ -267,6 +267,7 @@ export function SettingsPage() {
                 { value: "/gitlab/overview", label: "Git 扫描", icon: GitBranch },
                 { value: "/sonar", label: "单测覆盖率", icon: FileCode },
                 { value: "/ai-coverage", label: "AI 生成率", icon: Brain },
+                { value: "/dts", label: "DTS 任务", icon: Database },
               ]}
               placeholder="选择启动页"
               size="md"

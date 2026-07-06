@@ -20,6 +20,7 @@ const GitLabHistoryPage = lazy(() => import("@/pages/GitLabHistoryPage").then((m
 const GitLabSettingsPage = lazy(() => import("@/pages/GitLabSettingsPage").then((m) => ({ default: m.GitLabSettingsPage })));
 const SonarPromptPage = lazy(() => import("@/pages/SonarPromptPage").then((m) => ({ default: m.SonarPromptPage })));
 const AiCoveragePage = lazy(() => import("@/pages/AiCoveragePage").then((m) => ({ default: m.AiCoveragePage })));
+const DtsTaskManagerPage = lazy(() => import("@/pages/DtsTaskManagerPage").then((m) => ({ default: m.DtsTaskManagerPage })));
 
 /** Wrap a route element with an ErrorBoundary so a crash in one page doesn't take down the whole app. */
 function withErrorBoundary(children: React.ReactNode) {
@@ -104,6 +105,7 @@ function App() {
             </Route>
             <Route path="sonar" element={<PageGuard settingKey="page_sonar_visible">{withErrorBoundary(<SonarPromptPage />)}</PageGuard>} />
             <Route path="ai-coverage" element={<PageGuard settingKey="page_ai_coverage_visible">{withErrorBoundary(<AiCoveragePage />)}</PageGuard>} />
+            <Route path="dts" element={<PageGuard settingKey="page_dts_visible">{withErrorBoundary(<DtsTaskManagerPage />)}</PageGuard>} />
             <Route path="settings" element={withErrorBoundary(<SettingsPage />)} />
           </Route>
         </Routes>

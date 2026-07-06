@@ -61,7 +61,8 @@
     "home": "概览",
     "gitlab": "Git扫描",
     "sonar": "单测覆盖率",
-    "aiCoverage": "AI生成率"
+    "aiCoverage": "AI生成率",
+    "dts": "DTS 任务"
   },
   "dashboard": {
     "title": "概览",

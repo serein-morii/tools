@@ -33,7 +33,7 @@ export function ReminderSettings() {
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
-            <Label htmlFor="snoozeMinutes" className="text-xs">{t("settings.snoozeMinutes")}</Label>
+            <Label htmlFor="snoozeMinutes">{t("settings.snoozeMinutes")}</Label>
             <Input
               id="snoozeMinutes"
               type="number"
@@ -41,14 +41,14 @@ export function ReminderSettings() {
               max={1440}
               value={snoozeMinutes}
               onChange={(event) => saveNumber("snooze_minutes", event.target.value, 1, 1440)}
-              className="w-full h-7 text-xs"
+              className="w-full"
               disabled={updateSetting.isPending}
             />
             <p className="text-[11px] text-muted-foreground">{t("settings.snoozeMinutesHint")}</p>
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="historyRetentionDays" className="text-xs">{t("settings.historyRetentionDays")}</Label>
+            <Label htmlFor="historyRetentionDays">{t("settings.historyRetentionDays")}</Label>
             <Input
               id="historyRetentionDays"
               type="number"
@@ -56,7 +56,7 @@ export function ReminderSettings() {
               max={3650}
               value={historyRetentionDays}
               onChange={(event) => saveNumber("history_retention_days", event.target.value, 1, 3650)}
-              className="w-full h-7 text-xs"
+              className="w-full"
               disabled={updateSetting.isPending}
             />
             <p className="text-[11px] text-muted-foreground">{t("settings.historyRetentionDaysHint")}</p>

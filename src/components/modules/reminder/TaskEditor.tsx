@@ -118,9 +118,9 @@ export function TaskEditor({ open, onOpenChange, taskId }: TaskEditorProps) {
             </Dialog.Close>
           </div>
 
-          <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-4 pt-3 space-y-3">
+          <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-4 pt-3 space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="template_id" className="text-xs">{t("task.reminderTemplate")}</Label>
+              <Label htmlFor="template_id">{t("task.reminderTemplate")}</Label>
               <Select
                 id="template_id"
                 value={form.template_id || ""}
@@ -139,36 +139,33 @@ export function TaskEditor({ open, onOpenChange, taskId }: TaskEditorProps) {
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="name" className="text-xs">{t("task.taskName")}</Label>
+              <Label htmlFor="name">{t("task.taskName")}</Label>
               <Input
                 id="name"
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
                 placeholder={t("task.taskNamePlaceholder")}
-                className="h-7 text-xs"
                 required
               />
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="description" className="text-xs">{t("task.descriptionOptional")}</Label>
+              <Label htmlFor="description">{t("task.descriptionOptional")}</Label>
               <Textarea
                 id="description"
                 value={form.description || ""}
                 onChange={(e) => setForm({ ...form, description: e.target.value || undefined })}
                 placeholder={t("task.descriptionPlaceholder")}
                 rows={2}
-                className="text-xs"
               />
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="reminder_type" className="text-xs">{t("task.reminderType")}</Label>
+              <Label htmlFor="reminder_type">{t("task.reminderType")}</Label>
               <Select
                 id="reminder_type"
                 value={form.reminder_type}
                 onChange={(e) => setForm({ ...form, reminder_type: e.target.value })}
-                className="h-7 text-xs"
               >
                 <option value="simple">{t("task.simpleNotification")}</option>
                 <option value="confirm">{t("task.needConfirm")}</option>
@@ -177,7 +174,7 @@ export function TaskEditor({ open, onOpenChange, taskId }: TaskEditorProps) {
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs">{t("task.timeConfig")}</Label>
+              <Label>{t("task.timeConfig")}</Label>
               <CronEditor
                 value={form.cron_config || ""}
                 onChange={(cronExpr, cronConfig) =>
@@ -187,12 +184,12 @@ export function TaskEditor({ open, onOpenChange, taskId }: TaskEditorProps) {
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs">{t("task.channels")}</Label>
-              <div className="flex flex-wrap gap-1.5">
+              <Label>{t("task.channels")}</Label>
+              <div className="flex flex-wrap gap-2">
                 {channels?.map((channel) => (
                   <label
                     key={channel.id}
-                    className="flex items-center gap-1.5 px-2 py-1 border rounded-md cursor-pointer hover:bg-muted transition-colors text-xs"
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 border rounded-lg cursor-pointer hover:bg-muted transition-colors text-xs"
                   >
                     <input
                       type="checkbox"
@@ -222,12 +219,11 @@ export function TaskEditor({ open, onOpenChange, taskId }: TaskEditorProps) {
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="priority" className="text-xs">{t("task.priority")}</Label>
+              <Label htmlFor="priority">{t("task.priority")}</Label>
               <Select
                 id="priority"
                 value={form.priority?.toString() || "0"}
                 onChange={(e) => setForm({ ...form, priority: parseInt(e.target.value) })}
-                className="h-7 text-xs"
               >
                 <option value="0">{t("task.normal")}</option>
                 <option value="1">{t("task.important")}</option>
@@ -240,12 +236,11 @@ export function TaskEditor({ open, onOpenChange, taskId }: TaskEditorProps) {
                 type="button"
                 variant="outline"
                 size="sm"
-                className="h-7 text-xs"
                 onClick={() => onOpenChange(false)}
               >
                 {t("common.cancel")}
               </Button>
-              <Button type="submit" size="sm" className="h-7 text-xs" disabled={isPending}>
+              <Button type="submit" size="sm" disabled={isPending}>
                 {isPending ? t("task.saving") : t("common.save")}
               </Button>
             </div>

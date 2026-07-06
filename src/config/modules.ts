@@ -1,6 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import {
-  Bell, Settings, Home, GitBranch, FileCode, Brain,
+  Bell, Settings, Home, GitBranch, FileCode, Brain, Database,
 } from "lucide-react";
 
 export interface ModuleConfig {
@@ -52,6 +52,15 @@ export const allModules: ModuleConfig[] = [
     icon: Brain,
     description: "AI 覆盖率统计",
     settingKey: "page_ai_coverage_visible",
+  },
+  {
+    id: "dts",
+    path: "/dts",
+    labelKey: "nav.dts",
+    label: "DTS 任务",
+    icon: Database,
+    description: "DTS 任务批量启停 / 全量回刷",
+    settingKey: "page_dts_visible",
   },
   {
     id: "reminder",
