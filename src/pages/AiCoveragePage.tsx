@@ -869,11 +869,11 @@ export function AiCoveragePage() {
       </div>
 
       {activeTab === "settings" ? (
-        <div className="section-spacing-compact">
+        <div className="px-5 py-4 space-y-3">
           <SettingsTab config={config} onConfigChange={setConfig} />
         </div>
       ) : (
-        <div className="section-spacing-compact animate-in fade-in duration-200">
+        <div className="px-5 py-4 space-y-3 animate-in fade-in duration-200">
           <div className="card-modern overflow-hidden">
             <div className="flex items-center gap-3 px-4 py-3 border-b bg-muted/30 flex-wrap">
               <div className="flex items-center gap-1">

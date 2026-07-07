@@ -414,7 +414,7 @@ export function DtsTaskManagerPage() {
         </div>
       </div>
 
-      <div className="section-spacing-compact animate-in fade-in duration-200">
+      <div className="px-5 py-4 space-y-3 animate-in fade-in duration-200">
         {tab === "tasks" && <TasksTab activeConfig={activeConfig} envOptions={envOptions} envMap={envMap} addLog={addLog} setResult={setResult} />}
         {tab === "flush" && <FlushTab activeConfig={activeConfig} setTab={setTab} envOptions={envOptions} envMap={envMap} addLog={addLog} setResult={setResult} />}
         {tab === "configs" && <ConfigsTab onConfigChange={loadActive} envOptions={envOptions} />}
@@ -1513,7 +1513,7 @@ function TasksTab({
         </div>
       )}
 
-      {/* 任务表格 */}
+      {/* 任务列表 - 自适应 flex 行布局 */}
       <div className="card-modern overflow-hidden">
         {loading ? (
           <div className="flex flex-col items-center py-12 text-muted-foreground">
@@ -1526,131 +1526,120 @@ function TasksTab({
             <p className="text-sm">暂无任务</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="sticky top-0 bg-muted/50 z-10">
-                <tr className="text-[10px] uppercase tracking-wider font-medium text-muted-foreground border-b border-border/40">
-                  <th className="w-10 px-2 py-1.5 text-left">
-                    <Checkbox
-                      checked={selected.size > 0 && selected.size === tasks.length}
-                      onChange={(v) => v ? selectAll() : deselectAll()}
-                    />
-                  </th>
-                  <th className="px-2 py-1.5 text-left">ID</th>
-                  <th className="px-2 py-1.5 text-left min-w-[200px]">任务名称</th>
-                  <th className="px-2 py-1.5 text-left max-w-[180px]">源数据源</th>
-                  <th className="px-2 py-1.5 text-left max-w-[180px]">目标数据源</th>
-                  <th className="px-2 py-1.5 text-left">状态</th>
-                  <th className="px-2 py-1.5 text-left">环境</th>
-                  <th className="px-2 py-1.5 text-left">创建时间</th>
-                  <th className="px-2 py-1.5 text-right">操作</th>
-                </tr>
-              </thead>
-              <tbody>
-                {tasks.map((task) => {
-                  const id = String(task.id);
-                  const isSelected = selected.has(id);
-                  const t = task as any;
-                  // 提取源数据源名称
-                  const sourceDatasourceName = t.sourceDatasource && typeof t.sourceDatasource === 'object'
-                    ? (t.sourceDatasource.name || t.sourceDatasource.host || "-")
-                    : (t.sourceDatasource || "-");
-                  // 提取目标数据源名称
-                  const targetDatasourceName = t.targetDatasource && typeof t.targetDatasource === 'object'
-                    ? (t.targetDatasource.name || t.targetDatasource.host || "-")
-                    : (t.targetDatasource || "-");
-                  const envCode = t.env || t.envCode || "";
-                  const envName = envCode ? (envMap[envCode] || "") : "";
-                  const createTime = t.createTime ? new Date(t.createTime).toLocaleString() : "-";
+          <>
+            {/* 表头 */}
+            <div className="grid grid-cols-[40px_100px_minmax(180px,2fr)_minmax(140px,1fr)_minmax(140px,1fr)_80px_minmax(120px,1fr)_140px_120px] items-center gap-3 px-4 py-2 bg-muted/30 border-b text-[10px] uppercase tracking-wider font-medium text-muted-foreground">
+              <div>
+                <Checkbox
+                  checked={selected.size > 0 && selected.size === tasks.length}
+                  onChange={(v) => v ? selectAll() : deselectAll()}
+                />
+              </div>
+              <div>ID</div>
+              <div>任务名称</div>
+              <div>源数据源</div>
+              <div>目标数据源</div>
+              <div>状态</div>
+              <div>环境</div>
+              <div>创建时间</div>
+              <div className="text-right">操作</div>
+            </div>
 
-                  return (
-                    <tr
-                      key={id}
-                      className={cn(
-                        "border-b border-border/40 hover:bg-muted/30 transition-colors",
-                        isSelected && "bg-primary/5"
+            {/* 列表 */}
+            <div className="max-h-[calc(100vh-380px)] overflow-auto">
+              {tasks.map((task) => {
+                const id = String(task.id);
+                const isSelected = selected.has(id);
+                const t = task as any;
+                const sourceDatasourceName = t.sourceDatasource && typeof t.sourceDatasource === 'object'
+                  ? (t.sourceDatasource.name || t.sourceDatasource.host || "-")
+                  : (t.sourceDatasource || "-");
+                const targetDatasourceName = t.targetDatasource && typeof t.targetDatasource === 'object'
+                  ? (t.targetDatasource.name || t.targetDatasource.host || "-")
+                  : (t.targetDatasource || "-");
+                const envCode = t.env || t.envCode || "";
+                const envName = envCode ? (envMap[envCode] || "") : "";
+                const createTime = t.createTime ? new Date(t.createTime).toLocaleString() : "-";
+
+                return (
+                  <div
+                    key={id}
+                    className={cn(
+                      "grid grid-cols-[40px_100px_minmax(180px,2fr)_minmax(140px,1fr)_minmax(140px,1fr)_80px_minmax(120px,1fr)_140px_120px] items-center gap-3 px-4 py-2.5 border-b border-border/30 hover:bg-muted/30 transition-colors group",
+                      isSelected && "bg-primary/5"
+                    )}
+                  >
+                    <div>
+                      <Checkbox checked={isSelected} onChange={() => toggleSelect(id)} />
+                    </div>
+                    <div className="font-mono text-[11px] text-muted-foreground truncate" title={id}>{id}</div>
+                    <div className="text-xs font-medium truncate" title={task.name}>{task.name}</div>
+                    <div className="text-[11px] text-muted-foreground truncate" title={sourceDatasourceName}>{sourceDatasourceName}</div>
+                    <div className="text-[11px] text-muted-foreground truncate" title={targetDatasourceName}>{targetDatasourceName}</div>
+                    <div>
+                      <span className={cn("inline-block rounded px-1.5 py-0.5 text-[10px] font-mono font-bold", STATUS_COLOR[task.status] || "text-muted-foreground bg-muted")}>
+                        {task.status}
+                      </span>
+                    </div>
+                    <div className="text-[11px] min-w-0">
+                      {envCode ? (
+                        <>
+                          <div className="truncate">{envName || envCode}</div>
+                          {envName && <div className="text-muted-foreground font-mono text-[10px] truncate">{envCode}</div>}
+                        </>
+                      ) : <span className="text-muted-foreground">-</span>}
+                    </div>
+                    <div className="text-[11px] text-muted-foreground truncate" title={createTime}>{createTime}</div>
+                    <div className="flex items-center justify-end gap-0.5">
+                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => { setDetailTask(task); setShowTaskDetail(true); }} title="查看详情">
+                        <Eye className="h-3 w-3" />
+                      </Button>
+                      {task.status !== "RUN" && (
+                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => opTask("start", task)} title="启动">
+                          <Play className="h-3 w-3 text-emerald-600" />
+                        </Button>
                       )}
-                    >
-                      <td className="px-2 py-1.5">
-                        <Checkbox checked={isSelected} onChange={() => toggleSelect(id)} />
-                      </td>
-                      <td className="px-2 py-1.5 font-mono text-[11px]">{id}</td>
-                      <td className="px-2 py-1.5 text-[11px] font-medium truncate max-w-[200px]" title={task.name}>
-                        {task.name}
-                      </td>
-                      <td className="px-2 py-1.5 text-[11px] text-muted-foreground truncate max-w-[180px]" title={sourceDatasourceName}>
-                        {sourceDatasourceName}
-                      </td>
-                      <td className="px-2 py-1.5 text-[11px] text-muted-foreground truncate max-w-[180px]" title={targetDatasourceName}>
-                        {targetDatasourceName}
-                      </td>
-                      <td className="px-2 py-1.5">
-                        <span className={cn("inline-block rounded px-1.5 py-0.5 text-[10px] font-mono font-bold", STATUS_COLOR[task.status] || "text-muted-foreground bg-muted")}>
-                          {task.status}
-                        </span>
-                      </td>
-                      <td className="px-2 py-1.5 text-[11px]">
-                        {envCode ? (
-                          <div>
-                            <div className="truncate">{envName || envCode}</div>
-                            {envName && <div className="text-muted-foreground font-mono text-[10px] truncate">{envCode}</div>}
-                          </div>
-                        ) : "-"}
-                      </td>
-                      <td className="px-2 py-1.5 text-[11px] text-muted-foreground">{createTime}</td>
-                      <td className="px-2 py-1.5 text-right">
-                        <div className="flex items-center justify-end gap-0.5">
-                          <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => { setDetailTask(task); setShowTaskDetail(true); }} title="查看详情">
-                            <Eye className="h-3 w-3" />
-                          </Button>
-                          {task.status !== "RUN" && (
-                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => opTask("start", task)} title="启动">
-                              <Play className="h-3 w-3 text-emerald-600" />
-                            </Button>
-                          )}
-                          {task.status === "RUN" && (
-                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => opTask("stop", task)} title="停止">
-                              <Square className="h-3 w-3 text-amber-600" />
-                            </Button>
-                          )}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 w-6 p-0"
-                            onClick={() => {
-                              setSingleRenameTask(task);
-                              setSingleRenameNewName(task.name);
-                              setShowSingleRename(true);
-                            }}
-                            title="改名"
-                          >
-                            <Edit3 className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 w-6 p-0"
-                            onClick={() => {
-                              setResetOffsetTask(task);
-                              setResetOffsetFileName("");
-                              setResetOffsetPosition("");
-                              setShowResetOffset(true);
-                            }}
-                            title="重置点位"
-                          >
-                            <RotateCcw className="h-3 w-3 text-amber-600" />
-                          </Button>
-                          <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => opTask("delete", task)} title="删除">
-                            <Trash2 className="h-3 w-3 text-rose-500" />
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                      {task.status === "RUN" && (
+                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => opTask("stop", task)} title="停止">
+                          <Square className="h-3 w-3 text-amber-600" />
+                        </Button>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0"
+                        onClick={() => {
+                          setSingleRenameTask(task);
+                          setSingleRenameNewName(task.name);
+                          setShowSingleRename(true);
+                        }}
+                        title="改名"
+                      >
+                        <Edit3 className="h-3 w-3" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0"
+                        onClick={() => {
+                          setResetOffsetTask(task);
+                          setResetOffsetFileName("");
+                          setResetOffsetPosition("");
+                          setShowResetOffset(true);
+                        }}
+                        title="重置点位"
+                      >
+                        <RotateCcw className="h-3 w-3 text-amber-600" />
+                      </Button>
+                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => opTask("delete", task)} title="删除">
+                        <Trash2 className="h-3 w-3 text-rose-500" />
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </>
         )}
       </div>
 
@@ -2666,7 +2655,7 @@ function FlushTab({
         </div>
       </div>
 
-      {/* Flush 表格 */}
+      {/* Flush 列表 - 自适应 flex 行布局 */}
       <div className="card-modern overflow-hidden">
         {loading ? (
           <div className="flex flex-col items-center py-12 text-muted-foreground">
@@ -2680,84 +2669,76 @@ function FlushTab({
             <p className="text-xs mt-1">从任务管理页选任务后点「批量创建回刷」</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="sticky top-0 bg-muted/50 z-10">
-                <tr className="text-[10px] uppercase tracking-wider font-medium text-muted-foreground border-b border-border/40">
-                  <th className="w-10 px-2 py-1.5 text-left">
-                    <Checkbox
-                      checked={selected.size > 0 && selected.size === records.length}
-                      onChange={(v) => v ? selectAll() : deselectAll()}
-                    />
-                  </th>
-                  <th className="px-2 py-1.5 text-left">ID</th>
-                  <th className="px-2 py-1.5 text-left min-w-[160px]">任务名称</th>
-                  <th className="px-2 py-1.5 text-left max-w-[200px]">回刷名称</th>
-                  <th className="px-2 py-1.5 text-left min-w-[280px]">SQL</th>
-                  <th className="px-2 py-1.5 text-left">状态</th>
-                  <th className="px-2 py-1.5 text-left">创建时间</th>
-                  <th className="px-2 py-1.5 text-right">操作</th>
-                </tr>
-              </thead>
-              <tbody>
-                {records.map((r) => {
-                  const id = String(r.id);
-                  const isSelected = selected.has(id);
-                  const f = r as any;
-                  const taskName = r.taskName || "-";
-                  const flushName = f.name || "-";
-                  // 提取 SQL
-                  const sql = f.sql || f.selectSql || "-";
-                  const createTime = f.createTime ? new Date(f.createTime).toLocaleString() : "-";
+          <>
+            {/* 表头 */}
+            <div className="grid grid-cols-[40px_100px_minmax(160px,1.5fr)_minmax(180px,1.5fr)_minmax(280px,2fr)_80px_140px_100px] items-center gap-3 px-4 py-2 bg-muted/30 border-b text-[10px] uppercase tracking-wider font-medium text-muted-foreground">
+              <div>
+                <Checkbox
+                  checked={selected.size > 0 && selected.size === records.length}
+                  onChange={(v) => v ? selectAll() : deselectAll()}
+                />
+              </div>
+              <div>ID</div>
+              <div>任务名称</div>
+              <div>回刷名称</div>
+              <div>SQL</div>
+              <div>状态</div>
+              <div>创建时间</div>
+              <div className="text-right">操作</div>
+            </div>
 
-                  return (
-                    <tr
-                      key={id}
-                      className={cn(
-                        "border-b border-border/40 hover:bg-muted/30 transition-colors",
-                        isSelected && "bg-primary/5"
+            {/* 列表 */}
+            <div className="max-h-[calc(100vh-380px)] overflow-auto">
+              {records.map((r) => {
+                const id = String(r.id);
+                const isSelected = selected.has(id);
+                const f = r as any;
+                const taskName = r.taskName || "-";
+                const flushName = f.name || "-";
+                const sql = f.sql || f.selectSql || "-";
+                const createTime = f.createTime ? new Date(f.createTime).toLocaleString() : "-";
+
+                return (
+                  <div
+                    key={id}
+                    className={cn(
+                      "grid grid-cols-[40px_100px_minmax(160px,1.5fr)_minmax(180px,1.5fr)_minmax(280px,2fr)_80px_140px_100px] items-center gap-3 px-4 py-2.5 border-b border-border/30 hover:bg-muted/30 transition-colors group",
+                      isSelected && "bg-primary/5"
+                    )}
+                  >
+                    <div>
+                      <Checkbox checked={isSelected} onChange={() => toggleSelect(id)} />
+                    </div>
+                    <div className="font-mono text-[11px] text-muted-foreground truncate" title={id}>{id}</div>
+                    <div className="text-xs font-medium truncate" title={taskName}>{taskName}</div>
+                    <div className="text-[11px] text-muted-foreground truncate" title={flushName}>{flushName}</div>
+                    <div className="text-[11px] text-muted-foreground font-mono truncate" title={sql}>
+                      <code className="block truncate">{sql}</code>
+                    </div>
+                    <div>
+                      <span className={cn("inline-block rounded px-1.5 py-0.5 text-[10px] font-mono font-bold", STATUS_COLOR[r.status] || "text-muted-foreground bg-muted")}>
+                        {r.status}
+                      </span>
+                    </div>
+                    <div className="text-[11px] text-muted-foreground truncate" title={createTime}>{createTime}</div>
+                    <div className="flex items-center justify-end gap-0.5">
+                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => { setDetailFlush(r); setShowFlushDetail(true); }} title="查看详情">
+                        <Eye className="h-3 w-3" />
+                      </Button>
+                      {r.status !== "RUN" && (
+                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => flushOp("start", r)} title="启动">
+                          <Play className="h-3 w-3 text-emerald-600" />
+                        </Button>
                       )}
-                    >
-                      <td className="px-2 py-1.5">
-                        <Checkbox checked={isSelected} onChange={() => toggleSelect(id)} />
-                      </td>
-                      <td className="px-2 py-1.5 font-mono text-[11px]">{id}</td>
-                      <td className="px-2 py-1.5 text-[11px] font-medium truncate max-w-[160px]" title={taskName}>
-                        {taskName}
-                      </td>
-                      <td className="px-2 py-1.5 text-[11px] text-muted-foreground truncate max-w-[200px]" title={flushName}>
-                        {flushName}
-                      </td>
-                      <td className="px-2 py-1.5 text-[11px] text-muted-foreground font-mono max-w-[400px]">
-                        <code className="block truncate" title={sql}>{sql}</code>
-                      </td>
-                      <td className="px-2 py-1.5">
-                        <span className={cn("inline-block rounded px-1.5 py-0.5 text-[10px] font-mono font-bold", STATUS_COLOR[r.status] || "text-muted-foreground bg-muted")}>
-                          {r.status}
-                        </span>
-                      </td>
-                      <td className="px-2 py-1.5 text-[11px] text-muted-foreground">{createTime}</td>
-                      <td className="px-2 py-1.5 text-right">
-                        <div className="flex items-center justify-end gap-0.5">
-                          <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => { setDetailFlush(r); setShowFlushDetail(true); }} title="查看详情">
-                            <Eye className="h-3 w-3" />
-                          </Button>
-                          {r.status !== "RUN" && (
-                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => flushOp("start", r)} title="启动">
-                              <Play className="h-3 w-3 text-emerald-600" />
-                            </Button>
-                          )}
-                          <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => flushOp("delete", r)} title="删除">
-                            <Trash2 className="h-3 w-3 text-rose-500" />
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => flushOp("delete", r)} title="删除">
+                        <Trash2 className="h-3 w-3 text-rose-500" />
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </>
         )}
       </div>
 

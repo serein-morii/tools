@@ -139,7 +139,7 @@ export function TaskReminderPage() {
           </div>
         </div>
       </div>
-      <div className="section-spacing-compact animate-in fade-in duration-200">
+      <div className="px-5 py-4 space-y-3 animate-in fade-in duration-200">
       {/* Stats */}
       <div className="grid grid-cols-4 gap-3">
         {[

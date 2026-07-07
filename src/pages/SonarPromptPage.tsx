@@ -911,7 +911,7 @@ export function SonarPromptPage() {
             <div className="animate-in">
                 {/* ===== Tab: Prompt 生成 ===== */}
                 {activeTab === "generator" && (
-                    <div className="section-spacing-compact animate-in fade-in duration-200">
+                    <div className="px-5 py-4 space-y-3 animate-in fade-in duration-200">
                         {/* Overview stats - 单行紧凑 */}
                         <div className="flex items-center gap-6 text-sm text-muted-foreground">
                             {[
