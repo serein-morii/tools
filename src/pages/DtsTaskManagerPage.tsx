@@ -1538,7 +1538,8 @@ function TasksTab({
                   </th>
                   <th className="px-2 py-1.5 text-left">ID</th>
                   <th className="px-2 py-1.5 text-left min-w-[200px]">任务名称</th>
-                  <th className="px-2 py-1.5 text-left max-w-[260px]">源表</th>
+                  <th className="px-2 py-1.5 text-left max-w-[180px]">源数据源</th>
+                  <th className="px-2 py-1.5 text-left max-w-[180px]">目标数据源</th>
                   <th className="px-2 py-1.5 text-left">状态</th>
                   <th className="px-2 py-1.5 text-left">环境</th>
                   <th className="px-2 py-1.5 text-left">创建时间</th>
@@ -1549,16 +1550,18 @@ function TasksTab({
                 {tasks.map((task) => {
                   const id = String(task.id);
                   const isSelected = selected.has(id);
-                  // sourceDatabaseAndTableList 可能是字符串数组或对象数组
-                  const rawList = task.sourceDatabaseAndTableList || [];
-                  const sourceTables = rawList.length > 0
-                    ? (typeof rawList[0] === 'string'
-                      ? rawList.join(', ')
-                      : rawList.map((t: any) => t.dbName ? `${t.dbName}.${(t.tableNames || []).join(",")}` : "").filter(Boolean).join(', '))
-                    : '-';
-                  const envCode = (task as any).env || (task as any).envCode || "";
+                  const t = task as any;
+                  // 提取源数据源名称
+                  const sourceDatasourceName = t.sourceDatasource && typeof t.sourceDatasource === 'object'
+                    ? (t.sourceDatasource.name || t.sourceDatasource.host || "-")
+                    : (t.sourceDatasource || "-");
+                  // 提取目标数据源名称
+                  const targetDatasourceName = t.targetDatasource && typeof t.targetDatasource === 'object'
+                    ? (t.targetDatasource.name || t.targetDatasource.host || "-")
+                    : (t.targetDatasource || "-");
+                  const envCode = t.env || t.envCode || "";
                   const envName = envCode ? (envMap[envCode] || "") : "";
-                  const createTime = (task as any).createTime ? new Date((task as any).createTime).toLocaleString() : "-";
+                  const createTime = t.createTime ? new Date(t.createTime).toLocaleString() : "-";
 
                   return (
                     <tr
@@ -1575,8 +1578,11 @@ function TasksTab({
                       <td className="px-2 py-1.5 text-[11px] font-medium truncate max-w-[200px]" title={task.name}>
                         {task.name}
                       </td>
-                      <td className="px-2 py-1.5 text-[11px] text-muted-foreground truncate max-w-[260px]" title={sourceTables}>
-                        {sourceTables}
+                      <td className="px-2 py-1.5 text-[11px] text-muted-foreground truncate max-w-[180px]" title={sourceDatasourceName}>
+                        {sourceDatasourceName}
+                      </td>
+                      <td className="px-2 py-1.5 text-[11px] text-muted-foreground truncate max-w-[180px]" title={targetDatasourceName}>
+                        {targetDatasourceName}
                       </td>
                       <td className="px-2 py-1.5">
                         <span className={cn("inline-block rounded px-1.5 py-0.5 text-[10px] font-mono font-bold", STATUS_COLOR[task.status] || "text-muted-foreground bg-muted")}>
@@ -1740,78 +1746,101 @@ function TaskDetailModal({ task, envMap, onClose }: { task: DtsTask; envMap: Rec
     // 表信息
     sourceDatabaseAndTableList: "源表列表(sourceDatabaseAndTableList)",
     targetDatabaseAndTableList: "目标表列表(targetDatabaseAndTableList)",
+    sourceDatabaseAndTable: "源数据库和表(sourceDatabaseAndTable)",
+    targetDatabaseAndTable: "目标数据库和表(targetDatabaseAndTable)",
+    // 数据源信息
+    sourceDatasource: "源数据源(sourceDatasource)",
+    targetDatasource: "目标数据源(targetDatasource)",
+    sourceDatasourceId: "源数据源ID(sourceDatasourceId)",
+    targetDatasourceId: "目标数据源ID(targetDatasourceId)",
     // Kafka 相关
-    acks: "ACKS配置",
-    compressionType: "压缩类型",
-    retries: "重试次数",
-    batchSize: "批次大小",
-    lingerMs: "发送延迟",
-    bufferMemory: "缓冲内存",
-    maxRequestSize: "最大请求大小",
-    requestTimeoutMs: "请求超时",
-    maxBlockMs: "最大阻塞时间",
-    enableIdempotence: "幂等性",
+    acks: "ACKS配置(acks)",
+    compressionType: "压缩类型(compressionType)",
+    retries: "重试次数(retries)",
+    batchSize: "批次大小(batchSize)",
+    lingerMs: "发送延迟(lingerMs)",
+    bufferMemory: "缓冲内存(bufferMemory)",
+    maxRequestSize: "最大请求大小(maxRequestSize)",
+    requestTimeoutMs: "请求超时(requestTimeoutMs)",
+    maxBlockMs: "最大阻塞时间(maxBlockMs)",
+    enableIdempotence: "幂等性(enableIdempotence)",
     maxInFlightRequestsPerConnection: "最大未确认请求数",
     // 数据库相关
-    sourceDb: "源数据库",
-    targetDb: "目标数据库",
-    sourceTable: "源表",
-    targetTable: "目标表",
+    sourceDb: "源数据库(sourceDb)",
+    targetDb: "目标数据库(targetDb)",
+    sourceTable: "源表(sourceTable)",
+    targetTable: "目标表(targetTable)",
     // 连接相关
     sourceConnectionId: "源连接ID(sourceConnectionId)",
     targetConnectionId: "目标连接ID(targetConnectionId)",
     pipelineId: "管道ID(pipelineId)",
-    pipelineName: "管道名称",
+    pipelineName: "管道名称(pipelineName)",
     // 同步相关
-    syncType: "同步类型",
-    syncMode: "同步模式",
-    filterCondition: "过滤条件",
-    flushInterval: "刷新间隔",
-    // 其他
-    nodeInfo: "节点信息",
-    extendConfig: "扩展配置",
-    remark: "备注",
-    description: "描述",
-    operator: "操作人",
-    modifier: "修改人",
+    syncType: "同步类型(syncType)",
+    syncMode: "同步模式(syncMode)",
+    filterCondition: "过滤条件(filterCondition)",
+    flushInterval: "刷新间隔(flushInterval)",
+    // 用户相关
+    createUser: "创建人(createUser)",
+    updateUser: "更新人(updateUser)",
+    envManagerUserList: "环境管理员列表(envManagerUserList)",
+    projectManagerUserList: "项目管理员列表(projectManagerUserList)",
+    // 分组相关
+    group: "分组(group)",
     groupId: "分组ID(groupId)",
-    groupName: "分组名称",
+    groupName: "分组名称(groupName)",
+    mistakeGroupList: "异常分组列表(mistakeGroupList)",
+    mistakeProcessRuleList: "异常处理规则列表(mistakeProcessRuleList)",
+    // 其他
+    nodeInfo: "节点信息(nodeInfo)",
+    extendConfig: "扩展配置(extendConfig)",
+    remark: "备注(remark)",
+    description: "描述(description)",
+    operator: "操作人(operator)",
+    modifier: "修改人(modifier)",
     bizId: "业务ID(bizId)",
-    bizName: "业务名称",
-    tags: "标签",
-    owner: "负责人",
-    department: "部门",
+    bizName: "业务名称(bizName)",
+    tags: "标签(tags)",
+    owner: "负责人(owner)",
+    department: "部门(department)",
     projectId: "项目ID(projectId)",
-    projectName: "项目名称",
+    projectName: "项目名称(projectName)",
     // 状态相关
-    runStatus: "运行状态",
-    lastStartTime: "最后启动时间",
-    lastStopTime: "最后停止时间",
-    errorMessage: "错误信息",
+    runStatus: "运行状态(runStatus)",
+    lastStartTime: "最后启动时间(lastStartTime)",
+    lastStopTime: "最后停止时间(lastStopTime)",
+    errorMessage: "错误信息(errorMessage)",
     // 性能相关
-    retryTimes: "重试次数",
+    retryTimes: "重试次数(retryTimes)",
+    health: "健康状态(health)",
+    open: "是否开启(open)",
+    isShare: "是否共享(isShare)",
+    pkColumn: "主键列(pkColumn)",
+    parallelism: "并行度(parallelism)",
     // 其他常见
     taskId: "任务ID(taskId)",
-    taskName: "任务名称",
+    taskName: "任务名称(taskName)",
     selectSql: "查询SQL(selectSql)",
     gtid: "GTID(gtid)",
-    binlogFileName: "Binlog文件名",
-    binlogFilePosition: "Binlog位置",
+    binlogFileName: "Binlog文件名(binlogFileName)",
+    binlogFilePosition: "Binlog位置(binlogFilePosition)",
     sourceTopic: "源Topic(sourceTopic)",
     targetTopic: "目标Topic(targetTopic)",
     schemaRegistryUrl: "Schema注册中心URL(schemaRegistryUrl)",
-    keyConverter: "Key转换器",
-    valueConverter: "Value转换器",
-    keySerializer: "Key序列化器",
-    valueSerializer: "Value序列化器",
-    keyDeserializer: "Key反序列化器",
-    valueDeserializer: "Value反序列化器",
+    keyConverter: "Key转换器(keyConverter)",
+    valueConverter: "Value转换器(valueConverter)",
+    keySerializer: "Key序列化器(keySerializer)",
+    valueSerializer: "Value序列化器(valueSerializer)",
+    keyDeserializer: "Key反序列化器(keyDeserializer)",
+    valueDeserializer: "Value反序列化器(valueDeserializer)",
     // 扩展字段
-    extraConfig: "额外配置",
-    customParams: "自定义参数",
-    parallelism: "并行度",
-    memory: "内存配置",
-    cpu: "CPU配置",
+    extraConfig: "额外配置(extraConfig)",
+    customParams: "自定义参数(customParams)",
+    memory: "内存配置(memory)",
+    cpu: "CPU配置(cpu)",
+    // 运行时信息
+    taskRuntime: "任务运行时信息(taskRuntime)",
+    updateTimeColumn: "更新时间列(updateTimeColumn)",
   };
 
   // 格式化字段标签：优先使用映射表，否则智能翻译
@@ -1875,18 +1904,63 @@ function TaskDetailModal({ task, envMap, onClose }: { task: DtsTask; envMap: Rec
   if (t.extendConfig) entries.push({ label: formatLabel("extendConfig"), value: JSON.stringify(t.extendConfig, null, 2) });
   if (t.remark) entries.push({ label: formatLabel("remark"), value: t.remark });
 
+  // 数据源字段特殊处理（对象类型，提取关键信息）
+  if (t.sourceDatasource && typeof t.sourceDatasource === 'object') {
+    const ds = t.sourceDatasource;
+    entries.push({ label: formatLabel("sourceDatasource"), value: JSON.stringify(ds, null, 2) });
+  }
+  if (t.targetDatasource && typeof t.targetDatasource === 'object') {
+    entries.push({ label: formatLabel("targetDatasource"), value: JSON.stringify(t.targetDatasource, null, 2) });
+  }
+  if (t.createUser && typeof t.createUser === 'object') {
+    const u = t.createUser;
+    entries.push({ label: formatLabel("createUser"), value: `${u.empName || '-'} (${u.empCode || '-'} · ${u.deptName || '-'})` });
+  }
+  if (t.updateUser && typeof t.updateUser === 'object') {
+    const u = t.updateUser;
+    entries.push({ label: formatLabel("updateUser"), value: `${u.empName || '-'} (${u.empCode || '-'} · ${u.deptName || '-'})` });
+  }
+  if (t.envManagerUserList && Array.isArray(t.envManagerUserList)) {
+    const users = t.envManagerUserList.map((u: any) => `${u.empName}(${u.empCode})`).join(', ');
+    entries.push({ label: formatLabel("envManagerUserList"), value: users || '-' });
+  }
+  if (t.projectManagerUserList && Array.isArray(t.projectManagerUserList)) {
+    const users = t.projectManagerUserList.map((u: any) => `${u.empName}(${u.empCode})`).join(', ');
+    entries.push({ label: formatLabel("projectManagerUserList"), value: users || '-' });
+  }
+  if (t.taskRuntime && typeof t.taskRuntime === 'object') {
+    entries.push({ label: formatLabel("taskRuntime"), value: JSON.stringify(t.taskRuntime, null, 2) });
+  }
+  if (t.sourceDatabaseAndTable && Array.isArray(t.sourceDatabaseAndTable)) {
+    const tables = t.sourceDatabaseAndTable.map((item: any) => {
+      if (item.name) {
+        const children = (item.children || []).map((c: any) => c.name).join(', ');
+        return children ? `${item.name}: ${children}` : item.name;
+      }
+      return '';
+    }).filter(Boolean).join('; ');
+    entries.push({ label: formatLabel("sourceDatabaseAndTable"), value: tables || '-' });
+  }
+  if (t.targetDatabaseAndTable && Array.isArray(t.targetDatabaseAndTable)) {
+    const tables = t.targetDatabaseAndTable.join(', ');
+    entries.push({ label: formatLabel("targetDatabaseAndTable"), value: tables || '-' });
+  }
+
   // 收集其他未处理的字段
   const knownKeys = new Set([
     'id', 'name', 'status', 'createTime', 'updateTime', 'env', 'envCode',
     'configId', 'configName', 'taskType', 'sourceType', 'targetType',
     'sourceParallelism', 'targetParallelism', 'sourceDatabaseAndTableList',
-    'targetDatabaseAndTableList', 'nodeInfo', 'extendConfig', 'remark'
+    'targetDatabaseAndTableList', 'nodeInfo', 'extendConfig', 'remark',
+    'sourceDatasource', 'targetDatasource', 'sourceDatasourceId', 'targetDatasourceId',
+    'createUser', 'updateUser', 'envManagerUserList', 'projectManagerUserList',
+    'taskRuntime', 'sourceDatabaseAndTable', 'targetDatabaseAndTable'
   ]);
   const otherKeys = Object.keys(t).filter(k => !knownKeys.has(k) && t[k] !== undefined && t[k] !== null && t[k] !== '');
   for (const key of otherKeys) {
     const value = t[key];
     const label = formatLabel(key);
-    if (typeof value === 'object') {
+    if (typeof value === 'object' && value !== null) {
       entries.push({ label, value: JSON.stringify(value, null, 2) });
     } else {
       entries.push({ label, value: String(value) });
@@ -1915,10 +1989,12 @@ function TaskDetailModal({ task, envMap, onClose }: { task: DtsTask; envMap: Rec
               <div key={i} className="grid grid-cols-5 gap-1 py-1 border-b border-border/20 hover:bg-muted/20">
                 <div className="text-[11px] text-muted-foreground font-medium pr-2">{label}</div>
                 <div className="col-span-4 text-[11px] break-all">
-                  {typeof value === 'string' && value.startsWith('{') ? (
-                    <pre className="text-[10px] bg-muted/30 p-1.5 rounded overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed">
-                      {value}
-                    </pre>
+                  {typeof value === 'string' ? (
+                    value.startsWith('{') || value.startsWith('[') ? (
+                      <pre className="text-[10px] bg-muted/30 p-1.5 rounded overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed">
+                        {value}
+                      </pre>
+                    ) : value
                   ) : value}
                 </div>
               </div>
@@ -2022,6 +2098,42 @@ function translateFieldName(key: string): string {
     boolean: "布尔",
     null: "空",
     undefined: "未定义",
+    // 新增词根
+    user: "用户",
+    emp: "员工",
+    dept: "部门",
+    manager: "管理员",
+    env: "环境",
+    share: "共享",
+    health: "健康",
+    open: "开启",
+    column: "列",
+    pk: "主键",
+    runtime: "运行时",
+    offset: "偏移量",
+    delay: "延迟",
+    tps: "TPS",
+    mistake: "异常",
+    rule: "规则",
+    datasource: "数据源",
+    topic: "Topic",
+    schema: "Schema",
+    registry: "注册中心",
+    converter: "转换器",
+    serializer: "序列化器",
+    deserializer: "反序列化器",
+    request: "请求",
+    response: "响应",
+    timeout: "超时",
+    buffer: "缓冲",
+    memory: "内存",
+    cpu: "CPU",
+    pool: "池",
+    host: "主机",
+    port: "端口",
+    sid: "SID",
+    userName: "用户名",
+    password: "密码",
   };
 
   // 尝试直接匹配
@@ -2059,6 +2171,8 @@ function FlushDetailModal({ flush, onClose }: { flush: DtsFlush; onClose: () => 
     targetTable: "目标表(targetTable)",
     sourceTopic: "源Topic(sourceTopic)",
     targetTopic: "目标Topic(targetTopic)",
+    sourceDatasource: "源数据源(sourceDatasource)",
+    targetDatasource: "目标数据源(targetDatasource)",
     flushType: "回刷类型(flushType)",
     flushMode: "回刷模式(flushMode)",
     flushInterval: "刷新间隔(flushInterval)",
@@ -2072,6 +2186,8 @@ function FlushDetailModal({ flush, onClose }: { flush: DtsFlush; onClose: () => 
     remark: "备注(remark)",
     operator: "操作人(operator)",
     modifier: "修改人(modifier)",
+    createUser: "创建人(createUser)",
+    updateUser: "更新人(updateUser)",
   };
 
   // 格式化字段标签
@@ -2118,19 +2234,36 @@ function FlushDetailModal({ flush, onClose }: { flush: DtsFlush; onClose: () => 
   if (f.operator) entries.push({ label: formatLabel("operator"), value: f.operator });
   if (f.modifier) entries.push({ label: formatLabel("modifier"), value: f.modifier });
 
+  // 对象类型字段特殊处理
+  if (f.sourceDatasource && typeof f.sourceDatasource === 'object') {
+    entries.push({ label: formatLabel("sourceDatasource"), value: JSON.stringify(f.sourceDatasource, null, 2) });
+  }
+  if (f.targetDatasource && typeof f.targetDatasource === 'object') {
+    entries.push({ label: formatLabel("targetDatasource"), value: JSON.stringify(f.targetDatasource, null, 2) });
+  }
+  if (f.createUser && typeof f.createUser === 'object') {
+    const u = f.createUser;
+    entries.push({ label: formatLabel("createUser"), value: `${u.empName || '-'} (${u.empCode || '-'} · ${u.deptName || '-'})` });
+  }
+  if (f.updateUser && typeof f.updateUser === 'object') {
+    const u = f.updateUser;
+    entries.push({ label: formatLabel("updateUser"), value: `${u.empName || '-'} (${u.empCode || '-'} · ${u.deptName || '-'})` });
+  }
+
   // 收集其他未处理的字段
   const knownKeys = new Set([
     'id', 'name', 'taskName', 'status', 'createTime', 'updateTime', 'taskId',
     'sourceDb', 'sourceTable', 'targetDb', 'targetTable', 'sourceTopic', 'targetTopic',
     'flushType', 'flushMode', 'flushInterval', 'startTime', 'endTime',
     'progress', 'totalCount', 'successCount', 'failCount', 'errorMessage',
-    'remark', 'operator', 'modifier'
+    'remark', 'operator', 'modifier', 'sourceDatasource', 'targetDatasource',
+    'createUser', 'updateUser'
   ]);
   const otherKeys = Object.keys(f).filter(k => !knownKeys.has(k) && f[k] !== undefined && f[k] !== null && f[k] !== '');
   for (const key of otherKeys) {
     const value = f[key];
     const label = formatLabel(key);
-    if (typeof value === 'object') {
+    if (typeof value === 'object' && value !== null) {
       entries.push({ label, value: JSON.stringify(value, null, 2) });
     } else {
       entries.push({ label, value: String(value) });
@@ -2159,10 +2292,12 @@ function FlushDetailModal({ flush, onClose }: { flush: DtsFlush; onClose: () => 
               <div key={i} className="grid grid-cols-5 gap-1 py-1 border-b border-border/20 hover:bg-muted/20">
                 <div className="text-[11px] text-muted-foreground font-medium pr-2">{label}</div>
                 <div className="col-span-4 text-[11px] break-all">
-                  {typeof value === 'string' && value.startsWith('{') ? (
-                    <pre className="text-[10px] bg-muted/30 p-1.5 rounded overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed">
-                      {value}
-                    </pre>
+                  {typeof value === 'string' ? (
+                    value.startsWith('{') || value.startsWith('[') ? (
+                      <pre className="text-[10px] bg-muted/30 p-1.5 rounded overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed">
+                        {value}
+                      </pre>
+                    ) : value
                   ) : value}
                 </div>
               </div>
@@ -2556,6 +2691,8 @@ function FlushTab({
                   <th className="px-2 py-1.5 text-left">ID</th>
                   <th className="px-2 py-1.5 text-left min-w-[160px]">任务名称</th>
                   <th className="px-2 py-1.5 text-left max-w-[200px]">回刷名称</th>
+                  <th className="px-2 py-1.5 text-left max-w-[180px]">源数据源</th>
+                  <th className="px-2 py-1.5 text-left max-w-[180px]">目标数据源</th>
                   <th className="px-2 py-1.5 text-left">状态</th>
                   <th className="px-2 py-1.5 text-left">创建时间</th>
                   <th className="px-2 py-1.5 text-right">操作</th>
@@ -2565,9 +2702,18 @@ function FlushTab({
                 {records.map((r) => {
                   const id = String(r.id);
                   const isSelected = selected.has(id);
+                  const f = r as any;
                   const taskName = r.taskName || "-";
-                  const flushName = (r as any).name || "-";
-                  const createTime = (r as any).createTime ? new Date((r as any).createTime).toLocaleString() : "-";
+                  const flushName = f.name || "-";
+                  // 提取源数据源名称
+                  const sourceDatasourceName = f.sourceDatasource && typeof f.sourceDatasource === 'object'
+                    ? (f.sourceDatasource.name || f.sourceDatasource.host || "-")
+                    : (f.sourceDatasource || f.sourceDb || "-");
+                  // 提取目标数据源名称
+                  const targetDatasourceName = f.targetDatasource && typeof f.targetDatasource === 'object'
+                    ? (f.targetDatasource.name || f.targetDatasource.host || "-")
+                    : (f.targetDatasource || f.targetDb || "-");
+                  const createTime = f.createTime ? new Date(f.createTime).toLocaleString() : "-";
 
                   return (
                     <tr
@@ -2586,6 +2732,12 @@ function FlushTab({
                       </td>
                       <td className="px-2 py-1.5 text-[11px] text-muted-foreground truncate max-w-[200px]" title={flushName}>
                         {flushName}
+                      </td>
+                      <td className="px-2 py-1.5 text-[11px] text-muted-foreground truncate max-w-[180px]" title={sourceDatasourceName}>
+                        {sourceDatasourceName}
+                      </td>
+                      <td className="px-2 py-1.5 text-[11px] text-muted-foreground truncate max-w-[180px]" title={targetDatasourceName}>
+                        {targetDatasourceName}
                       </td>
                       <td className="px-2 py-1.5">
                         <span className={cn("inline-block rounded px-1.5 py-0.5 text-[10px] font-mono font-bold", STATUS_COLOR[r.status] || "text-muted-foreground bg-muted")}>
