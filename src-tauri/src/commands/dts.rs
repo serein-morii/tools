@@ -415,28 +415,59 @@ impl TaskManager {
     }
 
     async fn create_flush_for_task(&self, task: &Value, flush_name_override: Option<&str>) -> Result<(bool, Value), String> {
-        // 构造 flush payload
+        // 解析源表 - 兼容两种格式：
+        // 1) 字符串数组: ["yl_lmdm.sys_payment_manner", ...] (Python 版本约定)
+        // 2) 对象数组: [{dbName, tableNames}, ...]
         let source_db_tables = task.get("sourceDatabaseAndTableList")
-            .and_then(|v| v.as_array())
-            .and_then(|a| a.first())
             .cloned()
-            .unwrap_or_else(|| json!({}));
+            .unwrap_or_else(|| json!([]));
 
-        let db_name = source_db_tables.get("dbName").and_then(|v| v.as_str()).unwrap_or("");
-        let table_names = source_db_tables.get("tableNames").and_then(|v| v.as_array())
-            .map(|a| a.iter().filter_map(|t| t.as_str()).collect::<Vec<_>>().join(","))
-            .unwrap_or_default();
+        // 优先尝试取第一个字符串（标准格式）
+        let mut db_name = String::new();
+        let mut table_names = String::new();
 
-        let task_id = task.get("id").and_then(|v| v.as_str()).unwrap_or("");
+        if let Some(arr) = source_db_tables.as_array() {
+            if let Some(first) = arr.first() {
+                if let Some(s) = first.as_str() {
+                    // 字符串格式: "yl_lmdm.sys_payment_manner" → 拆出 db 和 table
+                    // 找最后一个 "." 分割
+                    if let Some(dot_pos) = s.rfind('.') {
+                        db_name = s[..dot_pos].to_string();
+                        table_names = s[dot_pos + 1..].to_string();
+                    } else {
+                        // 没有 . 说明可能整字符串就是表名（不带 db）
+                        table_names = s.to_string();
+                    }
+                } else if let Some(obj) = first.as_object() {
+                    // 对象格式
+                    db_name = obj.get("dbName").and_then(|v| v.as_str()).unwrap_or("").to_string();
+                    table_names = obj.get("tableNames").and_then(|v| v.as_array())
+                        .map(|a| a.iter().filter_map(|t| t.as_str()).collect::<Vec<_>>().join(","))
+                        .unwrap_or_default();
+                }
+            }
+        }
+
+        let task_id = task.get("id").and_then(|v| v.as_str())
+            .or_else(|| task.get("id").and_then(|v| v.as_i64()).map(|_| ""))
+            .unwrap_or("");
+        // id 可能是字符串或数字
+        let task_id = if task_id.is_empty() {
+            task.get("id").and_then(|v| v.as_i64())
+                .map(|n| n.to_string())
+                .unwrap_or_default()
+        } else {
+            task_id.to_string()
+        };
         let task_name = task.get("name").and_then(|v| v.as_str()).unwrap_or("");
 
         // 构造完整的 SQL
-        let sql = if !table_names.is_empty() {
+        let sql = if !db_name.is_empty() && !table_names.is_empty() {
             format!("select * from {}.{} where 1=1", db_name, table_names)
-        } else if !db_name.is_empty() {
-            format!("select * from {} where 1=1", db_name)
+        } else if !table_names.is_empty() {
+            format!("select * from {} where 1=1", table_names)
         } else {
-            "select * from unknown_table where 1=1".to_string()
+            return Err("任务无源表信息，无法创建回刷".into());
         };
 
         // 回刷名称：优先使用传入的自定义名称，否则默认加【回刷】前缀
@@ -452,7 +483,7 @@ impl TaskManager {
             "taskName": task_name,
             "name": flush_name,
             "sourceParallelism": task.get("sourceParallelism").cloned().unwrap_or(json!(1)),
-            "nodeInfo": task.get("nodeInfo").cloned().unwrap_or(json!([])),
+            "nodeInfo": task.get("nodeInfo").cloned().unwrap_or(json!(null)),
         });
 
         log::info!("[DTS] create_flush payload: {}", payload);

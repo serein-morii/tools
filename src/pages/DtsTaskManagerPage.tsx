@@ -2173,6 +2173,8 @@ function FlushDetailModal({ flush, onClose }: { flush: DtsFlush; onClose: () => 
     targetTopic: "目标Topic(targetTopic)",
     sourceDatasource: "源数据源(sourceDatasource)",
     targetDatasource: "目标数据源(targetDatasource)",
+    sql: "SQL(sql)",
+    selectSql: "查询SQL(selectSql)",
     flushType: "回刷类型(flushType)",
     flushMode: "回刷模式(flushMode)",
     flushInterval: "刷新间隔(flushInterval)",
@@ -2691,8 +2693,7 @@ function FlushTab({
                   <th className="px-2 py-1.5 text-left">ID</th>
                   <th className="px-2 py-1.5 text-left min-w-[160px]">任务名称</th>
                   <th className="px-2 py-1.5 text-left max-w-[200px]">回刷名称</th>
-                  <th className="px-2 py-1.5 text-left max-w-[180px]">源数据源</th>
-                  <th className="px-2 py-1.5 text-left max-w-[180px]">目标数据源</th>
+                  <th className="px-2 py-1.5 text-left min-w-[280px]">SQL</th>
                   <th className="px-2 py-1.5 text-left">状态</th>
                   <th className="px-2 py-1.5 text-left">创建时间</th>
                   <th className="px-2 py-1.5 text-right">操作</th>
@@ -2705,14 +2706,8 @@ function FlushTab({
                   const f = r as any;
                   const taskName = r.taskName || "-";
                   const flushName = f.name || "-";
-                  // 提取源数据源名称
-                  const sourceDatasourceName = f.sourceDatasource && typeof f.sourceDatasource === 'object'
-                    ? (f.sourceDatasource.name || f.sourceDatasource.host || "-")
-                    : (f.sourceDatasource || f.sourceDb || "-");
-                  // 提取目标数据源名称
-                  const targetDatasourceName = f.targetDatasource && typeof f.targetDatasource === 'object'
-                    ? (f.targetDatasource.name || f.targetDatasource.host || "-")
-                    : (f.targetDatasource || f.targetDb || "-");
+                  // 提取 SQL
+                  const sql = f.sql || f.selectSql || "-";
                   const createTime = f.createTime ? new Date(f.createTime).toLocaleString() : "-";
 
                   return (
@@ -2733,11 +2728,8 @@ function FlushTab({
                       <td className="px-2 py-1.5 text-[11px] text-muted-foreground truncate max-w-[200px]" title={flushName}>
                         {flushName}
                       </td>
-                      <td className="px-2 py-1.5 text-[11px] text-muted-foreground truncate max-w-[180px]" title={sourceDatasourceName}>
-                        {sourceDatasourceName}
-                      </td>
-                      <td className="px-2 py-1.5 text-[11px] text-muted-foreground truncate max-w-[180px]" title={targetDatasourceName}>
-                        {targetDatasourceName}
+                      <td className="px-2 py-1.5 text-[11px] text-muted-foreground font-mono max-w-[400px]">
+                        <code className="block truncate" title={sql}>{sql}</code>
                       </td>
                       <td className="px-2 py-1.5">
                         <span className={cn("inline-block rounded px-1.5 py-0.5 text-[10px] font-mono font-bold", STATUS_COLOR[r.status] || "text-muted-foreground bg-muted")}>

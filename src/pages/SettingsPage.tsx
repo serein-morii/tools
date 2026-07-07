@@ -6,7 +6,7 @@ import { useSettings, useUpdateSetting, getSettingValue } from "@/lib/query/sett
 import { useQueryClient } from "@tanstack/react-query";
 import { open, save } from "@tauri-apps/plugin-dialog";
 import { invoke } from "@tauri-apps/api/core";
-import { Monitor, Moon, Sun, Power, EyeOff, MonitorUp, Download, Upload, Info, Palette, Database, LayoutGrid, GripVertical, ChevronUp, ChevronDown, RotateCcw, Home, AlertTriangle, Bell, GitBranch, FileCode, Brain, Rocket, Pencil, Check, X, Settings, Sparkles, ArrowRight } from "lucide-react";
+import { Monitor, Moon, Sun, Power, EyeOff, MonitorUp, Download, Upload, Info, Palette, Database, LayoutGrid, GripVertical, ChevronUp, ChevronDown, RotateCcw, Home, AlertTriangle, Bell, GitBranch, FileCode, Brain, Rocket, Pencil, Check, X, Settings, Sparkles, ArrowRight, Zap } from "lucide-react";
 import { ToggleRow } from "@/components/ui/toggle-row";
 import { Switch } from "@/components/ui/switch";
 import { SearchableSelect } from "@/components/ui/searchable-select";
@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { allModules } from "@/config/modules";
 import { resetSetup } from "@/components/SetupWizard";
 import { useNavigate } from "react-router-dom";
+import { ShortcutInput } from "@/components/layout/ShortcutButtons";
 
 const LanguageSettings = lazy(() => import("@/components/settings/LanguageSettings").then((m) => ({ default: m.LanguageSettings })));
 
@@ -319,6 +320,26 @@ export function SettingsPage() {
               dragIdx={dragIdx}
               setDragIdx={setDragIdx}
             />
+          </CardContent>
+        </Card>
+
+        {/* 快捷按钮 */}
+        <Card className="card-modern overflow-hidden">
+          <CardHeader className="bg-muted/30 border-b py-3 px-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-amber-500/10">
+                  <Zap className="h-3.5 w-3.5 text-amber-500" />
+                </div>
+                <CardTitle className="text-sm font-semibold">全局快捷键</CardTitle>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="p-4">
+            <p className="text-[10px] text-muted-foreground mb-3">
+              为每个模块设置全局快捷键，按下后立即跳转到对应页面。快捷键需包含 Ctrl/Meta/Alt 之一。点击输入框后按键即可，Backspace 清空，Esc 取消。
+            </p>
+            <ShortcutList settings={settings} updateSetting={updateSetting} />
           </CardContent>
         </Card>
 
@@ -753,6 +774,31 @@ function MenuItemRow({
         checked={visible}
         onCheckedChange={(checked) => updateSetting.mutate({ key: page.key, value: checked ? "true" : "false" })}
       />
+    </div>
+  );
+}
+
+/** 快捷键配置列表 */
+function ShortcutList({ settings, updateSetting }: { settings: any; updateSetting: any }) {
+  return (
+    <div className="space-y-1.5">
+      {allModules.map((mod) => {
+        const shortcutKey = `shortcut_key_${mod.id}`;
+        const shortcut = getSettingValue(settings, shortcutKey, "");
+        return (
+          <div
+            key={mod.id}
+            className="flex items-center gap-3 rounded-lg border bg-card/50 hover:bg-muted/30 p-2 transition-colors"
+          >
+            <mod.icon className="h-4 w-4 shrink-0 text-amber-600" />
+            <span className="text-xs font-medium flex-1 min-w-0 truncate">{mod.label}</span>
+            <ShortcutInput
+              value={shortcut}
+              onChange={(v) => updateSetting.mutate({ key: shortcutKey, value: v })}
+            />
+          </div>
+        );
+      })}
     </div>
   );
 }
