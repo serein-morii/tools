@@ -61,7 +61,9 @@
     "home": "대시보드",
     "gitlab": "코드",
     "sonar": "단위 테스트",
-    "aiCoverage": "AI 커버리지"
+    "aiCoverage": "AI 커버리지",
+    "organizer": "바탕화면 정리",
+    "activityTracker": "AI 활동"
   },
   "dashboard": {
     "title": "대시보드",

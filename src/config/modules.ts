@@ -1,6 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import {
-  Bell, Settings, Home, GitBranch, FileCode, Brain, Database,
+  Bell, Settings, Home, GitBranch, FileCode, Brain, Database, FolderOpen, Activity,
 } from "lucide-react";
 
 export interface ModuleConfig {
@@ -61,6 +61,24 @@ export const allModules: ModuleConfig[] = [
     icon: Database,
     description: "DTS 任务批量启停 / 全量回刷",
     settingKey: "page_dts_visible",
+  },
+  {
+    id: "organizer",
+    path: "/organizer",
+    labelKey: "nav.organizer",
+    label: "桌面整理",
+    icon: FolderOpen,
+    description: "一键归类桌面文件到分类文件夹",
+    settingKey: "page_organizer_visible",
+  },
+  {
+    id: "activity-tracker",
+    path: "/activity-tracker",
+    labelKey: "nav.activityTracker",
+    label: "AI 活动",
+    icon: Activity,
+    description: "AI 工具活动追踪与报告",
+    settingKey: "page_activity_tracker_visible",
   },
   {
     id: "reminder",

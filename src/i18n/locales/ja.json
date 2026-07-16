@@ -61,7 +61,9 @@
     "home": "ダッシュボード",
     "gitlab": "コード",
     "sonar": "単体テスト",
-    "aiCoverage": "AI カバレッジ"
+    "aiCoverage": "AI カバレッジ",
+    "organizer": "デスクトップ整理",
+    "activityTracker": "AI 活動"
   },
   "dashboard": {
     "title": "ダッシュボード",

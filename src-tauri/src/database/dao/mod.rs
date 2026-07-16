@@ -5,6 +5,7 @@ pub mod template;
 pub mod settings;
 pub mod backup;
 pub mod gitlab_scan;
+pub mod activity;
 
 pub use task::*;
 pub use channel::*;

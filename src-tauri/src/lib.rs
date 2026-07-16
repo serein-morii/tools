@@ -3,9 +3,15 @@ mod database;
 mod error;
 mod services;
 
+use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use database::{Database, init_schema, migrate_default_templates};
 use services::scheduler::{start_scheduler, start_gitlab_scheduler};
+use services::activity::collector::ActivityCollector;
+use services::activity::parsers::claude_code::ClaudeCodeParser;
+use services::activity::parsers::codex::CodexParser;
+use services::activity::parsers::generic::GenericParser;
+use services::activity::parsers::ActivityParser;
 use tauri::Manager;
 use tauri::Emitter;
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
@@ -43,6 +49,14 @@ pub fn run() {
     // Start GitLab scheduler
     start_gitlab_scheduler(db.clone());
 
+    // Build activity parsers (collector started inside setup() where tokio runtime is ready)
+    let mut parsers: HashMap<String, Box<dyn ActivityParser>> = HashMap::new();
+    parsers.insert("claude-code".to_string(), Box::new(ClaudeCodeParser::new()));
+    parsers.insert("codex".to_string(), Box::new(CodexParser::new()));
+    parsers.insert("gemini-cli".to_string(), Box::new(GenericParser::new("gemini-cli", "~/.gemini/")));
+    parsers.insert("qwen-cli".to_string(), Box::new(GenericParser::new("qwen-cli", "~/.qwen/")));
+    let collector = Arc::new(ActivityCollector::new(db.clone(), parsers));
+
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_dialog::init())
@@ -51,6 +65,7 @@ pub fn run() {
             Some(vec!["--silent"]),
         ))
         .manage(db)
+        .manage(collector)
         .invoke_handler(tauri::generate_handler![
             commands::get_tasks,
             commands::get_task,
@@ -134,8 +149,41 @@ pub fn run() {
             commands::dts_batch_rename,
             commands::dts_batch_create_flush,
             commands::dts_batch_flush_op,
+            commands::get_desktop_path,
+            commands::organize_desktop,
+            commands::undo_organize,
+            commands::has_undo_data,
+            commands::get_builtin_rules,
+            commands::get_custom_rules,
+            commands::save_custom_rules,
+            commands::restore_all_from_folders,
+            commands::quick_scan,
+            // Activity Tracker
+            commands::get_ai_tools,
+            commands::update_ai_tool,
+            commands::get_sessions,
+            commands::get_session_detail,
+            commands::load_session_messages,
+            commands::get_today_stats,
+            commands::sync_now,
+            commands::get_collector_status,
+            commands::generate_report,
+            commands::get_reports,
+            commands::delete_report,
+            commands::render_report_html,
+            commands::get_today_range,
+            commands::get_date_range,
+            commands::setup_hooks,
+            commands::remove_hooks,
+            commands::reset_activity_data,
         ])
         .setup(|app| {
+            // Start activity collector (tokio runtime is active here)
+            let collector = app.state::<Arc<ActivityCollector>>().inner().clone();
+            tauri::async_runtime::spawn(async move {
+                collector.start().await;
+            });
+
             // Store app handle for auto-launch
             {
                 let mut handle = APP_HANDLE.lock().unwrap();

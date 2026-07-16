@@ -115,6 +115,71 @@ pub fn init_schema(conn: &Connection) -> Result<()> {
             developer_stats     TEXT DEFAULT '[]'
         );
 
+        -- AI Activity Tracker tables
+        -- AI Tools registry
+        CREATE TABLE IF NOT EXISTS ai_tools (
+            id              TEXT PRIMARY KEY,
+            name            TEXT NOT NULL,
+            enabled         INTEGER NOT NULL DEFAULT 1,
+            watch_paths     TEXT NOT NULL DEFAULT '[]',
+            parser_type     TEXT NOT NULL,
+            config          TEXT DEFAULT '{{}}',
+            created_at      INTEGER NOT NULL,
+            updated_at      INTEGER NOT NULL
+        );
+
+        -- AI Sessions
+        CREATE TABLE IF NOT EXISTS ai_sessions (
+            id              TEXT PRIMARY KEY,
+            tool_id         TEXT NOT NULL,
+            project_name    TEXT,
+            project_path    TEXT,
+            title           TEXT,
+            message_count   INTEGER DEFAULT 0,
+            duration_secs   INTEGER DEFAULT 0,
+            started_at      BIGINT NOT NULL,
+            ended_at        BIGINT,
+            source          TEXT NOT NULL DEFAULT 'watch',
+            raw_path        TEXT,
+            summary         TEXT,
+            tags            TEXT DEFAULT '[]',
+            metadata        TEXT DEFAULT '{{}}',
+            created_at      BIGINT NOT NULL,
+            FOREIGN KEY (tool_id) REFERENCES ai_tools(id)
+        );
+
+        -- AI Activities
+        CREATE TABLE IF NOT EXISTS ai_activities (
+            id              TEXT PRIMARY KEY,
+            session_id      TEXT NOT NULL,
+            activity_type   TEXT NOT NULL,
+            role            TEXT,
+            content_preview TEXT,
+            tool_name       TEXT,
+            file_path       TEXT,
+            lines_added     INTEGER,
+            lines_removed   INTEGER,
+            timestamp       BIGINT NOT NULL,
+            metadata        TEXT DEFAULT '{{}}',
+            FOREIGN KEY (session_id) REFERENCES ai_sessions(id) ON DELETE CASCADE
+        );
+
+        -- AI Reports
+        CREATE TABLE IF NOT EXISTS ai_reports (
+            id              TEXT PRIMARY KEY,
+            report_type     TEXT NOT NULL,
+            title           TEXT NOT NULL,
+            range_start     BIGINT NOT NULL,
+            range_end       BIGINT NOT NULL,
+            content         TEXT,
+            stats           TEXT DEFAULT '{{}}',
+            session_ids     TEXT DEFAULT '[]',
+            summary_method  TEXT,
+            summary_tool    TEXT,
+            generated_at    BIGINT,
+            created_at      BIGINT NOT NULL
+        );
+
         -- Create indexes
         CREATE INDEX IF NOT EXISTS idx_reminders_scheduled ON reminders(scheduled_at);
         CREATE INDEX IF NOT EXISTS idx_reminders_status ON reminders(status);
@@ -122,6 +187,19 @@ pub fn init_schema(conn: &Connection) -> Result<()> {
         CREATE INDEX IF NOT EXISTS idx_history_task ON reminder_history(task_id);
         CREATE INDEX IF NOT EXISTS idx_history_time ON reminder_history(scheduled_at);
         CREATE INDEX IF NOT EXISTS idx_gitlab_scan_time ON gitlab_scan_history(scan_at);
+        CREATE INDEX IF NOT EXISTS idx_ai_sessions_tool ON ai_sessions(tool_id);
+        CREATE INDEX IF NOT EXISTS idx_ai_sessions_time ON ai_sessions(started_at);
+        CREATE INDEX IF NOT EXISTS idx_ai_activities_session ON ai_activities(session_id);
+        CREATE INDEX IF NOT EXISTS idx_ai_activities_type ON ai_activities(activity_type);
+        CREATE INDEX IF NOT EXISTS idx_ai_reports_type_time ON ai_reports(report_type, range_start);
+
+        -- Insert default AI tools
+        INSERT OR IGNORE INTO ai_tools (id, name, enabled, watch_paths, parser_type, config, created_at, updated_at)
+        VALUES
+          ('claude-code',  'Claude Code',  1, '["~/.claude/projects/"]', 'claude_code',  '{{"has_hooks":true}}',  cast(strftime('%s','now') as integer) * 1000, cast(strftime('%s','now') as integer) * 1000),
+          ('codex',        'CodeX',        1, '["~/.codex/sessions/"]',  'codex',        '{{"has_hooks":false}}', cast(strftime('%s','now') as integer) * 1000, cast(strftime('%s','now') as integer) * 1000),
+          ('gemini-cli',   'Gemini CLI',   1, '["~/.gemini/"]',          'generic_json', '{{"has_hooks":false}}', cast(strftime('%s','now') as integer) * 1000, cast(strftime('%s','now') as integer) * 1000),
+          ('qwen-cli',     'Qwen CLI',     1, '["~/.qwen/"]',            'generic_json', '{{"has_hooks":false}}', cast(strftime('%s','now') as integer) * 1000, cast(strftime('%s','now') as integer) * 1000);
 
         -- Insert default settings if not exists
         INSERT OR IGNORE INTO settings (key, value) VALUES

@@ -8,6 +8,8 @@ pub mod gitlab;
 pub mod sonar;
 pub mod ai_coverage;
 pub mod dts;
+pub mod organizer;
+pub mod activity_tracker;
 
 pub use task::*;
 pub use channel::*;
@@ -19,3 +21,5 @@ pub use gitlab::*;
 pub use sonar::*;
 pub use ai_coverage::*;
 pub use dts::*;
+pub use organizer::*;
+pub use activity_tracker::*;

@@ -62,7 +62,9 @@
     "gitlab": "Code",
     "sonar": "Unit Test",
     "aiCoverage": "AI Coverage",
-    "dts": "DTS Tasks"
+    "dts": "DTS Tasks",
+    "organizer": "Desktop Organizer",
+    "activityTracker": "AI Activity"
   },
   "dashboard": {
     "title": "Dashboard",

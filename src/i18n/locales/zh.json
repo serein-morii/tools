@@ -63,7 +63,9 @@
     "gitlab": "Git扫描",
     "sonar": "单测覆盖率",
     "aiCoverage": "AI生成率",
-    "dts": "DTS 任务"
+    "dts": "DTS 任务",
+    "organizer": "桌面整理",
+    "activityTracker": "AI 活动"
   },
   "dashboard": {
     "title": "概览",
