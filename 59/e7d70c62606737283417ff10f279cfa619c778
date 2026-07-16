@@ -1,0 +1,57 @@
+src-tauri/src/services/activity/reporter.rs
+  s_a4d226eec38498::t_d6746fe8dffccf 53-55,64,117-133,135-139,141-147
+  s_a4d226eec38498::t_07b39fa0b55196 8-10
+src/lib/api/activity.ts
+  s_a4d226eec38498::t_6d7b350ca2cd7b 178,188
+  s_a4d226eec38498::t_36604d17995db1 200-236
+src/pages/ActivityTrackerPage.tsx
+  s_a4d226eec38498::t_50f978681375f1 1260-1264
+  s_a4d226eec38498::t_a5c893e3bf7c26 896-908,910
+  s_a4d226eec38498::t_e71f9bacc19cb8 761-765,782-793
+  s_a4d226eec38498::t_c2d0e1723963eb 56
+  s_a4d226eec38498::t_09abcc41ccdd19 168
+  s_a4d226eec38498::t_8193114b4c2872 18-21,38
+  s_a4d226eec38498::t_6b99f78fc08699 1247-1259,1265-1338,1340,1342-1353,1356-1360,1362-1365,1367-1402,1404-1405
+  s_a4d226eec38498::t_e06e40677fb247 1246,1339,1341,1354-1355,1361,1366,1403,1406
+  s_a4d226eec38498::t_34c576c4725e97 2
+  s_a4d226eec38498::t_399d4ef8b830a2 74-78,114
+  s_a4d226eec38498::t_184414e155ac12 794
+  s_a4d226eec38498::t_c822166c468656 1407-1409
+src-tauri/src/database/dao/activity.rs
+  s_a4d226eec38498::t_ef024cf738078d 608
+  s_a4d226eec38498::t_b98d97d51b7cde 67-106
+  s_a4d226eec38498::t_b6b0f32e7298e3 630-718
+src-tauri/src/commands/activity_tracker.rs
+  s_a4d226eec38498::t_fe76c5860f1c3a 341-349,351
+  s_a4d226eec38498::t_e9058b81706f21 306
+  s_a4d226eec38498::t_d933da20de5b87 8
+  s_a4d226eec38498::t_8d26aa197aa7f1 426-485
+src-tauri/src/lib.rs
+  s_4409a3b010cf57::t_28d6b5abeab447 174-177
+src-tauri/src/database/schema.rs
+  s_a4d226eec38498::t_77a29468cecc64 183-192,247-251,360-376
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "59e7d70c62606737283417ff10f279cfa619c778",
+  "prompts": {},
+  "sessions": {
+    "s_4409a3b010cf57": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b2f8756f-1197-44a3-a670-dbe61eea7616",
+        "model": "glm-5.2"
+      },
+      "human_author": "pengchenghui <pengchenghui@jtexpress.com>"
+    },
+    "s_a4d226eec38498": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7dfa4fc2-893d-481a-96be-d1d943c7d0b1",
+        "model": "glm-5.2"
+      },
+      "human_author": "pengchenghui <pengchenghui@jtexpress.com>"
+    }
+  }
+}
