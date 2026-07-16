@@ -5,7 +5,7 @@ use chrono::{Datelike, Local, NaiveDate};
 use tauri::State;
 
 use crate::database::dao::activity::{
-    ActivityDao, AiReport, AiSession, AiTool,
+    ActivityDao, AiReport, AiReportTemplate, AiSession, AiTool,
 };
 use crate::database::Database;
 use crate::services::activity::parsers::claude_code::{load_messages, ClaudeMessage};
@@ -303,6 +303,7 @@ pub async fn generate_report(
     summary_tool: Option<String>,
     api_key: Option<String>,
     model: Option<String>,
+    template_id: Option<String>,
 ) -> Result<serde_json::Value, String> {
     use tauri::Emitter;
     let emit = |stage: &str, message: String| {
@@ -337,8 +338,17 @@ pub async fn generate_report(
         ActivityDao::get_user_messages_in_range(&conn, range_start, range_end).unwrap_or_default()
     };
     emit("prompt", format!("已收集 {} 条用户提问，构建 Prompt...", user_messages.len()));
+    // Load the prompt template (by id, else default, else built-in fallback).
+    let template_body = {
+        let conn = db.conn().lock().unwrap();
+        let t = template_id
+            .as_deref()
+            .and_then(|id| ActivityDao::get_report_template(&conn, id).ok())
+            .or_else(|| ActivityDao::get_default_report_template(&conn).ok().flatten());
+        t.map(|t| t.body).unwrap_or_default()
+    };
     let prompt = reporter.build_report_prompt(
-        &report_type, range_start, range_end, &stats, &sessions, &user_messages, "zh",
+        &report_type, range_start, range_end, &stats, &sessions, &user_messages, &template_body,
     );
     emit(
         "prompt",
@@ -411,6 +421,66 @@ pub async fn delete_report(
 ) -> Result<(), String> {
     let conn = db.conn().lock().unwrap();
     ActivityDao::delete_report(&conn, &id).map_err(|e| e.to_string())
+}
+
+// ==================== Report Templates ====================
+
+#[tauri::command]
+pub async fn get_report_templates(
+    db: State<'_, Arc<Database>>,
+) -> Result<Vec<AiReportTemplate>, String> {
+    let conn = db.conn().lock().unwrap();
+    ActivityDao::get_all_report_templates(&conn).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn save_report_template(
+    db: State<'_, Arc<Database>>,
+    id: Option<String>,
+    name: String,
+    body: String,
+    is_default: Option<bool>,
+) -> Result<AiReportTemplate, String> {
+    let now = chrono::Local::now().timestamp_millis();
+    // New template if no id (or empty id); the built-in "default" can be edited in place.
+    let id = match id {
+        Some(s) if !s.trim().is_empty() => s,
+        _ => uuid::Uuid::new_v4().to_string(),
+    };
+    let tpl = AiReportTemplate {
+        id: id.clone(),
+        name,
+        body,
+        is_default: is_default.unwrap_or(false),
+        created_at: now,
+        updated_at: now,
+    };
+    {
+        let conn = db.conn().lock().unwrap();
+        ActivityDao::upsert_report_template(&conn, &tpl).map_err(|e| e.to_string())?;
+        if tpl.is_default {
+            ActivityDao::set_default_report_template(&conn, &id).map_err(|e| e.to_string())?;
+        }
+    }
+    Ok(tpl)
+}
+
+#[tauri::command]
+pub async fn delete_report_template(
+    db: State<'_, Arc<Database>>,
+    id: String,
+) -> Result<(), String> {
+    let conn = db.conn().lock().unwrap();
+    ActivityDao::delete_report_template(&conn, &id).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn set_default_report_template(
+    db: State<'_, Arc<Database>>,
+    id: String,
+) -> Result<(), String> {
+    let conn = db.conn().lock().unwrap();
+    ActivityDao::set_default_report_template(&conn, &id).map_err(|e| e.to_string())
 }
 
 // ==================== Report Rendering ====================

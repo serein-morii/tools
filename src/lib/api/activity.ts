@@ -175,6 +175,7 @@ export async function generateReport(params: {
   summaryTool?: string;
   apiKey?: string;
   model?: string;
+  templateId?: string;
 }): Promise<{ report: AiReport; stats: Record<string, unknown>; prompt: string }> {
   return invoke("generate_report", {
     reportType: params.reportType,
@@ -184,6 +185,7 @@ export async function generateReport(params: {
     summaryTool: params.summaryTool ?? null,
     apiKey: params.apiKey ?? null,
     model: params.model ?? null,
+    templateId: params.templateId ?? null,
   });
 }
 
@@ -193,6 +195,43 @@ export async function getReports(reportType?: string, limit?: number): Promise<A
 
 export async function deleteReport(id: string): Promise<void> {
   return invoke<void>("delete_report", { id });
+}
+
+// ==================== Report Templates ====================
+
+export interface AiReportTemplate {
+  id: string;
+  name: string;
+  body: string;
+  is_default: boolean;
+  created_at: number;
+  updated_at: number;
+}
+
+export async function getReportTemplates(): Promise<AiReportTemplate[]> {
+  return invoke<AiReportTemplate[]>("get_report_templates");
+}
+
+export async function saveReportTemplate(params: {
+  id?: string;
+  name: string;
+  body: string;
+  isDefault?: boolean;
+}): Promise<AiReportTemplate> {
+  return invoke<AiReportTemplate>("save_report_template", {
+    id: params.id ?? null,
+    name: params.name,
+    body: params.body,
+    isDefault: params.isDefault ?? false,
+  });
+}
+
+export async function deleteReportTemplate(id: string): Promise<void> {
+  return invoke<void>("delete_report_template", { id });
+}
+
+export async function setDefaultReportTemplate(id: string): Promise<void> {
+  return invoke<void>("set_default_report_template", { id });
 }
 
 // ==================== Report Rendering / Export ====================

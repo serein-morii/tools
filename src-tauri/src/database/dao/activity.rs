@@ -64,6 +64,46 @@ pub struct AiReport {
     pub created_at: i64,
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct AiReportTemplate {
+    pub id: String,
+    pub name: String,
+    pub body: String,
+    pub is_default: bool,
+    pub created_at: i64,
+    pub updated_at: i64,
+}
+
+/// The default report prompt template. Uses `{{placeholder}}` tokens that are
+/// substituted by the reporter before sending to the AI.
+pub const DEFAULT_REPORT_TEMPLATE_BODY: &str = r#"你是一个专业的工作总结助手。请根据以下用户在 AI 工具中的提问记录，生成{{report_type}}。
+
+## 时间范围
+{{date_range}}
+
+## 整体数据
+- AI 工具使用总时长：{{total_duration}}
+- 总会话数：{{total_sessions}}
+- 总对话轮次：{{total_messages}}
+
+## 各工具使用分布
+```json
+{{tool_distribution}}
+```
+
+## 会话与提问记录（用户的真实提问，按时间顺序）
+{{session_questions}}
+
+## 要求
+1. 重点总结用户在这段时间内**关注了哪些问题、做了什么工作**，从提问中提炼工作主题和意图
+2. 按项目 / 工作类型归类组织
+3. 不需要详细描述每个任务的实现过程和结果，聚焦"做了什么"
+4. 标注涉及的 AI 工具
+5. 输出格式为 Markdown，结构化
+6. 输出语言：中文
+7. 不要添加超出提问记录的内容
+"#;
+
 pub struct ActivityDao;
 
 #[allow(dead_code)]
@@ -565,8 +605,7 @@ impl ActivityDao {
         conn: &Connection,
         start: i64,
         end: i64,
-    ) -> Result<Vec<UserMessageRow>> {
-        let mut stmt = conn.prepare(
+    ) -> Result<Vec<UserMessageRow>> {        let mut stmt = conn.prepare(
             "SELECT a.session_id, s.tool_id, s.project_name, s.title, a.content_preview, a.timestamp
              FROM ai_activities a
              JOIN ai_sessions s ON a.session_id = s.id
@@ -587,6 +626,95 @@ impl ActivityDao {
         })?;
         rows.collect::<std::result::Result<Vec<_>, _>>()
             .map_err(|e| ToolsError::Database(e))
+    }
+
+    // ==================== AiReportTemplate ====================
+
+    pub fn get_all_report_templates(conn: &Connection) -> Result<Vec<AiReportTemplate>> {
+        let mut stmt = conn.prepare(
+            "SELECT id, name, body, is_default, created_at, updated_at FROM ai_report_templates ORDER BY is_default DESC, updated_at DESC",
+        )?;
+        let rows = stmt.query_map([], |row| {
+            Ok(AiReportTemplate {
+                id: row.get(0)?,
+                name: row.get(1)?,
+                body: row.get(2)?,
+                is_default: row.get::<_, i32>(3)? != 0,
+                created_at: row.get(4)?,
+                updated_at: row.get(5)?,
+            })
+        })?;
+        rows.collect::<std::result::Result<Vec<_>, _>>()
+            .map_err(|e| ToolsError::Database(e))
+    }
+
+    pub fn get_report_template(conn: &Connection, id: &str) -> Result<AiReportTemplate> {
+        conn.query_row(
+            "SELECT id, name, body, is_default, created_at, updated_at FROM ai_report_templates WHERE id = ?1",
+            [id],
+            |row| {
+                Ok(AiReportTemplate {
+                    id: row.get(0)?,
+                    name: row.get(1)?,
+                    body: row.get(2)?,
+                    is_default: row.get::<_, i32>(3)? != 0,
+                    created_at: row.get(4)?,
+                    updated_at: row.get(5)?,
+                })
+            },
+        )
+        .map_err(|e| ToolsError::Database(e))
+    }
+
+    pub fn get_default_report_template(conn: &Connection) -> Result<Option<AiReportTemplate>> {
+        let mut stmt = conn.prepare(
+            "SELECT id, name, body, is_default, created_at, updated_at FROM ai_report_templates WHERE is_default = 1 LIMIT 1",
+        )?;
+        let mut rows = stmt.query_map([], |row| {
+            Ok(AiReportTemplate {
+                id: row.get(0)?,
+                name: row.get(1)?,
+                body: row.get(2)?,
+                is_default: true,
+                created_at: row.get(4)?,
+                updated_at: row.get(5)?,
+            })
+        })?;
+        match rows.next() {
+            Some(r) => Ok(Some(r?)),
+            None => Ok(None),
+        }
+    }
+
+    pub fn upsert_report_template(conn: &Connection, t: &AiReportTemplate) -> Result<()> {
+        conn.execute(
+            "INSERT OR REPLACE INTO ai_report_templates (id, name, body, is_default, created_at, updated_at)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+            rusqlite::params![
+                t.id,
+                t.name,
+                t.body,
+                t.is_default as i32,
+                t.created_at,
+                t.updated_at,
+            ],
+        )?;
+        Ok(())
+    }
+
+    pub fn delete_report_template(conn: &Connection, id: &str) -> Result<()> {
+        conn.execute("DELETE FROM ai_report_templates WHERE id = ?1", [id])?;
+        Ok(())
+    }
+
+    /// Set one template as the default (and clear the flag on all others).
+    pub fn set_default_report_template(conn: &Connection, id: &str) -> Result<()> {
+        conn.execute("UPDATE ai_report_templates SET is_default = 0", [])?;
+        conn.execute(
+            "UPDATE ai_report_templates SET is_default = 1, updated_at = ?1 WHERE id = ?2",
+            rusqlite::params![chrono::Utc::now().timestamp_millis(), id],
+        )?;
+        Ok(())
     }
 }
 

@@ -5,7 +5,9 @@ use chrono::{DateTime, Utc};
 use serde_json::json;
 use uuid::Uuid;
 
-use crate::database::dao::activity::{ActivityDao, AiReport, AiSession, UserMessageRow};
+use crate::database::dao::activity::{
+    ActivityDao, AiReport, AiSession, DEFAULT_REPORT_TEMPLATE_BODY, UserMessageRow,
+};
 use crate::database::Database;
 
 pub struct Reporter {
@@ -48,8 +50,9 @@ impl Reporter {
         })
     }
 
-    /// Build the prompt for AI summarization. Includes the user's actual
-    /// questions from each session so the summary reflects what they worked on.
+    /// Build the prompt for AI summarization. Substitutes `{{placeholder}}`
+    /// tokens in the template body with the actual data. Includes the user's
+    /// actual questions from each session.
     pub fn build_report_prompt(
         &self,
         report_type: &str,
@@ -58,7 +61,7 @@ impl Reporter {
         stats: &serde_json::Value,
         sessions: &[AiSession],
         user_messages: &[UserMessageRow],
-        language: &str,
+        template_body: &str,
     ) -> String {
         let date_range = format_date_range(range_start, range_end);
 
@@ -110,58 +113,38 @@ impl Reporter {
             session_questions.push_str("（已达到内容上限，部分提问未全部列出）\n");
         }
 
-        let lang_instruction = match language {
-            "zh" => "输出语言：中文",
-            "en" => "Output language: English",
-            "ja" => "出力言語：日本語",
-            "ko" => "출력 언어: 한국어",
-            _ => "输出语言：中文",
+        let label = report_label(report_type);
+        let total_duration = stats
+            .get("total_duration_formatted")
+            .and_then(|v| v.as_str())
+            .unwrap_or("0")
+            .to_string();
+        let total_sessions = stats
+            .get("total_sessions")
+            .unwrap_or(&json!(0))
+            .to_string();
+        let total_messages = stats
+            .get("total_messages")
+            .unwrap_or(&json!(0))
+            .to_string();
+        let tool_distribution = serde_json::to_string_pretty(
+            stats.get("tool_distribution").unwrap_or(&json!({})),
+        )
+        .unwrap_or_default();
+
+        let body = if template_body.trim().is_empty() {
+            DEFAULT_REPORT_TEMPLATE_BODY
+        } else {
+            template_body
         };
 
-        let label = report_label(report_type);
-        format!(
-            r#"你是一个专业的工作总结助手。请根据以下用户在 AI 工具中的提问记录，生成{label}。
-
-## 时间范围
-{date_range}
-
-## 整体数据
-- AI 工具使用总时长：{total_duration}
-- 总会话数：{total_sessions}
-- 总对话轮次：{total_messages}
-
-## 各工具使用分布
-```json
-{tool_distribution}
-```
-
-## 会话与提问记录（用户的真实提问，按时间顺序）
-{session_questions}
-
-## 要求
-1. 重点总结用户在这段时间内**关注了哪些问题、做了什么工作**，从提问中提炼工作主题和意图
-2. 按项目 / 工作类型归类组织
-3. 不需要详细描述每个任务的实现过程和结果，聚焦"做了什么"
-4. 标注涉及的 AI 工具
-5. 输出格式为 Markdown，结构化
-6. {lang_instruction}
-7. 不要添加超出提问记录的内容
-"#,
-            label = label,
-            date_range = date_range,
-            total_duration = stats
-                .get("total_duration_formatted")
-                .and_then(|v| v.as_str())
-                .unwrap_or("0"),
-            total_sessions = stats.get("total_sessions").unwrap_or(&json!(0)),
-            total_messages = stats.get("total_messages").unwrap_or(&json!(0)),
-            tool_distribution = serde_json::to_string_pretty(
-                stats.get("tool_distribution").unwrap_or(&json!({}))
-            )
-            .unwrap_or_default(),
-            session_questions = session_questions,
-            lang_instruction = lang_instruction,
-        )
+        body.replace("{{report_type}}", &label)
+            .replace("{{date_range}}", &date_range)
+            .replace("{{total_duration}}", &total_duration)
+            .replace("{{total_sessions}}", &total_sessions)
+            .replace("{{total_messages}}", &total_messages)
+            .replace("{{tool_distribution}}", &tool_distribution)
+            .replace("{{session_questions}}", &session_questions)
     }
 
     /// Save a report to database

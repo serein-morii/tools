@@ -180,6 +180,16 @@ pub fn init_schema(conn: &Connection) -> Result<()> {
             created_at      BIGINT NOT NULL
         );
 
+        -- AI Report Templates (customizable prompt templates)
+        CREATE TABLE IF NOT EXISTS ai_report_templates (
+            id              TEXT PRIMARY KEY,
+            name            TEXT NOT NULL,
+            body            TEXT NOT NULL,
+            is_default      INTEGER NOT NULL DEFAULT 0,
+            created_at      BIGINT NOT NULL,
+            updated_at      BIGINT NOT NULL
+        );
+
         -- Create indexes
         CREATE INDEX IF NOT EXISTS idx_reminders_scheduled ON reminders(scheduled_at);
         CREATE INDEX IF NOT EXISTS idx_reminders_status ON reminders(status);
@@ -232,6 +242,11 @@ pub fn init_schema(conn: &Connection) -> Result<()> {
     // data is preserved with the new BIGINT column types.
     if let Err(e) = migrate_timestamps_to_bigint(conn) {
         log::error!("[Schema] Timestamp migration failed: {}", e);
+    }
+
+    // Seed the default AI report template if none exist.
+    if let Err(e) = seed_default_report_template(conn) {
+        log::error!("[Schema] Seed default report template failed: {}", e);
     }
 
     Ok(())
@@ -340,5 +355,22 @@ fn migrate_timestamps_to_bigint(conn: &rusqlite::Connection) -> rusqlite::Result
     conn.execute("INSERT OR IGNORE INTO _migrated_bigint VALUES (1)", [])?;
 
     log::info!("[Schema] Timestamp migration to BIGINT completed");
+    Ok(())
+}
+
+/// Insert the default AI report template if the table is empty.
+fn seed_default_report_template(conn: &rusqlite::Connection) -> rusqlite::Result<()> {
+    use crate::database::dao::activity::DEFAULT_REPORT_TEMPLATE_BODY;
+    let count: i64 =
+        conn.query_row("SELECT COUNT(*) FROM ai_report_templates", [], |row| row.get(0))?;
+    if count > 0 {
+        return Ok(());
+    }
+    let now = chrono::Utc::now().timestamp_millis();
+    conn.execute(
+        "INSERT INTO ai_report_templates (id, name, body, is_default, created_at, updated_at)
+         VALUES (?1, ?2, ?3, 1, ?4, ?4)",
+        rusqlite::params!["default", "默认模板", DEFAULT_REPORT_TEMPLATE_BODY, now],
+    )?;
     Ok(())
 }

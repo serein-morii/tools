@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Activity, History, FileText, Settings, RefreshCw, Zap, Download, FileCode, Minus, X } from "lucide-react";
+import { Activity, History, FileText, Settings, RefreshCw, Zap, Download, FileCode, Minus, X, LayoutTemplate } from "lucide-react";
 import { save } from "@tauri-apps/plugin-dialog";
 import { listen } from "@tauri-apps/api/event";
 import { useSettings, useUpdateSetting, getSettingValue } from "../lib/query/settingsQueries";
@@ -15,6 +15,10 @@ import {
   getCollectorStatus,
   generateReport,
   deleteReport,
+  getReportTemplates,
+  saveReportTemplate,
+  deleteReportTemplate,
+  setDefaultReportTemplate,
   getDateRange,
   loadSessionMessages,
   setupHooks,
@@ -31,6 +35,7 @@ import {
   type AiSession,
   type AiActivity,
   type AiReport,
+  type AiReportTemplate,
   type AiTool,
   type DateRange,
   type CollectorStatus,
@@ -48,6 +53,7 @@ export default function ActivityTrackerPage() {
     { id: "dashboard", label: "概览", icon: Activity },
     { id: "sessions", label: "会话", icon: History },
     { id: "reports", label: "报告", icon: FileText },
+    { id: "templates", label: "模板", icon: LayoutTemplate },
     { id: "settings", label: "设置", icon: Settings },
   ];
 
@@ -65,7 +71,11 @@ export default function ActivityTrackerPage() {
   }, []);
 
   const startGeneration = useCallback(
-    async (reportType: "daily" | "weekly" | "monthly", range: { start: number; end: number }) => {
+    async (
+      reportType: "daily" | "weekly" | "monthly",
+      range: { start: number; end: number },
+      templateId?: string
+    ) => {
       setGenLogs([]);
       setGenThinking(null);
       setGenText("");
@@ -101,6 +111,7 @@ export default function ActivityTrackerPage() {
           summaryTool: method === "cli" ? tool : provider,
           apiKey: apiKey || undefined,
           model,
+          templateId,
         });
         setGenStatus("done");
         appendLog("done", "报告已生成并保存");
@@ -154,6 +165,7 @@ export default function ActivityTrackerPage() {
         {activeTab === "reports" && (
           <ReportViewer onGenerate={startGeneration} reportsNonce={reportsNonce} genStatus={genStatus} />
         )}
+        {activeTab === "templates" && <TemplateManager />}
         {activeTab === "settings" && <ToolSettings />}
       </div>
 
@@ -746,7 +758,11 @@ function ReportViewer({
   reportsNonce,
   genStatus,
 }: {
-  onGenerate: (reportType: "daily" | "weekly" | "monthly", range: { start: number; end: number }) => void;
+  onGenerate: (
+    reportType: "daily" | "weekly" | "monthly",
+    range: { start: number; end: number },
+    templateId?: string
+  ) => void;
   reportsNonce: number;
   genStatus: GenStatus;
 }) {
@@ -762,6 +778,19 @@ function ReportViewer({
   const [genDate, setGenDate] = useState(toIsoDate(todayRef.current));
   const [genWeek, setGenWeek] = useState(toIsoWeek(todayRef.current));
   const [genMonth, setGenMonth] = useState(toIsoMonth(todayRef.current));
+
+  // Template selector state.
+  const [templates, setTemplates] = useState<AiReportTemplate[]>([]);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string | undefined>(undefined);
+
+  const loadTemplates = async () => {
+    try {
+      const t = await getReportTemplates();
+      setTemplates(t);
+      setSelectedTemplateId((prev) => prev ?? t.find((x) => x.is_default)?.id ?? t[0]?.id);
+    } catch (_) { /* ignore */ }
+  };
+  useEffect(() => { loadTemplates(); }, [reportsNonce]);
 
   // Render the selected report's Markdown into styled HTML for preview/export.
   useEffect(() => {
@@ -864,8 +893,21 @@ function ReportViewer({
             <input type="month" value={genMonth} onChange={(e) => setGenMonth(e.target.value)}
               className="h-8 rounded-md border border-border bg-background px-2 text-xs" />
           )}
+          <select
+            value={selectedTemplateId ?? ""}
+            onChange={(e) => setSelectedTemplateId(e.target.value || undefined)}
+            title="选择报告模板"
+            className="h-8 rounded-md border border-border bg-background px-2 text-xs max-w-[140px]"
+          >
+            {templates.length === 0 && <option value="">默认模板</option>}
+            {templates.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.name}{t.is_default ? " ★" : ""}
+              </option>
+            ))}
+          </select>
           <button
-            onClick={() => onGenerate(genType, computeRange())}
+            onClick={() => onGenerate(genType, computeRange(), selectedTemplateId)}
             disabled={genStatus === "generating"}
             className="flex items-center gap-1 h-8 px-3 text-xs bg-primary text-primary-foreground rounded-md hover:opacity-90 disabled:opacity-50"
           >
@@ -1196,6 +1238,170 @@ function ToolSettings() {
               <div className="mt-2 text-[11px] text-muted-foreground break-all">{rebuildMsg}</div>
             )}
           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ==================== Templates Tab ====================
+
+function TemplateManager() {
+  const [tplList, setTplList] = useState<AiReportTemplate[]>([]);
+  const [editingTpl, setEditingTpl] = useState<{ id?: string; name: string; body: string; isDefault: boolean } | null>(null);
+  const [tplMsg, setTplMsg] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const loadTemplates = async () => {
+    try {
+      const list = await getReportTemplates();
+      setTplList(list);
+      // If nothing is being edited, auto-select the first (default) for editing.
+      setEditingTpl((prev) => {
+        if (prev) return prev;
+        const t = list.find((x) => x.is_default) ?? list[0];
+        return t ? { id: t.id, name: t.name, body: t.body, isDefault: t.is_default } : null;
+      });
+    } catch (_) { /* ignore */ }
+    setLoading(false);
+  };
+  useEffect(() => { loadTemplates(); }, []);
+
+  const startNew = () => {
+    setTplMsg(null);
+    setEditingTpl({ name: "", body: "", isDefault: false });
+  };
+  const saveTpl = async () => {
+    if (!editingTpl) return;
+    if (!editingTpl.name.trim()) { setTplMsg("请填写模板名称"); return; }
+    setTplMsg(null);
+    try {
+      const saved = await saveReportTemplate({
+        id: editingTpl.id,
+        name: editingTpl.name.trim(),
+        body: editingTpl.body,
+        isDefault: editingTpl.isDefault,
+      });
+      await loadTemplates();
+      setEditingTpl({ id: saved.id, name: saved.name, body: saved.body, isDefault: saved.is_default });
+      setTplMsg("已保存");
+    } catch (e) {
+      setTplMsg(`保存失败: ${e}`);
+    }
+  };
+  const delTpl = async (id: string) => {
+    if (!window.confirm("确定删除该模板？")) return;
+    try {
+      await deleteReportTemplate(id);
+      if (editingTpl?.id === id) setEditingTpl(null);
+      await loadTemplates();
+    } catch (e) {
+      setTplMsg(`删除失败: ${e}`);
+    }
+  };
+  const setDefaultTpl = async (id: string) => {
+    try {
+      await setDefaultReportTemplate(id);
+      await loadTemplates();
+    } catch (e) {
+      setTplMsg(`设置失败: ${e}`);
+    }
+  };
+
+  if (loading) return <div className="flex items-center justify-center h-64 text-muted-foreground">加载中...</div>;
+
+  return (
+    <div className="flex flex-col h-full p-5 gap-3 overflow-hidden">
+      {/* Header */}
+      <div className="flex items-center justify-between flex-shrink-0">
+        <h2 className="text-sm font-medium">报告模板</h2>
+        <button
+          onClick={startNew}
+          className="px-2.5 py-1 text-xs bg-primary text-primary-foreground rounded-md hover:opacity-90"
+        >
+          + 新建模板
+        </button>
+      </div>
+      <p className="text-[10px] text-muted-foreground flex-shrink-0">
+        自定义喂给 AI 的 Prompt。占位符（生成时自动替换）：
+        <code className="mx-0.5">{"{{report_type}}"}</code>
+        <code className="mx-0.5">{"{{date_range}}"}</code>
+        <code className="mx-0.5">{"{{total_sessions}}"}</code>
+        <code className="mx-0.5">{"{{total_messages}}"}</code>
+        <code className="mx-0.5">{"{{total_duration}}"}</code>
+        <code className="mx-0.5">{"{{tool_distribution}}"}</code>
+        <code className="mx-0.5">{"{{session_questions}}"}</code>
+      </p>
+
+      <div className="grid grid-cols-[220px_1fr] grid-rows-1 gap-4 flex-1 min-h-0">
+        {/* List */}
+        <div className="border border-border rounded-lg p-2 min-h-0 overflow-auto space-y-1">
+          {tplList.length === 0 && (
+            <div className="text-center py-8 text-muted-foreground text-xs">暂无模板</div>
+          )}
+          {tplList.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => { setTplMsg(null); setEditingTpl({ id: t.id, name: t.name, body: t.body, isDefault: t.is_default }); }}
+              className={`w-full text-left p-2 rounded text-xs transition-colors ${
+                editingTpl?.id === t.id ? "bg-primary/10 text-primary" : "hover:bg-secondary"
+              }`}
+            >
+              <div className="font-medium truncate">{t.name}</div>
+              {t.is_default && <div className="text-[10px] text-amber-500">默认</div>}
+            </button>
+          ))}
+        </div>
+
+        {/* Editor */}
+        <div className="border border-border rounded-lg p-3 flex flex-col min-h-0">
+          {editingTpl ? (
+            <>
+              <div className="flex items-center gap-2 mb-2 flex-shrink-0">
+                <input
+                  placeholder="模板名称"
+                  value={editingTpl.name}
+                  onChange={(e) => setEditingTpl({ ...editingTpl, name: e.target.value })}
+                  className="flex-1 h-8 rounded-md border border-border bg-background px-2 text-sm"
+                />
+                {!editingTpl.id && <span className="text-[10px] text-muted-foreground">新建</span>}
+              </div>
+              <textarea
+                placeholder={"模板内容（Prompt）。可用占位符：{{report_type}} {{date_range}} {{total_sessions}} {{total_messages}} {{total_duration}} {{tool_distribution}} {{session_questions}}"}
+                value={editingTpl.body}
+                onChange={(e) => setEditingTpl({ ...editingTpl, body: e.target.value })}
+                className="flex-1 min-h-0 w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs font-mono resize-none"
+              />
+              <div className="flex items-center gap-2 mt-2 flex-shrink-0">
+                <button
+                  onClick={saveTpl}
+                  className="px-3 py-1 text-xs bg-primary text-primary-foreground rounded-md hover:opacity-90"
+                >
+                  保存
+                </button>
+                <label className="flex items-center gap-1 text-xs text-muted-foreground cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={editingTpl.isDefault}
+                    onChange={(e) => setEditingTpl({ ...editingTpl, isDefault: e.target.checked })}
+                  />
+                  设为默认
+                </label>
+                {editingTpl.id && !editingTpl.isDefault && (
+                  <button onClick={() => setDefaultTpl(editingTpl.id!)} className="px-2 py-1 text-xs border border-border rounded hover:bg-secondary">设默认</button>
+                )}
+                {editingTpl.id && (
+                  <button onClick={() => delTpl(editingTpl.id!)} className="px-2 py-1 text-xs text-red-500 hover:text-red-600">删除</button>
+                )}
+                <button onClick={() => setEditingTpl(null)} className="px-2 py-1 text-xs border border-border rounded hover:bg-secondary">关闭</button>
+                {tplMsg && <span className="text-[11px] text-muted-foreground ml-auto">{tplMsg}</span>}
+              </div>
+            </>
+          ) : (
+            <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
+              选择左侧模板编辑，或点「+ 新建模板」
+            </div>
+          )}
         </div>
       </div>
     </div>
