@@ -67,7 +67,13 @@
     "organizer": "桌面整理",
     "activityTracker": "AI 活动",
     "aesTool": "AES加解密",
-    "testgen": "单测执行"
+    "testgen": "单测执行",
+    "cat": {
+      "productivity": "效率工具",
+      "codeQuality": "代码质量",
+      "aiTools": "AI 工具",
+      "reminder": "智能提醒"
+    }
   },
   "dashboard": {
     "title": "概览",

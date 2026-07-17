@@ -6,7 +6,7 @@ import { useSettings, useUpdateSetting, getSettingValue } from "@/lib/query/sett
 import { useQueryClient } from "@tanstack/react-query";
 import { open, save } from "@tauri-apps/plugin-dialog";
 import { invoke } from "@tauri-apps/api/core";
-import { Monitor, Moon, Sun, Power, EyeOff, MonitorUp, Download, Upload, Info, Palette, Database, LayoutGrid, GripVertical, ChevronUp, ChevronDown, RotateCcw, Home, AlertTriangle, Bell, GitBranch, FileCode, Brain, Rocket, Pencil, Check, X, Settings, Sparkles, ArrowRight, Zap } from "lucide-react";
+import { Monitor, Moon, Sun, Power, EyeOff, MonitorUp, Download, Upload, Info, Palette, Database, LayoutGrid, GripVertical, ChevronUp, ChevronDown, RotateCcw, Home, AlertTriangle, Bell, GitBranch, FileCode, Brain, Rocket, Pencil, Check, X, Plus, Settings, Sparkles, ArrowRight, Zap } from "lucide-react";
 import { ToggleRow } from "@/components/ui/toggle-row";
 import { Switch } from "@/components/ui/switch";
 import { SearchableSelect } from "@/components/ui/searchable-select";
@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/theme-provider";
 import { toast } from "sonner";
-import { allModules } from "@/config/modules";
+import { allModules, DEFAULT_CATEGORIES } from "@/config/modules";
 import { resetSetup } from "@/components/SetupWizard";
 import { useNavigate } from "react-router-dom";
 import { ShortcutInput } from "@/components/layout/ShortcutButtons";
@@ -543,11 +543,12 @@ function ThemeButton({ active, onClick, icon: Icon, children }: ThemeButtonProps
 
 const PAGES = allModules
   .filter(m => m.settingKey)
-  .map(m => ({ key: m.settingKey!, id: m.id, label: m.label, labelKey: m.labelKey, icon: m.icon }));
+  .map(m => ({ key: m.settingKey!, id: m.id, label: m.label, labelKey: m.labelKey, icon: m.icon, defaultCategory: m.category }));
 
 function ReorderableMenuList({ settings, updateSetting, dragIdx, setDragIdx }: {
   settings: any; updateSetting: any; dragIdx: number | null; setDragIdx: (v: number | null) => void;
 }) {
+  const { t } = useTranslation();
   const raw = getSettingValue(settings, "menu_order", "");
   const order: string[] = raw ? JSON.parse(raw) : PAGES.map(p => p.id);
   const sorted = [...PAGES].sort((a, b) => {
@@ -563,6 +564,43 @@ function ReorderableMenuList({ settings, updateSetting, dragIdx, setDragIdx }: {
     updateRef.current = updateSetting;
   }, [order, sorted, updateSetting]);
   const dragRef = useRef<number | null>(null);
+
+  // Build category list: defaults + custom (from settings)
+  const customCatsRaw = getSettingValue(settings, "custom_categories", "");
+  const customCats: { id: string; label: string }[] = customCatsRaw ? JSON.parse(customCatsRaw) : [];
+  const allCats: { id: string; label: string }[] = [
+    ...DEFAULT_CATEGORIES.map((c) => ({ id: c.id, label: t(c.labelKey) === c.labelKey ? c.label : t(c.labelKey) })),
+    ...customCats,
+  ];
+  const [newCatName, setNewCatName] = useState("");
+
+  const addCategory = () => {
+    const name = newCatName.trim();
+    if (!name) return;
+    if (allCats.some((c) => c.label === name || c.id === name)) {
+      toast.error("分类名已存在");
+      return;
+    }
+    const id = `custom_${Date.now()}`;
+    const next = [...customCats, { id, label: name }];
+    updateSetting.mutate({ key: "custom_categories", value: JSON.stringify(next) });
+    setNewCatName("");
+    toast.success("已添加分类");
+  };
+
+  const deleteCategory = (id: string) => {
+    // Remove from custom_categories, and clear module assignments to this category
+    const next = customCats.filter((c) => c.id !== id);
+    updateSetting.mutate({ key: "custom_categories", value: JSON.stringify(next) });
+    // Clear any module assigned to this custom category
+    PAGES.forEach((p) => {
+      const ck = `menu_category_${p.id}`;
+      if (getSettingValue(settings, ck, "") === id) {
+        updateSetting.mutate({ key: ck, value: "" });
+      }
+    });
+    toast.success("已删除分类");
+  };
 
   const moveUp = (idx: number) => {
     if (idx <= 0) return;
@@ -621,7 +659,48 @@ function ReorderableMenuList({ settings, updateSetting, dragIdx, setDragIdx }: {
   );
 
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-3">
+      {/* Category management */}
+      <div className="rounded-lg border border-border bg-muted/20 p-3">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-xs font-semibold">菜单分类</span>
+          <span className="text-[10px] text-muted-foreground">为每个菜单项选择所属分类，侧边栏按分类分组显示</span>
+        </div>
+        <div className="flex flex-wrap gap-1.5 mb-2">
+          {allCats.map((c) => {
+            const isCustom = customCats.some((cc) => cc.id === c.id);
+            return (
+              <span key={c.id} className="inline-flex items-center gap-1 rounded-full border border-border bg-background px-2 py-0.5 text-[11px]">
+                {c.label}
+                {isCustom && (
+                  <button
+                    onClick={() => deleteCategory(c.id)}
+                    className="text-muted-foreground hover:text-red-500"
+                    title="删除自定义分类"
+                  >
+                    <X className="h-2.5 w-2.5" />
+                  </button>
+                )}
+              </span>
+            );
+          })}
+        </div>
+        <div className="flex gap-1.5">
+          <Input
+            value={newCatName}
+            onChange={(e) => setNewCatName(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addCategory(); } }}
+            placeholder="新分类名（如 数据分析）"
+            className="h-7 text-xs flex-1"
+            maxLength={12}
+          />
+          <Button variant="outline" size="sm" onClick={addCategory} className="h-7 px-2 text-xs">
+            <Plus className="h-3 w-3 mr-1" />添加
+          </Button>
+        </div>
+      </div>
+
+      <div className="space-y-1.5">
       <div className={itemClass(-1, true)}>
         <GripVertical className="h-3.5 w-3.5 text-muted-foreground/30" />
         <div className="flex flex-col gap-0.5 shrink-0">
@@ -650,19 +729,21 @@ function ReorderableMenuList({ settings, updateSetting, dragIdx, setDragIdx }: {
             moveUp={moveUp}
             moveDown={moveDown}
             sortedLength={sorted.length}
+            categories={allCats}
           />
         );
       })}
+      </div>
     </div>
   );
 }
 
 function MenuItemRow({
   idx, page, visible, settings, updateSetting,
-  onPointerDown, onPointerMove, onPointerUp, itemClass, moveUp, moveDown, sortedLength,
+  onPointerDown, onPointerMove, onPointerUp, itemClass, moveUp, moveDown, sortedLength, categories,
 }: {
   idx: number;
-  page: { id: string; key: string; label: string; labelKey: string; icon: React.ComponentType<{ className?: string }> };
+  page: { id: string; key: string; label: string; labelKey: string; icon: React.ComponentType<{ className?: string }>; defaultCategory: string };
   visible: boolean;
   settings: any;
   updateSetting: any;
@@ -673,6 +754,7 @@ function MenuItemRow({
   moveUp: (idx: number) => void;
   moveDown: (idx: number) => void;
   sortedLength: number;
+  categories: { id: string; label: string }[];
 }) {
   const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
@@ -682,6 +764,11 @@ function MenuItemRow({
   const customLabel = getSettingValue(settings, customLabelKey, "");
   const defaultLabel = t(page.labelKey);
   const displayLabel = customLabel || defaultLabel;
+
+  // Category: custom from setting, else default from module config
+  const categoryKey = `menu_category_${page.id}`;
+  const customCat = getSettingValue(settings, categoryKey, "");
+  const currentCat = customCat !== "" ? customCat : page.defaultCategory;
 
   const startEdit = () => {
     setDraft(customLabel || defaultLabel);
@@ -743,6 +830,19 @@ function MenuItemRow({
           <span className="text-xs truncate" title={displayLabel}>{displayLabel}</span>
         )}
       </div>
+      <select
+        value={currentCat}
+        onClick={(e) => e.stopPropagation()}
+        onPointerDown={(e) => e.stopPropagation()}
+        onChange={(e) => updateSetting.mutate({ key: categoryKey, value: e.target.value })}
+        title="所属分类"
+        className="h-6 text-[11px] rounded-md border border-border bg-background px-1.5 shrink-0 max-w-[90px]"
+      >
+        <option value="">（无分类）</option>
+        {categories.map((c) => (
+          <option key={c.id} value={c.id}>{c.label}</option>
+        ))}
+      </select>
       {editing ? (
         <div className="flex gap-1 shrink-0">
           <button onClick={(e) => { e.stopPropagation(); commit(); }} className="h-6 w-6 flex items-center justify-center text-emerald-600 hover:bg-muted rounded"><Check className="h-3 w-3" /></button>

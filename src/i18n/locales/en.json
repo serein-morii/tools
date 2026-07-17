@@ -66,7 +66,13 @@
     "organizer": "Desktop Organizer",
     "activityTracker": "AI Activity",
     "aesTool": "AES Tool",
-    "testgen": "Test Gen"
+    "testgen": "Test Gen",
+    "cat": {
+      "productivity": "Productivity",
+      "codeQuality": "Code Quality",
+      "aiTools": "AI Tools",
+      "reminder": "Reminder"
+    }
   },
   "dashboard": {
     "title": "Dashboard",

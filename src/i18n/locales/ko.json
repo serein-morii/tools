@@ -65,7 +65,13 @@
     "organizer": "바탕화면 정리",
     "activityTracker": "AI 활동",
     "aesTool": "AES 암호화",
-    "testgen": "테스트 생성"
+    "testgen": "테스트 생성",
+    "cat": {
+      "productivity": "효율 도구",
+      "codeQuality": "코드 품질",
+      "aiTools": "AI 도구",
+      "reminder": "알림"
+    }
   },
   "dashboard": {
     "title": "대시보드",

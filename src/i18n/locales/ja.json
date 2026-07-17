@@ -65,7 +65,13 @@
     "organizer": "デスクトップ整理",
     "activityTracker": "AI 活動",
     "aesTool": "AES暗号化",
-    "testgen": "テスト生成"
+    "testgen": "テスト生成",
+    "cat": {
+      "productivity": "効率ツール",
+      "codeQuality": "コード品質",
+      "aiTools": "AI ツール",
+      "reminder": "リマインダー"
+    }
   },
   "dashboard": {
     "title": "ダッシュボード",

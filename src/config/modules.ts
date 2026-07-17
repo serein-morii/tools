@@ -14,7 +14,33 @@ export interface ModuleConfig {
   description: string;
   /** Settings key to control visibility, null = always visible */
   settingKey: string | null;
+  /** Menu category for grouping - defaults by module type */
+  category: string;
 }
+
+/** Default menu categories - can be customized in settings */
+export const DEFAULT_CATEGORIES: { id: string; label: string; labelKey: string }[] = [
+  { id: "productivity", label: "效率工具", labelKey: "nav.cat.productivity" },
+  { id: "code_quality", label: "代码质量", labelKey: "nav.cat.codeQuality" },
+  { id: "ai_tools", label: "AI 工具", labelKey: "nav.cat.aiTools" },
+  { id: "reminder", label: "智能提醒", labelKey: "nav.cat.reminder" },
+];
+
+/** Default category for each module ID */
+export const DEFAULT_MODULE_CATEGORIES: Record<string, string> = {
+  home: "", // No category
+  features: "",
+  reminder: "reminder",
+  gitlab: "code_quality",
+  sonar: "code_quality",
+  "ai-coverage": "ai_tools",
+  dts: "productivity",
+  organizer: "productivity",
+  "activity-tracker": "ai_tools",
+  testgen: "code_quality",
+  "aes-tool": "productivity",
+  settings: "",
+};
 
 export const allModules: ModuleConfig[] = [
   {
@@ -25,6 +51,7 @@ export const allModules: ModuleConfig[] = [
     icon: Home,
     description: "概览面板",
     settingKey: null,
+    category: "",
   },
   {
     id: "gitlab",
@@ -34,6 +61,7 @@ export const allModules: ModuleConfig[] = [
     icon: GitBranch,
     description: "GitLab 代码扫描",
     settingKey: "page_gitlab_visible",
+    category: "code_quality",
   },
   {
     id: "sonar",
@@ -43,6 +71,7 @@ export const allModules: ModuleConfig[] = [
     icon: FileCode,
     description: "Sonar 代码质量",
     settingKey: "page_sonar_visible",
+    category: "code_quality",
   },
   {
     id: "ai-coverage",
@@ -52,6 +81,7 @@ export const allModules: ModuleConfig[] = [
     icon: Brain,
     description: "AI 覆盖率统计",
     settingKey: "page_ai_coverage_visible",
+    category: "ai_tools",
   },
   {
     id: "dts",
@@ -61,6 +91,7 @@ export const allModules: ModuleConfig[] = [
     icon: Database,
     description: "DTS 任务批量启停 / 全量回刷",
     settingKey: "page_dts_visible",
+    category: "productivity",
   },
   {
     id: "organizer",
@@ -70,6 +101,7 @@ export const allModules: ModuleConfig[] = [
     icon: FolderOpen,
     description: "一键归类桌面文件到分类文件夹",
     settingKey: "page_organizer_visible",
+    category: "productivity",
   },
   {
     id: "activity-tracker",
@@ -79,6 +111,7 @@ export const allModules: ModuleConfig[] = [
     icon: Activity,
     description: "AI 工具活动追踪与报告",
     settingKey: "page_activity_tracker_visible",
+    category: "ai_tools",
   },
   {
     id: "testgen",
@@ -88,6 +121,7 @@ export const allModules: ModuleConfig[] = [
     icon: FlaskConical,
     description: "AI 自动写单测并提交",
     settingKey: "page_testgen_visible",
+    category: "code_quality",
   },
   {
     id: "aes-tool",
@@ -97,6 +131,7 @@ export const allModules: ModuleConfig[] = [
     icon: ShieldCheck,
     description: "AES 加解密工具，多密钥管理",
     settingKey: "page_aes_tool_visible",
+    category: "productivity",
   },
   {
     id: "reminder",
@@ -106,6 +141,7 @@ export const allModules: ModuleConfig[] = [
     icon: Bell,
     description: "管理定时任务和提醒",
     settingKey: "page_reminder_visible",
+    category: "reminder",
   },
   {
     id: "settings",
@@ -115,6 +151,7 @@ export const allModules: ModuleConfig[] = [
     icon: Settings,
     description: "应用设置和通知渠道配置",
     settingKey: null,
+    category: "",
   },
 ];
 

@@ -2,9 +2,9 @@ import { NavLink } from "react-router-dom";
 import { Settings, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useSettings, useUpdateSetting, getSettingValue } from "@/lib/query/settingsQueries";
-import { getVisibleModules } from "@/config/modules";
+import { getVisibleModules, DEFAULT_CATEGORIES } from "@/config/modules";
 
 export function Sidebar() {
   const { t } = useTranslation();
@@ -25,6 +25,27 @@ export function Sidebar() {
   const raw = getSettingValue(settings, "menu_order", "");
   const menuOrder: string[] = raw ? JSON.parse(raw) : [];
 
+  // Custom categories from settings
+  const customCatsRaw = getSettingValue(settings, "custom_categories", "");
+
+  // Resolve effective category for a module: custom setting overrides default
+  const effectiveCategory = (modId: string, defaultCat: string): string => {
+    const custom = getSettingValue(settings, `menu_category_${modId}`, "");
+    return custom !== "" ? custom : defaultCat;
+  };
+
+  // Build label map for all categories (defaults + custom)
+  const catLabelMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    DEFAULT_CATEGORIES.forEach((c) => {
+      const i18nLabel = t(c.labelKey);
+      map[c.id] = i18nLabel === c.labelKey ? c.label : i18nLabel;
+    });
+    const customCats: { id: string; label: string }[] = customCatsRaw ? JSON.parse(customCatsRaw) : [];
+    customCats.forEach((c) => { map[c.id] = c.label; });
+    return map;
+  }, [t, customCatsRaw]);
+
   const sortedModules = [...visibleModules].sort((a, b) => {
     if (a.id === "home") return -1;
     if (b.id === "home") return 1;
@@ -32,6 +53,27 @@ export function Sidebar() {
     const bi = menuOrder.indexOf(b.id);
     return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
   });
+
+  // Group modules by effective category
+  const { ungrouped, grouped } = useMemo(() => {
+    const ungrouped = sortedModules.filter((m) => !effectiveCategory(m.id, m.category));
+    const grouped: Record<string, typeof sortedModules> = {};
+
+    sortedModules
+      .forEach((m) => {
+        const cat = effectiveCategory(m.id, m.category);
+        if (!cat) return;
+        if (!grouped[cat]) grouped[cat] = [];
+        grouped[cat].push(m);
+      });
+
+    return { ungrouped, grouped };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sortedModules, settings]);
+
+  function getCategoryLabel(catId: string): string {
+    return catLabelMap[catId] ?? catId;
+  }
 
   return (
     <aside
@@ -71,8 +113,9 @@ export function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex flex-1 flex-col gap-1 p-2">
-        {sortedModules.map((mod) => {
+      <nav className="flex flex-1 flex-col gap-1 p-2 overflow-y-auto">
+        {/* Ungrouped items (Home etc.) */}
+        {ungrouped.map((mod) => {
           const customLabel = getSettingValue(settings, `menu_label_${mod.id}`, "");
           const label = customLabel || t(mod.labelKey);
           return (
@@ -95,10 +138,50 @@ export function Sidebar() {
             </NavLink>
           );
         })}
+
+        {/* Categories */}
+        {Object.entries(grouped).map(([catId, modules]) => {
+          if (modules.length === 0) return null;
+          return (
+            <div key={catId} className="mt-2 first:mt-0">
+              {!collapsed && (
+                <div className="flex items-center px-2.5 mb-1">
+                  <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+                    {getCategoryLabel(catId)}
+                  </span>
+                </div>
+              )}
+              {collapsed && <div className="h-1" />}
+              {modules.map((mod) => {
+                const customLabel = getSettingValue(settings, `menu_label_${mod.id}`, "");
+                const label = customLabel || t(mod.labelKey);
+                return (
+                  <NavLink
+                    key={mod.id}
+                    to={mod.path}
+                    end={mod.path === "/home"}
+                    className={({ isActive }) =>
+                      cn(
+                        "group flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium transition-all duration-150",
+                        isActive
+                          ? "bg-primary text-primary-foreground shadow-sm"
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted",
+                        collapsed && "justify-center px-2"
+                      )
+                    }
+                  >
+                    <mod.icon className="h-[18px] w-[18px] shrink-0" />
+                    {!collapsed && <span className="truncate" title={label}>{label}</span>}
+                  </NavLink>
+                );
+              })}
+            </div>
+          );
+        })}
       </nav>
 
       {/* Settings at bottom */}
-      <div className="border-t p-2">
+      <div className="border-t p-2 mt-auto">
         <NavLink
           to="/settings"
           className={({ isActive }) =>
