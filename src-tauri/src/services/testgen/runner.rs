@@ -25,6 +25,8 @@ pub struct TestGenRequest {
     pub continue_session: bool,
     #[serde(default)]
     pub ai_provider_json: Option<String>,
+    #[serde(default)]
+    pub task_id: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -217,7 +219,7 @@ pub async fn run_test_gen(
         };
         let handle = tokio::spawn(async move { provider.call_streaming(request, tx).await });
         while let Some(event) = rx.recv().await {
-            match event {
+            match &event {
                 AiEvent::Progress { stage, message } => {
                     let _ = app.emit("testgen-progress", serde_json::json!({"stage": stage, "message": message}));
                 }
@@ -230,6 +232,32 @@ pub async fn run_test_gen(
                 AiEvent::Done => {
                     let _ = app.emit("testgen-stream", serde_json::json!({"kind": "done"}));
                 }
+            }
+            // Also forward to ai-stream with task_id for AiTaskCenter
+            if let Some(ref tid) = req.task_id {
+                let mut ai_payload = serde_json::json!({
+                    "task_id": tid,
+                    "kind": match &event {
+                        AiEvent::Progress { .. } => "progress",
+                        AiEvent::Thinking { .. } => "thinking",
+                        AiEvent::TextDelta { .. } => "text",
+                        AiEvent::Done => "done",
+                    }
+                });
+                match &event {
+                    AiEvent::Progress { stage, message } => {
+                        ai_payload["stage"] = serde_json::Value::String(stage.clone());
+                        ai_payload["message"] = serde_json::Value::String(message.clone());
+                    }
+                    AiEvent::Thinking { tokens } => {
+                        ai_payload["tokens"] = serde_json::json!(tokens);
+                    }
+                    AiEvent::TextDelta { text } => {
+                        ai_payload["text"] = serde_json::Value::String(text.clone());
+                    }
+                    AiEvent::Done => {}
+                }
+                let _ = app.emit("ai-stream", ai_payload);
             }
             if cancel_flag.load(std::sync::atomic::Ordering::SeqCst) {
                 return Err("已取消".to_string());

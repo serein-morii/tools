@@ -70,7 +70,8 @@ export interface TestgenRun {
 
 export const validateGitRepo = (dir: string) => call<RepoInfo>("validate_git_repo", { dir });
 export const listGitBranches = (dir: string) => call<BranchInfo[]>("list_git_branches", { dir });
-export const runTestGen = (req: TestGenRequest) => call<TestGenResult>("run_test_gen", { req });
+export const runTestGen = (config: TestGenRequest & { taskId?: string }) =>
+  call<TestGenResult>("run_test_gen", { req: { ...config, task_id: config.taskId } });
 export const pushBranch = (dir: string, branch: string) => call<string>("push_branch", { dir, branch });
 export const scanProjects = (root: string) => call<ProjectEntry[]>("scan_projects", { root });
 export const getTestgenRuns = (limit?: number) => call<TestgenRun[]>("get_testgen_runs", { limit: limit ?? 50 });
