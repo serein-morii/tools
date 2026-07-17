@@ -86,7 +86,13 @@ export default function TestGenPage() {
   const providersConfig = useAiProvidersConfig();
   const defaultProviderId = useDefaultProviderId();
   const [aiProvider, setAiProvider] = useState<AiProviderConfig>(
-    () => getProviderConfig(providersConfig, defaultProviderId) || providersConfig.providers[0]
+    () => {
+      const saved = getSettingValue(settings, "testgen_ai_provider", "");
+      if (saved) {
+        try { const cfg = JSON.parse(saved) as AiProviderConfig; if (cfg.id) return cfg; } catch { /* ignore */ }
+      }
+      return getProviderConfig(providersConfig, defaultProviderId) || providersConfig.providers[0];
+    }
   );
 
   // Execution state from global context
@@ -341,7 +347,7 @@ export default function TestGenPage() {
 
       {/* Execute + Retry */}
       <div className="flex items-center gap-2">
-        <AiSelector value={aiProvider} onChange={setAiProvider} showModel={false} />
+        <AiSelector value={aiProvider} onChange={(c) => { setAiProvider(c); setSetting("testgen_ai_provider", JSON.stringify(c)); }} showModel={false} />
         <button onClick={onExecuteClick} disabled={!canRun || runStatus === "running"} className="flex items-center gap-1 h-8 px-3 text-xs bg-primary text-primary-foreground rounded-md hover:opacity-90 disabled:opacity-50"><Play className="w-3.5 h-3.5" /> 执行</button>
         {canRetry && <button onClick={startRetry} className="flex items-center gap-1 h-8 px-3 text-xs border border-border rounded-md hover:bg-secondary"><RotateCw className="w-3.5 h-3.5" /> 重试（修复测试）</button>}
       </div>

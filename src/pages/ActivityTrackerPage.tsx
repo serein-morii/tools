@@ -685,8 +685,16 @@ function ReportViewer({
 }) {
   const providersConfig = useAiProvidersConfig();
   const defaultProviderId = useDefaultProviderId();
+  const { data: settings } = useSettings();
+  const updateSetting = useUpdateSetting();
   const [aiProvider, setAiProvider] = useState<AiProviderConfig>(
-    () => getProviderConfig(providersConfig, defaultProviderId) ?? providersConfig.providers[0]
+    () => {
+      const saved = getSettingValue(settings, "ai_summary_model", "");
+      if (saved) {
+        try { const cfg = JSON.parse(saved) as AiProviderConfig; if (cfg.id) return cfg; } catch { /* ignore */ }
+      }
+      return getProviderConfig(providersConfig, defaultProviderId) ?? providersConfig.providers[0];
+    }
   );
   const atc = useAiTaskCenter();
   const [isGenerating, setIsGenerating] = useState(false);
@@ -872,7 +880,7 @@ function ReportViewer({
             ))}
           </select>
           {providersConfig.providers.length > 0 && (
-            <AiSelector value={aiProvider} onChange={setAiProvider} showModel={true} />
+            <AiSelector value={aiProvider} onChange={(c) => { setAiProvider(c); updateSetting.mutate({ key: "ai_summary_model", value: JSON.stringify(c) }); }} showModel={true} />
           )}
           <button
             onClick={() => setGenConfirm(true)}
