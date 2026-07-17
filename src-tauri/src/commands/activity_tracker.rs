@@ -12,6 +12,7 @@ use crate::services::activity::parsers::claude_code::{load_messages, ClaudeMessa
 use crate::services::activity::collector::ActivityCollector;
 use crate::services::activity::reporter::Reporter;
 use crate::services::activity::summarizer::{Summarizer, SummaryMethod};
+use crate::services::ai::{AiProviderConfig, AiRequest, AiEvent, ProviderRegistry};
 
 // ==================== AI Tools ====================
 
@@ -356,27 +357,70 @@ pub async fn generate_report(
     );
 
     let method_label = match summary_method.as_str() {
+        "ai" => format!("AI: {}", summary_tool.as_deref().unwrap_or("claude-cli")),
         "cli" => format!("CLI: {}", summary_tool.as_deref().unwrap_or("claude")),
         "api" => format!("API: {}", summary_tool.as_deref().unwrap_or("anthropic")),
         _ => "手动模式".to_string(),
     };
     emit("summarize", format!("调用 {} 进行总结...", method_label));
 
-    let summary_result = match summary_method.as_str() {
-        "cli" => {
-            let cmd = summary_tool.clone().unwrap_or_else(|| "claude".to_string());
-            Summarizer::summarize_cli_streaming(&cmd, &prompt, &app).await
+    let summary_result = if summary_method == "ai" {
+        // Use unified AI module
+        let provider_id = summary_tool.clone().unwrap_or_else(|| "claude-cli".to_string());
+        let config_str = model.clone().unwrap_or_else(|| "{}".to_string());
+        let config: AiProviderConfig = serde_json::from_str(&config_str)
+            .map_err(|e| format!("Invalid AI config: {}", e))?;
+
+        let registry = ProviderRegistry::new();
+        let provider = registry.get(&provider_id)
+            .ok_or_else(|| format!("Unknown AI provider: {}", provider_id))?;
+
+        let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<AiEvent>();
+        let request = AiRequest {
+            prompt: prompt.clone(),
+            provider_config: config,
+            continue_session: false,
+        };
+        let handle = tokio::spawn(async move { provider.call_streaming(request, tx).await });
+        while let Some(event) = rx.recv().await {
+            match event {
+                AiEvent::Progress { stage, message } => {
+                    let _ = app.emit("report-gen-progress", serde_json::json!({"stage": stage, "message": message}));
+                }
+                AiEvent::Thinking { tokens } => {
+                    let _ = app.emit("report-gen-stream", serde_json::json!({"kind": "thinking", "tokens": tokens}));
+                }
+                AiEvent::TextDelta { text } => {
+                    let _ = app.emit("report-gen-stream", serde_json::json!({"kind": "text", "text": text}));
+                }
+                AiEvent::Done => {
+                    let _ = app.emit("report-gen-stream", serde_json::json!({"kind": "done"}));
+                }
+            }
         }
-        "api" => {
-            let provider = summary_tool.clone().unwrap_or_else(|| "anthropic".to_string());
-            let key = api_key.unwrap_or_default();
-            let m = model.unwrap_or_else(|| {
-                if provider == "anthropic" { "claude-sonnet-4-20250514".to_string() }
-                else { "gpt-4o".to_string() }
-            });
-            Summarizer::summarize(&prompt, &SummaryMethod::Api { provider, api_key: key, model: m }).await
+        handle.await.map_err(|e| format!("AI task error: {}", e))?
+            .map(|r| r.output)
+            .map_err(|e| format!("{}", e))
+    } else if summary_method == "manual" {
+        Ok(prompt.clone())
+    } else {
+        // Legacy backward compat: still support old "cli"/"api" mode
+        match summary_method.as_str() {
+            "cli" => {
+                let cmd = summary_tool.clone().unwrap_or_else(|| "claude".to_string());
+                Summarizer::summarize_cli_streaming(&cmd, &prompt, &app).await
+            }
+            "api" => {
+                let provider = summary_tool.clone().unwrap_or_else(|| "anthropic".to_string());
+                let key = api_key.unwrap_or_default();
+                let m = model.unwrap_or_else(|| {
+                    if provider == "anthropic" { "claude-sonnet-4-20250514".to_string() }
+                    else { "gpt-4o".to_string() }
+                });
+                Summarizer::summarize(&prompt, &SummaryMethod::Api { provider, api_key: key, model: m }).await
+            }
+            _ => Ok(prompt.clone()),
         }
-        _ => Ok(prompt.clone()),
     };
 
     match summary_result {

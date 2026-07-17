@@ -43,12 +43,17 @@ import {
   type SessionDetail,
   type ClaudeMessage,
 } from "../lib/api/activity";
+import { AiSelector } from "@/components/modules/ai/AiSelector";
+import { useAiProvidersConfig, getProviderConfig, useDefaultProviderId } from "@/lib/query/aiQueries";
+import type { AiProviderConfig } from "@/lib/api/ai";
 
 // ==================== Main Page ====================
 
 export default function ActivityTrackerPage() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const { data: settings } = useSettings();
+  const providersConfig = useAiProvidersConfig();
+  const defaultProviderId = useDefaultProviderId();
 
   const tabs = [
     { id: "dashboard", label: "概览", icon: Activity },
@@ -99,21 +104,46 @@ export default function ActivityTrackerPage() {
 
       try {
         const method = getSettingValue?.(settings as any, "ai_summary_method", "cli") ?? "cli";
-        const tool = getSettingValue?.(settings as any, "ai_summary_tool", "claude") ?? "claude";
-        const provider = getSettingValue?.(settings as any, "ai_summary_provider", "anthropic") ?? "anthropic";
-        const apiKey = getSettingValue?.(settings as any, "ai_summary_api_key", "") ?? "";
-        const model = getSettingValue?.(settings as any, "ai_summary_model", "") || undefined;
 
-        await generateReport({
-          reportType,
-          rangeStart: range.start,
-          rangeEnd: range.end,
-          summaryMethod: method,
-          summaryTool: method === "cli" ? tool : provider,
-          apiKey: apiKey || undefined,
-          model,
-          templateId,
-        });
+        if (method === "ai") {
+          // Use unified AI module: read saved provider config from settings, fall back to default
+          const modelStr = getSettingValue?.(settings as any, "ai_summary_model", "");
+          let providerConfig: AiProviderConfig | undefined;
+          if (modelStr) {
+            try { providerConfig = JSON.parse(modelStr) as AiProviderConfig; } catch { /* ignore parse error */ }
+          }
+          if (!providerConfig) {
+            providerConfig = getProviderConfig(providersConfig, defaultProviderId) || providersConfig.providers[0];
+          }
+
+          await generateReport({
+            reportType,
+            rangeStart: range.start,
+            rangeEnd: range.end,
+            summaryMethod: method,
+            summaryTool: providerConfig?.id || defaultProviderId,
+            apiKey: undefined,
+            model: providerConfig ? JSON.stringify(providerConfig) : undefined,
+            templateId,
+          });
+        } else {
+          // Legacy cli / api / manual mode
+          const tool = getSettingValue?.(settings as any, "ai_summary_tool", "claude") ?? "claude";
+          const provider = getSettingValue?.(settings as any, "ai_summary_provider", "anthropic") ?? "anthropic";
+          const apiKey = getSettingValue?.(settings as any, "ai_summary_api_key", "") ?? "";
+          const model = getSettingValue?.(settings as any, "ai_summary_model", "") || undefined;
+
+          await generateReport({
+            reportType,
+            rangeStart: range.start,
+            rangeEnd: range.end,
+            summaryMethod: method,
+            summaryTool: method === "cli" ? tool : provider,
+            apiKey: apiKey || undefined,
+            model,
+            templateId,
+          });
+        }
         setGenStatus("done");
         appendLog("done", "报告已生成并保存");
         setReportsNonce((n) => n + 1);
@@ -125,7 +155,7 @@ export default function ActivityTrackerPage() {
         unlistenStream();
       }
     },
-    [settings, appendLog]
+    [settings, appendLog, providersConfig, defaultProviderId]
   );
 
   const closeGen = useCallback(() => {
@@ -1128,6 +1158,13 @@ function ToolSettings() {
   const getVal = (key: string, fallback: string) =>
     getSettingValue(settings, key, fallback);
 
+  // AI provider state for the new unified AI summary method
+  const providersConfig = useAiProvidersConfig();
+  const defaultProviderId = useDefaultProviderId();
+  const [aiProvider, setAiProvider] = useState<AiProviderConfig>(
+    () => getProviderConfig(providersConfig, defaultProviderId) || providersConfig.providers[0]
+  );
+
   const [hookMsg, setHookMsg] = useState<string | null>(null);
   const [hookBusy, setHookBusy] = useState(false);
   const [rebuilding, setRebuilding] = useState(false);
@@ -1242,16 +1279,28 @@ function ToolSettings() {
 
           {/* 总结方式 */}
           <div className="p-3 border border-border rounded-lg space-y-2">
-            <label className="text-sm font-medium">AI 总结方式</label>
+            <span className="text-xs text-muted-foreground">AI 总结方式</span>
             <select
               className="w-full h-8 rounded-md border border-border bg-background px-3 text-sm"
               value={summaryMethod}
               onChange={(e) => setSetting("ai_summary_method", e.target.value)}
             >
-              <option value="cli">CLI 调用（claude / codex 命令）</option>
-              <option value="api">API 调用（Anthropic / OpenAI）</option>
-              <option value="manual">手动模式（生成 Prompt，自行复制粘贴）</option>
+              <option value="ai">AI 自动总结（使用下方选择的 AI）</option>
+              <option value="cli">CLI 调用（旧模式，兼容）</option>
+              <option value="manual">手动模式（仅生成 Prompt）</option>
             </select>
+
+            {summaryMethod === "ai" && (
+              <div className="mt-2">
+                <AiSelector
+                  value={aiProvider}
+                  onChange={(config) => {
+                    setAiProvider(config);
+                    setSetting("ai_summary_model", JSON.stringify(config));
+                  }}
+                />
+              </div>
+            )}
 
             {summaryMethod === "cli" && (
               <select
@@ -1262,32 +1311,6 @@ function ToolSettings() {
                 <option value="claude">Claude Code (claude CLI)</option>
                 <option value="codex">CodeX CLI</option>
               </select>
-            )}
-
-            {summaryMethod === "api" && (
-              <div className="space-y-2 mt-2">
-                <select
-                  className="w-full h-8 rounded-md border border-border bg-background px-3 text-sm"
-                  value={getVal("ai_summary_provider", "anthropic")}
-                  onChange={(e) => setSetting("ai_summary_provider", e.target.value)}
-                >
-                  <option value="anthropic">Anthropic (Claude API)</option>
-                  <option value="openai">OpenAI (GPT API)</option>
-                </select>
-                <input
-                  placeholder="API Key（加密存储）"
-                  type="password"
-                  className="w-full h-8 rounded-md border border-border bg-background px-3 text-sm"
-                  defaultValue={getVal("ai_summary_api_key", "")}
-                  onBlur={(e) => { if (e.target.value) setSetting("ai_summary_api_key", e.target.value); }}
-                />
-                <input
-                  placeholder="模型名（默认: claude-sonnet-4-20250514）"
-                  className="w-full h-8 rounded-md border border-border bg-background px-3 text-sm"
-                  defaultValue={getVal("ai_summary_model", "")}
-                  onBlur={(e) => { if (e.target.value) setSetting("ai_summary_model", e.target.value); }}
-                />
-              </div>
             )}
           </div>
 
