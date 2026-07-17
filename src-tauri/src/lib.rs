@@ -5,6 +5,7 @@ mod services;
 
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
+use std::sync::atomic::AtomicBool;
 use database::{Database, init_schema, migrate_default_templates};
 use services::scheduler::{start_scheduler, start_gitlab_scheduler};
 use services::activity::collector::ActivityCollector;
@@ -66,6 +67,7 @@ pub fn run() {
         ))
         .manage(db)
         .manage(collector)
+        .manage(Arc::new(AtomicBool::new(false)))
         .invoke_handler(tauri::generate_handler![
             commands::get_tasks,
             commands::get_task,
@@ -181,6 +183,9 @@ pub fn run() {
             commands::list_git_branches,
             commands::run_test_gen,
             commands::push_branch,
+            commands::scan_projects,
+            commands::get_testgen_runs,
+            commands::cancel_test_gen,
             commands::get_today_range,
             commands::get_date_range,
             commands::setup_hooks,

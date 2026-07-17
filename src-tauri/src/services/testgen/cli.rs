@@ -20,6 +20,7 @@ pub async fn run_claude_streaming(
     prompt: &str,
     cwd: &Path,
     app: &AppHandle,
+    cancel: &std::sync::Arc<std::sync::atomic::AtomicBool>,
 ) -> Result<String, String> {
     let args = claude_args();
     let mut cmd = if cfg!(target_os = "windows") {
@@ -51,6 +52,9 @@ pub async fn run_claude_streaming(
     let mut last_thinking = 0i64;
 
     while let Ok(Some(line)) = reader.next_line().await {
+        if cancel.load(std::sync::atomic::Ordering::SeqCst) {
+            return Err("已取消".to_string());
+        }
         let val: serde_json::Value = match serde_json::from_str(&line) {
             Ok(v) => v,
             Err(_) => continue,
