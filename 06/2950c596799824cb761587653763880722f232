@@ -1,0 +1,24 @@
+src-tauri/src/services/testgen/runner.rs
+  s_df78d3f297f53f::t_1093b8e77b69ee 26-27
+  s_df78d3f297f53f::t_152998c38fd3de 199-243
+src/pages/TestGenPage.tsx
+  s_df78d3f297f53f::t_b2a0aa83cacc5e 84-90
+  s_df78d3f297f53f::t_7bfb0e620a91c7 327-332
+  s_df78d3f297f53f::t_6f42a9b1288b3d 186
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "062950c596799824cb761587653763880722f232",
+  "prompts": {},
+  "sessions": {
+    "s_df78d3f297f53f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "775d8944-fc8a-4efb-b48d-410c29dfa631",
+        "model": "deepseek-v4-pro"
+      },
+      "human_author": "pengchenghui <pengchenghui@jtexpress.com>"
+    }
+  }
+}
