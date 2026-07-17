@@ -5,3 +5,4 @@ pub mod sonar;
 pub mod walkin;
 pub mod activity;
 pub mod testgen;
+pub mod ai;
