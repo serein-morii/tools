@@ -63,7 +63,9 @@
     "sonar": "単体テスト",
     "aiCoverage": "AI カバレッジ",
     "organizer": "デスクトップ整理",
-    "activityTracker": "AI 活動"
+    "activityTracker": "AI 活動",
+    "aesTool": "AES暗号化",
+    "testgen": "テスト生成"
   },
   "dashboard": {
     "title": "ダッシュボード",

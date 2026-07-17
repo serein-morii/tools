@@ -64,7 +64,9 @@
     "aiCoverage": "AI Coverage",
     "dts": "DTS Tasks",
     "organizer": "Desktop Organizer",
-    "activityTracker": "AI Activity"
+    "activityTracker": "AI Activity",
+    "aesTool": "AES Tool",
+    "testgen": "Test Gen"
   },
   "dashboard": {
     "title": "Dashboard",

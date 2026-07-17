@@ -1,6 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import {
-  Bell, Settings, Home, GitBranch, FileCode, Brain, Database, FolderOpen, Activity,
+  Bell, Settings, Home, GitBranch, FileCode, Brain, Database, FolderOpen, Activity, ShieldCheck, FlaskConical,
 } from "lucide-react";
 
 export interface ModuleConfig {
@@ -79,6 +79,24 @@ export const allModules: ModuleConfig[] = [
     icon: Activity,
     description: "AI 工具活动追踪与报告",
     settingKey: "page_activity_tracker_visible",
+  },
+  {
+    id: "testgen",
+    path: "/testgen",
+    labelKey: "nav.testgen",
+    label: "单测执行",
+    icon: FlaskConical,
+    description: "AI 自动写单测并提交",
+    settingKey: "page_testgen_visible",
+  },
+  {
+    id: "aes-tool",
+    path: "/aes-tool",
+    labelKey: "nav.aesTool",
+    label: "AES加解密",
+    icon: ShieldCheck,
+    description: "AES 加解密工具，多密钥管理",
+    settingKey: "page_aes_tool_visible",
   },
   {
     id: "reminder",

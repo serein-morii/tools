@@ -24,6 +24,8 @@ const AiCoveragePage = lazy(() => import("@/pages/AiCoveragePage").then((m) => (
 const DtsTaskManagerPage = lazy(() => import("@/pages/DtsTaskManagerPage").then((m) => ({ default: m.DtsTaskManagerPage })));
 const OrganizerPage = lazy(() => import("@/pages/OrganizerPage").then((m) => ({ default: m.OrganizerPage })));
 const ActivityTrackerPage = lazy(() => import("@/pages/ActivityTrackerPage").then((m) => ({ default: m.default })));
+const AesToolPage = lazy(() => import("@/pages/AesToolPage").then((m) => ({ default: m.default })));
+const TestGenPage = lazy(() => import("@/pages/TestGenPage").then((m) => ({ default: m.default })));
 
 /** Wrap a route element with an ErrorBoundary so a crash in one page doesn't take down the whole app. */
 function withErrorBoundary(children: React.ReactNode) {
@@ -112,6 +114,8 @@ function App() {
             <Route path="dts" element={<PageGuard settingKey="page_dts_visible">{withErrorBoundary(<DtsTaskManagerPage />)}</PageGuard>} />
             <Route path="organizer" element={<PageGuard settingKey="page_organizer_visible">{withErrorBoundary(<OrganizerPage />)}</PageGuard>} />
             <Route path="activity-tracker" element={<PageGuard settingKey="page_activity_tracker_visible">{withErrorBoundary(<ActivityTrackerPage />)}</PageGuard>} />
+            <Route path="aes-tool" element={<PageGuard settingKey="page_aes_tool_visible">{withErrorBoundary(<AesToolPage />)}</PageGuard>} />
+            <Route path="testgen" element={<PageGuard settingKey="page_testgen_visible">{withErrorBoundary(<TestGenPage />)}</PageGuard>} />
             <Route path="settings" element={withErrorBoundary(<SettingsPage />)} />
           </Route>
         </Routes>

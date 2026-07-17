@@ -63,7 +63,9 @@
     "sonar": "단위 테스트",
     "aiCoverage": "AI 커버리지",
     "organizer": "바탕화면 정리",
-    "activityTracker": "AI 활동"
+    "activityTracker": "AI 활동",
+    "aesTool": "AES 암호화",
+    "testgen": "테스트 생성"
   },
   "dashboard": {
     "title": "대시보드",
