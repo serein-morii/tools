@@ -202,6 +202,9 @@ pub async fn run_test_gen(
         let config: AiProviderConfig = serde_json::from_str(provider_config_json)
             .map_err(|e| format!("Invalid AI config: {}", e))?;
         let provider_id = config.id.clone();
+        // Note: Creates a new registry instance. The Tauri-managed singleton is available via
+        // app state but the runner doesn't currently accept it as a parameter.
+        // Functionally identical since providers are stateless.
         let registry = ProviderRegistry::new();
         let provider = registry.get(&provider_id)
             .ok_or_else(|| format!("Unknown AI provider: {}", provider_id))?;

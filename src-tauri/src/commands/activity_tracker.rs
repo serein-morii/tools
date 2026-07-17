@@ -371,6 +371,9 @@ pub async fn generate_report(
         let config: AiProviderConfig = serde_json::from_str(&config_str)
             .map_err(|e| format!("Invalid AI config: {}", e))?;
 
+        // Note: Creates a new registry instance. The Tauri-managed singleton is available via
+        // app state but the reporter doesn't currently accept it as a parameter.
+        // Functionally identical since providers are stateless.
         let registry = ProviderRegistry::new();
         let provider = registry.get(&provider_id)
             .ok_or_else(|| format!("Unknown AI provider: {}", provider_id))?;

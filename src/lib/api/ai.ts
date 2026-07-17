@@ -45,6 +45,11 @@ export async function callAi(params: {
   });
 }
 
+/** Derive provider type from provider ID. CLI providers end with "-cli", API providers end with "-api". */
+export function getProviderType(id: string): "cli" | "api" {
+  return id.endsWith("-api") ? "api" : "cli";
+}
+
 export function getDefaultProvidersConfig(): AiProvidersConfig {
   return {
     providers: [

@@ -4,7 +4,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useSettings, useUpdateSetting, getSettingValue } from "@/lib/query/settingsQueries";
 import { useAiProvidersConfig, useSaveAiProvidersConfig, useDefaultProviderId, useSaveDefaultProvider, getEnabledProviders } from "@/lib/query/aiQueries";
-import type { AiProviderConfig } from "@/lib/api/ai";
+import { getProviderType, type AiProviderConfig } from "@/lib/api/ai";
 import { useQueryClient } from "@tanstack/react-query";
 import { open, save } from "@tauri-apps/plugin-dialog";
 import { invoke } from "@tauri-apps/api/core";
@@ -915,11 +915,6 @@ function ShortcutList({ settings, updateSetting }: { settings: any; updateSettin
       })}
     </div>
   );
-}
-
-/** Derive provider type from provider ID. CLI providers end with "-cli", API providers end with "-api". */
-function getProviderType(id: string): "cli" | "api" {
-  return id.endsWith("-api") ? "api" : "cli";
 }
 
 function AISettingsCard() {

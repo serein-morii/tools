@@ -1,4 +1,4 @@
-import { useEffect, type FC } from "react";
+import { type FC } from "react";
 import {
   useAiProvidersConfig,
   useDefaultProviderId,
@@ -6,11 +6,7 @@ import {
   getProviderConfig,
 } from "@/lib/query/aiQueries";
 import type { AiProviderConfig } from "@/lib/api/ai";
-
-/** Derive provider type from provider ID. CLI providers end with "-cli", API providers end with "-api". */
-function getProviderType(id: string): "cli" | "api" {
-  return id.endsWith("-api") ? "api" : "cli";
-}
+import { getProviderType } from "@/lib/api/ai";
 
 interface AiSelectorProps {
   value: AiProviderConfig;
@@ -22,14 +18,6 @@ export const AiSelector: FC<AiSelectorProps> = ({ value, onChange, showModel = t
   const config = useAiProvidersConfig();
   const defaultId = useDefaultProviderId();
   const providers = getEnabledProviders(config);
-
-  // Initialize from default if no value set
-  useEffect(() => {
-    if (!value?.id) {
-      const def = getProviderConfig(config, defaultId) || providers[0];
-      if (def) onChange(def);
-    }
-  }, []);
 
   const handleProviderChange = (id: string) => {
     const p = getProviderConfig(config, id);
@@ -47,6 +35,7 @@ export const AiSelector: FC<AiSelectorProps> = ({ value, onChange, showModel = t
         onChange={(e) => handleProviderChange(e.target.value)}
         className="h-8 rounded-md border border-border bg-background px-2 text-xs min-w-[140px]"
       >
+        {!value?.id && <option value="" disabled>请选择 AI 提供商</option>}
         {providers.length === 0 && <option value="">无可用 AI</option>}
         {providers.map((p) => (
           <option key={p.id} value={p.id}>
