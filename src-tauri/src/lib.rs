@@ -68,6 +68,7 @@ pub fn run() {
         .manage(db)
         .manage(collector)
         .manage(Arc::new(AtomicBool::new(false)))
+        .manage(Arc::new(services::ai::ProviderRegistry::new()))
         .invoke_handler(tauri::generate_handler![
             commands::get_tasks,
             commands::get_task,
@@ -191,6 +192,9 @@ pub fn run() {
             commands::setup_hooks,
             commands::remove_hooks,
             commands::reset_activity_data,
+            // AI
+            commands::list_ai_providers,
+            commands::call_ai,
         ])
         .setup(|app| {
             // Start activity collector (tokio runtime is active here)
