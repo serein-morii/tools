@@ -1,0 +1,155 @@
+src/pages/TemplatesPage.tsx
+  s_661e06f14b3ae2::t_a0c6562ba87a00 92
+  s_661e06f14b3ae2::t_df519e04ce03b4 98
+  s_661e06f14b3ae2::t_4c75ef7239f3af 90,93,101,108
+src/pages/OrganizerPage.tsx
+  s_661e06f14b3ae2::t_137fbe50db9497 717
+  s_661e06f14b3ae2::t_c0116f90dc4ca6 785,847
+  s_661e06f14b3ae2::t_15b1f04aa527dd 391
+src/lib/api/testgen.ts
+  s_661e06f14b3ae2::t_158bb3898f8b59 31,43
+src/components/modules/reminder/ChannelList.tsx
+  s_661e06f14b3ae2::t_bf0f76e90b1c32 4
+  s_661e06f14b3ae2::t_6b5a907db8f41e 16-21
+src/pages/HistoryPage.tsx
+  s_661e06f14b3ae2::t_e9f26ef8b9aadb 63
+  s_661e06f14b3ae2::t_d70c21c3105dbe 57
+  s_661e06f14b3ae2::t_58e32dd4b77f30 110-115
+  s_661e06f14b3ae2::t_c80b0934764d4a 55,58,68
+  s_661e06f14b3ae2::t_2df5dd9980274b 156-157
+src/pages/GitLabHistoryPage.tsx
+  s_661e06f14b3ae2::t_cf5a9d982b128f 450
+  s_661e06f14b3ae2::t_c498831e5520b7 730
+  s_661e06f14b3ae2::t_af59766c4f84d2 727,729
+  s_661e06f14b3ae2::t_0447664eda3dee 747,760
+src/pages/TestGenPage.tsx
+  s_661e06f14b3ae2::t_52ba34e8d5f946 42
+  s_661e06f14b3ae2::t_8ee89da2a3ccfc 156
+  s_661e06f14b3ae2::t_51d39d81af4ec6 475
+  s_661e06f14b3ae2::t_85b38f7e77c4fb 57-60
+  s_661e06f14b3ae2::t_f01b1217526bc1 282-283,285
+  s_661e06f14b3ae2::t_fad4336c0a891f 240,243,246-247
+  s_661e06f14b3ae2::t_15276a1104b8a0 276-281,286-291
+  s_661e06f14b3ae2::t_a933221056dee1 97-98
+  s_661e06f14b3ae2::t_ec542720119665 220-226
+  s_661e06f14b3ae2::t_f02b3bd148c9aa 438-459
+  s_661e06f14b3ae2::t_86d7acef47b2e8 194-197,208-209,217
+  s_661e06f14b3ae2::t_b45afe00b50b8f 236,241-242,244-245,248
+  s_661e06f14b3ae2::t_b9ec1eee9c4c56 155,157,161-174
+  s_661e06f14b3ae2::t_30214763c39670 284
+  s_661e06f14b3ae2::t_0ef699ad1c30e4 175
+  s_661e06f14b3ae2::t_cb1f14130d9c74 249
+src/pages/FeaturesPage.tsx
+  s_661e06f14b3ae2::t_08055059125c65 24
+  s_661e06f14b3ae2::t_5a1c7316fa1a7f 25
+src/pages/DtsTaskManagerPage.tsx
+  s_661e06f14b3ae2::t_425a1d186448e0 362
+  s_661e06f14b3ae2::t_7e9891d5c9b878 3028,3031
+  s_661e06f14b3ae2::t_ec4a15a7dc70ab 417
+  s_661e06f14b3ae2::t_6d31b637d05bb5 612
+  s_661e06f14b3ae2::t_25c4d7190ecef2 345
+  s_661e06f14b3ae2::t_ed5ce46c7e7430 440,1225,1292,1336,1391,1454,1594,1598,1603,1634,1969,2274,2725,2729,2733,3211
+src/pages/SonarPromptPage.tsx
+  s_661e06f14b3ae2::t_6387fd2281b18b 889
+  s_661e06f14b3ae2::t_37f7b10e342d45 1537,1655,1712
+  s_661e06f14b3ae2::t_5359f505fc042c 1419-1422
+  s_661e06f14b3ae2::t_42da54fb9e0f81 1636,1640
+  s_661e06f14b3ae2::t_553102fb8cfcb8 916
+  s_661e06f14b3ae2::t_a334d2a84121fd 1111-1114
+  s_661e06f14b3ae2::t_fc4f4a75f9906b 1667-1669,1671-1672
+  s_661e06f14b3ae2::t_ba7f986f1d98c0 1125
+  s_661e06f14b3ae2::t_97210128bc0228 898
+  s_661e06f14b3ae2::t_e4d5883c34f15b 888
+  s_661e06f14b3ae2::t_98e076cd7f5c17 904
+  s_661e06f14b3ae2::t_631da0096cd344 1901
+src/components/modules/reminder/TemplateList.tsx
+  s_661e06f14b3ae2::t_2f220718e7f4de 4
+  s_661e06f14b3ae2::t_5a25c63c18d8d2 17-22
+src/pages/AesToolPage.tsx
+  s_661e06f14b3ae2::t_ebee1893161651 293-316
+src/pages/TaskReminderPage.tsx
+  s_661e06f14b3ae2::t_f69c7f65f790d9 84,112,139
+  s_661e06f14b3ae2::t_85dd51caa32003 85,113
+  s_661e06f14b3ae2::t_0cdb08f0956766 187
+  s_661e06f14b3ae2::t_96dedbfb7ef269 155
+  s_661e06f14b3ae2::t_1494b374bbc74d 144
+src/pages/AiCoveragePage.tsx
+  s_661e06f14b3ae2::t_c67b605f64bf43 849
+  s_661e06f14b3ae2::t_6474c53e4e7cac 1005-1010
+  s_661e06f14b3ae2::t_9baf8985301b94 877
+  s_661e06f14b3ae2::t_42652d8934e9fc 864
+  s_661e06f14b3ae2::t_54ac0701757e8c 848
+  s_661e06f14b3ae2::t_b98cb02674df18 858
+  s_661e06f14b3ae2::t_a6fbf56f0838e4 873
+src/pages/DashboardPage.tsx
+  s_661e06f14b3ae2::t_865315dabc30c1 123,143
+  s_661e06f14b3ae2::t_33ed3d147ab633 124
+  s_661e06f14b3ae2::t_0526c5cb981cef 228,287,353,414,459,512
+src/pages/GitLabOverviewPage.tsx
+  s_661e06f14b3ae2::t_8c172f62ba1953 992-994,996-997
+  s_661e06f14b3ae2::t_469bf14370c78e 117
+  s_661e06f14b3ae2::t_5d17ba933823c2 945
+  s_661e06f14b3ae2::t_44517f4f0a2be3 940
+  s_661e06f14b3ae2::t_eafd8cf03f29ff 939
+  s_661e06f14b3ae2::t_3729ad6e23b8d6 917-919,921-924
+src-tauri/src/services/testgen/cli.rs
+  s_661e06f14b3ae2::t_8e6201c417ef19 7-20
+  s_661e06f14b3ae2::t_ce738a3fff463b 31,33
+  s_661e06f14b3ae2::t_956bfe3b6e23ff 129,132-138
+src-tauri/src/services/testgen/runner.rs
+  s_661e06f14b3ae2::t_11eb830ef9ff05 296
+  s_661e06f14b3ae2::t_dac8376890b50b 208-221
+  s_661e06f14b3ae2::t_46205731f3fa3d 43-63,222
+  s_661e06f14b3ae2::t_52c4827dc468d2 198
+  s_661e06f14b3ae2::t_76927c81be6998 24-25,38-40
+  s_661e06f14b3ae2::t_7331f1a3606f7e 252
+  s_661e06f14b3ae2::t_854bee50ecdb51 301
+  s_661e06f14b3ae2::t_24b108b9de8aea 292
+  s_661e06f14b3ae2::t_557159359c840e 275
+  s_661e06f14b3ae2::t_f3606133d9db26 41-42
+  s_661e06f14b3ae2::t_b5f97414c761c4 223
+src/pages/ActivityTrackerPage.tsx
+  s_661e06f14b3ae2::t_8588dcb09648a0 145-148
+  s_661e06f14b3ae2::t_84b9a7d6abdc5a 139-144,150-165
+  s_661e06f14b3ae2::t_fb9fd78af96e7f 149
+src/pages/SettingsPage.tsx
+  s_661e06f14b3ae2::t_056a7ffb14952c 202,249,315,337,357,383,497
+  s_661e06f14b3ae2::t_c51eb6cc3435aa 185
+  s_661e06f14b3ae2::t_b1ce53d297d892 288
+  s_661e06f14b3ae2::t_62c99b0e452542 56,58-59,82,84-85,169-172
+  s_661e06f14b3ae2::t_d7b5c5f2613946 57,83
+src/pages/ChannelsPage.tsx
+  s_661e06f14b3ae2::t_532066445ab39c 67
+  s_661e06f14b3ae2::t_ba58cc5c19043f 61
+  s_661e06f14b3ae2::t_0c51972d3a8705 59,62,70,78
+src/components/modules/gitlab/GitLabLayout.tsx
+  s_661e06f14b3ae2::t_3327da9bcd5308 17
+src/components/modules/gitlab/UnitBoardCard.tsx
+  s_661e06f14b3ae2::t_9bbc9eb842cbc2 206
+src/components/modules/reminder/ChannelCard.tsx
+  s_661e06f14b3ae2::t_9800441584bec4 121,125,131,133,139,142
+src/components/modules/reminder/ReminderLayout.tsx
+  s_661e06f14b3ae2::t_c216c122154d38 19
+src/components/modules/reminder/TaskCard.tsx
+  s_661e06f14b3ae2::t_fc9597b842d24c 146,149,175,177,183,186
+src/components/modules/reminder/TaskList.tsx
+  s_661e06f14b3ae2::t_57105a67d1f4c3 19-20,22-23
+src/components/modules/reminder/TemplateCard.tsx
+  s_661e06f14b3ae2::t_d5a6b770fb1644 60,62,68,70
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "9cfb3da091aefac80a1f13e9dfa009a9226130c2",
+  "prompts": {},
+  "sessions": {
+    "s_661e06f14b3ae2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "964be603-748d-4298-99f7-2a6dd4d78f9b",
+        "model": "deepseek-v4-pro"
+      },
+      "human_author": "pengchenghui <pengchenghui@jtexpress.com>"
+    }
+  }
+}
