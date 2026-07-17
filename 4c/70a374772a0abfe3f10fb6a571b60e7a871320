@@ -1,0 +1,20 @@
+src/pages/SonarPromptPage.tsx
+  s_a4d226eec38498::t_21e998deaca429 2
+  s_a4d226eec38498::t_cf0015a5464daf 334,1413-1421
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "4c70a374772a0abfe3f10fb6a571b60e7a871320",
+  "prompts": {},
+  "sessions": {
+    "s_a4d226eec38498": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7dfa4fc2-893d-481a-96be-d1d943c7d0b1",
+        "model": "glm-5.2"
+      },
+      "human_author": "pengchenghui <pengchenghui@jtexpress.com>"
+    }
+  }
+}
