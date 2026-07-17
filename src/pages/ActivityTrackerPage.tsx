@@ -1518,7 +1518,7 @@ function ChatView() {
 
     const taskId = `chat-${Date.now()}`;
     let accumulated = "";
-    const unlisten = listen<{ task_id: string; kind: string; tokens?: number; text?: string }>(
+    const unlisten = await listen<{ task_id: string; kind: string; tokens?: number; text?: string }>(
       "ai-stream",
       (e) => {
         if (e.payload.task_id !== taskId) return;
@@ -1542,7 +1542,7 @@ function ChatView() {
     } catch (e) {
       setMessages(prev => [...prev, { role: "assistant", content: `错误: ${String(e)}` }]);
     } finally {
-      (await unlisten)();
+      unlisten();
       setStreaming("");
       setThinking(null);
       setSending(false);
