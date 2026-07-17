@@ -16,6 +16,7 @@ pub async fn list_ai_providers(
 pub async fn call_ai(
     app: AppHandle,
     registry: State<'_, Arc<ProviderRegistry>>,
+    task_id: String,
     provider_id: String,
     prompt: String,
     config_json: String,
@@ -36,18 +37,20 @@ pub async fn call_ai(
         continue_session,
     };
 
-    // Spawn the AI call, forwarding events to frontend
     let app_handle = app.clone();
     let provider_clone = provider.clone();
+    let tid = task_id.clone();
 
     let handle = tokio::spawn(async move {
         provider_clone.call_streaming(request, tx).await
     });
 
-    // Forward events to frontend
     while let Some(event) = rx.recv().await {
-        let serialized = serde_json::to_value(&event).unwrap_or_default();
-        let _ = app_handle.emit("ai-stream", serialized);
+        let mut payload = serde_json::to_value(&event).unwrap_or_default();
+        if let Some(obj) = payload.as_object_mut() {
+            obj.insert("task_id".to_string(), serde_json::Value::String(tid.clone()));
+        }
+        let _ = app_handle.emit("ai-stream", payload);
     }
 
     handle.await.map_err(|e| format!("Task join error: {}", e))?
