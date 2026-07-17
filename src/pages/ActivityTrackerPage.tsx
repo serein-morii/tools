@@ -1633,12 +1633,8 @@ function ChatView() {
           ))}
           {hasStreaming && (
             <div className="flex justify-start">
-              <div className="bg-muted rounded-lg px-3 py-2 text-sm max-w-[80%]">
-                {thinking !== null && streamTextRef.current.length === 0 && (
-                  <span className="text-amber-500 flex items-center gap-2">
-                    <RefreshCw className="w-3 h-3 animate-spin" /> 思考中... {thinking} tokens
-                  </span>
-                )}
+              <div className="bg-muted rounded-lg px-3 py-2 text-sm max-w-[80%] min-w-[200px]">
+                <ThinkingSection thinking={thinking} hasText={streamTextRef.current.length > 0} />
                 <div ref={streamElRef} className="whitespace-pre-wrap" />
                 {streamTextRef.current.length > 0 && <span className="animate-pulse">|</span>}
               </div>
@@ -1669,6 +1665,34 @@ function ChatView() {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function ThinkingSection({ thinking, hasText }: { thinking: number | null; hasText: boolean }) {
+  const [open, setOpen] = useState(true);
+  const wasThinking = useRef(false);
+  if (thinking !== null) wasThinking.current = true;
+  const collapsed = hasText || (wasThinking.current && thinking === null);
+  // Auto-collapse when text starts streaming
+  useEffect(() => { if (hasText) setOpen(false); }, [hasText]);
+
+  if (thinking === null && !wasThinking.current) return null;
+
+  return (
+    <div className="mb-1">
+      <button onClick={() => setOpen(!open)} className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors">
+        <span className="text-[10px]">{open ? "▾" : "▸"}</span>
+        <RefreshCw className={`w-3 h-3 ${thinking !== null ? "animate-spin" : ""} text-amber-500`} />
+        <span className={thinking !== null ? "text-amber-500" : ""}>
+          思考过程 {thinking !== null ? `(${thinking} tokens)` : collapsed ? "(已完成)" : ""}
+        </span>
+      </button>
+      {open && (
+        <div className="mt-1 pl-4 text-[11px] text-muted-foreground/70 border-l-2 border-muted-foreground/20 italic">
+          {thinking !== null ? "正在分析你的问题..." : "思考完成"}
+        </div>
+      )}
     </div>
   );
 }
