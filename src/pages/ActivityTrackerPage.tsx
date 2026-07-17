@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback, useRef, type ReactNode } from "react";
-import { Activity, History, FileText, Settings, RefreshCw, Zap, Download, FileCode, Minus, X, LayoutTemplate } from "lucide-react";
+import { Activity, History, FileText, Settings, RefreshCw, Zap, Download, FileCode, LayoutTemplate } from "lucide-react";
 import { save } from "@tauri-apps/plugin-dialog";
-import { listen } from "@tauri-apps/api/event";
 import { useSettings, useUpdateSetting, getSettingValue } from "../lib/query/settingsQueries";
 import {
   getTodayStats,
@@ -45,6 +44,7 @@ import {
 } from "../lib/api/activity";
 import { AiSelector } from "@/components/modules/ai/AiSelector";
 import { useAiProvidersConfig, getProviderConfig, useDefaultProviderId } from "@/lib/query/aiQueries";
+import { useAiTaskCenter } from "@/lib/AiTaskCenter";
 import type { AiProviderConfig } from "@/lib/api/ai";
 
 // ==================== Main Page ====================
@@ -63,54 +63,23 @@ export default function ActivityTrackerPage() {
     { id: "settings", label: "设置", icon: Settings },
   ];
 
-  // ----- Report generation state (page-level so it survives tab switches) -----
-  const [genOpen, setGenOpen] = useState(false);
-  const [genMinimized, setGenMinimized] = useState(false);
-  const [genLogs, setGenLogs] = useState<GenLog[]>([]);
-  const [genStatus, setGenStatus] = useState<GenStatus>("idle");
-  const [genThinking, setGenThinking] = useState<number | null>(null);
-  const [genText, setGenText] = useState("");
   const [reportsNonce, setReportsNonce] = useState(0);
-
-  const appendLog = useCallback((stage: string, text: string) => {
-    setGenLogs((prev) => [...prev, { time: Date.now(), stage, text }]);
-  }, []);
 
   const startGeneration = useCallback(
     async (
       reportType: "daily" | "weekly" | "monthly",
       range: { start: number; end: number },
-      templateId?: string
+      templateId?: string,
+      taskId?: string,
     ) => {
-      setGenLogs([]);
-      setGenThinking(null);
-      setGenText("");
-      setGenStatus("generating");
-      setGenOpen(true);
-      setGenMinimized(false);
-
-      const unlistenProgress = await listen<{ stage: string; message: string }>(
-        "report-gen-progress",
-        (e) => appendLog(e.payload.stage, e.payload.message)
-      );
-      const unlistenStream = await listen<{ kind: string; text?: string; tokens?: number }>(
-        "report-gen-stream",
-        (e) => {
-          const p = e.payload;
-          if (p.kind === "thinking") setGenThinking(p.tokens ?? 0);
-          else if (p.kind === "text") setGenText(p.text ?? "");
-        }
-      );
-
       try {
         const method = getSettingValue?.(settings as any, "ai_summary_method", "cli") ?? "cli";
 
         if (method === "ai") {
-          // Use unified AI module: read saved provider config from settings, fall back to default
           const modelStr = getSettingValue?.(settings as any, "ai_summary_model", "");
           let providerConfig: AiProviderConfig | undefined;
           if (modelStr) {
-            try { providerConfig = JSON.parse(modelStr) as AiProviderConfig; } catch { /* ignore parse error */ }
+            try { providerConfig = JSON.parse(modelStr) as AiProviderConfig; } catch { /* ignore */ }
           }
           if (!providerConfig) {
             providerConfig = getProviderConfig(providersConfig, defaultProviderId) || providersConfig.providers[0];
@@ -125,9 +94,9 @@ export default function ActivityTrackerPage() {
             apiKey: undefined,
             model: providerConfig ? JSON.stringify(providerConfig) : undefined,
             templateId,
+            taskId,
           });
         } else {
-          // Legacy cli / api / manual mode
           const tool = getSettingValue?.(settings as any, "ai_summary_tool", "claude") ?? "claude";
           const provider = getSettingValue?.(settings as any, "ai_summary_provider", "anthropic") ?? "anthropic";
           const apiKey = getSettingValue?.(settings as any, "ai_summary_api_key", "") ?? "";
@@ -142,26 +111,16 @@ export default function ActivityTrackerPage() {
             apiKey: apiKey || undefined,
             model,
             templateId,
+            taskId,
           });
         }
-        setGenStatus("done");
-        appendLog("done", "报告已生成并保存");
         setReportsNonce((n) => n + 1);
-      } catch (e) {
-        setGenStatus("error");
-        appendLog("error", String(e));
-      } finally {
-        unlistenProgress();
-        unlistenStream();
+      } catch (_e) {
+        setReportsNonce((n) => n + 1); // still refresh to show any partial reports
       }
     },
-    [settings, appendLog, providersConfig, defaultProviderId]
+    [settings, providersConfig, defaultProviderId]
   );
-
-  const closeGen = useCallback(() => {
-    setGenOpen(false);
-    setGenMinimized(false);
-  }, []);
 
   return (
     <div className="flex flex-col h-full">
@@ -201,24 +160,12 @@ export default function ActivityTrackerPage() {
         {activeTab === "dashboard" && <Dashboard />}
         {activeTab === "sessions" && <SessionList />}
         {activeTab === "reports" && (
-          <ReportViewer onGenerate={startGeneration} reportsNonce={reportsNonce} genStatus={genStatus} />
+          <ReportViewer onGenerate={startGeneration} reportsNonce={reportsNonce} />
         )}
         {activeTab === "templates" && <TemplateManager />}
         {activeTab === "settings" && <ToolSettings />}
       </div>
 
-      {/* Generation modal / floating chip - page-level, visible on every tab */}
-      <ReportGenModal
-        open={genOpen}
-        minimized={genMinimized}
-        status={genStatus}
-        logs={genLogs}
-        thinking={genThinking}
-        text={genText}
-        onMinimize={() => setGenMinimized(true)}
-        onRestore={() => setGenMinimized(false)}
-        onClose={closeGen}
-      />
     </div>
   );
 }
@@ -724,140 +671,26 @@ function rangeForWeek(val: string): { start: number; end: number } {
   return { start: mon.getTime(), end: sun.getTime() };
 }
 
-type GenStatus = "idle" | "generating" | "done" | "error";
-interface GenLog { time: number; stage: string; text: string }
-
-function ReportGenModal({
-  open, minimized, status, logs, thinking, text, onMinimize, onRestore, onClose,
-}: {
-  open: boolean;
-  minimized: boolean;
-  status: GenStatus;
-  logs: GenLog[];
-  thinking: number | null;
-  text: string;
-  onMinimize: () => void;
-  onRestore: () => void;
-  onClose: () => void;
-}) {
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const [displayedText, setDisplayedText] = useState("");
-
-  // Reveal the streaming text gradually for a live "typing" effect.
-  useEffect(() => {
-    if (!text) { setDisplayedText(""); return; }
-    setDisplayedText("");
-    let i = 0;
-    const total = text.length;
-    const step = Math.max(2, Math.ceil(total / 240));
-    const id = setInterval(() => {
-      i += step;
-      if (i >= total) { setDisplayedText(text); clearInterval(id); }
-      else setDisplayedText(text.slice(0, i));
-    }, 16);
-    return () => clearInterval(id);
-  }, [text]);
-
-  useEffect(() => {
-    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-  }, [logs, displayedText, thinking]);
-
-  if (!open && !minimized) return null;
-
-  if (minimized) {
-    return (
-      <button
-        onClick={onRestore}
-        className="fixed bottom-4 right-4 z-50 flex items-center gap-2 px-3 py-2 bg-primary text-primary-foreground rounded-full shadow-lg hover:opacity-90"
-      >
-        <RefreshCw className={`w-3.5 h-3.5 ${status === "generating" ? "animate-spin" : ""}`} />
-        <span className="text-xs">
-          {status === "generating"
-            ? (thinking !== null ? `思考中 ${thinking}` : "生成中")
-            : status === "done" ? "已完成（点击查看）" : status === "error" ? "失败（点击查看）" : "处理中"}
-        </span>
-      </button>
-    );
-  }
-
-  const stageColor: Record<string, string> = {
-    query: "text-blue-500",
-    stats: "text-blue-500",
-    prompt: "text-purple-500",
-    summarize: "text-amber-500",
-    save: "text-blue-500",
-    done: "text-green-500",
-    error: "text-red-500",
-  };
-  const statusLabel = status === "generating" ? "进行中" : status === "done" ? "已完成" : status === "error" ? "失败" : "";
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-background border border-border rounded-lg w-[620px] max-w-[92vw] h-[460px] max-h-[82vh] flex flex-col">
-        <div className="flex items-center justify-between px-4 py-2.5 border-b border-border">
-          <div className="flex items-center gap-2">
-            <RefreshCw className={`w-3.5 h-3.5 ${status === "generating" ? "animate-spin" : ""} text-primary`} />
-            <h3 className="text-sm font-medium">报告生成过程</h3>
-            {statusLabel && <span className="text-[10px] text-muted-foreground">{statusLabel}</span>}
-          </div>
-          <div className="flex items-center gap-1">
-            <button onClick={onMinimize} title="静默（缩小到右下角）" className="p-1.5 rounded hover:bg-secondary">
-              <Minus className="w-3.5 h-3.5" />
-            </button>
-            {status !== "generating" && (
-              <button onClick={onClose} title="关闭" className="p-1.5 rounded hover:bg-secondary">
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
-          </div>
-        </div>
-        <div ref={scrollRef} className="flex-1 overflow-auto px-4 py-2 space-y-1 text-xs">
-          {logs.length === 0 && !text && thinking === null && (
-            <div className="text-muted-foreground">等待开始...</div>
-          )}
-          {logs.map((l, i) => (
-            <div
-              key={i}
-              className={`leading-relaxed break-words ${stageColor[l.stage] || "text-muted-foreground"}`}
-            >
-              <span className="text-[10px] text-muted-foreground/70 mr-1">[{l.stage}]</span>
-              {l.text}
-            </div>
-          ))}
-          {thinking !== null && !text && (
-            <div className="flex items-center gap-1.5 text-amber-500">
-              <RefreshCw className="w-3 h-3 animate-spin" />
-              <span>思考中... {thinking} tokens</span>
-            </div>
-          )}
-          {displayedText && (
-            <div className="mt-1 pt-1 border-t border-border/40 whitespace-pre-wrap break-words text-foreground/90 leading-relaxed font-sans">
-              {displayedText}
-              {displayedText.length < (text?.length ?? 0) && <span className="animate-pulse">▍</span>}
-            </div>
-          )}
-          {status === "generating" && !displayedText && thinking === null && (
-            <div className="text-muted-foreground animate-pulse">▍</div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function ReportViewer({
   onGenerate,
   reportsNonce,
-  genStatus,
 }: {
   onGenerate: (
     reportType: "daily" | "weekly" | "monthly",
     range: { start: number; end: number },
-    templateId?: string
+    templateId?: string,
+    taskId?: string,
   ) => void;
   reportsNonce: number;
-  genStatus: GenStatus;
 }) {
+  const providersConfig = useAiProvidersConfig();
+  const defaultProviderId = useDefaultProviderId();
+  const [aiProvider, setAiProvider] = useState<AiProviderConfig>(
+    () => getProviderConfig(providersConfig, defaultProviderId) ?? providersConfig.providers[0]
+  );
+  const atc = useAiTaskCenter();
+  const [isGenerating, setIsGenerating] = useState(false);
+
   const [reports, setReports] = useState<AiReport[]>([]);
   const [loading, setLoading] = useState(true);
   const [previewReport, setPreviewReport] = useState<AiReport | null>(null);
@@ -962,10 +795,34 @@ function ReportViewer({
   const timeLabel = genType === "daily" ? genDate : genType === "weekly" ? genWeek : genMonth;
   const templateName =
     templates.find((t) => t.id === selectedTemplateId)?.name ?? "默认模板";
+
   const confirmGenerate = () => {
     setGenConfirm(false);
-    onGenerate(genType, computeRange(), selectedTemplateId);
+    const taskId = `ai-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    const typeMap: Record<string, "daily_report" | "weekly_report" | "monthly_report"> = {
+      daily: "daily_report", weekly: "weekly_report", monthly: "monthly_report",
+    };
+
+    atc.addExternalTask({
+      id: taskId,
+      type: typeMap[genType],
+      providerId: aiProvider.id,
+      providerName: aiProvider.id,
+      status: "running",
+      logs: [{ time: Date.now(), stage: "start", text: `开始生成${typeLabel}（${timeLabel}）...` }],
+      streamText: "",
+      thinkingTokens: null,
+      result: null,
+      error: null,
+      createdAt: Date.now(),
+    });
+
+    setIsGenerating(true);
+    onGenerate(genType, computeRange(), selectedTemplateId, taskId);
   };
+
+  // Reset generating state when reportsNonce changes (generation complete)
+  useEffect(() => { setIsGenerating(false); }, [reportsNonce]);
 
   const handleDelete = async (id: string) => {
     await deleteReport(id);
@@ -1014,13 +871,16 @@ function ReportViewer({
               </option>
             ))}
           </select>
+          {providersConfig.providers.length > 0 && (
+            <AiSelector value={aiProvider} onChange={setAiProvider} showModel={true} />
+          )}
           <button
             onClick={() => setGenConfirm(true)}
-            disabled={genStatus === "generating"}
+            disabled={isGenerating}
             className="flex items-center gap-1 h-8 px-3 text-xs bg-primary text-primary-foreground rounded-md hover:opacity-90 disabled:opacity-50"
           >
-            <RefreshCw className={`w-3 h-3 ${genStatus === "generating" ? "animate-spin" : ""}`} />
-            {genStatus === "generating" ? "生成中" : "生成"}
+            <RefreshCw className={`w-3 h-3 ${isGenerating ? "animate-spin" : ""}`} />
+            {isGenerating ? "生成中" : "生成"}
           </button>
         </div>
       </div>
@@ -1158,13 +1018,6 @@ function ToolSettings() {
   const getVal = (key: string, fallback: string) =>
     getSettingValue(settings, key, fallback);
 
-  // AI provider state for the new unified AI summary method
-  const providersConfig = useAiProvidersConfig();
-  const defaultProviderId = useDefaultProviderId();
-  const [aiProvider, setAiProvider] = useState<AiProviderConfig>(
-    () => getProviderConfig(providersConfig, defaultProviderId) || providersConfig.providers[0]
-  );
-
   const [hookMsg, setHookMsg] = useState<string | null>(null);
   const [hookBusy, setHookBusy] = useState(false);
   const [rebuilding, setRebuilding] = useState(false);
@@ -1289,18 +1142,6 @@ function ToolSettings() {
               <option value="cli">CLI 调用（旧模式，兼容）</option>
               <option value="manual">手动模式（仅生成 Prompt）</option>
             </select>
-
-            {summaryMethod === "ai" && (
-              <div className="mt-2">
-                <AiSelector
-                  value={aiProvider}
-                  onChange={(config) => {
-                    setAiProvider(config);
-                    setSetting("ai_summary_model", JSON.stringify(config));
-                  }}
-                />
-              </div>
-            )}
 
             {summaryMethod === "cli" && (
               <select

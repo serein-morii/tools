@@ -176,6 +176,7 @@ export async function generateReport(params: {
   apiKey?: string;
   model?: string;
   templateId?: string;
+  taskId?: string;
 }): Promise<{ report: AiReport; stats: Record<string, unknown>; prompt: string }> {
   return invoke("generate_report", {
     reportType: params.reportType,
@@ -186,6 +187,7 @@ export async function generateReport(params: {
     apiKey: params.apiKey ?? null,
     model: params.model ?? null,
     templateId: params.templateId ?? null,
+    taskId: params.taskId ?? null,
   });
 }
 

@@ -305,6 +305,7 @@ pub async fn generate_report(
     api_key: Option<String>,
     model: Option<String>,
     template_id: Option<String>,
+    task_id: Option<String>,
 ) -> Result<serde_json::Value, String> {
     use tauri::Emitter;
     let emit = |stage: &str, message: String| {
@@ -312,6 +313,12 @@ pub async fn generate_report(
             "report-gen-progress",
             serde_json::json!({ "stage": stage, "message": message }),
         );
+        if let Some(ref tid) = task_id {
+            let _ = app.emit(
+                "ai-stream",
+                serde_json::json!({ "task_id": tid, "kind": "progress", "stage": stage, "message": message }),
+            );
+        }
     };
 
     emit("query", "查询时间范围内的会话数据...".to_string());
@@ -389,15 +396,27 @@ pub async fn generate_report(
             match event {
                 AiEvent::Progress { stage, message } => {
                     let _ = app.emit("report-gen-progress", serde_json::json!({"stage": stage, "message": message}));
+                    if let Some(ref tid) = task_id {
+                        let _ = app.emit("ai-stream", serde_json::json!({"task_id": tid, "kind": "progress", "stage": stage, "message": message}));
+                    }
                 }
                 AiEvent::Thinking { tokens } => {
                     let _ = app.emit("report-gen-stream", serde_json::json!({"kind": "thinking", "tokens": tokens}));
+                    if let Some(ref tid) = task_id {
+                        let _ = app.emit("ai-stream", serde_json::json!({"task_id": tid, "kind": "thinking", "tokens": tokens}));
+                    }
                 }
                 AiEvent::TextDelta { text } => {
                     let _ = app.emit("report-gen-stream", serde_json::json!({"kind": "text", "text": text}));
+                    if let Some(ref tid) = task_id {
+                        let _ = app.emit("ai-stream", serde_json::json!({"task_id": tid, "kind": "text", "text": text}));
+                    }
                 }
                 AiEvent::Done => {
                     let _ = app.emit("report-gen-stream", serde_json::json!({"kind": "done"}));
+                    if let Some(ref tid) = task_id {
+                        let _ = app.emit("ai-stream", serde_json::json!({"task_id": tid, "kind": "done"}));
+                    }
                 }
             }
         }
@@ -436,10 +455,16 @@ pub async fn generate_report(
                     e
                 })?;
             emit("done", "报告已生成并保存".to_string());
+            if let Some(ref tid) = task_id {
+                let _ = app.emit("ai-stream", serde_json::json!({"task_id": tid, "kind": "done"}));
+            }
             Ok(serde_json::json!({ "report": report, "stats": stats, "prompt": prompt }))
         }
         Err(e) => {
             emit("error", format!("总结失败: {}（已保存 Prompt 供手动使用）", e));
+            if let Some(ref tid) = task_id {
+                let _ = app.emit("ai-stream", serde_json::json!({"task_id": tid, "kind": "progress", "stage": "error", "message": format!("总结失败: {}", e)}));
+            }
             let _ = reporter.save_report(
                 &report_type, range_start, range_end,
                 &format!("[Generation failed: {}]\n\n## Prompt\n\n{}", e, prompt),
