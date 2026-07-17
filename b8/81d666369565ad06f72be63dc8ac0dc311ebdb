@@ -1,0 +1,22 @@
+src-tauri/src/services/testgen/runner.rs
+  s_a4d226eec38498::t_7ce1b292ba5646 178-181
+  s_a4d226eec38498::t_978957612f204f 1-177,182-204
+src-tauri/src/services/testgen/mod.rs
+  s_a4d226eec38498::t_b7b822d1b7e8a6 3
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "b881d666369565ad06f72be63dc8ac0dc311ebdb",
+  "prompts": {},
+  "sessions": {
+    "s_a4d226eec38498": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7dfa4fc2-893d-481a-96be-d1d943c7d0b1",
+        "model": "glm-5.2"
+      },
+      "human_author": "pengchenghui <pengchenghui@jtexpress.com>"
+    }
+  }
+}
