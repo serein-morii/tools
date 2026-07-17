@@ -61,7 +61,7 @@ impl AiProvider for CodexCliProvider {
         while let Ok(Some(line)) = reader.next_line().await {
             if !final_text.is_empty() { final_text.push('\n'); }
             final_text.push_str(&line);
-            let _ = tx.send(AiEvent::TextDelta { text: line });
+            let _ = tx.send(AiEvent::TextDelta { text: final_text.clone() });
         }
         let _ = tx.send(AiEvent::Done);
 

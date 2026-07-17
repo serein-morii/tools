@@ -55,3 +55,23 @@ pub async fn call_ai(
 
     handle.await.map_err(|e| format!("Task join error: {}", e))?
 }
+
+/// Check if CLI tools are installed on the system PATH.
+/// Returns a list of provider IDs that should be enabled by default.
+#[tauri::command]
+pub async fn detect_installed_cli_tools() -> Result<Vec<String>, String> {
+    let mut found: Vec<String> = Vec::new();
+    let cmd_name = if cfg!(target_os = "windows") { "where" } else { "which" };
+    for (name, id) in [("claude", "claude-cli"), ("codex", "codex-cli")] {
+        let output = tokio::process::Command::new(cmd_name)
+            .arg(name)
+            .output()
+            .await;
+        if let Ok(o) = output {
+            if o.status.success() {
+                found.push(id.to_string());
+            }
+        }
+    }
+    Ok(found)
+}

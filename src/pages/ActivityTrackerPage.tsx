@@ -1529,7 +1529,7 @@ function ChatView() {
         switch (e.payload.kind) {
           case "thinking": setThinking(prev => e.payload.tokens ?? prev); break;
           case "text":
-            streamTextRef.current += (e.payload.text ?? "");
+            streamTextRef.current = e.payload.text ?? "";
             if (streamElRef.current) streamElRef.current.textContent = streamTextRef.current;
             setTick(n => n + 1); // trigger scroll
             break;

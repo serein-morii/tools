@@ -1,8 +1,8 @@
 import { createContext, useContext, useState, useRef, useEffect, useCallback, useMemo, type ReactNode } from "react";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import { RefreshCw, X, Bot } from "lucide-react";
-import { callAi, type AiProviderConfig, type AiResponse } from "./api/ai";
-import { useMigrateAiSettings } from "@/lib/query/aiQueries";
+import { callAi, detectInstalledCliTools, type AiProviderConfig, type AiResponse } from "./api/ai";
+import { useMigrateAiSettings, useAiProvidersConfig, useSaveAiProvidersConfig } from "@/lib/query/aiQueries";
 
 // ---- types ----
 
@@ -81,6 +81,25 @@ export function AiTaskCenterProvider({ children }: { children: ReactNode }) {
   const [detailTaskId, setDetailTaskId] = useState<string | null>(null);
 
   useMigrateAiSettings();
+
+  // Auto-detect installed CLI tools on first load
+  const providersConfig = useAiProvidersConfig();
+  const saveConfig = useSaveAiProvidersConfig();
+  useEffect(() => {
+    const key = "ai_cli_tools_detected";
+    if (localStorage.getItem(key) === "true") return;
+    detectInstalledCliTools().then((found) => {
+      if (found.length > 0) {
+        const updated = { ...providersConfig };
+        for (const id of found) {
+          const p = updated.providers.find(p => p.id === id);
+          if (p) p.enabled = true;
+        }
+        saveConfig(updated);
+      }
+      localStorage.setItem(key, "true");
+    }).catch(() => { /* ignore detection errors */ });
+  }, []);
 
   // Global ai-stream listener
   useEffect(() => {

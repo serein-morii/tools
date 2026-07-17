@@ -126,20 +126,20 @@ export function generateRandomIv(): string {
 // ===================== AES-CBC 核心加解密 =====================
 
 async function aesEncrypt(plainText: string, keyHex: string, ivHex: string): Promise<string> {
-  const keyBytes = hexToBytes(keyHex);
-  const ivBytes = hexToBytes(ivHex);
+  const keyBytes = hexToBytes(keyHex) as Uint8Array<ArrayBuffer>;
+  const ivBytes = hexToBytes(ivHex) as Uint8Array<ArrayBuffer>;
   const plainBytes = new TextEncoder().encode(plainText);
   const key = await crypto.subtle.importKey("raw", keyBytes, { name: "AES-CBC" }, false, ["encrypt"]);
-  const cipherBuf = await crypto.subtle.encrypt({ name: "AES-CBC", iv: ivBytes }, key, plainBytes);
+  const cipherBuf = await crypto.subtle.encrypt({ name: "AES-CBC", iv: ivBytes }, key, plainBytes as BufferSource);
   return bytesToBase64(new Uint8Array(cipherBuf));
 }
 
 async function aesDecrypt(base64Cipher: string, keyHex: string, ivHex: string): Promise<string> {
-  const keyBytes = hexToBytes(keyHex);
-  const ivBytes = hexToBytes(ivHex);
+  const keyBytes = hexToBytes(keyHex) as Uint8Array<ArrayBuffer>;
+  const ivBytes = hexToBytes(ivHex) as Uint8Array<ArrayBuffer>;
   const cipherBytes = base64ToBytes(base64Cipher);
   const key = await crypto.subtle.importKey("raw", keyBytes, { name: "AES-CBC" }, false, ["decrypt"]);
-  const plainBuf = await crypto.subtle.decrypt({ name: "AES-CBC", iv: ivBytes }, key, cipherBytes);
+  const plainBuf = await crypto.subtle.decrypt({ name: "AES-CBC", iv: ivBytes }, key, cipherBytes as BufferSource);
   return new TextDecoder().decode(plainBuf);
 }
 

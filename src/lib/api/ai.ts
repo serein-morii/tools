@@ -52,6 +52,10 @@ export function getProviderType(id: string): "cli" | "api" {
   return id.endsWith("-api") ? "api" : "cli";
 }
 
+export async function detectInstalledCliTools(): Promise<string[]> {
+  return invoke<string[]>("detect_installed_cli_tools");
+}
+
 export function getDefaultProvidersConfig(): AiProvidersConfig {
   return {
     providers: [

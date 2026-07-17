@@ -195,6 +195,7 @@ pub fn run() {
             // AI
             commands::list_ai_providers,
             commands::call_ai,
+            commands::detect_installed_cli_tools,
         ])
         .setup(|app| {
             // Start activity collector (tokio runtime is active here)
