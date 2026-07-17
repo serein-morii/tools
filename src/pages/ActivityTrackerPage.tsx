@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, type ReactNode } from "react";
 import { Activity, History, FileText, Settings, RefreshCw, Zap, Download, FileCode, Minus, X, LayoutTemplate } from "lucide-react";
 import { save } from "@tauri-apps/plugin-dialog";
 import { listen } from "@tauri-apps/api/event";
@@ -25,6 +25,7 @@ import {
   removeHooks,
   resetActivityData,
   renderReportHtml,
+  listReportThemes,
   writeTextFile,
   formatDuration,
   formatTimestamp,
@@ -181,6 +182,60 @@ export default function ActivityTrackerPage() {
         onRestore={() => setGenMinimized(false)}
         onClose={closeGen}
       />
+    </div>
+  );
+}
+
+// ==================== Confirm Dialog ====================
+
+function ConfirmDialog({
+  open,
+  title,
+  description,
+  confirmText = "确定",
+  cancelText = "取消",
+  danger = false,
+  onConfirm,
+  onCancel,
+}: {
+  open: boolean;
+  title: string;
+  description?: ReactNode;
+  confirmText?: string;
+  cancelText?: string;
+  danger?: boolean;
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50">
+      <div className="bg-background border border-border rounded-lg shadow-xl w-[380px] max-w-[calc(100vw-32px)] overflow-hidden">
+        <div className="px-4 py-3 border-b border-border/50">
+          <span className="text-sm font-semibold">{title}</span>
+        </div>
+        {description && (
+          <div className="px-4 py-3 text-xs text-muted-foreground whitespace-pre-wrap leading-relaxed">
+            {description}
+          </div>
+        )}
+        <div className="px-4 py-3 border-t border-border/50 bg-muted/30 flex justify-end gap-2">
+          <button
+            onClick={onCancel}
+            className="px-3 py-1.5 text-xs border border-border rounded-md hover:bg-secondary"
+          >
+            {cancelText}
+          </button>
+          <button
+            onClick={onConfirm}
+            className={`px-3 py-1.5 text-xs rounded-md text-white ${
+              danger ? "bg-red-500 hover:opacity-90" : "bg-primary hover:opacity-90"
+            }`}
+          >
+            {confirmText}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -792,16 +847,21 @@ function ReportViewer({
   };
   useEffect(() => { loadTemplates(); }, [reportsNonce]);
 
+  // HTML theme selector.
+  const [themes, setThemes] = useState<{ id: string; label: string }[]>([]);
+  const [htmlTheme, setHtmlTheme] = useState("github");
+  useEffect(() => { listReportThemes().then(setThemes).catch(() => {}); }, []);
+
   // Render the selected report's Markdown into styled HTML for preview/export.
   useEffect(() => {
     setPreviewHtml(null);
     if (!previewReport || !previewReport.content) return;
     let cancelled = false;
-    renderReportHtml(previewReport.content, previewReport.title)
+    renderReportHtml(previewReport.content, previewReport.title, htmlTheme)
       .then((html) => { if (!cancelled) setPreviewHtml(html); })
       .catch(() => { if (!cancelled) setPreviewHtml(null); });
     return () => { cancelled = true; };
-  }, [previewReport]);
+  }, [previewReport, htmlTheme]);
 
   const safeName = (title: string) =>
     title.replace(/[\\/:*?"<>|]/g, "_").slice(0, 60) || "report";
@@ -829,7 +889,7 @@ function ReportViewer({
     try {
       const html =
         previewHtml ??
-        (await renderReportHtml(previewReport.content, previewReport.title));
+        (await renderReportHtml(previewReport.content, previewReport.title, htmlTheme));
       const path = await save({
         defaultPath: `${safeName(previewReport.title)}.html`,
         filters: [{ name: "HTML", extensions: ["html"] }],
@@ -857,6 +917,17 @@ function ReportViewer({
     if (genType === "daily") return rangeForDate(genDate);
     if (genType === "weekly") return rangeForWeek(genWeek);
     return rangeForMonth(genMonth);
+  };
+
+  // Generate confirmation.
+  const [genConfirm, setGenConfirm] = useState(false);
+  const typeLabel = genType === "daily" ? "日报" : genType === "weekly" ? "周报" : "月报";
+  const timeLabel = genType === "daily" ? genDate : genType === "weekly" ? genWeek : genMonth;
+  const templateName =
+    templates.find((t) => t.id === selectedTemplateId)?.name ?? "默认模板";
+  const confirmGenerate = () => {
+    setGenConfirm(false);
+    onGenerate(genType, computeRange(), selectedTemplateId);
   };
 
   const handleDelete = async (id: string) => {
@@ -907,7 +978,7 @@ function ReportViewer({
             ))}
           </select>
           <button
-            onClick={() => onGenerate(genType, computeRange(), selectedTemplateId)}
+            onClick={() => setGenConfirm(true)}
             disabled={genStatus === "generating"}
             className="flex items-center gap-1 h-8 px-3 text-xs bg-primary text-primary-foreground rounded-md hover:opacity-90 disabled:opacity-50"
           >
@@ -950,6 +1021,16 @@ function ReportViewer({
               <div className="flex items-center justify-between mb-3">
                 <h3 className="font-medium text-sm truncate">{previewReport.title}</h3>
                 <div className="flex items-center gap-2 flex-shrink-0">
+                  <select
+                    value={htmlTheme}
+                    onChange={(e) => setHtmlTheme(e.target.value)}
+                    title="HTML 主题（预览与导出共用）"
+                    className="h-7 rounded-md border border-border bg-background px-1.5 text-xs max-w-[110px]"
+                  >
+                    {themes.map((t) => (
+                      <option key={t.id} value={t.id}>{t.label}</option>
+                    ))}
+                  </select>
                   <button
                     onClick={handleExportMd}
                     disabled={!previewReport.content}
@@ -961,7 +1042,7 @@ function ReportViewer({
                   <button
                     onClick={handleExportHtml}
                     disabled={!previewReport.content}
-                    title="生成并导出 HTML 文件"
+                    title="生成并导出 HTML 文件（当前主题）"
                     className="flex items-center gap-1 px-2 py-1 text-xs border border-border rounded-md hover:bg-secondary disabled:opacity-50"
                   >
                     <FileCode className="w-3 h-3" /> 导出 HTML
@@ -1001,6 +1082,15 @@ function ReportViewer({
           )}
         </div>
       </div>
+
+      <ConfirmDialog
+        open={genConfirm}
+        title={`生成${typeLabel}`}
+        description={`类型：${typeLabel}\n时间：${timeLabel}\n模板：${templateName}\n\n将调用 AI 进行总结，可能需要一些时间。是否继续？`}
+        confirmText="开始生成"
+        onCancel={() => setGenConfirm(false)}
+        onConfirm={confirmGenerate}
+      />
     </div>
   );
 }
@@ -1289,12 +1379,20 @@ function TemplateManager() {
       setTplMsg(`保存失败: ${e}`);
     }
   };
-  const delTpl = async (id: string) => {
-    if (!window.confirm("确定删除该模板？")) return;
+  const [delConfirm, setDelConfirm] = useState<{ id: string; name: string } | null>(null);
+  const requestDelete = () => {
+    if (!editingTpl?.id) return;
+    setDelConfirm({ id: editingTpl.id, name: editingTpl.name });
+  };
+  const confirmDelete = async () => {
+    if (!delConfirm) return;
+    const id = delConfirm.id;
+    setDelConfirm(null);
     try {
       await deleteReportTemplate(id);
       if (editingTpl?.id === id) setEditingTpl(null);
       await loadTemplates();
+      setTplMsg("已删除");
     } catch (e) {
       setTplMsg(`删除失败: ${e}`);
     }
@@ -1322,16 +1420,25 @@ function TemplateManager() {
           + 新建模板
         </button>
       </div>
-      <p className="text-[10px] text-muted-foreground flex-shrink-0">
-        自定义喂给 AI 的 Prompt。占位符（生成时自动替换）：
-        <code className="mx-0.5">{"{{report_type}}"}</code>
-        <code className="mx-0.5">{"{{date_range}}"}</code>
-        <code className="mx-0.5">{"{{total_sessions}}"}</code>
-        <code className="mx-0.5">{"{{total_messages}}"}</code>
-        <code className="mx-0.5">{"{{total_duration}}"}</code>
-        <code className="mx-0.5">{"{{tool_distribution}}"}</code>
-        <code className="mx-0.5">{"{{session_questions}}"}</code>
-      </p>
+      <div className="text-[10px] text-muted-foreground flex-shrink-0 border border-border/60 rounded-md p-2 bg-secondary/30">
+        <div className="font-medium mb-1">占位符（生成时自动替换为实际数据，直接写在模板正文里即可）：</div>
+        <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5">
+          <code className="text-primary">{"{{report_type}}"}</code>
+          <span>报告类型：日报 / 周报 / 月报</span>
+          <code className="text-primary">{"{{date_range}}"}</code>
+          <span>时间范围，如 2026-07-13 - 2026-07-16</span>
+          <code className="text-primary">{"{{total_sessions}}"}</code>
+          <span>总会话数（数字）</span>
+          <code className="text-primary">{"{{total_messages}}"}</code>
+          <span>总对话轮次（数字）</span>
+          <code className="text-primary">{"{{total_duration}}"}</code>
+          <span>AI 工具使用总时长，如 3h 42m</span>
+          <code className="text-primary">{"{{tool_distribution}}"}</code>
+          <span>各 AI 工具使用次数分布（JSON，如 {"{claude-code:5, codex:2}"})</span>
+          <code className="text-primary">{"{{session_questions}}"}</code>
+          <span>会话与你的真实提问记录（按时间顺序，每条提问≤400字，这是最核心的内容）</span>
+        </div>
+      </div>
 
       <div className="grid grid-cols-[220px_1fr] grid-rows-1 gap-4 flex-1 min-h-0">
         {/* List */}
@@ -1367,7 +1474,7 @@ function TemplateManager() {
                 {!editingTpl.id && <span className="text-[10px] text-muted-foreground">新建</span>}
               </div>
               <textarea
-                placeholder={"模板内容（Prompt）。可用占位符：{{report_type}} {{date_range}} {{total_sessions}} {{total_messages}} {{total_duration}} {{tool_distribution}} {{session_questions}}"}
+                placeholder={"模板内容（Prompt 正文）。把 {{report_type}}、{{date_range}}、{{session_questions}} 等占位符写在需要的位置即可（占位符说明见上方）"}
                 value={editingTpl.body}
                 onChange={(e) => setEditingTpl({ ...editingTpl, body: e.target.value })}
                 className="flex-1 min-h-0 w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs font-mono resize-none"
@@ -1391,7 +1498,7 @@ function TemplateManager() {
                   <button onClick={() => setDefaultTpl(editingTpl.id!)} className="px-2 py-1 text-xs border border-border rounded hover:bg-secondary">设默认</button>
                 )}
                 {editingTpl.id && (
-                  <button onClick={() => delTpl(editingTpl.id!)} className="px-2 py-1 text-xs text-red-500 hover:text-red-600">删除</button>
+                  <button onClick={requestDelete} className="px-2 py-1 text-xs text-red-500 hover:text-red-600">删除</button>
                 )}
                 <button onClick={() => setEditingTpl(null)} className="px-2 py-1 text-xs border border-border rounded hover:bg-secondary">关闭</button>
                 {tplMsg && <span className="text-[11px] text-muted-foreground ml-auto">{tplMsg}</span>}
@@ -1404,6 +1511,16 @@ function TemplateManager() {
           )}
         </div>
       </div>
+
+      <ConfirmDialog
+        open={!!delConfirm}
+        title="删除模板"
+        description={`确定删除模板「${delConfirm?.name ?? ""}」？此操作不可撤销。`}
+        confirmText="删除"
+        danger
+        onCancel={() => setDelConfirm(null)}
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 }

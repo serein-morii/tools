@@ -237,8 +237,19 @@ export async function setDefaultReportTemplate(id: string): Promise<void> {
 // ==================== Report Rendering / Export ====================
 
 /** Render a Markdown report into a standalone, styled HTML document. */
-export async function renderReportHtml(content: string, title: string): Promise<string> {
-  return invoke<string>("render_report_html", { content, title });
+export async function renderReportHtml(
+  content: string,
+  title: string,
+  theme?: string
+): Promise<string> {
+  return invoke<string>("render_report_html", { content, title, theme: theme ?? null });
+}
+
+/** List available HTML export themes: [{id, label}]. */
+export async function listReportThemes(): Promise<{ id: string; label: string }[]> {
+  return invoke<[string, string][]>("list_report_themes").then((pairs) =>
+    pairs.map(([id, label]) => ({ id, label }))
+  );
 }
 
 /** Write text content to a user-chosen file path (generic helper). */

@@ -486,12 +486,150 @@ pub async fn set_default_report_template(
 // ==================== Report Rendering ====================
 
 #[tauri::command]
-pub async fn render_report_html(content: String, title: String) -> Result<String, String> {
-    Ok(report_to_html_document(&title, &content))
+pub async fn render_report_html(
+    content: String,
+    title: String,
+    theme: Option<String>,
+) -> Result<String, String> {
+    Ok(report_to_html_document(
+        &title,
+        &content,
+        theme.as_deref().unwrap_or("github"),
+    ))
 }
 
-/// Convert a Markdown report into a standalone, styled HTML document.
-fn report_to_html_document(title: &str, markdown: &str) -> String {
+/// Available HTML export themes (id -> label), surfaced to the frontend.
+#[tauri::command]
+pub async fn list_report_themes() -> Vec<(String, String)> {
+    vec![
+        ("github".to_string(), "GitHub 风".to_string()),
+        ("dark".to_string(), "暗色".to_string()),
+        ("elegant".to_string(), "典雅文档".to_string()),
+        ("minimal".to_string(), "极简".to_string()),
+        ("colorful".to_string(), "彩色".to_string()),
+    ]
+}
+
+/// CSS for a given theme. Falls back to the GitHub light theme.
+fn theme_css(theme: &str) -> &'static str {
+    match theme {
+        "dark" => r#"
+  :root { color-scheme: dark; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+         font-size: 14px; max-width: 760px; margin: 0 auto; padding: 48px 24px; line-height: 1.75;
+         color: #e6edf3; background: #0d1117; }
+  h1,h2,h3,h4 { color: #f0f6fc; font-weight: 600; line-height: 1.3; margin-top: 1.4em; margin-bottom: .5em; }
+  h1 { font-size: 1.7em; border-bottom: 1px solid #30363d; padding-bottom: .3em; }
+  h2 { font-size: 1.35em; border-bottom: 1px solid #30363d; padding-bottom: .3em; }
+  h3 { font-size: 1.12em; }
+  a { color: #58a6ff; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code { font-family: "Cascadia Code", Consolas, "Courier New", monospace; background: #161b22; color: #e6edf3; padding: .15em .4em; border-radius: 6px; font-size: .9em; }
+  pre { background: #161b22; padding: 16px; border-radius: 8px; border: 1px solid #30363d; overflow-x: auto; }
+  pre code { background: none; padding: 0; color: inherit; }
+  blockquote { border-left: 4px solid #30363d; margin: 1em 0; padding: .4em 1em; color: #8b949e; background: #161b22; border-radius: 0 6px 6px 0; }
+  table { border-collapse: collapse; margin: 1em 0; }
+  th, td { border: 1px solid #30363d; padding: 6px 13px; }
+  th { background: #161b22; font-weight: 600; }
+  ul, ol { padding-left: 1.6em; }
+  hr { border: none; border-top: 1px solid #30363d; margin: 1.5em 0; }
+"#,
+        "elegant" => r#"
+  body { font-family: Georgia, "Songti SC", "SimSun", serif; font-size: 15px; max-width: 680px;
+         margin: 48px auto; padding: 0 32px; line-height: 1.85; color: #2c2c2c; background: #fdfcf8; }
+  h1,h2,h3,h4 { font-family: Georgia, "Songti SC", serif; color: #1a1a1a; font-weight: bold; margin-top: 1.4em; margin-bottom: .5em; }
+  h1 { font-size: 1.75em; text-align: center; border-bottom: 2px solid #b8a07a; padding-bottom: .35em; margin-bottom: .7em; }
+  h2 { font-size: 1.3em; border-bottom: 1px solid #d8d0c0; padding-bottom: .25em; }
+  h3 { font-size: 1.1em; color: #6b5a3e; }
+  a { color: #8a6d3b; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code { font-family: "Cascadia Code", Consolas, monospace; background: #f3efe6; color: #6b5a3e; padding: .15em .4em; border-radius: 4px; font-size: .9em; }
+  pre { background: #f3efe6; padding: 14px; border-radius: 6px; border-left: 3px solid #b8a07a; overflow-x: auto; }
+  pre code { background: none; color: inherit; }
+  blockquote { border-left: 3px solid #b8a07a; margin: 1em 0; padding: .5em 1em; color: #5a5a5a; font-style: italic; background: #f8f5ee; }
+  table { border-collapse: collapse; margin: 1em 0; }
+  th, td { border: 1px solid #d8d0c0; padding: 6px 13px; }
+  th { background: #f3efe6; }
+  ul, ol { padding-left: 1.6em; }
+  hr { border: none; border-top: 1px solid #d8d0c0; margin: 1.5em 0; }
+"#,
+        "minimal" => r#"
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+         font-size: 14px; max-width: 680px; margin: 64px auto; padding: 0 28px; line-height: 1.8;
+         color: #333; background: #fafafa; }
+  h1,h2,h3,h4 { font-weight: 600; color: #111; margin-top: 1.7em; margin-bottom: .4em; letter-spacing: -0.01em; }
+  h1 { font-size: 1.85em; }
+  h2 { font-size: 1.3em; }
+  h3 { font-size: 1.05em; color: #555; }
+  a { color: #0070f3; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code { font-family: "SFMono-Regular", Consolas, monospace; background: #ececec; padding: .15em .4em; border-radius: 3px; font-size: .88em; }
+  pre { background: #ececec; padding: 14px; border-radius: 6px; overflow-x: auto; }
+  pre code { background: none; padding: 0; }
+  blockquote { border-left: 3px solid #ddd; margin: 1em 0; padding: 0 1em; color: #777; }
+  table { border-collapse: collapse; margin: 1em 0; }
+  th, td { border-bottom: 1px solid #e0e0e0; padding: 8px 13px; }
+  th { border-bottom: 2px solid #333; }
+  ul, ol { padding-left: 1.6em; }
+  hr { border: none; border-top: 1px solid #e0e0e0; margin: 2em 0; }
+"#,
+        "colorful" => r#"
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+         font-size: 14px; max-width: 760px; margin: 32px auto; padding: 0 24px; line-height: 1.75;
+         color: #2d3748; background: #f7fafc; }
+  h1 { font-size: 1.6em; color: #fff; background: linear-gradient(135deg, #667eea, #764ba2); padding: 14px 18px; border-radius: 10px; margin-top: 1.2em; font-weight: 700; }
+  h2 { font-size: 1.3em; color: #553c9a; border-left: 4px solid #667eea; padding-left: 10px; margin-top: 1.5em; font-weight: 700; }
+  h3 { font-size: 1.12em; color: #667eea; margin-top: 1.3em; font-weight: 700; }
+  h4 { color: #6b46c1; font-weight: 700; }
+  a { color: #667eea; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code { font-family: "Cascadia Code", Consolas, monospace; background: #edf2f7; color: #d53f8c; padding: .15em .4em; border-radius: 4px; font-size: .9em; }
+  pre { background: #1a202c; color: #e2e8f0; padding: 16px; border-radius: 8px; overflow-x: auto; }
+  pre code { background: none; color: inherit; padding: 0; }
+  blockquote { border-left: 4px solid #667eea; margin: 1em 0; padding: .5em 1em; background: #edf2f7; border-radius: 0 6px 6px 0; color: #4a5568; }
+  table { border-collapse: collapse; margin: 1em 0; border-radius: 6px; overflow: hidden; }
+  th, td { border: 1px solid #e2e8f0; padding: 6px 13px; }
+  th { background: #667eea; color: #fff; }
+  ul, ol { padding-left: 1.6em; }
+  hr { border: none; border-top: 2px solid #e2e8f0; margin: 1.5em 0; }
+"#,
+        // "github" (default) and unknown -> GitHub light
+        _ => r#"
+  :root { color-scheme: light dark; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+         font-size: 13px; max-width: 720px; margin: 24px auto; padding: 0 20px; line-height: 1.65;
+         color: #1f2328; background: #ffffff; }
+  h1,h2,h3,h4 { line-height: 1.25; margin-top: 1.3em; margin-bottom: 0.5em; font-weight: 600; }
+  h1 { font-size: 1.5em; border-bottom: 1px solid #d0d7de; padding-bottom: .3em; }
+  h2 { font-size: 1.25em; border-bottom: 1px solid #d0d7de; padding-bottom: .3em; }
+  h3 { font-size: 1.08em; }
+  a { color: #0969da; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code { font-family: "Cascadia Code", Consolas, "Courier New", monospace;
+          background: #f6f8fa; padding: .15em .4em; border-radius: 6px; font-size: .9em; }
+  pre { background: #f6f8fa; padding: 16px; border-radius: 8px; overflow-x: auto; }
+  pre code { background: none; padding: 0; }
+  blockquote { border-left: 4px solid #d0d7de; margin: 1em 0; padding: 0 1em; color: #57606a; }
+  table { border-collapse: collapse; margin: 1em 0; }
+  th, td { border: 1px solid #d0d7de; padding: 6px 13px; }
+  th { background: #f6f8fa; font-weight: 600; }
+  ul, ol { padding-left: 1.6em; }
+  hr { border: none; border-top: 1px solid #d0d7de; margin: 1.5em 0; }
+  @media (prefers-color-scheme: dark) {
+    body { color: #e6edf3; background: #0d1117; }
+    h1, h2 { border-color: #30363d; }
+    a { color: #58a6ff; }
+    code, pre, th { background: #161b22; }
+    blockquote { border-color: #30363d; color: #8b949e; }
+    th, td { border-color: #30363d; }
+    hr { border-color: #30363d; }
+  }
+"#,
+    }
+}
+
+/// Convert a Markdown report into a standalone, themed HTML document.
+fn report_to_html_document(title: &str, markdown: &str, theme: &str) -> String {
     use pulldown_cmark::{html, Options, Parser};
 
     let mut options = Options::empty();
@@ -502,6 +640,7 @@ fn report_to_html_document(title: &str, markdown: &str) -> String {
     let mut body = String::new();
     html::push_html(&mut body, parser);
 
+    let css = theme_css(theme);
     format!(
         r#"<!DOCTYPE html>
 <html lang="zh-CN">
@@ -509,43 +648,14 @@ fn report_to_html_document(title: &str, markdown: &str) -> String {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{title}</title>
-<style>
-  :root {{ color-scheme: light dark; }}
-  body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
-         font-size: 13px; max-width: 720px; margin: 24px auto; padding: 0 20px; line-height: 1.65;
-         color: #1f2328; background: #ffffff; }}
-  h1,h2,h3,h4 {{ line-height: 1.25; margin-top: 1.3em; margin-bottom: 0.5em; font-weight: 600; }}
-  h1 {{ font-size: 1.5em; border-bottom: 1px solid #d0d7de; padding-bottom: .3em; }}
-  h2 {{ font-size: 1.25em; border-bottom: 1px solid #d0d7de; padding-bottom: .3em; }}
-  h3 {{ font-size: 1.08em; }}
-  a {{ color: #0969da; text-decoration: none; }}
-  a:hover {{ text-decoration: underline; }}
-  code {{ font-family: "Cascadia Code", Consolas, "Courier New", monospace;
-          background: #f6f8fa; padding: .15em .4em; border-radius: 6px; font-size: .9em; }}
-  pre {{ background: #f6f8fa; padding: 16px; border-radius: 8px; overflow-x: auto; }}
-  pre code {{ background: none; padding: 0; }}
-  blockquote {{ border-left: 4px solid #d0d7de; margin: 1em 0; padding: 0 1em; color: #57606a; }}
-  table {{ border-collapse: collapse; margin: 1em 0; }}
-  th, td {{ border: 1px solid #d0d7de; padding: 6px 13px; }}
-  th {{ background: #f6f8fa; font-weight: 600; }}
-  ul, ol {{ padding-left: 1.6em; }}
-  hr {{ border: none; border-top: 1px solid #d0d7de; margin: 1.5em 0; }}
-  @media (prefers-color-scheme: dark) {{
-    body {{ color: #e6edf3; background: #0d1117; }}
-    h1, h2 {{ border-color: #30363d; }}
-    a {{ color: #58a6ff; }}
-    code, pre, th {{ background: #161b22; }}
-    blockquote {{ border-color: #30363d; color: #8b949e; }}
-    th, td {{ border-color: #30363d; }}
-    hr {{ border-color: #30363d; }}
-  }}
-</style>
+<style>{css}</style>
 </head>
 <body>
 {body}
 </body>
 </html>"#,
         title = html_escape(title),
+        css = css,
         body = body
     )
 }
