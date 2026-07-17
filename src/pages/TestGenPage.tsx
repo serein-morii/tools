@@ -5,6 +5,7 @@ import { FlaskConical, FolderOpen, Play, Search, RotateCw } from "lucide-react";
 import { AiSelector } from "@/components/modules/ai/AiSelector";
 import { useAiProvidersConfig, getProviderConfig, useDefaultProviderId } from "@/lib/query/aiQueries";
 import type { AiProviderConfig } from "@/lib/api/ai";
+import { useAiTaskCenter } from "../lib/AiTaskCenter";
 import { useSettings, useUpdateSetting, getSettingValue } from "../lib/query/settingsQueries";
 import {
   validateGitRepo,
@@ -91,6 +92,7 @@ export default function TestGenPage() {
   // Execution state from global context
   const tg = useTestGen();
   const { runStatus, result, setPushConfirm } = tg;
+  const atc = useAiTaskCenter();
 
   // Local confirm dialogs
   const [execConfirm, setExecConfirm] = useState(false);
@@ -187,7 +189,17 @@ export default function TestGenPage() {
   });
 
   const onExecuteClick = () => setExecConfirm(true);
-  const confirmExec = () => { setExecConfirm(false); tg.startRun(buildConfig() as any, false); };
+  const confirmExec = () => {
+    setExecConfirm(false);
+    const taskId = `testgen-${Date.now()}`;
+    atc.addExternalTask({
+      id: taskId, type: "testgen",
+      providerId: aiProvider.id, providerName: aiProvider.id,
+      status: "running", logs: [], streamText: "", thinkingTokens: null,
+      result: null, error: null, createdAt: Date.now(),
+    });
+    tg.startRun({ ...buildConfig() as any, taskId }, false);
+  };
   const startRetry = () => { if (result) tg.startRun(buildConfig() as any, true, result.test_output_excerpt); };
 
   const confirmPush = async () => {
@@ -324,17 +336,12 @@ export default function TestGenPage() {
           </div>
           <div><label className="text-[11px] text-muted-foreground">mvn 额外参数（如 -pl moduleA -Dtest=Xxx）</label><input value={mvnExtraArgs} onChange={(e) => setMvnExtraArgs(e.target.value)} className={`${inputCls} w-full mt-1`} /></div>
           <div><label className="text-[11px] text-muted-foreground">AI 命令（留空用 claude，可填路径）</label><input value={claudeCommand} onChange={(e) => { setClaudeCommand(e.target.value); setSetting("testgen_claude_command", e.target.value); }} placeholder="claude" className={`${inputCls} w-full mt-1`} /></div>
-          <div>
-            <label className="text-[11px] text-muted-foreground">AI 提供商（优先使用统一 AI 模块）</label>
-            <div className="mt-1">
-              <AiSelector value={aiProvider} onChange={setAiProvider} />
-            </div>
-          </div>
         </div>
       </details>
 
       {/* Execute + Retry */}
-      <div className="flex gap-2">
+      <div className="flex items-center gap-2">
+        <AiSelector value={aiProvider} onChange={setAiProvider} showModel={false} />
         <button onClick={onExecuteClick} disabled={!canRun || runStatus === "running"} className="flex items-center gap-1 h-8 px-3 text-xs bg-primary text-primary-foreground rounded-md hover:opacity-90 disabled:opacity-50"><Play className="w-3.5 h-3.5" /> 执行</button>
         {canRetry && <button onClick={startRetry} className="flex items-center gap-1 h-8 px-3 text-xs border border-border rounded-md hover:bg-secondary"><RotateCw className="w-3.5 h-3.5" /> 重试（修复测试）</button>}
       </div>
