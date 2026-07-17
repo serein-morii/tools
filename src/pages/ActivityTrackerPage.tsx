@@ -1447,16 +1447,19 @@ function ChatView() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
-  const [streaming, setStreaming] = useState("");
   const [thinking, setThinking] = useState<number | null>(null);
   const [sending, setSending] = useState(false);
+  const [tick, setTick] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const streamElRef = useRef<HTMLDivElement>(null);
+  const streamTextRef = useRef("");
 
   const activeConv = conversations.find(c => c.id === activeId);
+  const hasStreaming = sending && (thinking !== null || streamTextRef.current.length > 0);
 
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-  }, [messages, streaming, thinking]);
+  }, [messages, tick, thinking]);
 
   // Persist messages when they change
   useEffect(() => {
@@ -1471,7 +1474,8 @@ function ChatView() {
   const newConversation = () => {
     setActiveId(null);
     setMessages([]);
-    setStreaming("");
+    streamTextRef.current = "";
+    setTick(0);
   };
 
   const selectConversation = (id: string) => {
@@ -1479,7 +1483,8 @@ function ChatView() {
     if (conv) {
       setActiveId(id);
       setMessages(conv.messages);
-      setStreaming("");
+      streamTextRef.current = "";
+      setTick(0);
     }
   };
 
@@ -1500,8 +1505,8 @@ function ChatView() {
     setMessages(newMessages);
     setInput("");
     setSending(true);
-    setStreaming("");
     setThinking(null);
+    streamTextRef.current = "";
 
     // Create conversation if no active one
     let convId = activeId;
@@ -1517,14 +1522,17 @@ function ChatView() {
     }
 
     const taskId = `chat-${Date.now()}`;
-    let accumulated = "";
     const unlisten = await listen<{ task_id: string; kind: string; tokens?: number; text?: string }>(
       "ai-stream",
       (e) => {
         if (e.payload.task_id !== taskId) return;
         switch (e.payload.kind) {
-          case "thinking": setThinking(e.payload.tokens ?? 0); break;
-          case "text": accumulated += (e.payload.text ?? ""); setStreaming(accumulated); break;
+          case "thinking": setThinking(prev => e.payload.tokens ?? prev); break;
+          case "text":
+            streamTextRef.current += (e.payload.text ?? "");
+            if (streamElRef.current) streamElRef.current.textContent = streamTextRef.current;
+            setTick(n => n + 1); // trigger scroll
+            break;
         }
       }
     );
@@ -1543,9 +1551,10 @@ function ChatView() {
       setMessages(prev => [...prev, { role: "assistant", content: `错误: ${String(e)}` }]);
     } finally {
       unlisten();
-      setStreaming("");
+      streamTextRef.current = "";
       setThinking(null);
       setSending(false);
+      setTick(0);
     }
   };
 
@@ -1606,7 +1615,7 @@ function ChatView() {
         </div>
 
         <div ref={scrollRef} className="flex-1 overflow-auto px-4 py-3 space-y-3">
-          {messages.length === 0 && !streaming && (
+          {messages.length === 0 && !hasStreaming && (
             <div className="text-center py-16 text-muted-foreground">
               <MessageSquare className="w-8 h-8 mx-auto mb-2 opacity-20" />
               <p className="text-sm">开始与 AI 对话</p>
@@ -1622,18 +1631,16 @@ function ChatView() {
               </div>
             </div>
           ))}
-          {thinking !== null && !streaming && (
+          {hasStreaming && (
             <div className="flex justify-start">
-              <div className="bg-muted rounded-lg px-3 py-2 text-sm text-amber-500 flex items-center gap-2">
-                <RefreshCw className="w-3 h-3 animate-spin" /> 思考中... {thinking} tokens
-              </div>
-            </div>
-          )}
-          {streaming && (
-            <div className="flex justify-start">
-              <div className="bg-muted rounded-lg px-3 py-2 text-sm whitespace-pre-wrap max-w-[80%]">
-                {streaming}
-                <span className="animate-pulse">|</span>
+              <div className="bg-muted rounded-lg px-3 py-2 text-sm max-w-[80%]">
+                {thinking !== null && streamTextRef.current.length === 0 && (
+                  <span className="text-amber-500 flex items-center gap-2">
+                    <RefreshCw className="w-3 h-3 animate-spin" /> 思考中... {thinking} tokens
+                  </span>
+                )}
+                <div ref={streamElRef} className="whitespace-pre-wrap" />
+                {streamTextRef.current.length > 0 && <span className="animate-pulse">|</span>}
               </div>
             </div>
           )}
