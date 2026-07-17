@@ -2,6 +2,9 @@ import { useState, useEffect, useRef, type ReactNode } from "react";
 import { useLocation } from "react-router-dom";
 import { open } from "@tauri-apps/plugin-dialog";
 import { FlaskConical, FolderOpen, Play, Search, RotateCw } from "lucide-react";
+import { AiSelector } from "@/components/modules/ai/AiSelector";
+import { useAiProvidersConfig, getProviderConfig, useDefaultProviderId } from "@/lib/query/aiQueries";
+import type { AiProviderConfig } from "@/lib/api/ai";
 import { useSettings, useUpdateSetting, getSettingValue } from "../lib/query/settingsQueries";
 import {
   validateGitRepo,
@@ -77,6 +80,13 @@ export default function TestGenPage() {
   const [mvnSettingsXml, setMvnSettingsXml] = useState(() => getVal("testgen_mvn_settings_xml", ""));
   const [mvnExtraArgs, setMvnExtraArgs] = useState("");
   const [claudeCommand, setClaudeCommand] = useState(() => getVal("testgen_claude_command", ""));
+
+  // AI provider
+  const providersConfig = useAiProvidersConfig();
+  const defaultProviderId = useDefaultProviderId();
+  const [aiProvider, setAiProvider] = useState<AiProviderConfig>(
+    () => getProviderConfig(providersConfig, defaultProviderId) || providersConfig.providers[0]
+  );
 
   // Execution state from global context
   const tg = useTestGen();
@@ -173,6 +183,7 @@ export default function TestGenPage() {
     claude_command: claudeCommand || undefined,
     commit_only_if_pass: commitOnlyIfPass,
     mvn_extra_args: mvnExtraArgs || undefined,
+    ai_provider_json: JSON.stringify(aiProvider),
   });
 
   const onExecuteClick = () => setExecConfirm(true);
@@ -313,6 +324,12 @@ export default function TestGenPage() {
           </div>
           <div><label className="text-[11px] text-muted-foreground">mvn 额外参数（如 -pl moduleA -Dtest=Xxx）</label><input value={mvnExtraArgs} onChange={(e) => setMvnExtraArgs(e.target.value)} className={`${inputCls} w-full mt-1`} /></div>
           <div><label className="text-[11px] text-muted-foreground">AI 命令（留空用 claude，可填路径）</label><input value={claudeCommand} onChange={(e) => { setClaudeCommand(e.target.value); setSetting("testgen_claude_command", e.target.value); }} placeholder="claude" className={`${inputCls} w-full mt-1`} /></div>
+          <div>
+            <label className="text-[11px] text-muted-foreground">AI 提供商（优先使用统一 AI 模块）</label>
+            <div className="mt-1">
+              <AiSelector value={aiProvider} onChange={setAiProvider} />
+            </div>
+          </div>
         </div>
       </details>
 

@@ -23,6 +23,8 @@ pub struct TestGenRequest {
     pub mvn_failure_excerpt: Option<String>,
     #[serde(default)]
     pub continue_session: bool,
+    #[serde(default)]
+    pub ai_provider_json: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -194,13 +196,51 @@ pub async fn run_test_gen(
             req.mvn_failure_excerpt.as_deref().unwrap_or("（无错误摘录）")
         ));
     }
-    let claude_cmd = req.claude_command.clone().unwrap_or_else(|| "claude".to_string());
-    let ai_output = cli::run_claude_streaming(&claude_cmd, &prompt, dir, app, cancel_flag, req.continue_session)
-        .await
-        .map_err(|e| {
-            emit("error", format!("AI 失败: {}", e));
-            e
-        })?;
+    // Use AI provider if configured, fall back to direct CLI
+    let ai_output = if let Some(ref provider_config_json) = req.ai_provider_json {
+        use crate::services::ai::{AiProviderConfig, AiRequest, AiEvent, ProviderRegistry};
+        let config: AiProviderConfig = serde_json::from_str(provider_config_json)
+            .map_err(|e| format!("Invalid AI config: {}", e))?;
+        let provider_id = config.id.clone();
+        let registry = ProviderRegistry::new();
+        let provider = registry.get(&provider_id)
+            .ok_or_else(|| format!("Unknown AI provider: {}", provider_id))?;
+
+        let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<AiEvent>();
+        let request = AiRequest {
+            prompt: prompt.clone(),
+            provider_config: config,
+            continue_session: req.continue_session,
+        };
+        let handle = tokio::spawn(async move { provider.call_streaming(request, tx).await });
+        while let Some(event) = rx.recv().await {
+            match event {
+                AiEvent::Progress { stage, message } => {
+                    let _ = app.emit("testgen-progress", serde_json::json!({"stage": stage, "message": message}));
+                }
+                AiEvent::Thinking { tokens } => {
+                    let _ = app.emit("testgen-stream", serde_json::json!({"kind": "thinking", "tokens": tokens}));
+                }
+                AiEvent::TextDelta { text } => {
+                    let _ = app.emit("testgen-stream", serde_json::json!({"kind": "text", "text": text}));
+                }
+                AiEvent::Done => {
+                    let _ = app.emit("testgen-stream", serde_json::json!({"kind": "done"}));
+                }
+            }
+            if cancel_flag.load(std::sync::atomic::Ordering::SeqCst) {
+                return Err("已取消".to_string());
+            }
+        }
+        handle.await.map_err(|e| format!("AI task error: {}", e))?
+            .map(|r| r.output)
+            .map_err(|e| { emit("error", format!("AI 失败: {}", e)); e })?
+    } else {
+        let claude_cmd = req.claude_command.clone().unwrap_or_else(|| "claude".to_string());
+        cli::run_claude_streaming(&claude_cmd, &prompt, dir, app, cancel_flag, req.continue_session)
+            .await
+            .map_err(|e| { emit("error", format!("AI 失败: {}", e)); e })?
+    };
     if cancelled() {
         return Err("已取消".into());
     }
