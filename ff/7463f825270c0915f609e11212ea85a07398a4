@@ -1,0 +1,31 @@
+src/lib/api/ai.ts
+  s_df78d3f297f53f::t_9a41cf75120d3e 55-58
+src/lib/aes/tool.ts
+  s_df78d3f297f53f::t_037f54f2f8b9b4 129-130,133
+  s_df78d3f297f53f::t_28fb359d39e8df 138-139,142
+src-tauri/src/lib.rs
+  s_df78d3f297f53f::t_a82a90311f185a 198
+src/lib/AiTaskCenter.tsx
+  s_df78d3f297f53f::t_dbf16b8c1faed2 4-5
+  s_df78d3f297f53f::t_65a4cacd07e8a6 85-103
+src/pages/ActivityTrackerPage.tsx
+  s_df78d3f297f53f::t_a7ae4431390459 1532
+src-tauri/src/services/ai/providers/codex_cli.rs
+  s_df78d3f297f53f::t_ece710fefd913d 64
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "ff7463f825270c0915f609e11212ea85a07398a4",
+  "prompts": {},
+  "sessions": {
+    "s_df78d3f297f53f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "775d8944-fc8a-4efb-b48d-410c29dfa631",
+        "model": "deepseek-v4-pro"
+      },
+      "human_author": "pengchenghui <pengchenghui@jtexpress.com>"
+    }
+  }
+}
