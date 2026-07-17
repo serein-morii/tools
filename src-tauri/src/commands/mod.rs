@@ -10,6 +10,7 @@ pub mod ai_coverage;
 pub mod dts;
 pub mod organizer;
 pub mod activity_tracker;
+pub mod testgen;
 
 pub use task::*;
 pub use channel::*;
@@ -23,3 +24,4 @@ pub use ai_coverage::*;
 pub use dts::*;
 pub use organizer::*;
 pub use activity_tracker::*;
+pub use testgen::*;
