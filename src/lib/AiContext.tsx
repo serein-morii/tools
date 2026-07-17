@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useRef, useEffect, useCallback, ty
 import { listen } from "@tauri-apps/api/event";
 import { RefreshCw, Minus, X } from "lucide-react";
 import { callAi, type AiProviderConfig, type AiResponse } from "./api/ai";
+import { useMigrateAiSettings } from "@/lib/query/aiQueries";
 
 export type RunStatus = "idle" | "running" | "done" | "error";
 
@@ -56,6 +57,8 @@ export function AiProvider({ children }: { children: ReactNode }) {
   const [currentProviderName, setCurrentProviderName] = useState("");
   const [runId, setRunId] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  useMigrateAiSettings();
 
   const appendLog = useCallback((stage: string, text: string) => {
     setLogs((p) => [...p, { time: Date.now(), stage, text }]);
