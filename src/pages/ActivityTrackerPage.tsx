@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback, useRef, type ReactNode } from "react";
-import { Activity, History, FileText, Settings, RefreshCw, Zap, Download, FileCode, LayoutTemplate } from "lucide-react";
+import { Activity, History, FileText, Settings, RefreshCw, Zap, Download, FileCode, LayoutTemplate, MessageSquare, Send, StopCircle } from "lucide-react";
 import { save } from "@tauri-apps/plugin-dialog";
 import { useSettings, useUpdateSetting, getSettingValue } from "../lib/query/settingsQueries";
+import { listen } from "@tauri-apps/api/event";
+import { callAi } from "@/lib/api/ai";
 import {
   getTodayStats,
   getTodayRange,
@@ -60,6 +62,7 @@ export default function ActivityTrackerPage() {
     { id: "sessions", label: "会话", icon: History },
     { id: "reports", label: "报告", icon: FileText },
     { id: "templates", label: "模板", icon: LayoutTemplate },
+    { id: "chat", label: "AI 对话", icon: MessageSquare },
     { id: "settings", label: "设置", icon: Settings },
   ];
 
@@ -163,6 +166,7 @@ export default function ActivityTrackerPage() {
           <ReportViewer onGenerate={startGeneration} reportsNonce={reportsNonce} />
         )}
         {activeTab === "templates" && <TemplateManager />}
+        {activeTab === "chat" && <ChatView />}
         {activeTab === "settings" && <ToolSettings />}
       </div>
 
@@ -1400,6 +1404,150 @@ function TemplateManager() {
         onCancel={() => setDelConfirm(null)}
         onConfirm={confirmDelete}
       />
+    </div>
+  );
+}
+
+// ==================== Chat Tab ====================
+
+interface ChatMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
+function ChatView() {
+  const providersConfig = useAiProvidersConfig();
+  const defaultProviderId = useDefaultProviderId();
+  const [aiProvider, setAiProvider] = useState<AiProviderConfig>(
+    () => getProviderConfig(providersConfig, defaultProviderId) ?? providersConfig.providers[0]
+  );
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [input, setInput] = useState("");
+  const [streaming, setStreaming] = useState("");
+  const [thinking, setThinking] = useState<number | null>(null);
+  const [sending, setSending] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+  }, [messages, streaming, thinking]);
+
+  const sendMessage = async () => {
+    const text = input.trim();
+    if (!text || sending) return;
+
+    const userMsg: ChatMessage = { role: "user", content: text };
+    setMessages((prev) => [...prev, userMsg]);
+    setInput("");
+    setSending(true);
+    setStreaming("");
+    setThinking(null);
+
+    const taskId = `chat-${Date.now()}`;
+    const unlisten = listen<{ task_id: string; kind: string; tokens?: number; text?: string }>(
+      "ai-stream",
+      (e) => {
+        if (e.payload.task_id !== taskId) return;
+        switch (e.payload.kind) {
+          case "thinking": setThinking(e.payload.tokens ?? 0); break;
+          case "text": setStreaming(e.payload.text ?? ""); break;
+        }
+      }
+    );
+
+    try {
+      const result = await callAi({
+        providerId: aiProvider.id,
+        prompt: text,
+        configJson: JSON.stringify(aiProvider),
+        continueSession: false,
+        taskId,
+      });
+      setMessages((prev) => [...prev, { role: "assistant", content: result.output }]);
+    } catch (e) {
+      setMessages((prev) => [...prev, { role: "assistant", content: `错误: ${String(e)}` }]);
+    } finally {
+      (await unlisten)();
+      setStreaming("");
+      setThinking(null);
+      setSending(false);
+    }
+  };
+
+  const clearChat = () => setMessages([]);
+
+  return (
+    <div className="flex flex-col h-full">
+      <div className="flex items-center justify-between gap-2 px-1 py-2 border-b border-border flex-shrink-0">
+        <div className="flex items-center gap-2">
+          <AiSelector value={aiProvider} onChange={setAiProvider} showModel={true} />
+        </div>
+        <button
+          onClick={clearChat}
+          className="h-7 px-2 text-[11px] text-muted-foreground hover:text-foreground rounded hover:bg-secondary flex-shrink-0"
+        >
+          清空对话
+        </button>
+      </div>
+
+      <div ref={scrollRef} className="flex-1 overflow-auto px-4 py-3 space-y-3">
+        {messages.length === 0 && !streaming && (
+          <div className="text-center py-16 text-muted-foreground">
+            <MessageSquare className="w-8 h-8 mx-auto mb-2 opacity-20" />
+            <p className="text-sm">开始与 AI 对话</p>
+            <p className="text-xs mt-1">支持 Claude Code CLI / Codex CLI / Anthropic API / OpenAI API</p>
+          </div>
+        )}
+        {messages.map((msg, i) => (
+          <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+            <div
+              className={`max-w-[80%] rounded-lg px-3 py-2 text-sm whitespace-pre-wrap ${
+                msg.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"
+              }`}
+            >
+              {msg.content}
+            </div>
+          </div>
+        ))}
+        {thinking !== null && !streaming && (
+          <div className="flex justify-start">
+            <div className="bg-muted rounded-lg px-3 py-2 text-sm text-amber-500 flex items-center gap-2">
+              <RefreshCw className="w-3 h-3 animate-spin" /> 思考中... {thinking} tokens
+            </div>
+          </div>
+        )}
+        {streaming && (
+          <div className="flex justify-start">
+            <div className="bg-muted rounded-lg px-3 py-2 text-sm whitespace-pre-wrap max-w-[80%]">
+              {streaming}
+              <span className="animate-pulse">|</span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="flex-shrink-0 border-t border-border p-3">
+        <div className="flex gap-2">
+          <textarea
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+            }}
+            placeholder="输入消息，Enter 发送，Shift+Enter 换行"
+            className="flex-1 h-20 rounded-md border border-border bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-primary"
+            disabled={sending}
+          />
+          <button
+            onClick={sending ? undefined : sendMessage}
+            disabled={!input.trim() || sending}
+            className="h-20 px-3 text-xs bg-primary text-primary-foreground rounded-md hover:opacity-90 disabled:opacity-50 flex flex-col items-center justify-center gap-1 flex-shrink-0"
+          >
+            {sending ? <StopCircle className="w-4 h-4" /> : <Send className="w-4 h-4" />}
+            <span>{sending ? "等待" : "发送"}</span>
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
