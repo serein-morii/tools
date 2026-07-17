@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import {
     Search, FileCode, Loader2, ChevronRight, ChevronLeft, Check,
     Trash2, RotateCcw, History, Sparkles, Clock,
@@ -331,6 +331,7 @@ export function SonarPromptPage() {
 
     // --- Tab ---
     const [searchParams] = useSearchParams();
+    const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState(() => searchParams.get("tab") || "coverage");
 
     // --- 覆盖率周期 ---
@@ -1409,7 +1410,15 @@ export function SonarPromptPage() {
                                         )}
                                     </div>
                                     {!processing && prompt && (
-                                        <CopyButton text={prompt} size="sm" className="h-8 text-xs" showText />
+                                        <div className="flex gap-2">
+                                            <CopyButton text={prompt} size="sm" className="h-8 text-xs" showText />
+                                            <button
+                                                onClick={() => navigate("/testgen", { state: { prompt } })}
+                                                className="h-8 px-3 text-xs bg-primary text-primary-foreground rounded-md hover:opacity-90"
+                                            >
+                                                用 AI 执行
+                                            </button>
+                                        </div>
                                     )}
                                 </div>
 
