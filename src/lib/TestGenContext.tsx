@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useRef, useEffect, useCallback, type ReactNode } from "react";
 import { listen } from "@tauri-apps/api/event";
-import { RefreshCw, Minus, X } from "lucide-react";
+import { Minus, X, FlaskConical } from "lucide-react";
 import {
   runTestGen,
   pushBranch,
@@ -158,11 +158,16 @@ function TestGenPanel() {
     <>
       {runOpen && !runMinimized && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-background border border-border rounded-lg w-[620px] max-w-[92vw] h-[460px] max-h-[82vh] flex flex-col">
-            <div className="flex items-center justify-between px-4 py-2.5 border-b border-border">
-              <div className="flex items-center gap-2"><RefreshCw className={`w-3.5 h-3.5 ${runStatus === "running" ? "animate-spin" : ""} text-primary`} /><span className="text-sm font-medium">单测执行过程</span></div>
+          <div className="bg-background border border-emerald-500/30 rounded-lg w-[620px] max-w-[92vw] h-[460px] max-h-[82vh] flex flex-col shadow-xl shadow-emerald-500/5">
+            <div className="flex items-center justify-between px-4 py-2.5 border-b border-emerald-500/20 bg-emerald-500/[0.03]">
+              <div className="flex items-center gap-2">
+                <div className="flex h-6 w-6 items-center justify-center rounded bg-emerald-500/10">
+                  <FlaskConical className="w-3.5 h-3.5 text-emerald-500" />
+                </div>
+                <span className="text-sm font-medium">单测执行过程</span>
+              </div>
               <div className="flex gap-1">
-                {runStatus === "running" && <button onClick={() => cancelTestGen()} className="px-2 py-1 text-xs text-red-500 hover:text-red-600 rounded hover:bg-secondary">取消</button>}
+                {runStatus === "running" && <button onClick={() => cancelTestGen()} className="px-2 py-1 text-xs text-emerald-600 hover:text-emerald-700 rounded hover:bg-emerald-500/10">取消</button>}
                 <button onClick={() => setRunMinimized(true)} className="p-1.5 rounded hover:bg-secondary"><Minus className="w-3.5 h-3.5" /></button>
                 {runStatus !== "running" && <button onClick={() => setRunOpen(false)} className="p-1.5 rounded hover:bg-secondary"><X className="w-3.5 h-3.5" /></button>}
               </div>
@@ -193,7 +198,7 @@ function TestGenPanel() {
                 </div>
               )}
               {result && runStatus !== "running" && runStatus !== "awaiting_answer" && (
-                <div className="mt-2 pt-2 border-t border-border/40 text-xs space-y-0.5">
+                <div className="mt-2 pt-2 border-t border-emerald-500/20 text-xs space-y-0.5 bg-emerald-500/[0.02] -mx-4 px-4 pb-3">
                   <div><span className="text-muted-foreground">分支：</span>{result.branch}</div>
                   {result.commit_sha && <div><span className="text-muted-foreground">提交：</span>{result.commit_sha}（{result.files_changed} 文件）</div>}
                   <div><span className="text-muted-foreground">测试：</span>{result.test_passed ? "✓ 通过" : "✗ 失败"}</div>
@@ -206,9 +211,9 @@ function TestGenPanel() {
         </div>
       )}
       {runMinimized && (
-        <button onClick={() => setRunMinimized(false)} className="fixed bottom-4 right-4 z-50 flex items-center gap-2 px-3 py-2 bg-primary text-primary-foreground rounded-full shadow-lg">
-          <RefreshCw className={`w-3.5 h-3.5 ${runStatus === "running" ? "animate-spin" : ""}`} />
-          <span className="text-xs">{runStatus === "running" ? "执行中..." : runStatus === "done" ? "完成（点击查看）" : runStatus === "awaiting_answer" ? "AI 提问中..." : "失败（点击查看）"}</span>
+        <button onClick={() => setRunMinimized(false)} className="fixed bottom-4 left-4 z-50 flex items-center gap-2 px-3 py-2 rounded-full shadow-lg bg-emerald-500 text-white hover:bg-emerald-600 transition-colors">
+          <FlaskConical className="w-3.5 h-3.5" />
+          <span className="text-xs">{runStatus === "running" ? "单测执行中..." : runStatus === "done" ? "单测完成 ✓" : runStatus === "awaiting_answer" ? "AI 提问中..." : "单测失败 ✗"}</span>
         </button>
       )}
     </>
