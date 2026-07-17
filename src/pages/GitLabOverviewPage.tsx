@@ -114,7 +114,7 @@ function SummaryCards({
             onClick={() => toggleCard(card.id)}
           >
             <div className="flex items-center gap-2">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-muted">
+              <div className="flex h-8 w-7 items-center justify-center rounded-lg bg-muted">
                 <card.icon className="h-4 w-4 text-muted-foreground shrink-0" />
               </div>
               <div className="flex-1 min-w-0">
@@ -938,7 +938,7 @@ export function GitLabOverviewPage() {
               <BarChart3 className="h-4 w-4 text-primary" />
             </div>
             <div>
-              <h1 className="text-base font-semibold tracking-tight">GitLab 概览</h1>
+              <h1 className="text-base font-semibold ">GitLab 概览</h1>
             </div>
           </div>
         </div>
@@ -992,7 +992,7 @@ export function GitLabOverviewPage() {
       {!selectedHistory && (
         <div className="flex flex-col items-center justify-center py-12">
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-muted mb-4">
-            <Inbox className="h-7 w-7 text-muted-foreground" />
+            <Inbox className="h-8 w-7 text-muted-foreground" />
           </div>
           <p className="text-sm font-medium mb-1.5">{t("gitlab.overview.noScanData")}</p>
           <p className="text-sm text-muted-foreground mb-4">{t("gitlab.overview.clickToScan")}</p>

@@ -337,8 +337,8 @@ export default function TestGenPage() {
 
       {/* Execute + Retry */}
       <div className="flex gap-2">
-        <button onClick={onExecuteClick} disabled={!canRun || runStatus === "running"} className="flex items-center gap-1 h-9 px-4 text-sm bg-primary text-primary-foreground rounded-md hover:opacity-90 disabled:opacity-50"><Play className="w-4 h-4" /> 执行</button>
-        {canRetry && <button onClick={startRetry} className="flex items-center gap-1 h-9 px-4 text-sm border border-border rounded-md hover:bg-secondary"><RotateCw className="w-4 h-4" /> 重试（修复测试）</button>}
+        <button onClick={onExecuteClick} disabled={!canRun || runStatus === "running"} className="flex items-center gap-1 h-8 px-3 text-xs bg-primary text-primary-foreground rounded-md hover:opacity-90 disabled:opacity-50"><Play className="w-3.5 h-3.5" /> 执行</button>
+        {canRetry && <button onClick={startRetry} className="flex items-center gap-1 h-8 px-3 text-xs border border-border rounded-md hover:bg-secondary"><RotateCw className="w-3.5 h-3.5" /> 重试（修复测试）</button>}
       </div>
 
         </div>

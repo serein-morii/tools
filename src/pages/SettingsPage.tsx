@@ -53,7 +53,7 @@ export function SettingsPage() {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
               <Settings className="h-4 w-4 text-primary" />
             </div>
-            <h1 className="text-base font-semibold tracking-tight">{t("nav.settings")}</h1>
+            <h1 className="text-base font-semibold ">{t("nav.settings")}</h1>
           </div>
         </div>
         <div className="section-spacing">
@@ -76,7 +76,7 @@ export function SettingsPage() {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
               <Settings className="h-4 w-4 text-primary" />
             </div>
-            <h1 className="text-base font-semibold tracking-tight">{t("nav.settings")}</h1>
+            <h1 className="text-base font-semibold ">{t("nav.settings")}</h1>
           </div>
         </div>
         <div className="section-spacing">
@@ -160,7 +160,7 @@ export function SettingsPage() {
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
             <Settings className="h-4 w-4 text-primary" />
           </div>
-          <h1 className="text-base font-semibold tracking-tight">{t("nav.settings")}</h1>
+          <h1 className="text-base font-semibold ">{t("nav.settings")}</h1>
         </div>
       </div>
       <div className="section-spacing">
@@ -173,7 +173,7 @@ export function SettingsPage() {
         >
           <div className="flex items-center gap-4">
             <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-md group-hover:scale-105 transition-transform">
-              <Sparkles className="h-7 w-7" />
+              <Sparkles className="h-8 w-7" />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
@@ -446,7 +446,7 @@ export function SettingsPage() {
               <CardHeader className="bg-destructive/10 border-b py-4 px-5">
                 <div className="flex items-center gap-2">
                   <AlertTriangle className="h-5 w-5 text-destructive" />
-                  <CardTitle className="text-lg font-semibold text-destructive">确认操作</CardTitle>
+                  <CardTitle className="text-base font-semibold text-destructive">确认操作</CardTitle>
                 </div>
               </CardHeader>
               <CardContent className="p-5">
@@ -691,10 +691,10 @@ function ReorderableMenuList({ settings, updateSetting, dragIdx, setDragIdx }: {
             onChange={(e) => setNewCatName(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addCategory(); } }}
             placeholder="新分类名（如 数据分析）"
-            className="h-7 text-xs flex-1"
+            className="h-8 text-xs flex-1"
             maxLength={12}
           />
-          <Button variant="outline" size="sm" onClick={addCategory} className="h-7 px-2 text-xs">
+          <Button variant="outline" size="sm" onClick={addCategory} className="h-8 px-2 text-xs">
             <Plus className="h-3 w-3 mr-1" />添加
           </Button>
         </div>

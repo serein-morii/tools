@@ -447,7 +447,7 @@ function HistoryCard({ item, selected, onToggleSelect, onClick }: {
               className="h-4 w-4"
               onClick={(e) => e.stopPropagation()}
             />
-            <div className="flex h-7 w-7 items-center justify-center rounded-md bg-muted">
+            <div className="flex h-8 w-7 items-center justify-center rounded-md bg-muted">
               <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
             </div>
             <div>
@@ -727,7 +727,7 @@ export function GitLabHistoryPage() {
     <div className="border-b px-5 py-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
+          <div className="flex h-8 w-7 items-center justify-center rounded-lg bg-primary/10">
             <GitBranch className="h-3.5 w-3.5 text-primary" />
           </div>
           <div>
@@ -799,7 +799,7 @@ export function GitLabHistoryPage() {
             placeholder={t("gitlab.history.searchPlaceholder")}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="h-7 text-xs w-44"
+            className="h-8 text-xs w-44"
           />
           <div className="inline-flex gap-1 rounded-lg bg-muted p-1">
             <button

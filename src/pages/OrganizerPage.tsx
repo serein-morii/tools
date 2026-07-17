@@ -388,7 +388,7 @@ export function OrganizerPage() {
               <FolderOpen className="h-4 w-4 text-primary" />
             </div>
             <div>
-              <h1 className="text-base font-semibold tracking-tight">桌面整理</h1>
+              <h1 className="text-base font-semibold ">桌面整理</h1>
               <p className="text-xs text-muted-foreground mt-0.5">
                 按文件类型/文件名模式自动归类 + 一键还原
                 {totalFilesCount > 0 && (
@@ -412,12 +412,12 @@ export function OrganizerPage() {
                   value={sourceDir}
                   onChange={(e) => setSourceDir(e.target.value)}
                   placeholder="桌面路径..."
-                  className="text-xs h-7 flex-1"
+                  className="text-xs h-8 flex-1"
                 />
                 <Button
                   variant="outline"
                   size="sm"
-                  className="h-7 text-xs shrink-0"
+                  className="h-8 text-xs shrink-0"
                   onClick={() => setSourceDir(desktopPath)}
                   title="重置为桌面"
                 >
@@ -714,7 +714,7 @@ export function OrganizerPage() {
                       const totalSize = files.reduce((sum, f) => sum + f.size, 0);
                       return (
                         <div key={category} className="flex items-center gap-2 rounded-lg bg-muted/30 p-2">
-                          <div className={cn("flex h-7 w-7 items-center justify-center rounded-lg shrink-0", color)}>
+                          <div className={cn("flex h-8 w-7 items-center justify-center rounded-lg shrink-0", color)}>
                             <Icon className="h-3.5 w-3.5" />
                           </div>
                           <div className="min-w-0">

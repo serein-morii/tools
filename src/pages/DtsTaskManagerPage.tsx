@@ -342,7 +342,7 @@ export function DtsTaskManagerPage() {
               <Database className="h-4 w-4 text-primary" />
             </div>
             <div>
-              <h1 className="text-base font-semibold tracking-tight">DTS 任务</h1>
+              <h1 className="text-base font-semibold ">DTS 任务</h1>
               <p className="text-xs text-muted-foreground mt-0.5">
                 DTS 任务批量启停 · 全量回刷 · 多环境配置
               </p>
@@ -1146,7 +1146,7 @@ function TasksTab({
             <button
               type="button"
               onClick={() => setShowEnvDropdown(!showEnvDropdown)}
-              className="flex items-center gap-1 h-7 px-2 rounded-md border bg-background text-xs hover:bg-muted"
+              className="flex items-center gap-1 h-8 px-2 rounded-md border bg-background text-xs hover:bg-muted"
             >
               <span className="truncate max-w-[120px]">
                 {envCodeFilter ? (envMap[envCodeFilter] || envCodeFilter) : "全部环境"}
@@ -1205,7 +1205,7 @@ function TasksTab({
           >
             {PAGE_SIZE_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
           </Select>
-          <Button size="sm" onClick={handleSearch} disabled={loading} className="h-7 px-3">
+          <Button size="sm" onClick={handleSearch} disabled={loading} className="h-8 px-3">
             <Search className="h-3.5 w-3.5 mr-1" />
             搜索
           </Button>
@@ -2589,7 +2589,7 @@ function FlushTab({
             <button
               type="button"
               onClick={() => setShowEnvDropdown(!showEnvDropdown)}
-              className="flex items-center gap-1 h-7 px-2 rounded-md border bg-background text-xs hover:bg-muted"
+              className="flex items-center gap-1 h-8 px-2 rounded-md border bg-background text-xs hover:bg-muted"
             >
               <span className="truncate max-w-[120px]">
                 {envCodeFilter ? (envMap[envCodeFilter] || envCodeFilter) : "全部环境"}
@@ -2648,7 +2648,7 @@ function FlushTab({
           >
             {PAGE_SIZE_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
           </Select>
-          <Button size="sm" onClick={handleSearch} disabled={loading} className="h-7 px-3">
+          <Button size="sm" onClick={handleSearch} disabled={loading} className="h-8 px-3">
             <Search className="h-3.5 w-3.5 mr-1" />
             搜索
           </Button>
@@ -3025,10 +3025,10 @@ function ConfigsTab({ onConfigChange, envOptions }: { onConfigChange: () => void
                     激活
                   </Button>
                 )}
-                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => startEdit(c)} title="编辑">
+                <Button variant="ghost" size="sm" className="h-8 w-7 p-0" onClick={() => startEdit(c)} title="编辑">
                   <Edit3 className="h-3.5 w-3.5" />
                 </Button>
-                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => remove(c.config_name)} title="删除">
+                <Button variant="ghost" size="sm" className="h-8 w-7 p-0" onClick={() => remove(c.config_name)} title="删除">
                   <Trash2 className="h-3.5 w-3.5 text-rose-500" />
                 </Button>
               </div>

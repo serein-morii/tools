@@ -90,14 +90,14 @@ export function TemplatesPage() {
       <div className="border-b px-5 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
+            <div className="flex h-8 w-7 items-center justify-center rounded-lg bg-primary/10">
               <FileText className="h-3.5 w-3.5 text-primary" />
             </div>
             <div>
               <h1 className="text-sm font-medium">模板管理</h1>
             </div>
           </div>
-          <Button onClick={handleCreate} size="sm" className="gap-1.5 shadow-sm h-7 text-xs">
+          <Button onClick={handleCreate} size="sm" className="gap-1.5 shadow-sm h-8 text-xs">
             <Plus className="h-3.5 w-3.5" />
             新建模板
           </Button>

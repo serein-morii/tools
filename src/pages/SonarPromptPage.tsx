@@ -885,7 +885,7 @@ export function SonarPromptPage() {
                             <FlaskConical className="h-4 w-4 text-primary" />
                         </div>
                         <div>
-                            <h1 className="text-base font-semibold tracking-tight">单测覆盖率</h1>
+                            <h1 className="text-base font-semibold ">单测覆盖率</h1>
                         </div>
                     </div>
                     <div className="inline-flex gap-1 rounded-lg bg-muted p-1">
@@ -1022,7 +1022,7 @@ export function SonarPromptPage() {
                                         type="button"
                                         onClick={() => setShowAdvanced(!showAdvanced)}
                                         className={cn(
-                                            "inline-flex h-7 items-center gap-1.5 rounded-md px-2.5 text-[11px] font-medium transition-colors",
+                                            "inline-flex h-8 items-center gap-1.5 rounded-md px-2.5 text-[11px] font-medium transition-colors",
                                             showAdvanced
                                                 ? "bg-muted text-foreground"
                                                 : "text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -1119,7 +1119,7 @@ export function SonarPromptPage() {
                                                 onClick={() => handleSelectReport(r)}
                                             >
                                                 <div className="flex items-center gap-3 min-w-0">
-                                                    <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                                                    <div className="flex h-8 w-7 items-center justify-center rounded-lg bg-muted text-muted-foreground">
                                                         <FileCode className="h-3.5 w-3.5" />
                                                     </div>
                                                     <div className="min-w-0">
@@ -1542,14 +1542,14 @@ export function SonarPromptPage() {
                                                 {"{file_list}"}
                                             </code>
                                         </div>
-                                        <Button variant="ghost" size="sm" className="h-7 px-2" onClick={handleCancelEdit}>
+                                        <Button variant="ghost" size="sm" className="h-8 px-2" onClick={handleCancelEdit}>
                                             取消
                                         </Button>
                                     </div>
                                     <div className="space-y-1.5">
                                         <Label className="text-xs">模板名称</Label>
                                         <Input
-                                            className="h-9 text-xs"
+                                            className="h-8 text-xs"
                                             value={tplName}
                                             onChange={(e) => setTplName(e.target.value)}
                                             placeholder="输入模板名称"
@@ -1627,11 +1627,11 @@ export function SonarPromptPage() {
                                                 </p>
                                             </div>
                                             <div className="flex gap-0.5 shrink-0">
-                                                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => handleStartEdit(tpl)}>
+                                                <Button variant="ghost" size="sm" className="h-8 w-7 p-0" onClick={() => handleStartEdit(tpl)}>
                                                     <Pencil className="h-3.5 w-3.5" />
                                                 </Button>
                                                 {tpl.id !== "built-in" && (
-                                                    <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setDeleteTemplateId(tpl.id)}>
+                                                    <Button variant="ghost" size="sm" className="h-8 w-7 p-0" onClick={() => setDeleteTemplateId(tpl.id)}>
                                                         <Trash2 className="h-3.5 w-3.5" />
                                                     </Button>
                                                 )}
@@ -1650,7 +1650,7 @@ export function SonarPromptPage() {
                         {history.length > 0 && (
                             <div className="flex items-center justify-between">
                                 <span className="text-xs text-muted-foreground">共 {history.length} 条记录</span>
-                                <Button variant="ghost" size="sm" className="h-7 text-xs text-destructive hover:text-destructive" onClick={() => setShowClearConfirm(true)}>
+                                <Button variant="ghost" size="sm" className="h-8 text-xs text-destructive hover:text-destructive" onClick={() => setShowClearConfirm(true)}>
                                     <Trash2 className="h-3 w-3 mr-1" /> 清空全部
                                 </Button>
                             </div>
@@ -1705,11 +1705,11 @@ export function SonarPromptPage() {
                 {activeTab === "history" && detailRecord && (
                     <div className="mx-auto max-w-[1400px] space-y-3 px-3 py-3">
                         <div className="flex items-center justify-between">
-                            <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={() => setDetailRecord(null)}>
+                            <Button variant="ghost" size="sm" className="h-8 text-xs gap-1" onClick={() => setDetailRecord(null)}>
                                 <RotateCcw className="h-3 w-3" /> 返回列表
                             </Button>
                             <div className="flex gap-1">
-                                <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={() => handleLoadFromHistory(detailRecord)}>
+                                <Button variant="ghost" size="sm" className="h-8 text-xs gap-1" onClick={() => handleLoadFromHistory(detailRecord)}>
                                     <RotateCcw className="h-3 w-3" /> 加载配置
                                 </Button>
                                 <CopyButton text={detailRecord.prompt} variant="ghost" size="sm" className="h-8 text-xs" showText />

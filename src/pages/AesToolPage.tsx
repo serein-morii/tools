@@ -320,7 +320,7 @@ export default function AesToolPage() {
             <select
               value={encryptType}
               onChange={(e) => setEncryptType(e.target.value)}
-              className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm"
+              className="h-8 w-full rounded-md border border-border bg-background px-3 text-sm"
             >
               {ENCRYPT_TYPE_OPTIONS.map((o) => (
                 <option key={o.value} value={o.value}>
@@ -337,7 +337,7 @@ export default function AesToolPage() {
                 setSelectedGroupName(e.target.value);
                 setSelectedKeyId(0); // 切换组后密钥ID重置，由派生回退到该组第一个
               }}
-              className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm"
+              className="h-8 w-full rounded-md border border-border bg-background px-3 text-sm"
             >
               {groupOptions.length === 0 && <option value="">（无密钥组）</option>}
               {groupOptions.map((name) => (
@@ -352,7 +352,7 @@ export default function AesToolPage() {
             <select
               value={effectiveKeyId}
               onChange={(e) => setSelectedKeyId(Number(e.target.value))}
-              className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm"
+              className="h-8 w-full rounded-md border border-border bg-background px-3 text-sm"
             >
               {keyIdOptions.length === 0 && <option value={0}>（无密钥）</option>}
               {keyIdOptions.map((k) => (
@@ -522,7 +522,7 @@ export default function AesToolPage() {
                           type="number"
                           defaultValue={k.id}
                           onBlur={(e) => updateDraftKeyId(group.name, k.id, e.target.value)}
-                          className="w-24 h-7 rounded-md border border-border bg-background px-2 text-xs font-semibold"
+                          className="w-24 h-8 rounded-md border border-border bg-background px-2 text-xs font-semibold"
                         />
                         <button
                           onClick={() => deleteDraftKey(group.name, k.id)}
@@ -538,7 +538,7 @@ export default function AesToolPage() {
                           value={k.keyHex}
                           onChange={(e) => updateDraftKeyHex(group.name, k.id, e.target.value)}
                           placeholder="64/48/32 位十六进制"
-                          className="flex-1 h-7 rounded-md border border-border bg-background px-2 text-[11px] font-mono"
+                          className="flex-1 h-8 rounded-md border border-border bg-background px-2 text-[11px] font-mono"
                         />
                         <button
                           onClick={() => genDraftKey(group.name, k.id)}
@@ -554,7 +554,7 @@ export default function AesToolPage() {
                           value={k.ivHex}
                           onChange={(e) => updateDraftIvHex(group.name, k.id, e.target.value)}
                           placeholder="32 位十六进制"
-                          className="flex-1 h-7 rounded-md border border-border bg-background px-2 text-[11px] font-mono"
+                          className="flex-1 h-8 rounded-md border border-border bg-background px-2 text-[11px] font-mono"
                         />
                         <button
                           onClick={() => genDraftIv(group.name, k.id)}

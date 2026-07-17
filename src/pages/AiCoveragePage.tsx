@@ -845,7 +845,7 @@ export function AiCoveragePage() {
               <Brain className="h-4 w-4 text-primary" />
             </div>
             <div>
-              <h1 className="text-base font-semibold tracking-tight">AI 生成率</h1>
+              <h1 className="text-base font-semibold ">AI 生成率</h1>
             </div>
           </div>
           <div className="inline-flex gap-1 rounded-lg bg-muted p-1">
@@ -882,7 +882,7 @@ export function AiCoveragePage() {
                     key={preset.label}
                     variant="ghost"
                     size="sm"
-                    className="h-7 px-2.5 text-xs"
+                    className="h-8 px-2.5 text-xs"
                     onClick={() => applyPreset(preset)}
                   >
                     {preset.label}
@@ -893,18 +893,18 @@ export function AiCoveragePage() {
               <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
               <input
                 type="date"
-                className="h-7 rounded-md border border-input bg-background px-2 text-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
+                className="h-8 rounded-md border border-input bg-background px-2 text-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
               />
               <span className="text-muted-foreground text-xs">→</span>
               <input
                 type="date"
-                className="h-7 rounded-md border border-input bg-background px-2 text-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
+                className="h-8 rounded-md border border-input bg-background px-2 text-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
               />
-              <Button size="sm" className="h-7 text-xs" onClick={fetchData} disabled={loading}>
+              <Button size="sm" className="h-8 text-xs" onClick={fetchData} disabled={loading}>
                 <RefreshCw className={cn("h-3.5 w-3.5 mr-1.5", loading && "animate-spin")} />
                 查询
               </Button>
@@ -965,16 +965,16 @@ export function AiCoveragePage() {
                 <div className="relative">
                   <Search className="h-3.5 w-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
                   <Input
-                    className="h-7 w-56 pl-7 text-xs"
+                    className="h-8 w-56 pl-7 text-xs"
                     placeholder="搜索部门..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                   />
                 </div>
-                <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={expandAll}>
+                <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={expandAll}>
                   展开全部
                 </Button>
-                <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={collapseAll}>
+                <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={collapseAll}>
                   收起全部
                 </Button>
               </div>

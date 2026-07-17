@@ -1025,7 +1025,7 @@ function ReportViewer({
                     value={htmlTheme}
                     onChange={(e) => setHtmlTheme(e.target.value)}
                     title="HTML 主题（预览与导出共用）"
-                    className="h-7 rounded-md border border-border bg-background px-1.5 text-xs max-w-[110px]"
+                    className="h-8 rounded-md border border-border bg-background px-1.5 text-xs max-w-[110px]"
                   >
                     {themes.map((t) => (
                       <option key={t.id} value={t.id}>{t.label}</option>
@@ -1237,7 +1237,7 @@ function ToolSettings() {
           <div className="p-3 border border-border rounded-lg space-y-2">
             <label className="text-sm font-medium">AI 总结方式</label>
             <select
-              className="w-full h-9 rounded-md border border-border bg-background px-3 text-sm"
+              className="w-full h-8 rounded-md border border-border bg-background px-3 text-sm"
               value={summaryMethod}
               onChange={(e) => setSetting("ai_summary_method", e.target.value)}
             >
@@ -1248,7 +1248,7 @@ function ToolSettings() {
 
             {summaryMethod === "cli" && (
               <select
-                className="w-full h-9 rounded-md border border-border bg-background px-3 text-sm mt-2"
+                className="w-full h-8 rounded-md border border-border bg-background px-3 text-sm mt-2"
                 value={getVal("ai_summary_tool", "claude")}
                 onChange={(e) => setSetting("ai_summary_tool", e.target.value)}
               >
@@ -1260,7 +1260,7 @@ function ToolSettings() {
             {summaryMethod === "api" && (
               <div className="space-y-2 mt-2">
                 <select
-                  className="w-full h-9 rounded-md border border-border bg-background px-3 text-sm"
+                  className="w-full h-8 rounded-md border border-border bg-background px-3 text-sm"
                   value={getVal("ai_summary_provider", "anthropic")}
                   onChange={(e) => setSetting("ai_summary_provider", e.target.value)}
                 >
@@ -1270,13 +1270,13 @@ function ToolSettings() {
                 <input
                   placeholder="API Key（加密存储）"
                   type="password"
-                  className="w-full h-9 rounded-md border border-border bg-background px-3 text-sm"
+                  className="w-full h-8 rounded-md border border-border bg-background px-3 text-sm"
                   defaultValue={getVal("ai_summary_api_key", "")}
                   onBlur={(e) => { if (e.target.value) setSetting("ai_summary_api_key", e.target.value); }}
                 />
                 <input
                   placeholder="模型名（默认: claude-sonnet-4-20250514）"
-                  className="w-full h-9 rounded-md border border-border bg-background px-3 text-sm"
+                  className="w-full h-8 rounded-md border border-border bg-background px-3 text-sm"
                   defaultValue={getVal("ai_summary_model", "")}
                   onBlur={(e) => { if (e.target.value) setSetting("ai_summary_model", e.target.value); }}
                 />
