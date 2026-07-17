@@ -36,12 +36,14 @@ export async function callAi(params: {
   prompt: string;
   configJson: string;
   continueSession: boolean;
+  taskId: string;
 }): Promise<AiResponse> {
   return invoke<AiResponse>("call_ai", {
     providerId: params.providerId,
     prompt: params.prompt,
     configJson: params.configJson,
     continueSession: params.continueSession,
+    taskId: params.taskId,
   });
 }
 

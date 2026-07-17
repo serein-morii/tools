@@ -8,7 +8,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useSettings, getSettingValue } from "@/lib/query/settingsQueries";
 import { SetupWizard, useNeedsSetup } from "@/components/SetupWizard";
 import { TestGenProvider } from "@/lib/TestGenContext";
-import { AiProvider } from "@/lib/AiContext";
+import { AiTaskCenterProvider } from "@/lib/AiTaskCenter";
 
 const DashboardPage = lazy(() => import("@/pages/DashboardPage").then((m) => ({ default: m.DashboardPage })));
 const FeaturesPage = lazy(() => import("@/pages/FeaturesPage").then((m) => ({ default: m.FeaturesPage })));
@@ -75,20 +75,20 @@ function App() {
   if (showSetup) {
     return (
       <ErrorBoundary>
-        <AiProvider>
+        <AiTaskCenterProvider>
         <WalkinAuthProvider>
           <TestGenProvider>
           <SetupWizard onComplete={handleSetupComplete} />
           </TestGenProvider>
         </WalkinAuthProvider>
-        </AiProvider>
+        </AiTaskCenterProvider>
       </ErrorBoundary>
     );
   }
 
   return (
     <ErrorBoundary>
-      <AiProvider>
+      <AiTaskCenterProvider>
       <WalkinAuthProvider>
       <TestGenProvider>
       <Suspense
@@ -130,7 +130,7 @@ function App() {
       </Suspense>
       </TestGenProvider>
       </WalkinAuthProvider>
-      </AiProvider>
+      </AiTaskCenterProvider>
     </ErrorBoundary>
   );
 }
