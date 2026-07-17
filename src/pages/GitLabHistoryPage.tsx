@@ -447,7 +447,7 @@ function HistoryCard({ item, selected, onToggleSelect, onClick }: {
               className="h-4 w-4"
               onClick={(e) => e.stopPropagation()}
             />
-            <div className="flex h-8 w-7 items-center justify-center rounded-md bg-muted">
+            <div className="flex h-7 w-7 items-center justify-center rounded-md bg-muted">
               <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
             </div>
             <div>
@@ -724,10 +724,10 @@ export function GitLabHistoryPage() {
   const selectedHistory = filteredHistory.filter(h => selectedIds.includes(h.id));
   const canCompare = selectedHistory.length === 2;
   const header = (
-    <div className="border-b px-5 py-3">
+    <div className="page-header">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="flex h-8 w-7 items-center justify-center rounded-lg bg-primary/10">
+        <div className="flex items-center gap-3">
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
             <GitBranch className="h-3.5 w-3.5 text-primary" />
           </div>
           <div>
@@ -744,7 +744,7 @@ export function GitLabHistoryPage() {
     return (
       <div className="min-h-full bg-background">
         {header}
-        <div className="mx-auto max-w-[1400px] space-y-3 px-3 py-3">
+        <div className="section-spacing-compact">
           <div className="flex h-[300px] items-center justify-center">
             <p className="text-muted-foreground">{t("common.loading")}</p>
           </div>
@@ -757,7 +757,7 @@ export function GitLabHistoryPage() {
     return (
       <div className="min-h-full bg-background">
         {header}
-        <div className="mx-auto max-w-[1400px] space-y-3 px-3 py-3">
+        <div className="section-spacing-compact">
           <div className="flex h-[300px] items-center justify-center">
             <div className="text-center">
               <Clock className="mx-auto h-8 w-8 text-muted-foreground mb-3" />

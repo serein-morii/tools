@@ -28,6 +28,7 @@ export interface TestGenRequest {
   mvn_extra_args?: string;
   retry: boolean;
   mvn_failure_excerpt?: string;
+  continue_session?: boolean;
 }
 
 export interface TestGenResult {
@@ -39,6 +40,7 @@ export interface TestGenResult {
   pushed: boolean;
   push_output: string | null;
   error: string | null;
+  ai_question?: string | null;
 }
 
 export interface ProjectEntry {

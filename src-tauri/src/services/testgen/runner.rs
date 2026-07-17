@@ -21,6 +21,8 @@ pub struct TestGenRequest {
     pub mvn_extra_args: Option<String>,
     pub retry: bool,
     pub mvn_failure_excerpt: Option<String>,
+    #[serde(default)]
+    pub continue_session: bool,
 }
 
 #[derive(Debug, Serialize)]
@@ -33,6 +35,32 @@ pub struct TestGenResult {
     pub pushed: bool,
     pub push_output: Option<String>,
     pub error: Option<String>,
+    /// If the AI asked a question, this contains the question text.
+    /// Frontend should show an input and re-run with continue_session=true.
+    pub ai_question: Option<String>,
+}
+
+/// Detect if the AI output ends with a question that needs user input.
+/// Returns the question text if detected, None otherwise.
+fn detect_question(output: &str) -> Option<String> {
+    let trimmed = output.trim();
+    if trimmed.is_empty() { return None; }
+    // Check if the last non-empty line ends with a question mark
+    let last_line = trimmed.lines().last().unwrap_or("").trim();
+    // Chinese or English question patterns
+    let is_question = last_line.ends_with('?')
+        || last_line.ends_with('？')
+        || last_line.contains("请问")
+        || last_line.contains("需要你")
+        || last_line.contains("需要您")
+        || last_line.contains("请确认")
+        || last_line.contains("要我")
+        || (last_line.contains("是否") && last_line.ends_with('？'));
+    if is_question {
+        Some(trimmed.to_string())
+    } else {
+        None
+    }
 }
 
 pub fn slugify(s: &str) -> String {
@@ -167,7 +195,7 @@ pub async fn run_test_gen(
         ));
     }
     let claude_cmd = req.claude_command.clone().unwrap_or_else(|| "claude".to_string());
-    cli::run_claude_streaming(&claude_cmd, &prompt, dir, app, cancel_flag)
+    let ai_output = cli::run_claude_streaming(&claude_cmd, &prompt, dir, app, cancel_flag, req.continue_session)
         .await
         .map_err(|e| {
             emit("error", format!("AI 失败: {}", e));
@@ -175,6 +203,22 @@ pub async fn run_test_gen(
         })?;
     if cancelled() {
         return Err("已取消".into());
+    }
+
+    // If AI asked a question, return early so the user can answer
+    if let Some(question) = detect_question(&ai_output) {
+        emit("ai", "AI 有问题需要回答，暂停等待用户输入".into());
+        return Ok(TestGenResult {
+            branch,
+            commit_sha: None,
+            files_changed: 0,
+            test_passed: false,
+            test_output_excerpt: String::new(),
+            pushed: false,
+            push_output: None,
+            error: None,
+            ai_question: Some(question),
+        });
     }
 
     // --- mvn test ---
@@ -205,6 +249,7 @@ pub async fn run_test_gen(
                 pushed: false,
                 push_output: None,
                 error: Some("mvn test 失败".into()),
+                ai_question: None,
             });
         } else {
             emit("mvn", "测试失败，但开关允许提交".into());
@@ -227,6 +272,7 @@ pub async fn run_test_gen(
             pushed: false,
             push_output: None,
             error: Some("AI 未产生任何改动，跳过提交".into()),
+            ai_question: None,
         });
     }
     let file_list = git::staged_file_list(dir).await.unwrap_or_default();
@@ -243,16 +289,16 @@ pub async fn run_test_gen(
         return match git::push(dir, &branch).await {
             Ok(o) => {
                 emit("push", "已推送".into());
-                Ok(TestGenResult { branch, commit_sha: Some(sha), files_changed: files, test_passed: passed, test_output_excerpt: excerpt, pushed: true, push_output: Some(o), error: None })
+                Ok(TestGenResult { branch, commit_sha: Some(sha), files_changed: files, test_passed: passed, test_output_excerpt: excerpt, pushed: true, push_output: Some(o), error: None, ai_question: None })
             }
             Err(e) => {
                 let msg = format!("push 失败: {}", e);
-                Ok(TestGenResult { branch, commit_sha: Some(sha), files_changed: files, test_passed: passed, test_output_excerpt: excerpt, pushed: false, push_output: Some(e), error: Some(msg) })
+                Ok(TestGenResult { branch, commit_sha: Some(sha), files_changed: files, test_passed: passed, test_output_excerpt: excerpt, pushed: false, push_output: Some(e), error: Some(msg), ai_question: None })
             }
         };
     }
 
-    Ok(TestGenResult { branch, commit_sha: Some(sha), files_changed: files, test_passed: passed, test_output_excerpt: excerpt, pushed: false, push_output: None, error: None })
+    Ok(TestGenResult { branch, commit_sha: Some(sha), files_changed: files, test_passed: passed, test_output_excerpt: excerpt, pushed: false, push_output: None, error: None, ai_question: None })
 }
 
 #[cfg(test)]

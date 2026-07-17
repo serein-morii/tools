@@ -53,7 +53,10 @@ export function SettingsPage() {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
               <Settings className="h-4 w-4 text-primary" />
             </div>
-            <h1 className="text-base font-semibold ">{t("nav.settings")}</h1>
+            <div>
+            <h1 className="text-base font-semibold">{t("nav.settings")}</h1>
+            <p className="text-xs text-muted-foreground mt-0.5">应用配置与个性化</p>
+          </div>
           </div>
         </div>
         <div className="section-spacing">
@@ -76,7 +79,10 @@ export function SettingsPage() {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
               <Settings className="h-4 w-4 text-primary" />
             </div>
-            <h1 className="text-base font-semibold ">{t("nav.settings")}</h1>
+            <div>
+            <h1 className="text-base font-semibold">{t("nav.settings")}</h1>
+            <p className="text-xs text-muted-foreground mt-0.5">应用配置与个性化</p>
+          </div>
           </div>
         </div>
         <div className="section-spacing">
@@ -160,7 +166,10 @@ export function SettingsPage() {
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
             <Settings className="h-4 w-4 text-primary" />
           </div>
-          <h1 className="text-base font-semibold ">{t("nav.settings")}</h1>
+          <div>
+            <h1 className="text-base font-semibold">{t("nav.settings")}</h1>
+            <p className="text-xs text-muted-foreground mt-0.5">应用配置与个性化</p>
+          </div>
         </div>
       </div>
       <div className="section-spacing">
@@ -173,7 +182,7 @@ export function SettingsPage() {
         >
           <div className="flex items-center gap-4">
             <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-md group-hover:scale-105 transition-transform">
-              <Sparkles className="h-8 w-7" />
+              <Sparkles className="h-7 w-7" />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
@@ -190,7 +199,7 @@ export function SettingsPage() {
 
         {/* Appearance Settings */}
         <Card className="card-modern overflow-hidden">
-          <CardHeader className="bg-muted/30 border-b py-3 px-4">
+          <CardHeader className="bg-muted/30 border-b py-2.5 px-4">
             <div className="flex items-center gap-2">
               <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-violet-500/10">
                 <Palette className="h-3.5 w-3.5 text-violet-500" />
@@ -237,7 +246,7 @@ export function SettingsPage() {
 
         {/* Launch Settings */}
         <Card className="card-modern overflow-hidden">
-          <CardHeader className="bg-muted/30 border-b py-3 px-4">
+          <CardHeader className="bg-muted/30 border-b py-2.5 px-4">
             <div className="flex items-center gap-2">
               <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-orange-500/10">
                 <Power className="h-3.5 w-3.5 text-orange-500" />
@@ -276,7 +285,7 @@ export function SettingsPage() {
 
         {/* Default Startup Page */}
         <Card>
-          <CardHeader className="bg-muted/30 border-b py-2 px-3">
+          <CardHeader className="bg-muted/30 border-b py-2.5 px-4">
             <div className="flex items-center gap-1.5">
               <Home className="h-3.5 w-3.5 text-indigo-500" />
               <CardTitle className="text-sm">启动页</CardTitle>
@@ -303,7 +312,7 @@ export function SettingsPage() {
 
         {/* Page Visibility + Ordering */}
         <Card className="card-modern overflow-hidden">
-          <CardHeader className="bg-muted/30 border-b py-3 px-4">
+          <CardHeader className="bg-muted/30 border-b py-2.5 px-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-blue-500/10">
@@ -325,7 +334,7 @@ export function SettingsPage() {
 
         {/* 快捷按钮 */}
         <Card className="card-modern overflow-hidden">
-          <CardHeader className="bg-muted/30 border-b py-3 px-4">
+          <CardHeader className="bg-muted/30 border-b py-2.5 px-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-amber-500/10">
@@ -345,7 +354,7 @@ export function SettingsPage() {
 
         {/* Data Management */}
         <Card className="card-modern overflow-hidden">
-          <CardHeader className="bg-muted/30 border-b py-3 px-4">
+          <CardHeader className="bg-muted/30 border-b py-2.5 px-4">
             <div className="flex items-center gap-2">
               <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-500/10">
                 <Database className="h-3.5 w-3.5 text-emerald-500" />
@@ -371,7 +380,7 @@ export function SettingsPage() {
 
         {/* Setup Wizard */}
         <Card className="card-modern overflow-hidden">
-          <CardHeader className="bg-muted/30 border-b py-3 px-4">
+          <CardHeader className="bg-muted/30 border-b py-2.5 px-4">
             <div className="flex items-center gap-2">
               <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-primary/10">
                 <Rocket className="h-3.5 w-3.5 text-primary" />
@@ -485,7 +494,7 @@ export function SettingsPage() {
 
         {/* About */}
         <Card className="card-modern overflow-hidden">
-          <CardHeader className="bg-muted/30 border-b py-3 px-4">
+          <CardHeader className="bg-muted/30 border-b py-2.5 px-4">
             <div className="flex items-center gap-2">
               <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-muted">
                 <Info className="h-3.5 w-3.5 text-muted-foreground" />

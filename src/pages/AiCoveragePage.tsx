@@ -845,7 +845,8 @@ export function AiCoveragePage() {
               <Brain className="h-4 w-4 text-primary" />
             </div>
             <div>
-              <h1 className="text-base font-semibold ">AI 生成率</h1>
+              <h1 className="text-base font-semibold">AI 生成率</h1>
+              <p className="text-xs text-muted-foreground mt-0.5">AI 生成代码占比统计</p>
             </div>
           </div>
           <div className="inline-flex gap-1 rounded-lg bg-muted p-1">
@@ -854,13 +855,13 @@ export function AiCoveragePage() {
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
                 className={cn(
-                  "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-all duration-150",
+                  "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all duration-150",
                   activeTab === tab.key
                     ? "bg-background text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                 )}
               >
-                <tab.icon className="h-4 w-4" />
+                <tab.icon className="h-3.5 w-3.5" />
                 {tab.label}
               </button>
             ))}
@@ -869,11 +870,11 @@ export function AiCoveragePage() {
       </div>
 
       {activeTab === "settings" ? (
-        <div className="px-5 py-4 space-y-3">
+        <div className="section-spacing">
           <SettingsTab config={config} onConfigChange={setConfig} />
         </div>
       ) : (
-        <div className="px-5 py-4 space-y-3 animate-in fade-in duration-200">
+        <div className="section-spacing animate-in fade-in duration-200">
           <div className="card-modern overflow-hidden">
             <div className="flex items-center gap-3 px-4 py-3 border-b bg-muted/30 flex-wrap">
               <div className="flex items-center gap-1">
@@ -1001,10 +1002,12 @@ export function AiCoveragePage() {
                   <p className="text-xs text-muted-foreground">正在获取数据...</p>
                 </div>
               ) : filteredDepartments.length === 0 ? (
-                <div className="flex flex-col items-center py-16 text-muted-foreground">
-                  <AlertCircle className="h-8 w-8 mb-2 opacity-50" />
-                  <p className="text-sm">暂无数据</p>
-                  <p className="text-xs mt-1">请确认网络连接或选择其他时间范围</p>
+                <div className="flex flex-col items-center justify-center py-16">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-muted/50 mb-4">
+                    <AlertCircle className="h-7 w-7 text-muted-foreground/60" />
+                  </div>
+                  <p className="text-sm font-medium text-foreground mb-1">暂无数据</p>
+                  <p className="text-xs text-muted-foreground">请确认网络连接或选择其他时间范围</p>
                 </div>
               ) : (
                 filteredDepartments.map((dept) => (

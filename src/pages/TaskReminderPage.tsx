@@ -81,7 +81,8 @@ export function TaskReminderPage() {
                 <Bell className="h-4 w-4 text-primary" />
               </div>
               <div>
-                <h1 className="text-base font-semibold ">任务提醒</h1>
+                <h1 className="text-base font-semibold">任务提醒</h1>
+                <p className="text-xs text-muted-foreground mt-0.5">管理定时提醒任务</p>
               </div>
             </div>
           </div>
@@ -108,7 +109,8 @@ export function TaskReminderPage() {
                 <Bell className="h-4 w-4 text-primary" />
               </div>
               <div>
-                <h1 className="text-base font-semibold ">任务提醒</h1>
+                <h1 className="text-base font-semibold">任务提醒</h1>
+                <p className="text-xs text-muted-foreground mt-0.5">管理定时提醒任务</p>
               </div>
             </div>
           </div>
@@ -134,12 +136,12 @@ export function TaskReminderPage() {
               <Bell className="h-4 w-4 text-primary" />
             </div>
             <div>
-              <h1 className="text-base font-semibold ">任务提醒</h1>
+              <h1 className="text-base font-semibold">任务提醒</h1>
             </div>
           </div>
         </div>
       </div>
-      <div className="px-5 py-4 space-y-3 animate-in fade-in duration-200">
+      <div className="section-spacing animate-in fade-in duration-200">
       {/* Stats */}
       <div className="grid grid-cols-4 gap-3">
         {[
@@ -150,7 +152,7 @@ export function TaskReminderPage() {
         ].map((card) => (
           <div key={card.label} className="stat-card-compact">
             <div className="flex items-center gap-2">
-              <div className={cn("flex h-8 w-7 items-center justify-center rounded-lg", card.bg)}>
+              <div className={cn("flex h-7 w-7 items-center justify-center rounded-lg", card.bg)}>
                 <card.icon className={cn("h-4 w-4", card.color || "text-muted-foreground")} />
               </div>
               <div className="flex-1 min-w-0">
@@ -182,7 +184,7 @@ export function TaskReminderPage() {
                 type="button"
                 onClick={() => setRange(option.value)}
                 className={cn(
-                  "rounded-md px-3 py-1.5 text-sm font-medium transition-all duration-150",
+                  "rounded-md px-3 py-1.5 text-xs font-medium transition-all duration-150",
                   range === option.value
                     ? "bg-primary text-primary-foreground shadow-sm"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground"

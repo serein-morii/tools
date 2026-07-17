@@ -39,7 +39,7 @@ function ConfirmDialog({
   );
 }
 
-type RunStatus = "idle" | "running" | "done" | "error";
+type RunStatus = "idle" | "running" | "done" | "error" | "awaiting_answer";
 interface RunLog { time: number; stage: string; text: string }
 
 const PROTECTED_BRANCHES = ["main", "master", "develop", "dev", "release"];
@@ -54,7 +54,10 @@ const formatTs = (ms: number) => {
 
 export default function TestGenPage() {
   const loc = useLocation();
-  const presetPrompt = (loc.state as { prompt?: string } | null)?.prompt ?? "";
+  const locState = loc.state as { prompt?: string; projectKey?: string; projectName?: string; branch?: string } | null;
+  const presetPrompt = locState?.prompt ?? "";
+  const fromProject = locState?.projectName || locState?.projectKey || null;
+  const fromBranch = locState?.branch || null;
   const [prompt, setPrompt] = useState(presetPrompt);
 
   const { data: settings } = useSettings();
@@ -91,6 +94,8 @@ export default function TestGenPage() {
   const [result, setResult] = useState<TestGenResult | null>(null);
   const [pushConfirm, setPushConfirm] = useState(false);
   const [execConfirm, setExecConfirm] = useState(false);
+  const [aiQuestion, setAiQuestion] = useState<string | null>(null);
+  const [aiAnswer, setAiAnswer] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // History
@@ -147,9 +152,26 @@ export default function TestGenPage() {
     if (info.is_repo) {
       const bs = await listGitBranches(p.path);
       setBranches(bs);
-      setBaseBranch(bs.find((b) => b.current)?.name ?? bs[0]?.name ?? "");
+      // 优先匹配传入的分支，否则用当前分支
+      const targetBranch = fromBranch ? bs.find(b => b.name === fromBranch) : undefined;
+      setBaseBranch(targetBranch?.name ?? bs.find((b) => b.current)?.name ?? bs[0]?.name ?? "");
     }
   };
+
+  // 从 Sonar 跳转过来时，自动匹配项目并填充
+  const autoSelectedRef = useRef(false);
+  useEffect(() => {
+    if (autoSelectedRef.current || !fromProject || scannedProjects.length === 0) return;
+    const match = scannedProjects.find(p =>
+      p.name === fromProject ||
+      p.name.toLowerCase().includes(fromProject.toLowerCase()) ||
+      fromProject.toLowerCase().includes(p.name.toLowerCase())
+    );
+    if (match) {
+      autoSelectedRef.current = true;
+      selectProject(match);
+    }
+  }, [scannedProjects, fromProject]);
 
   const onManualDir = async () => {
     const p = await open({ directory: true, multiple: false });
@@ -169,8 +191,10 @@ export default function TestGenPage() {
     if (res.commit_sha && !res.pushed && !res.error) setPushConfirm(true);
   };
 
-  const startRun = async (retry: boolean, failureExcerpt?: string) => {
-    setRunLogs([]); setRunThinking(null); setRunText(""); setResult(null);
+  const startRun = async (retry: boolean, failureExcerpt?: string, continueAnswer?: string) => {
+    const isContinue = !!continueAnswer;
+    if (!isContinue) { setRunLogs([]); setRunText(""); setResult(null); }
+    setRunThinking(null);
     setRunStatus("running"); setRunOpen(true); setRunMinimized(false);
     const up = await listen<{ stage: string; message: string }>("testgen-progress", (e) => appendLog(e.payload.stage, e.payload.message));
     const us = await listen<{ kind: string; text?: string; tokens?: number }>("testgen-stream", (e) => {
@@ -181,7 +205,8 @@ export default function TestGenPage() {
       const res = await runTestGen({
         dir, base_branch: baseBranch, branch_mode: branchMode,
         new_branch_name: branchMode === "new" ? newBranchName || undefined : undefined,
-        commit_message: commitMessage, prompt,
+        commit_message: commitMessage,
+        prompt: isContinue ? continueAnswer! : prompt,
         push_confirm_skip: pushConfirmSkip,
         mvn_local_repo: mvnLocalRepo || undefined, mvn_settings_xml: mvnSettingsXml || undefined,
         claude_command: claudeCommand || undefined,
@@ -189,8 +214,16 @@ export default function TestGenPage() {
         mvn_extra_args: mvnExtraArgs || undefined,
         retry,
         mvn_failure_excerpt: retry ? failureExcerpt : undefined,
+        continue_session: isContinue,
       });
       setResult(res);
+      if (res.ai_question) {
+        // AI asked a question — pause and wait for user answer
+        setAiQuestion(res.ai_question);
+        setRunStatus("awaiting_answer");
+        appendLog("ai", "AI 有问题需要回答");
+        return;
+      }
       maybeAskPush(res);
       if (res.error && !res.commit_sha) { setRunStatus("error"); appendLog("error", res.error); }
       else if (res.error && res.commit_sha) { setRunStatus("error"); appendLog("error", `${res.error}（本地已提交 ${res.commit_sha}）`); }
@@ -200,9 +233,19 @@ export default function TestGenPage() {
     } finally { up(); us(); loadHistory(); }
   };
 
-  const onExecuteClick = () => setExecConfirm(true);
+  const onExecuteClick = () => { setAiQuestion(null); setAiAnswer(""); setExecConfirm(true); };
   const confirmExec = () => { setExecConfirm(false); startRun(false); };
   const startRetry = () => { if (result) startRun(true, result.test_output_excerpt); };
+
+  // Submit answer and continue the session
+  const submitAnswer = () => {
+    if (!aiAnswer.trim()) return;
+    const answer = aiAnswer;
+    setAiQuestion(null);
+    setAiAnswer("");
+    appendLog("ai", `> ${answer}`);
+    startRun(false, undefined, answer);
+  };
 
   const confirmPush = async () => {
     setPushConfirm(false);
@@ -230,15 +273,22 @@ export default function TestGenPage() {
   return (
     <div className="flex flex-col h-full">
       {/* Header + tabs */}
-      <div className="flex items-center justify-between px-5 py-2.5 border-b border-border">
-        <div className="flex items-center gap-2">
-          <FlaskConical className="w-4 h-4 text-primary" />
-          <h1 className="text-base font-semibold">单测执行</h1>
-        </div>
-        <div className="flex items-center gap-1 bg-secondary rounded-lg p-1">
-          {tabs.map((tab) => (
-            <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`px-3 py-1 rounded-md text-xs transition-colors ${activeTab === tab.id ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>{tab.label}</button>
-          ))}
+      <div className="page-header">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+              <FlaskConical className="h-4 w-4 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-base font-semibold">单测执行</h1>
+              <p className="text-xs text-muted-foreground mt-0.5">AI 生成单测并自动提交</p>
+            </div>
+          </div>
+          <div className="inline-flex gap-1 rounded-lg bg-muted p-0.5">
+            {tabs.map((tab) => (
+              <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`rounded-md px-3 py-1.5 text-xs font-medium transition-all duration-150 ${activeTab === tab.id ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>{tab.label}</button>
+            ))}
+          </div>
         </div>
       </div>
       {/* Content */}
@@ -385,7 +435,28 @@ export default function TestGenPage() {
               {runLogs.map((l, i) => <div key={i} className="break-words"><span className="text-[10px] text-muted-foreground/70 mr-1">[{l.stage}]</span>{l.text}</div>)}
               {runThinking !== null && !runText && <div className="text-amber-500">思考中... {runThinking} tokens</div>}
               {displayedText && <div className="whitespace-pre-wrap break-words border-t border-border/40 pt-1">{displayedText}{displayedText.length < (runText?.length ?? 0) && <span className="animate-pulse">▍</span>}</div>}
-              {result && runStatus !== "running" && (
+              {runStatus === "awaiting_answer" && aiQuestion && (
+                <div className="mt-2 pt-2 border-t border-amber-500/30 space-y-2">
+                  <div className="rounded-lg bg-amber-500/5 border border-amber-500/20 p-3">
+                    <p className="text-xs font-medium text-amber-600 mb-1">🤖 AI 提问</p>
+                    <p className="text-xs text-foreground whitespace-pre-wrap">{aiQuestion}</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <input
+                      value={aiAnswer}
+                      onChange={(e) => setAiAnswer(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") submitAnswer(); }}
+                      placeholder="输入你的回答，按 Enter 发送..."
+                      className="flex-1 h-8 rounded-md border border-border bg-background px-2 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                      autoFocus
+                    />
+                    <button onClick={submitAnswer} disabled={!aiAnswer.trim()} className="h-8 px-3 text-xs bg-primary text-primary-foreground rounded-md hover:opacity-90 disabled:opacity-50">
+                      发送
+                    </button>
+                  </div>
+                </div>
+              )}
+              {result && runStatus !== "running" && runStatus !== "awaiting_answer" && (
                 <div className="mt-2 pt-2 border-t border-border/40 text-xs space-y-0.5">
                   <div><span className="text-muted-foreground">分支：</span>{result.branch}</div>
                   {result.commit_sha && <div><span className="text-muted-foreground">提交：</span>{result.commit_sha}（{result.files_changed} 文件）</div>}
@@ -401,7 +472,7 @@ export default function TestGenPage() {
       {runMinimized && (
         <button onClick={() => setRunMinimized(false)} className="fixed bottom-4 right-4 z-50 flex items-center gap-2 px-3 py-2 bg-primary text-primary-foreground rounded-full shadow-lg">
           <RefreshCw className={`w-3.5 h-3.5 ${runStatus === "running" ? "animate-spin" : ""}`} />
-          <span className="text-xs">{runStatus === "running" ? "执行中..." : runStatus === "done" ? "完成（点击查看）" : "失败（点击查看）"}</span>
+          <span className="text-xs">{runStatus === "running" ? "执行中..." : runStatus === "done" ? "完成（点击查看）" : runStatus === "awaiting_answer" ? "AI 提问中..." : "失败（点击查看）"}</span>
         </button>
       )}
     </div>

@@ -885,7 +885,8 @@ export function SonarPromptPage() {
                             <FlaskConical className="h-4 w-4 text-primary" />
                         </div>
                         <div>
-                            <h1 className="text-base font-semibold ">单测覆盖率</h1>
+                            <h1 className="text-base font-semibold">单测覆盖率</h1>
+                            <p className="text-xs text-muted-foreground mt-0.5">SonarQube 覆盖率查询与单测 Prompt 生成</p>
                         </div>
                     </div>
                     <div className="inline-flex gap-1 rounded-lg bg-muted p-1">
@@ -894,13 +895,13 @@ export function SonarPromptPage() {
                                 key={tab.key}
                                 onClick={() => setActiveTab(tab.key)}
                                 className={cn(
-                                    "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-all duration-150",
+                                    "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all duration-150",
                                     activeTab === tab.key
                                         ? "bg-background text-foreground shadow-sm"
                                         : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                                 )}
                             >
-                                <tab.icon className="h-4 w-4" />
+                                <tab.icon className="h-3.5 w-3.5" />
                                 {tab.label}
                             </button>
                         ))}
@@ -912,7 +913,7 @@ export function SonarPromptPage() {
             <div className="animate-in">
                 {/* ===== Tab: Prompt 生成 ===== */}
                 {activeTab === "generator" && (
-                    <div className="px-5 py-4 space-y-3 animate-in fade-in duration-200">
+                    <div className="section-spacing animate-in fade-in duration-200">
                         {/* Overview stats - 单行紧凑 */}
                         <div className="flex items-center gap-6 text-sm text-muted-foreground">
                             {[
@@ -1107,8 +1108,10 @@ export function SonarPromptPage() {
 
                                 {reports.length === 0 ? (
                                     <div className="flex flex-col items-center py-16 text-muted-foreground">
-                                        <AlertCircle className="h-8 w-8 mb-3 opacity-50" />
-                                        <p className="text-sm font-medium">没有符合条件的报告</p>
+                                        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-muted/50 mb-4">
+                                  <AlertCircle className="h-7 w-7 text-muted-foreground/60" />
+                                </div>
+                                <p className="text-sm font-medium text-foreground">没有符合条件的报告</p>
                                     </div>
                                 ) : (
                                     <div className="divide-y divide-border max-h-[420px] overflow-auto">
@@ -1119,7 +1122,7 @@ export function SonarPromptPage() {
                                                 onClick={() => handleSelectReport(r)}
                                             >
                                                 <div className="flex items-center gap-3 min-w-0">
-                                                    <div className="flex h-8 w-7 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                                                    <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-muted text-muted-foreground">
                                                         <FileCode className="h-3.5 w-3.5" />
                                                     </div>
                                                     <div className="min-w-0">
@@ -1413,7 +1416,10 @@ export function SonarPromptPage() {
                                         <div className="flex gap-2">
                                             <CopyButton text={prompt} size="sm" className="h-8 text-xs" showText />
                                             <button
-                                                onClick={() => navigate("/testgen", { state: { prompt } })}
+                                                onClick={() => {
+                                                    const proj = gitlabProjects?.find(p => p.id === selectedProjectId);
+                                                    navigate("/testgen", { state: { prompt, projectKey, projectName: proj?.name ?? projectKey, branch } });
+                                                }}
                                                 className="h-8 px-3 text-xs bg-primary text-primary-foreground rounded-md hover:opacity-90"
                                             >
                                                 用 AI 执行
@@ -1528,7 +1534,7 @@ export function SonarPromptPage() {
 
                 {/* ===== Tab: 模板管理 ===== */}
                 {activeTab === "template" && (
-                    <div className="mx-auto max-w-[1400px] space-y-3 px-3 py-3">
+                    <div className="section-spacing-compact">
                         {/* 编辑/创建表单 */}
                         {(editingTemplate || isCreating) && (
                             <Card>
@@ -1627,11 +1633,11 @@ export function SonarPromptPage() {
                                                 </p>
                                             </div>
                                             <div className="flex gap-0.5 shrink-0">
-                                                <Button variant="ghost" size="sm" className="h-8 w-7 p-0" onClick={() => handleStartEdit(tpl)}>
+                                                <Button variant="ghost" size="icon-sm" onClick={() => handleStartEdit(tpl)}>
                                                     <Pencil className="h-3.5 w-3.5" />
                                                 </Button>
                                                 {tpl.id !== "built-in" && (
-                                                    <Button variant="ghost" size="sm" className="h-8 w-7 p-0" onClick={() => setDeleteTemplateId(tpl.id)}>
+                                                    <Button variant="ghost" size="icon-sm" onClick={() => setDeleteTemplateId(tpl.id)}>
                                                         <Trash2 className="h-3.5 w-3.5" />
                                                     </Button>
                                                 )}
@@ -1646,7 +1652,7 @@ export function SonarPromptPage() {
 
                 {/* ===== Tab 3: 生成历史 ===== */}
                 {activeTab === "history" && !detailRecord && (
-                    <div className="mx-auto max-w-[1400px] space-y-3 px-3 py-3">
+                    <div className="section-spacing-compact">
                         {history.length > 0 && (
                             <div className="flex items-center justify-between">
                                 <span className="text-xs text-muted-foreground">共 {history.length} 条记录</span>
@@ -1658,12 +1664,12 @@ export function SonarPromptPage() {
 
                         {history.length === 0 ? (
                             <Card>
-                                <CardContent className="flex flex-col items-center py-12">
-                                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-muted mb-3">
-                                        <History className="h-5 w-5 text-muted-foreground" />
+                                <CardContent className="flex flex-col items-center justify-center py-16">
+                                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-muted/50 mb-4">
+                                        <History className="h-7 w-7 text-muted-foreground/60" />
                                     </div>
-                                    <p className="text-sm font-medium">暂无生成历史</p>
-                                    <p className="text-xs text-muted-foreground mt-1">生成 Prompt 后将自动保存</p>
+                                    <p className="text-sm font-medium text-foreground mb-1">暂无生成历史</p>
+                                    <p className="text-xs text-muted-foreground">生成 Prompt 后将自动保存</p>
                                 </CardContent>
                             </Card>
                         ) : (
@@ -1703,7 +1709,7 @@ export function SonarPromptPage() {
                 )}
 
                 {activeTab === "history" && detailRecord && (
-                    <div className="mx-auto max-w-[1400px] space-y-3 px-3 py-3">
+                    <div className="section-spacing-compact">
                         <div className="flex items-center justify-between">
                             <Button variant="ghost" size="sm" className="h-8 text-xs gap-1" onClick={() => setDetailRecord(null)}>
                                 <RotateCcw className="h-3 w-3" /> 返回列表
@@ -1892,7 +1898,7 @@ export function SonarPromptPage() {
                                                     <div className="space-y-1.5">
                                                         <div className="flex items-center justify-between">
                                                             <Label className="text-xs">工作空间</Label>
-                                                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={fetchWorkspaces} disabled={loadingWorkspaces}>
+                                                            <Button variant="ghost" size="icon-xs" onClick={fetchWorkspaces} disabled={loadingWorkspaces}>
                                                                 <RefreshCw className={cn("h-3 w-3", loadingWorkspaces && "animate-spin")} />
                                                             </Button>
                                                         </div>

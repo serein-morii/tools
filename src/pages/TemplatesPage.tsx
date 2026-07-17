@@ -87,24 +87,25 @@ export function TemplatesPage() {
   return (
     <div className="min-h-full bg-background">
       {/* Header */}
-      <div className="border-b px-5 py-3">
+      <div className="page-header">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-7 items-center justify-center rounded-lg bg-primary/10">
+          <div className="flex items-center gap-3">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
               <FileText className="h-3.5 w-3.5 text-primary" />
             </div>
             <div>
               <h1 className="text-sm font-medium">模板管理</h1>
+              <p className="text-xs text-muted-foreground mt-0.5">管理消息模板</p>
             </div>
           </div>
-          <Button onClick={handleCreate} size="sm" className="gap-1.5 shadow-sm h-8 text-xs">
+          <Button onClick={handleCreate} size="sm" className="gap-1.5">
             <Plus className="h-3.5 w-3.5" />
             新建模板
           </Button>
         </div>
       </div>
 
-      <div className="mx-auto max-w-[1400px] space-y-3 px-3 py-3 animate-in fade-in duration-200">
+      <div className="section-spacing-compact animate-in fade-in duration-200">
         <TemplateList templates={templates || []} onEdit={handleEdit} onDelete={handleDelete} />
 
         <TemplateEditor

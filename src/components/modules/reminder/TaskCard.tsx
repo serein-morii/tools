@@ -143,10 +143,10 @@ export function TaskCard({ task, onEdit }: TaskCardProps) {
           <div className="flex items-center gap-0.5">
             <Button
               variant="ghost"
-              size="icon"
+              size="icon-sm"
               onClick={handleTest}
               disabled={testMutation.isPending}
-              className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+              className="opacity-0 group-hover:opacity-100 transition-opacity"
               title={t("channel.testChannel")}
             >
               {testStatus === "success" ? (
@@ -172,18 +172,18 @@ export function TaskCard({ task, onEdit }: TaskCardProps) {
             />
             <Button
               variant="ghost"
-              size="icon"
+              size="icon-sm"
               onClick={() => onEdit(task.id)}
-              className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+              className="opacity-0 group-hover:opacity-100 transition-opacity"
             >
               <Pencil className="h-3 w-3" />
             </Button>
             <Button
               variant="ghost"
-              size="icon"
+              size="icon-sm"
               onClick={handleDelete}
               className={cn(
-                "h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity",
+                "opacity-0 group-hover:opacity-100 transition-opacity",
                 isDeleting && "opacity-100 text-destructive hover:text-destructive"
               )}
             >

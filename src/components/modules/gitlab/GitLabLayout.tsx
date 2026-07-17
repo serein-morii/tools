@@ -14,7 +14,7 @@ export function GitLabLayout() {
 
   return (
     <div className="min-h-full bg-background">
-      <div className="border-b px-5 py-3">
+      <div className="page-header">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-orange-500 to-amber-600">

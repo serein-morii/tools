@@ -21,8 +21,8 @@ export function FeaturesPage() {
             <Sparkles className="h-4 w-4 text-primary" />
           </div>
           <div>
-            <h1 className="text-base font-semibold ">功能介绍</h1>
-            <p className="text-xs text-muted-foreground">Dev Tools 完整功能文档</p>
+            <h1 className="text-base font-semibold">功能介绍</h1>
+            <p className="text-xs text-muted-foreground mt-0.5">Dev Tools 完整功能文档</p>
           </div>
         </div>
       </div>

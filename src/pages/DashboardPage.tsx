@@ -120,7 +120,8 @@ export function DashboardPage() {
               <LayoutGrid className="h-4 w-4 text-primary" />
             </div>
             <div>
-              <h1 className="text-base font-semibold ">概览</h1>
+              <h1 className="text-base font-semibold">概览</h1>
+              <p className="text-xs text-muted-foreground mt-0.5">项目总览与快捷入口</p>
             </div>
           </div>
         </div>
@@ -139,7 +140,7 @@ export function DashboardPage() {
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h2 className="text-base font-semibold ">
+                  <h2 className="text-base font-semibold">
                     {isLoggedIn && userName ? userName : t("dashboard.welcome")}
                   </h2>
                   <span className="text-sm text-muted-foreground font-normal">
@@ -224,7 +225,7 @@ export function DashboardPage() {
             <Card className="card-modern">
               <CardHeader className="pb-2 pt-3 px-4 flex-row items-center justify-between">
                 <CardTitle className="text-sm flex items-center gap-2 font-semibold">
-                  <div className="flex h-8 w-7 items-center justify-center rounded-lg bg-amber-500/10">
+                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500/10">
                     <Bell className="h-4 w-4 text-amber-500" />
                   </div>
                   智能提醒
@@ -283,7 +284,7 @@ export function DashboardPage() {
               <Card className="card-modern">
                 <CardHeader className="pb-2 pt-3 px-4 flex-row items-center justify-between">
                   <CardTitle className="text-sm flex items-center gap-2 font-semibold">
-                    <div className="flex h-8 w-7 items-center justify-center rounded-lg bg-orange-500/10">
+                    <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-orange-500/10">
                       <GitBranch className="h-4 w-4 text-orange-500" />
                     </div>
                     代码扫描
@@ -349,7 +350,7 @@ export function DashboardPage() {
             <Card className="card-modern">
               <CardHeader className="pb-2 pt-3 px-4 flex-row items-center justify-between">
                 <CardTitle className="text-sm flex items-center gap-2 font-semibold">
-                  <div className="flex h-8 w-7 items-center justify-center rounded-lg bg-violet-500/10">
+                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-violet-500/10">
                     <BarChart3 className="h-4 w-4 text-violet-500" />
                   </div>
                   团队覆盖率
@@ -410,7 +411,7 @@ export function DashboardPage() {
             <Card className="card-modern">
               <CardHeader className="pb-2 pt-3 px-4 flex-row items-center justify-between">
                 <CardTitle className="text-sm flex items-center gap-2 font-semibold">
-                  <div className="flex h-8 w-7 items-center justify-center rounded-lg bg-emerald-500/10">
+                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-500/10">
                     <FlaskConical className="h-4 w-4 text-emerald-500" />
                   </div>
                   单测扫描历史
@@ -455,7 +456,7 @@ export function DashboardPage() {
             <Card className="card-modern">
               <CardHeader className="pb-2 pt-3 px-4 flex-row items-center justify-between">
                 <CardTitle className="text-sm flex items-center gap-2 font-semibold">
-                  <div className="flex h-8 w-7 items-center justify-center rounded-lg bg-cyan-500/10">
+                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-cyan-500/10">
                     <MessageSquare className="h-4 w-4 text-cyan-500" />
                   </div>
                   最近发送
@@ -508,7 +509,7 @@ function StatCard({ icon: Icon, label, value, sub, href, color, bg }: {
   return (
     <Link to={href} className="stat-card group">
       <div className="flex items-center gap-2 mb-1">
-        <div className={cn("flex h-8 w-7 items-center justify-center rounded-lg", bg)}>
+        <div className={cn("flex h-7 w-7 items-center justify-center rounded-lg", bg)}>
           <Icon className={cn("h-4 w-4", color)} />
         </div>
         <span className="text-xs text-muted-foreground font-medium">{label}</span>

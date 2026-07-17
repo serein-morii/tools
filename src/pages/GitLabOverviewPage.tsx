@@ -114,7 +114,7 @@ function SummaryCards({
             onClick={() => toggleCard(card.id)}
           >
             <div className="flex items-center gap-2">
-              <div className="flex h-8 w-7 items-center justify-center rounded-lg bg-muted">
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-muted">
                 <card.icon className="h-4 w-4 text-muted-foreground shrink-0" />
               </div>
               <div className="flex-1 min-w-0">
@@ -914,16 +914,14 @@ export function GitLabOverviewPage() {
 
   if (isConfigured === false) {
     return (
-      <div className="flex h-[400px] items-center justify-center">
-        <div className="text-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted mx-auto mb-4">
-            <Settings className="h-8 w-8 text-muted-foreground" />
-          </div>
-          <p className="text-muted-foreground mb-4 text-sm">{t("gitlab.overview.configureGitLabFirst")}</p>
-          <Link to="/gitlab/settings">
-            <Button>{t("gitlab.overview.goToSettings")}</Button>
-          </Link>
+      <div className="flex flex-col items-center justify-center py-16">
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-muted/50 mb-4">
+          <Settings className="h-7 w-7 text-muted-foreground/60" />
         </div>
+        <p className="text-sm font-medium text-foreground mb-1">{t("gitlab.overview.configureGitLabFirst")}</p>
+        <Link to="/gitlab/settings">
+          <Button size="sm" variant="outline">{t("gitlab.overview.goToSettings")}</Button>
+        </Link>
       </div>
     );
   }
@@ -938,12 +936,13 @@ export function GitLabOverviewPage() {
               <BarChart3 className="h-4 w-4 text-primary" />
             </div>
             <div>
-              <h1 className="text-base font-semibold ">GitLab 概览</h1>
+              <h1 className="text-base font-semibold">GitLab 概览</h1>
+              <p className="text-xs text-muted-foreground mt-0.5">代码提交扫描与覆盖率分析</p>
             </div>
           </div>
         </div>
       </div>
-      <div className="px-5 py-4 space-y-3 animate-in fade-in duration-200">
+      <div className="section-spacing animate-in fade-in duration-200">
       <ScanProgressModal
         isOpen={showProgressModal}
         onClose={() => setShowProgressModal(false)}
@@ -990,12 +989,12 @@ export function GitLabOverviewPage() {
 
       {/* Empty State */}
       {!selectedHistory && (
-        <div className="flex flex-col items-center justify-center py-12">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-muted mb-4">
-            <Inbox className="h-8 w-7 text-muted-foreground" />
+        <div className="flex flex-col items-center justify-center py-16">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-muted/50 mb-4">
+            <Inbox className="h-7 w-7 text-muted-foreground/60" />
           </div>
-          <p className="text-sm font-medium mb-1.5">{t("gitlab.overview.noScanData")}</p>
-          <p className="text-sm text-muted-foreground mb-4">{t("gitlab.overview.clickToScan")}</p>
+          <p className="text-sm font-medium text-foreground mb-1">{t("gitlab.overview.noScanData")}</p>
+          <p className="text-xs text-muted-foreground mb-4">{t("gitlab.overview.clickToScan")}</p>
         </div>
       )}
 
