@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback, useRef, type ReactNode } from "react"
 import { Activity, History, FileText, Settings, RefreshCw, Zap, Download, FileCode, LayoutTemplate, MessageSquare, Send, StopCircle, X } from "lucide-react";
 import { save } from "@tauri-apps/plugin-dialog";
 import { useSettings, useUpdateSetting, getSettingValue } from "../lib/query/settingsQueries";
-import { listen } from "@tauri-apps/api/event";
 import { callAi } from "@/lib/api/ai";
 import {
   getTodayStats,
@@ -1450,6 +1449,7 @@ function ChatView() {
   const [thinking, setThinking] = useState<number | null>(null);
   const [sending, setSending] = useState(false);
   const [tick, setTick] = useState(0);
+  const atc = useAiTaskCenter();
   const scrollRef = useRef<HTMLDivElement>(null);
   const streamElRef = useRef<HTMLDivElement>(null);
   const streamTextRef = useRef("");
@@ -1496,6 +1496,19 @@ function ChatView() {
     if (activeId === id) { setActiveId(null); setMessages([]); }
   };
 
+  // Sync streaming text from task center
+  useEffect(() => {
+    const running = atc.tasks.find(t => t.status === "running" && t.type === "generic");
+    if (running) {
+      streamTextRef.current = running.streamText;
+      if (streamElRef.current) streamElRef.current.textContent = running.streamText;
+      setTick(n => n + 1);
+    }
+    if (running?.thinkingTokens !== null && running?.thinkingTokens !== undefined) {
+      setThinking(running.thinkingTokens);
+    }
+  }, [atc.tasks]);
+
   const sendMessage = async () => {
     const text = input.trim();
     if (!text || sending) return;
@@ -1521,21 +1534,21 @@ function ChatView() {
       setActiveId(convId);
     }
 
+    // Use task center's proven streaming path
     const taskId = `chat-${Date.now()}`;
-    const unlisten = await listen<{ task_id: string; kind: string; tokens?: number; text?: string }>(
-      "ai-stream",
-      (e) => {
-        if (e.payload.task_id !== taskId) return;
-        switch (e.payload.kind) {
-          case "thinking": setThinking(prev => e.payload.tokens ?? prev); break;
-          case "text":
-            streamTextRef.current = e.payload.text ?? "";
-            if (streamElRef.current) streamElRef.current.textContent = streamTextRef.current;
-            setTick(n => n + 1); // trigger scroll
-            break;
-        }
-      }
-    );
+    atc.addExternalTask({
+      id: taskId,
+      type: "generic",
+      providerId: aiProvider.id,
+      providerName: aiProvider.id,
+      status: "running",
+      logs: [],
+      streamText: "",
+      thinkingTokens: null,
+      result: null,
+      error: null,
+      createdAt: Date.now(),
+    });
 
     try {
       const result = await callAi({
@@ -1550,7 +1563,6 @@ function ChatView() {
     } catch (e) {
       setMessages(prev => [...prev, { role: "assistant", content: `错误: ${String(e)}` }]);
     } finally {
-      unlisten();
       streamTextRef.current = "";
       setThinking(null);
       setSending(false);
