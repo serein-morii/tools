@@ -1,0 +1,21 @@
+src/lib/api/testgen.ts
+  s_a4d226eec38498::t_831b31e63a6c2a 27-30,44-68,73-75
+src/pages/TestGenPage.tsx
+  s_a4d226eec38498::t_4a8f53e113c155 5,12-14,18-19,45-54,65-68,73,77-78,81-82,96-109,111,122,125-155,160,172-173,175-179,183-185,188,192-193,216,228,231,233-236,238-263,268,285,287,289,291-294,298,300,302-303,305-306,308-309,313-317,319-336,343,345,359
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "19fc9a5cda5b190b56e9f81986f9f714e66bef56",
+  "prompts": {},
+  "sessions": {
+    "s_a4d226eec38498": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7dfa4fc2-893d-481a-96be-d1d943c7d0b1",
+        "model": "glm-5.2"
+      },
+      "human_author": "pengchenghui <pengchenghui@jtexpress.com>"
+    }
+  }
+}
