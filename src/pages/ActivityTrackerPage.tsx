@@ -1446,20 +1446,13 @@ function ChatView() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
-  const [thinking, setThinking] = useState<number | null>(null);
   const [sending, setSending] = useState(false);
-  const [tick, setTick] = useState(0);
   const atc = useAiTaskCenter();
   const scrollRef = useRef<HTMLDivElement>(null);
   const streamElRef = useRef<HTMLDivElement>(null);
   const streamTextRef = useRef("");
 
   const activeConv = conversations.find(c => c.id === activeId);
-  const hasStreaming = sending && (thinking !== null || streamTextRef.current.length > 0);
-
-  useEffect(() => {
-    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-  }, [messages, tick, thinking]);
 
   // Persist messages when they change
   useEffect(() => {
@@ -1475,7 +1468,7 @@ function ChatView() {
     setActiveId(null);
     setMessages([]);
     streamTextRef.current = "";
-    setTick(0);
+    streamTextRef.current = "";
   };
 
   const selectConversation = (id: string) => {
@@ -1484,7 +1477,7 @@ function ChatView() {
       setActiveId(id);
       setMessages(conv.messages);
       streamTextRef.current = "";
-      setTick(0);
+      streamTextRef.current = "";
     }
   };
 
@@ -1496,18 +1489,22 @@ function ChatView() {
     if (activeId === id) { setActiveId(null); setMessages([]); }
   };
 
-  // Sync streaming text from task center
+  // Read streaming state directly from task center (reactive in render)
+  const chatTask = atc.tasks.find(t => t.status === "running" && t.type === "generic");
+  const chatThinking = chatTask?.thinkingTokens ?? null;
+  const chatStreamText = chatTask?.streamText ?? "";
+  // Update DOM ref for auto-scroll
+  if (chatStreamText) {
+    streamTextRef.current = chatStreamText;
+    if (streamElRef.current) streamElRef.current.textContent = chatStreamText;
+  }
+
+  const hasStreaming = sending && (chatThinking !== null || chatStreamText.length > 0);
+
+  // Auto-scroll
   useEffect(() => {
-    const running = atc.tasks.find(t => t.status === "running" && t.type === "generic");
-    if (running) {
-      streamTextRef.current = running.streamText;
-      if (streamElRef.current) streamElRef.current.textContent = running.streamText;
-      setTick(n => n + 1);
-    }
-    if (running?.thinkingTokens !== null && running?.thinkingTokens !== undefined) {
-      setThinking(running.thinkingTokens);
-    }
-  }, [atc.tasks]);
+    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+  }, [messages, chatStreamText, chatThinking]);
 
   const sendMessage = async () => {
     const text = input.trim();
@@ -1518,7 +1515,6 @@ function ChatView() {
     setMessages(newMessages);
     setInput("");
     setSending(true);
-    setThinking(null);
     streamTextRef.current = "";
 
     // Create conversation if no active one
@@ -1564,9 +1560,7 @@ function ChatView() {
       setMessages(prev => [...prev, { role: "assistant", content: `错误: ${String(e)}` }]);
     } finally {
       streamTextRef.current = "";
-      setThinking(null);
       setSending(false);
-      setTick(0);
     }
   };
 
@@ -1646,9 +1640,9 @@ function ChatView() {
           {hasStreaming && (
             <div className="flex justify-start">
               <div className="bg-muted rounded-lg px-3 py-2 text-sm max-w-[80%] min-w-[200px]">
-                <ThinkingSection thinking={thinking} hasText={streamTextRef.current.length > 0} />
+                <ThinkingIndicator thinking={chatThinking} hasText={chatStreamText.length > 0} />
                 <div ref={streamElRef} className="whitespace-pre-wrap" />
-                {streamTextRef.current.length > 0 && <span className="animate-pulse">|</span>}
+                {chatStreamText.length > 0 && <span className="animate-pulse">|</span>}
               </div>
             </div>
           )}
@@ -1681,30 +1675,14 @@ function ChatView() {
   );
 }
 
-function ThinkingSection({ thinking, hasText }: { thinking: number | null; hasText: boolean }) {
-  const [open, setOpen] = useState(true);
-  const wasThinking = useRef(false);
-  if (thinking !== null) wasThinking.current = true;
-  const collapsed = hasText || (wasThinking.current && thinking === null);
-  // Auto-collapse when text starts streaming
-  useEffect(() => { if (hasText) setOpen(false); }, [hasText]);
-
-  if (thinking === null && !wasThinking.current) return null;
+function ThinkingIndicator({ thinking, hasText }: { thinking: number | null; hasText: boolean }) {
+  if (thinking === null && hasText) return null;
+  if (thinking === null && !hasText) return null;
 
   return (
-    <div className="mb-1">
-      <button onClick={() => setOpen(!open)} className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors">
-        <span className="text-[10px]">{open ? "▾" : "▸"}</span>
-        <RefreshCw className={`w-3 h-3 ${thinking !== null ? "animate-spin" : ""} text-amber-500`} />
-        <span className={thinking !== null ? "text-amber-500" : ""}>
-          思考过程 {thinking !== null ? `(${thinking} tokens)` : collapsed ? "(已完成)" : ""}
-        </span>
-      </button>
-      {open && (
-        <div className="mt-1 pl-4 text-[11px] text-muted-foreground/70 border-l-2 border-muted-foreground/20 italic">
-          {thinking !== null ? "正在分析你的问题..." : "思考完成"}
-        </div>
-      )}
+    <div className="mb-1 text-[11px] text-amber-500 flex items-center gap-1.5">
+      <RefreshCw className="w-3 h-3 animate-spin" />
+      <span>思考中...{thinking !== null ? ` (${thinking} tokens)` : ""}</span>
     </div>
   );
 }
