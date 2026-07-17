@@ -1,0 +1,22 @@
+src/pages/ActivityTrackerPage.tsx
+  s_df78d3f297f53f::t_94926288d1537d 1643,1645
+  s_df78d3f297f53f::t_18a4874ef58625 1492-1504,1506-1507
+  s_df78d3f297f53f::t_96fae92d8028ff 1678-1680,1683-1685
+  s_df78d3f297f53f::t_bf86bc5d2291e4 1471,1480
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "b9f331b7d6e724e0950fbff52b93ea398a7ecbb4",
+  "prompts": {},
+  "sessions": {
+    "s_df78d3f297f53f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "775d8944-fc8a-4efb-b48d-410c29dfa631",
+        "model": "deepseek-v4-pro"
+      },
+      "human_author": "pengchenghui <pengchenghui@jtexpress.com>"
+    }
+  }
+}
