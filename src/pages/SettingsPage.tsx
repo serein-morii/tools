@@ -3,6 +3,8 @@ import { useTranslation } from "react-i18next";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useSettings, useUpdateSetting, getSettingValue } from "@/lib/query/settingsQueries";
+import { useAiProvidersConfig, useSaveAiProvidersConfig, useDefaultProviderId, useSaveDefaultProvider, getEnabledProviders } from "@/lib/query/aiQueries";
+import type { AiProviderConfig } from "@/lib/api/ai";
 import { useQueryClient } from "@tanstack/react-query";
 import { open, save } from "@tauri-apps/plugin-dialog";
 import { invoke } from "@tauri-apps/api/core";
@@ -405,6 +407,9 @@ export function SettingsPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* AI Settings */}
+        <AISettingsCard />
 
         {/* Reset & Clear - Collapsible */}
         <Card className="card-modern overflow-hidden border-destructive/30">
@@ -908,6 +913,151 @@ function ShortcutList({ settings, updateSetting }: { settings: any; updateSettin
           </div>
         );
       })}
+    </div>
+  );
+}
+
+/** Derive provider type from provider ID. CLI providers end with "-cli", API providers end with "-api". */
+function getProviderType(id: string): "cli" | "api" {
+  return id.endsWith("-api") ? "api" : "cli";
+}
+
+function AISettingsCard() {
+  const providersConfig = useAiProvidersConfig();
+  const defaultProviderId = useDefaultProviderId();
+  const saveDefault = useSaveDefaultProvider();
+  const enabledProviders = getEnabledProviders(providersConfig);
+
+  return (
+    <Card>
+      <CardHeader className="bg-muted/30 border-b py-2.5 px-4">
+        <div className="flex items-center gap-2">
+          <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-purple-500/10">
+            <Brain className="h-3.5 w-3.5 text-purple-500" />
+          </div>
+          <CardTitle className="text-sm font-semibold">AI 设置</CardTitle>
+        </div>
+      </CardHeader>
+      <CardContent className="p-4 space-y-4">
+        <div className="space-y-2">
+          <span className="text-xs text-muted-foreground">默认 AI Provider</span>
+          <select
+            className="w-full h-8 rounded-md border border-border bg-background px-3 text-sm"
+            value={defaultProviderId}
+            onChange={(e) => saveDefault(e.target.value)}
+          >
+            {enabledProviders.length === 0 && <option value="">无可用 AI</option>}
+            {enabledProviders.map((p) => (
+              <option key={p.id} value={p.id}>{p.id}</option>
+            ))}
+          </select>
+        </div>
+        <div className="space-y-3">
+          <span className="text-xs text-muted-foreground">Provider 配置</span>
+          {providersConfig.providers.map((provider) => (
+            <AiProviderRow
+              key={provider.id}
+              provider={provider}
+            />
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function AiProviderRow({ provider }: { provider: AiProviderConfig }) {
+  const [expanded, setExpanded] = useState(false);
+  const providersConfig = useAiProvidersConfig();
+  const save = useSaveAiProvidersConfig();
+
+  const update = (partial: Partial<AiProviderConfig>) => {
+    const updated = { ...provider, ...partial };
+    const idx = providersConfig.providers.findIndex((p) => p.id === updated.id);
+    if (idx >= 0) {
+      const newConfig = { ...providersConfig };
+      newConfig.providers[idx] = updated;
+      save(newConfig);
+    }
+  };
+
+  const providerType = getProviderType(provider.id);
+
+  return (
+    <div className="border border-border rounded-md p-3 space-y-2">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <button onClick={() => setExpanded(!expanded)} className="text-xs text-muted-foreground hover:text-foreground">
+            {expanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+          </button>
+          <span className="text-sm font-medium">{provider.id}</span>
+          <span className="text-[10px] text-muted-foreground bg-secondary px-1.5 py-0.5 rounded">{providerType}</span>
+        </div>
+        <Switch checked={provider.enabled} onCheckedChange={(v) => update({ enabled: v })} />
+      </div>
+      {expanded && (
+        <div className="space-y-2 pt-2 border-t border-border/50">
+          {providerType === "cli" ? (
+            <>
+              <div className="space-y-1">
+                <span className="text-[10px] text-muted-foreground">命令路径（空则用默认）</span>
+                <Input
+                  value={provider.command}
+                  onChange={(e) => update({ command: e.target.value })}
+                  placeholder="claude"
+                  className="h-7 text-xs"
+                />
+              </div>
+              <div className="space-y-1">
+                <span className="text-[10px] text-muted-foreground">额外参数（逗号分隔）</span>
+                <Input
+                  value={provider.extra_args?.join(", ") || ""}
+                  onChange={(e) => update({ extra_args: e.target.value.split(",").map(s => s.trim()).filter(Boolean) })}
+                  placeholder="--permission-mode, acceptEdits"
+                  className="h-7 text-xs"
+                />
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="space-y-1">
+                <span className="text-[10px] text-muted-foreground">Base URL</span>
+                <Input
+                  value={provider.base_url}
+                  onChange={(e) => update({ base_url: e.target.value })}
+                  className="h-7 text-xs"
+                />
+              </div>
+              <div className="space-y-1">
+                <span className="text-[10px] text-muted-foreground">API Key</span>
+                <Input
+                  type="password"
+                  value={provider.api_key}
+                  onChange={(e) => update({ api_key: e.target.value })}
+                  className="h-7 text-xs"
+                />
+              </div>
+              <div className="space-y-1">
+                <span className="text-[10px] text-muted-foreground">默认模型</span>
+                <Input
+                  value={provider.default_model}
+                  onChange={(e) => update({ default_model: e.target.value })}
+                  className="h-7 text-xs"
+                />
+              </div>
+              <div className="space-y-1">
+                <span className="text-[10px] text-muted-foreground">Max Tokens</span>
+                <Input
+                  type="number"
+                  value={String(provider.max_tokens || 4096)}
+                  onChange={(e) => update({ max_tokens: parseInt(e.target.value) || 0 })}
+                  className="h-7 text-xs w-24"
+                />
+              </div>
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 }
