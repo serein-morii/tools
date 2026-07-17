@@ -1,0 +1,39 @@
+src/lib/TestGenContext.tsx
+  s_661e06f14b3ae2::t_08b0c507a38496 1-28,31,33-55,57-76,78-105,107-108,112,122-140,142-154,156-183,185-188,190-216
+  s_661e06f14b3ae2::t_d15e96be0acdcb 30
+  s_661e06f14b3ae2::t_837e80a384554c 141
+  s_661e06f14b3ae2::t_a7bb659c43e898 106
+  s_661e06f14b3ae2::t_c138dc0dbae6e8 29,32
+  s_661e06f14b3ae2::t_15e8d7370711c2 77
+  s_661e06f14b3ae2::t_098c4382ef1e05 56
+  s_661e06f14b3ae2::t_1ebba4a1ecca36 109-111,113-121
+  s_661e06f14b3ae2::t_c68282d9474696 189
+  s_661e06f14b3ae2::t_21a1019b608d30 184
+  s_661e06f14b3ae2::t_bf25f2af1496a2 155
+src/pages/TestGenPage.tsx
+  s_661e06f14b3ae2::t_4849a80fa5aa0e 4,17
+  s_661e06f14b3ae2::t_1759719a9a0a62 109
+  s_661e06f14b3ae2::t_e54534631ee824 187
+  s_661e06f14b3ae2::t_87b61dfe03e9aa 81-85
+  s_661e06f14b3ae2::t_87039f92ca9740 167-180,185,188-189
+  s_661e06f14b3ae2::t_1d059a3015dff1 352
+  s_661e06f14b3ae2::t_773a9b42d3b13b 71
+src/App.tsx
+  s_661e06f14b3ae2::t_26298c11db94c8 10,78,80,89,127
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "02ef03b0c2416f9df872d47256f14362b2a16dbb",
+  "prompts": {},
+  "sessions": {
+    "s_661e06f14b3ae2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "964be603-748d-4298-99f7-2a6dd4d78f9b",
+        "model": "deepseek-v4-pro"
+      },
+      "human_author": "pengchenghui <pengchenghui@jtexpress.com>"
+    }
+  }
+}
