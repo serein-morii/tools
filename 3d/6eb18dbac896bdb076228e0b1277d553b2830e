@@ -1,0 +1,26 @@
+src-tauri/src/lib.rs
+  s_df78d3f297f53f::t_b2cf220f50eb9a 195-197
+  s_df78d3f297f53f::t_a9abb637d2a020 71
+src-tauri/src/commands/mod.rs
+  s_df78d3f297f53f::t_88f35985055d14 24
+  s_df78d3f297f53f::t_14649a8e3e06a9 9
+src-tauri/src/commands/ai.rs
+  s_df78d3f297f53f::t_be726293166b5f 5
+  s_df78d3f297f53f::t_cbd8c374dadb81 1-4,6-54
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "3d6eb18dbac896bdb076228e0b1277d553b2830e",
+  "prompts": {},
+  "sessions": {
+    "s_df78d3f297f53f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "775d8944-fc8a-4efb-b48d-410c29dfa631",
+        "model": "deepseek-v4-pro"
+      },
+      "human_author": "pengchenghui <pengchenghui@jtexpress.com>"
+    }
+  }
+}
