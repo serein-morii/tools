@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, type ReactNode } from "react";
 import { useLocation } from "react-router-dom";
 import { open } from "@tauri-apps/plugin-dialog";
 import { listen } from "@tauri-apps/api/event";
-import { FlaskConical, FolderOpen, Play, Minus, X, RefreshCw, Search, History, RotateCw } from "lucide-react";
+import { FlaskConical, FolderOpen, Play, Minus, X, RefreshCw, Search, RotateCw } from "lucide-react";
 import { useSettings, useUpdateSetting, getSettingValue } from "../lib/query/settingsQueries";
 import {
   validateGitRepo,
@@ -95,6 +95,12 @@ export default function TestGenPage() {
 
   // History
   const [history, setHistory] = useState<TestgenRun[]>([]);
+  // Tab
+  const [activeTab, setActiveTab] = useState("exec");
+  const tabs = [
+    { id: "exec", label: "执行" },
+    { id: "history", label: "记录" },
+  ];
 
   // Default commit message on mount
   useEffect(() => { setCommitMessage((prev) => prev || `【单测】${formatNow()}`); }, []);
@@ -107,6 +113,12 @@ export default function TestGenPage() {
   // Load history
   const loadHistory = async () => { try { setHistory(await getTestgenRuns(30)); } catch (_) {} };
   useEffect(() => { loadHistory(); }, []);
+  useEffect(() => { if (activeTab === "history") loadHistory(); }, [activeTab]);
+
+  const pickProjectRoot = async () => {
+    const p = await open({ directory: true, multiple: false });
+    if (typeof p === "string" && p) { setProjectRoot(p); setSetting("testgen_project_root", p); }
+  };
 
   const appendLog = (stage: string, text: string) => setRunLogs((p) => [...p, { time: Date.now(), stage, text }]);
   const [displayedText, setDisplayedText] = useState("");
@@ -216,11 +228,23 @@ export default function TestGenPage() {
   const canRetry = runStatus === "error" && result !== null && !result.commit_sha && !result.test_passed;
 
   return (
-    <div className="flex flex-col h-full p-5 gap-3 overflow-auto">
-      <div className="flex items-center gap-2">
-        <FlaskConical className="w-4 h-4 text-primary" />
-        <h1 className="text-base font-semibold">单测执行</h1>
+    <div className="flex flex-col h-full">
+      {/* Header + tabs */}
+      <div className="flex items-center justify-between px-5 py-2.5 border-b border-border">
+        <div className="flex items-center gap-2">
+          <FlaskConical className="w-4 h-4 text-primary" />
+          <h1 className="text-base font-semibold">单测执行</h1>
+        </div>
+        <div className="flex items-center gap-1 bg-secondary rounded-lg p-1">
+          {tabs.map((tab) => (
+            <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`px-3 py-1 rounded-md text-xs transition-colors ${activeTab === tab.id ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>{tab.label}</button>
+          ))}
+        </div>
       </div>
+      {/* Content */}
+      <div className="flex-1 overflow-auto">
+        {activeTab === "exec" && (
+        <div className="p-5 space-y-3">
 
       {/* Prompt */}
       <div>
@@ -233,6 +257,7 @@ export default function TestGenPage() {
         <label className="text-xs text-muted-foreground">项目根目录（预扫描）</label>
         <div className="flex gap-2 mt-1">
           <input value={projectRoot} onChange={(e) => { setProjectRoot(e.target.value); setSetting("testgen_project_root", e.target.value); }} placeholder="配置根目录，自动扫描下级项目" className={`${inputCls} flex-1`} />
+          <button onClick={pickProjectRoot} className="flex items-center gap-1 h-8 px-3 text-xs border border-border rounded-md hover:bg-secondary"><FolderOpen className="w-3.5 h-3.5" /> 选择</button>
           <button onClick={() => doScan(projectRoot)} className="h-8 px-3 text-xs border border-border rounded-md hover:bg-secondary">扫描</button>
         </div>
         {scannedProjects.length > 0 && (
@@ -316,22 +341,31 @@ export default function TestGenPage() {
         {canRetry && <button onClick={startRetry} className="flex items-center gap-1 h-9 px-4 text-sm border border-border rounded-md hover:bg-secondary"><RotateCw className="w-4 h-4" /> 重试（修复测试）</button>}
       </div>
 
-      {/* History */}
-      <details className="border border-border rounded-md p-2">
-        <summary className="text-xs font-medium cursor-pointer flex items-center gap-1"><History className="w-3.5 h-3.5" /> 执行记录 ({history.length})</summary>
-        <div className="mt-2 space-y-1 max-h-60 overflow-auto">
-          {history.length === 0 && <div className="text-muted-foreground text-center py-4 text-xs">暂无记录</div>}
-          {history.map((r) => (
-            <div key={r.id} className="text-xs p-1.5 border border-border/50 rounded">
-              <div className="flex justify-between"><span className="font-medium">{r.project_name ?? r.dir ?? "-"}</span>
-                <span className={r.status === "done" ? "text-green-500" : r.status === "error" ? "text-red-500" : r.status === "cancelled" ? "text-muted-foreground" : "text-amber-500"}>{r.status ?? "-"}</span>
-              </div>
-              <div className="text-muted-foreground">{r.branch ?? "-"} · {formatTs(r.started_at)}{r.commit_sha ? ` · ${r.commit_sha}` : ""}{r.pushed ? " · 已推送" : ""}{r.test_passed ? " · 测试通过" : " · 测试未通过"}</div>
-              {r.error && <div className="text-red-500 mt-0.5 break-all text-[11px]">{r.error}</div>}
-            </div>
-          ))}
         </div>
-      </details>
+        )}
+        {activeTab === "history" && (
+          <div className="p-5 space-y-2">
+            <h2 className="text-sm font-medium">执行记录</h2>
+            {history.length === 0 && <div className="text-center py-12 text-muted-foreground text-sm">暂无记录</div>}
+            <div className="space-y-2">
+              {history.map((r) => (
+                <div key={r.id} className="p-3 border border-border rounded-lg text-xs">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <span className="font-medium">{r.project_name ?? r.dir ?? "-"}</span>
+                      <span className="ml-2 text-muted-foreground">{r.branch ?? "-"}</span>
+                    </div>
+                    <span className={r.status === "done" ? "text-green-500" : r.status === "error" ? "text-red-500" : r.status === "cancelled" ? "text-muted-foreground" : "text-amber-500"}>{r.status ?? "-"}</span>
+                  </div>
+                  <div className="text-muted-foreground mt-1">{formatTs(r.started_at)}{r.commit_sha ? ` · ${r.commit_sha}` : ""}{r.pushed ? " · 已推送" : ""}{r.test_passed ? " · 测试通过" : " · 测试未通过"}{r.files_changed > 0 ? ` · ${r.files_changed} 文件` : ""}</div>
+                  {r.error && <div className="text-red-500 mt-1 break-all">{r.error}</div>}
+                  {r.prompt_summary && <div className="text-muted-foreground/70 mt-1 break-all">{r.prompt_summary}</div>}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
 
       <ConfirmDialog open={execConfirm} title="执行单测生成" description={`目录：${dir}\n分支：${baseBranch}${branchMode === "new" ? `（新建 ${newBranchName || "test/..."}）` : ""}${branchWarn ? `\n⚠ 受保护分支 ${baseBranch}` : ""}\n提交信息：${commitMessage}\n\n将调用 AI 写单测并跑 mvn test，确认继续？`} confirmText="开始" onCancel={() => setExecConfirm(false)} onConfirm={confirmExec} />
       <ConfirmDialog open={pushConfirm} title="确认推送" description={`已提交到 ${result?.branch}，是否推送到远程？`} confirmText="推送" onCancel={() => setPushConfirm(false)} onConfirm={confirmPush} />
