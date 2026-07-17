@@ -463,7 +463,7 @@ pub async fn generate_report(
         Err(e) => {
             emit("error", format!("总结失败: {}（已保存 Prompt 供手动使用）", e));
             if let Some(ref tid) = task_id {
-                let _ = app.emit("ai-stream", serde_json::json!({"task_id": tid, "kind": "progress", "stage": "error", "message": format!("总结失败: {}", e)}));
+                let _ = app.emit("ai-stream", serde_json::json!({"task_id": tid, "kind": "error", "message": format!("总结失败: {}", e)}));
             }
             let _ = reporter.save_report(
                 &report_type, range_start, range_end,

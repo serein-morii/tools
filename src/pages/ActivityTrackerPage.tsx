@@ -73,7 +73,7 @@ export default function ActivityTrackerPage() {
       taskId?: string,
     ) => {
       try {
-        const method = getSettingValue?.(settings as any, "ai_summary_method", "cli") ?? "cli";
+        const method = getSettingValue?.(settings as any, "ai_summary_method", "ai") ?? "cli";
 
         if (method === "ai") {
           const modelStr = getSettingValue?.(settings as any, "ai_summary_model", "");
@@ -1065,7 +1065,7 @@ function ToolSettings() {
 
   if (loading) return <div className="flex items-center justify-center h-64 text-muted-foreground">加载中...</div>;
 
-  const summaryMethod = getVal("ai_summary_method", "cli");
+  const summaryMethod = getVal("ai_summary_method", "ai");
 
   return (
     <div className="p-5 space-y-4">

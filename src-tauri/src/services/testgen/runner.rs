@@ -231,41 +231,42 @@ pub async fn run_test_gen(
                 }
                 AiEvent::Done => {
                     let _ = app.emit("testgen-stream", serde_json::json!({"kind": "done"}));
+                    // Don't forward Done to ai-stream yet — runner still has mvn/git work
                 }
             }
-            // Also forward to ai-stream with task_id for AiTaskCenter
+            // Forward to ai-stream (but NOT Done — sent after all ops complete)
             if let Some(ref tid) = req.task_id {
-                let mut ai_payload = serde_json::json!({
-                    "task_id": tid,
-                    "kind": match &event {
-                        AiEvent::Progress { .. } => "progress",
-                        AiEvent::Thinking { .. } => "thinking",
-                        AiEvent::TextDelta { .. } => "text",
-                        AiEvent::Done => "done",
+                let kind = match &event {
+                    AiEvent::Progress { .. } => Some("progress"),
+                    AiEvent::Thinking { .. } => Some("thinking"),
+                    AiEvent::TextDelta { .. } => Some("text"),
+                    AiEvent::Done => None, // deferred until all ops complete
+                };
+                if let Some(k) = kind {
+                    let mut ai_payload = serde_json::json!({ "task_id": tid, "kind": k });
+                    match &event {
+                        AiEvent::Progress { stage, message } => {
+                            ai_payload["stage"] = serde_json::Value::String(stage.clone());
+                            ai_payload["message"] = serde_json::Value::String(message.clone());
+                        }
+                        AiEvent::Thinking { tokens } => {
+                            ai_payload["tokens"] = serde_json::json!(tokens);
+                        }
+                        AiEvent::TextDelta { text } => {
+                            ai_payload["text"] = serde_json::Value::String(text.clone());
+                        }
+                        AiEvent::Done => {}
                     }
-                });
-                match &event {
-                    AiEvent::Progress { stage, message } => {
-                        ai_payload["stage"] = serde_json::Value::String(stage.clone());
-                        ai_payload["message"] = serde_json::Value::String(message.clone());
-                    }
-                    AiEvent::Thinking { tokens } => {
-                        ai_payload["tokens"] = serde_json::json!(tokens);
-                    }
-                    AiEvent::TextDelta { text } => {
-                        ai_payload["text"] = serde_json::Value::String(text.clone());
-                    }
-                    AiEvent::Done => {}
+                    let _ = app.emit("ai-stream", ai_payload);
                 }
-                let _ = app.emit("ai-stream", ai_payload);
             }
             if cancel_flag.load(std::sync::atomic::Ordering::SeqCst) {
                 return Err("已取消".to_string());
             }
         }
-        handle.await.map_err(|e| format!("AI task error: {}", e))?
-            .map(|r| r.output)
-            .map_err(|e| { emit("error", format!("AI 失败: {}", e)); e })?
+        let result = handle.await.map_err(|e| format!("AI task error: {}", e))?;
+        result.map(|r| r.output)
+            .map_err(|e| { emit("error", format!("AI 失败: {}", e)); emit_ai_final(app, &req.task_id, true, &format!("AI 失败: {}", e)); e })?
     } else {
         let claude_cmd = req.claude_command.clone().unwrap_or_else(|| "claude".to_string());
         cli::run_claude_streaming(&claude_cmd, &prompt, dir, app, cancel_flag, req.continue_session)
@@ -279,6 +280,7 @@ pub async fn run_test_gen(
     // If AI asked a question, return early so the user can answer
     if let Some(question) = detect_question(&ai_output) {
         emit("ai", "AI 有问题需要回答，暂停等待用户输入".into());
+        emit_ai_final(app, &req.task_id, false, "AI 需要回答");
         return Ok(TestGenResult {
             branch,
             commit_sha: None,
@@ -360,16 +362,27 @@ pub async fn run_test_gen(
         return match git::push(dir, &branch).await {
             Ok(o) => {
                 emit("push", "已推送".into());
+                emit_ai_final(app, &req.task_id, false, "");
                 Ok(TestGenResult { branch, commit_sha: Some(sha), files_changed: files, test_passed: passed, test_output_excerpt: excerpt, pushed: true, push_output: Some(o), error: None, ai_question: None })
             }
             Err(e) => {
                 let msg = format!("push 失败: {}", e);
+                emit_ai_final(app, &req.task_id, true, &msg);
                 Ok(TestGenResult { branch, commit_sha: Some(sha), files_changed: files, test_passed: passed, test_output_excerpt: excerpt, pushed: false, push_output: Some(e), error: Some(msg), ai_question: None })
             }
         };
     }
 
+    // --- final result ---
+    emit_ai_final(app, &req.task_id, false, "");
     Ok(TestGenResult { branch, commit_sha: Some(sha), files_changed: files, test_passed: passed, test_output_excerpt: excerpt, pushed: false, push_output: None, error: None, ai_question: None })
+}
+
+fn emit_ai_final(app: &tauri::AppHandle, task_id: &Option<String>, is_error: bool, message: &str) {
+    if let Some(ref tid) = task_id {
+        let kind = if is_error { "error" } else { "done" };
+        let _ = app.emit("ai-stream", serde_json::json!({ "task_id": tid, "kind": kind, "message": message }));
+    }
 }
 
 #[cfg(test)]
