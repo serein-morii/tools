@@ -1,0 +1,28 @@
+src-tauri/src/commands/activity_tracker.rs
+  s_df78d3f297f53f::t_02dbe1977065b3 15
+  ai_agent 360,367-399,401-422
+src/pages/ActivityTrackerPage.tsx
+  s_df78d3f297f53f::t_77f7c2dd53aba0 108,118-146
+  s_df78d3f297f53f::t_bba8ebf769d033 109-117
+  s_df78d3f297f53f::t_0164369b25b09b 46-48
+  s_df78d3f297f53f::t_50715d4262640c 158
+  s_df78d3f297f53f::t_b91387c5d35a5f 1282,1288-1290,1293-1304
+  s_df78d3f297f53f::t_42fbac55d2bd4a 1161-1167
+  s_df78d3f297f53f::t_a2b150db2ab838 55-56
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "99190250497702f8a5f3f3e5298578797f653975",
+  "prompts": {},
+  "sessions": {
+    "s_df78d3f297f53f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "775d8944-fc8a-4efb-b48d-410c29dfa631",
+        "model": "deepseek-v4-pro"
+      },
+      "human_author": "pengchenghui <pengchenghui@jtexpress.com>"
+    }
+  }
+}
