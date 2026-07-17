@@ -716,6 +716,60 @@ impl ActivityDao {
         )?;
         Ok(())
     }
+
+    // ==================== TestgenRun ====================
+
+    /// Insert a run record (call at start, status="running").
+    pub fn insert_testgen_run(conn: &Connection, run: &TestgenRun) -> Result<()> {
+        conn.execute(
+            "INSERT INTO ai_testgen_runs (id, dir, project_name, branch, branch_mode, commit_sha, files_changed, test_passed, pushed, status, error, prompt_summary, started_at, finished_at)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)",
+            rusqlite::params![
+                run.id, run.dir, run.project_name, run.branch, run.branch_mode,
+                run.commit_sha, run.files_changed, run.test_passed as i32, run.pushed as i32,
+                run.status, run.error, run.prompt_summary, run.started_at, run.finished_at,
+            ],
+        )?;
+        Ok(())
+    }
+
+    /// Update a run record with final fields (call at finish).
+    pub fn finish_testgen_run(conn: &Connection, run: &TestgenRun) -> Result<()> {
+        conn.execute(
+            "UPDATE ai_testgen_runs SET commit_sha = ?2, files_changed = ?3, test_passed = ?4, pushed = ?5, status = ?6, error = ?7, finished_at = ?8 WHERE id = ?1",
+            rusqlite::params![
+                run.id, run.commit_sha, run.files_changed, run.test_passed as i32,
+                run.pushed as i32, run.status, run.error, run.finished_at,
+            ],
+        )?;
+        Ok(())
+    }
+
+    pub fn get_testgen_runs(conn: &Connection, limit: i64) -> Result<Vec<TestgenRun>> {
+        let mut stmt = conn.prepare(
+            "SELECT id, dir, project_name, branch, branch_mode, commit_sha, files_changed, test_passed, pushed, status, error, prompt_summary, started_at, finished_at FROM ai_testgen_runs ORDER BY started_at DESC LIMIT ?1",
+        )?;
+        let rows = stmt.query_map(rusqlite::params![limit], |row| {
+            Ok(TestgenRun {
+                id: row.get(0)?,
+                dir: row.get(1)?,
+                project_name: row.get(2)?,
+                branch: row.get(3)?,
+                branch_mode: row.get(4)?,
+                commit_sha: row.get(5)?,
+                files_changed: row.get(6)?,
+                test_passed: row.get::<_, i32>(7)? != 0,
+                pushed: row.get::<_, i32>(8)? != 0,
+                status: row.get(9)?,
+                error: row.get(10)?,
+                prompt_summary: row.get(11)?,
+                started_at: row.get(12)?,
+                finished_at: row.get(13)?,
+            })
+        })?;
+        rows.collect::<std::result::Result<Vec<_>, _>>()
+            .map_err(|e| ToolsError::Database(e))
+    }
 }
 
 /// A user message (question) within a session, for report generation.
@@ -727,6 +781,25 @@ pub struct UserMessageRow {
     pub title: Option<String>,
     pub content: String,
     pub timestamp: i64,
+}
+
+/// A TestGen execution run record (history).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TestgenRun {
+    pub id: String,
+    pub dir: Option<String>,
+    pub project_name: Option<String>,
+    pub branch: Option<String>,
+    pub branch_mode: Option<String>,
+    pub commit_sha: Option<String>,
+    pub files_changed: i32,
+    pub test_passed: bool,
+    pub pushed: bool,
+    pub status: Option<String>, // "running" | "done" | "error" | "cancelled"
+    pub error: Option<String>,
+    pub prompt_summary: Option<String>,
+    pub started_at: i64,
+    pub finished_at: Option<i64>,
 }
 
 #[cfg(test)]

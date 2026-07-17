@@ -115,6 +115,11 @@ pub async fn changed_files(dir: &Path) -> Result<usize, String> {
     Ok(out.lines().filter(|l| !l.is_empty()).count())
 }
 
+pub async fn staged_file_list(dir: &Path) -> Result<Vec<String>, String> {
+    let out = git(dir, &["diff", "--cached", "--name-only"]).await?;
+    Ok(out.lines().filter(|l| !l.is_empty()).map(|s| s.to_string()).collect())
+}
+
 pub async fn push(dir: &Path, branch: &str) -> Result<String, String> {
     match git(dir, &["push"]).await {
         Ok(o) => Ok(o),

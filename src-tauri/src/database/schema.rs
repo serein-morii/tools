@@ -203,6 +203,25 @@ pub fn init_schema(conn: &Connection) -> Result<()> {
         CREATE INDEX IF NOT EXISTS idx_ai_activities_type ON ai_activities(activity_type);
         CREATE INDEX IF NOT EXISTS idx_ai_reports_type_time ON ai_reports(report_type, range_start);
 
+        -- AI TestGen execution runs (history)
+        CREATE TABLE IF NOT EXISTS ai_testgen_runs (
+            id              TEXT PRIMARY KEY,
+            dir             TEXT,
+            project_name    TEXT,
+            branch          TEXT,
+            branch_mode     TEXT,
+            commit_sha      TEXT,
+            files_changed   INTEGER DEFAULT 0,
+            test_passed     INTEGER DEFAULT 0,
+            pushed          INTEGER DEFAULT 0,
+            status          TEXT,
+            error           TEXT,
+            prompt_summary  TEXT,
+            started_at      BIGINT NOT NULL,
+            finished_at     BIGINT
+        );
+        CREATE INDEX IF NOT EXISTS idx_testgen_runs_time ON ai_testgen_runs(started_at);
+
         -- Insert default AI tools
         INSERT OR IGNORE INTO ai_tools (id, name, enabled, watch_paths, parser_type, config, created_at, updated_at)
         VALUES
