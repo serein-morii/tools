@@ -1,0 +1,24 @@
+src/pages/TestGenPage.tsx
+  s_a4d226eec38498::t_cdd69a04333122 231-242,244-247
+  s_a4d226eec38498::t_91bc17f7c80290 260
+  s_a4d226eec38498::t_82f3ef554f67d5 345-368
+  s_a4d226eec38498::t_b698cfb72ce982 116-121
+  s_a4d226eec38498::t_9c4133d1e18819 5
+  s_a4d226eec38498::t_b29d861b58860e 98-103
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "85537916c777da535d72bfd3488727163876da43",
+  "prompts": {},
+  "sessions": {
+    "s_a4d226eec38498": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7dfa4fc2-893d-481a-96be-d1d943c7d0b1",
+        "model": "glm-5.2"
+      },
+      "human_author": "pengchenghui <pengchenghui@jtexpress.com>"
+    }
+  }
+}
