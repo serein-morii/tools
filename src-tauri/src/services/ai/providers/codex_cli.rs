@@ -20,19 +20,6 @@ impl CodexCliProvider {
             },
         }
     }
-
-    fn build_args(continue_session: bool, extra_args: &[String]) -> Vec<String> {
-        let mut args = vec![
-            "-p".to_string(),
-            "--output-format".to_string(), "stream-json".to_string(),
-            "--verbose".to_string(),
-        ];
-        if continue_session {
-            args.push("--continue".to_string());
-        }
-        args.extend(extra_args.iter().cloned());
-        args
-    }
 }
 
 #[async_trait]
@@ -45,17 +32,15 @@ impl AiProvider for CodexCliProvider {
         } else {
             request.provider_config.command.clone()
         };
-        let args = Self::build_args(request.continue_session, &request.provider_config.extra_args);
 
+        // Codex CLI takes prompt directly as a positional argument, not via -p.
+        // It does not support --output-format or --verbose flags.
         let mut cmd = if cfg!(target_os = "windows") {
             let mut c = Command::new("cmd");
             c.arg("/C").arg(&cmd_str);
-            for a in &args { c.arg(a); }
             c
         } else {
-            let mut c = Command::new(&cmd_str);
-            for a in &args { c.arg(a); }
-            c
+            Command::new(&cmd_str)
         };
 
         cmd.stdin(Stdio::piped())
@@ -72,51 +57,16 @@ impl AiProvider for CodexCliProvider {
         let stderr = child.stderr.take();
         let mut reader = BufReader::new(stdout).lines();
         let mut final_text = String::new();
-        let mut had_error = false;
-        let mut last_thinking = 0i64;
 
         while let Ok(Some(line)) = reader.next_line().await {
-            let val: serde_json::Value = match serde_json::from_str(&line) {
-                Ok(v) => v,
-                Err(_) => continue,
-            };
-            let t = val.get("type").and_then(|v| v.as_str()).unwrap_or("");
-            match t {
-                "system" => {
-                    if val.get("subtype").and_then(|v| v.as_str()) == Some("thinking_tokens") {
-                        let n = val.get("estimated_tokens").and_then(|v| v.as_i64()).unwrap_or(0);
-                        if n - last_thinking >= 10 || n < last_thinking {
-                            last_thinking = n;
-                            let _ = tx.send(AiEvent::Thinking { tokens: n });
-                        }
-                    }
-                }
-                "assistant" => {
-                    if let Some(content) = val.get("message").and_then(|m| m.get("content")).and_then(|c| c.as_array()) {
-                        for block in content {
-                            if block.get("type").and_then(|v| v.as_str()) == Some("text") {
-                                if let Some(text) = block.get("text").and_then(|v| v.as_str()) {
-                                    let _ = tx.send(AiEvent::TextDelta { text: text.to_string() });
-                                }
-                            }
-                        }
-                    }
-                }
-                "result" => {
-                    if val.get("is_error").and_then(|v| v.as_bool()).unwrap_or(false) {
-                        had_error = true;
-                    }
-                    if let Some(r) = val.get("result").and_then(|v| v.as_str()) {
-                        final_text = r.to_string();
-                    }
-                    let _ = tx.send(AiEvent::Done);
-                }
-                _ => {}
-            }
+            if !final_text.is_empty() { final_text.push('\n'); }
+            final_text.push_str(&line);
+            let _ = tx.send(AiEvent::TextDelta { text: line });
         }
+        let _ = tx.send(AiEvent::Done);
 
         let status = child.wait().await.map_err(|e| format!("CLI wait error: {}", e))?;
-        if !status.success() || had_error {
+        if !status.success() {
             let mut err_text = String::new();
             if let Some(mut se) = stderr {
                 let _ = se.read_to_string(&mut err_text).await;
@@ -139,17 +89,13 @@ impl AiProvider for CodexCliProvider {
         } else {
             request.provider_config.command.clone()
         };
-        let args = Self::build_args(request.continue_session, &request.provider_config.extra_args);
 
         let mut cmd = if cfg!(target_os = "windows") {
             let mut c = Command::new("cmd");
             c.arg("/C").arg(&cmd_str);
-            for a in &args { c.arg(a); }
             c
         } else {
-            let mut c = Command::new(&cmd_str);
-            for a in &args { c.arg(a); }
-            c
+            Command::new(&cmd_str)
         };
 
         cmd.stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).kill_on_drop(true);
