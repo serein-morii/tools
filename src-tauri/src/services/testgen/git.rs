@@ -92,6 +92,36 @@ pub async fn list_branches(dir: &Path) -> Result<Vec<BranchInfo>, String> {
     Ok(branches)
 }
 
+pub async fn checkout(dir: &Path, branch: &str) -> Result<(), String> {
+    git(dir, &["checkout", branch]).await.map(|_| ())
+}
+
+pub async fn create_branch(dir: &Path, base: &str, new_name: &str) -> Result<(), String> {
+    git(dir, &["checkout", "-b", new_name, base]).await.map(|_| ())
+}
+
+pub async fn add_all(dir: &Path) -> Result<(), String> {
+    git(dir, &["add", "-A"]).await.map(|_| ())
+}
+
+pub async fn commit(dir: &Path, msg: &str) -> Result<String, String> {
+    git(dir, &["commit", "-m", msg]).await?;
+    let sha = git(dir, &["rev-parse", "--short", "HEAD"]).await?;
+    Ok(sha.trim().to_string())
+}
+
+pub async fn changed_files(dir: &Path) -> Result<usize, String> {
+    let out = git(dir, &["diff", "--cached", "--name-only"]).await?;
+    Ok(out.lines().filter(|l| !l.is_empty()).count())
+}
+
+pub async fn push(dir: &Path, branch: &str) -> Result<String, String> {
+    match git(dir, &["push"]).await {
+        Ok(o) => Ok(o),
+        Err(_) => git(dir, &["push", "-u", "origin", branch]).await,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -155,6 +185,21 @@ mod tests {
         let bs = list_branches(&d).await.unwrap();
         assert!(bs.iter().any(|b| b.name == "feat-x"));
         assert_eq!(bs.iter().filter(|b| b.current).count(), 1);
+        std::fs::remove_dir_all(&d).ok();
+    }
+
+    #[tokio::test]
+    async fn create_branch_and_commit() {
+        let d = temp_dir();
+        init_repo(&d).await;
+        create_branch(&d, "HEAD", "test/abc").await.unwrap();
+        let cur = git(&d, &["rev-parse", "--abbrev-ref", "HEAD"]).await.unwrap();
+        assert_eq!(cur.trim(), "test/abc");
+        std::fs::write(d.join("b.txt"), "b").unwrap();
+        add_all(&d).await.unwrap();
+        assert_eq!(changed_files(&d).await.unwrap(), 1);
+        let sha = commit(&d, "add b").await.unwrap();
+        assert!(!sha.is_empty());
         std::fs::remove_dir_all(&d).ok();
     }
 }
