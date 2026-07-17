@@ -103,7 +103,11 @@ export function AiTaskCenterProvider({ children }: { children: ReactNode }) {
             updated.streamText = text ?? "";
             break;
           case "done":
-            // status set by caller via setTaskStatus
+            updated.status = "done";
+            break;
+          case "error":
+            updated.status = "error";
+            updated.error = message ?? "未知错误";
             break;
         }
         next.set(task_id, updated);
