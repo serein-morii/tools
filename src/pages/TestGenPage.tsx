@@ -111,8 +111,14 @@ export default function TestGenPage() {
       });
       setResult(res);
       maybeAskPush(res);
-      if (res.error && !res.commit_sha) { setRunStatus("error"); appendLog("error", res.error); }
-      else { setRunStatus("done"); appendLog("done", `完成：分支 ${res.branch}，提交 ${res.commit_sha ?? "-"}，${res.files_changed} 文件，测试${res.test_passed ? "通过" : "失败"}`); }
+      if (res.error && !res.commit_sha) {
+        setRunStatus("error"); appendLog("error", res.error);
+      } else if (res.error && res.commit_sha) {
+        // committed but a later step (push) failed
+        setRunStatus("error"); appendLog("error", `${res.error}（本地已提交 ${res.commit_sha}）`);
+      } else {
+        setRunStatus("done"); appendLog("done", `完成：分支 ${res.branch}，提交 ${res.commit_sha ?? "-"}，${res.files_changed} 文件，测试${res.test_passed ? "通过" : "失败"}${res.pushed ? "，已推送" : ""}`);
+      }
     } catch (e) {
       setRunStatus("error"); appendLog("error", String(e));
     } finally { up(); us(); }
@@ -275,6 +281,15 @@ export default function TestGenPage() {
               {runLogs.map((l, i) => <div key={i} className="break-words"><span className="text-[10px] text-muted-foreground/70 mr-1">[{l.stage}]</span>{l.text}</div>)}
               {runThinking !== null && !runText && <div className="text-amber-500">思考中... {runThinking} tokens</div>}
               {displayedText && <div className="whitespace-pre-wrap break-words border-t border-border/40 pt-1">{displayedText}{displayedText.length < (runText?.length ?? 0) && <span className="animate-pulse">▍</span>}</div>}
+              {result && runStatus !== "running" && (
+                <div className="mt-2 pt-2 border-t border-border/40 text-xs space-y-0.5">
+                  <div><span className="text-muted-foreground">分支：</span>{result.branch}</div>
+                  {result.commit_sha && <div><span className="text-muted-foreground">提交：</span>{result.commit_sha}（{result.files_changed} 文件）</div>}
+                  <div><span className="text-muted-foreground">测试：</span>{result.test_passed ? "✓ 通过" : "✗ 失败"}</div>
+                  <div><span className="text-muted-foreground">推送：</span>{result.pushed ? "✓ 已推送" : result.commit_sha ? "未推送" : "—"}</div>
+                  {result.error && <div className="text-red-500">错误：{result.error}</div>}
+                </div>
+              )}
             </div>
           </div>
         </div>

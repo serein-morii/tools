@@ -66,6 +66,7 @@ pub async fn run_mvn_test(
     let output = Command::new(cmd_name)
         .current_dir(dir)
         .args(&arg_refs)
+        .kill_on_drop(true)
         .output()
         .await
         .map_err(|e| format!("mvn exec error: {}（确认 mvn 在 PATH）", e))?;
@@ -100,11 +101,14 @@ pub async fn run_test_gen(req: TestGenRequest, app: &AppHandle) -> Result<TestGe
     }
 
     let branch = if req.branch_mode == "new" {
-        let name = req
+        let mut name = req
             .new_branch_name
             .clone()
             .filter(|s| !s.trim().is_empty())
             .unwrap_or_else(|| format!("test/{}", slugify(&req.commit_message)));
+        if name == "test/" {
+            name = "test/unnamed".to_string();
+        }
         emit("branch", format!("新建工作分支 {} 基于 {}", name, req.base_branch));
         git::create_branch(dir, &req.base_branch, &name).await?;
         name
