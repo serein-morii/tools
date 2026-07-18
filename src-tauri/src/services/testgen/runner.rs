@@ -27,6 +27,8 @@ pub struct TestGenRequest {
     pub ai_provider_json: Option<String>,
     #[serde(default)]
     pub task_id: Option<String>,
+    #[serde(default)]
+    pub continue_session: bool,
 }
 
 #[derive(Debug, Serialize)]
@@ -273,8 +275,31 @@ pub async fn run_test_gen(
             .await
             .map_err(|e| { emit("error", format!("AI 失败: {}", e)); e })?
     };
+    let claude_cmd = req.claude_command.clone().unwrap_or_else(|| "claude".to_string());
+    let ai_output = cli::run_claude_streaming(&claude_cmd, &prompt, dir, app, cancel_flag, req.continue_session)
+        .await
+        .map_err(|e| {
+            emit("error", format!("AI 失败: {}", e));
+            e
+        })?;
     if cancelled() {
         return Err("已取消".into());
+    }
+
+    // If AI asked a question, return early so the user can answer
+    if let Some(question) = detect_question(&ai_output) {
+        emit("ai", "AI 有问题需要回答，暂停等待用户输入".into());
+        return Ok(TestGenResult {
+            branch,
+            commit_sha: None,
+            files_changed: 0,
+            test_passed: false,
+            test_output_excerpt: String::new(),
+            pushed: false,
+            push_output: None,
+            error: None,
+            ai_question: Some(question),
+        });
     }
 
     // If AI asked a question, return early so the user can answer
@@ -364,10 +389,12 @@ pub async fn run_test_gen(
                 emit("push", "已推送".into());
                 emit_ai_final(app, &req.task_id, false, "");
                 Ok(TestGenResult { branch, commit_sha: Some(sha), files_changed: files, test_passed: passed, test_output_excerpt: excerpt, pushed: true, push_output: Some(o), error: None, ai_question: None })
+                Ok(TestGenResult { branch, commit_sha: Some(sha), files_changed: files, test_passed: passed, test_output_excerpt: excerpt, pushed: true, push_output: Some(o), error: None, ai_question: None })
             }
             Err(e) => {
                 let msg = format!("push 失败: {}", e);
                 emit_ai_final(app, &req.task_id, true, &msg);
+                Ok(TestGenResult { branch, commit_sha: Some(sha), files_changed: files, test_passed: passed, test_output_excerpt: excerpt, pushed: false, push_output: Some(e), error: Some(msg), ai_question: None })
                 Ok(TestGenResult { branch, commit_sha: Some(sha), files_changed: files, test_passed: passed, test_output_excerpt: excerpt, pushed: false, push_output: Some(e), error: Some(msg), ai_question: None })
             }
         };
@@ -383,6 +410,7 @@ fn emit_ai_final(app: &tauri::AppHandle, task_id: &Option<String>, is_error: boo
         let kind = if is_error { "error" } else { "done" };
         let _ = app.emit("ai-stream", serde_json::json!({ "task_id": tid, "kind": kind, "message": message }));
     }
+    Ok(TestGenResult { branch, commit_sha: Some(sha), files_changed: files, test_passed: passed, test_output_excerpt: excerpt, pushed: false, push_output: None, error: None, ai_question: None })
 }
 
 #[cfg(test)]
