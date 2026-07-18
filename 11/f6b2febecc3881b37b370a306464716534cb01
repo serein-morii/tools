@@ -1,0 +1,18 @@
+src/lib/TestGenContext.tsx
+  h_d554d32aa9d663 4,170-172,175,207,223-225
+src-tauri/src/services/testgen/runner.rs
+  h_d554d32aa9d663 30-31,278-284,289-302,392,398,413
+src/App.tsx
+  h_d554d32aa9d663 12
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "11f6b2febecc3881b37b370a306464716534cb01",
+  "prompts": {},
+  "humans": {
+    "h_d554d32aa9d663": {
+      "author": "pengchenghui <pengchenghui@jtexpress.com>"
+    }
+  }
+}
