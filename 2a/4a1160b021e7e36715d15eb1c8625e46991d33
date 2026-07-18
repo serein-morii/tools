@@ -1,0 +1,22 @@
+src/pages/DashboardPage.tsx
+  s_e4d1e9beeba44a::t_679b60ab905aba 113,125
+  s_e4d1e9beeba44a::t_ceddd5cf499925 18
+  s_e4d1e9beeba44a::t_de88796da96181 112,114-124,126-128,131-132
+  s_e4d1e9beeba44a::t_e7b90bbead151b 44-45
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "2a4a1160b021e7e36715d15eb1c8625e46991d33",
+  "prompts": {},
+  "sessions": {
+    "s_e4d1e9beeba44a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3bad9193-e60b-491a-8796-627d83b43414",
+        "model": "minimax-m3"
+      },
+      "human_author": "pengchenghui <pengchenghui@jtexpress.com>"
+    }
+  }
+}

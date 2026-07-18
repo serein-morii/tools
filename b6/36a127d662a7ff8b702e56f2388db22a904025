@@ -1,0 +1,23 @@
+src/pages/SettingsPage.tsx
+  s_e4d1e9beeba44a::t_44079979203b00 410
+vite.config.ts
+  s_e4d1e9beeba44a::t_19fe5a7a6431e9 4-8,12-14
+src/vite-env.d.ts
+  s_e4d1e9beeba44a::t_f76457eda22f0c 2-3
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "b636a127d662a7ff8b702e56f2388db22a904025",
+  "prompts": {},
+  "sessions": {
+    "s_e4d1e9beeba44a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3bad9193-e60b-491a-8796-627d83b43414",
+        "model": "minimax-m3"
+      },
+      "human_author": "pengchenghui <pengchenghui@jtexpress.com>"
+    }
+  }
+}

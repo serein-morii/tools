@@ -1,0 +1,19 @@
+src/pages/DtsTaskManagerPage.tsx
+  s_04d649ec29b063::t_c28653b776a046 1541-1542,1553-1562,1564,1581-1585,1749-1755,1757-1766,1769-1772,1777,1779-1789,1791-1800,1802-1805,1807,1809-1812,1814-1819,1822,1825-1826,1830-1835,1837-1843,1907-1948,1954-1957,1963,1992-1997,2101-2136,2174-2175,2189-2190,2237-2252,2259-2260,2266,2295-2300,2694-2695,2705,2707-2716,2736-2741
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "b1c7a1a313b0385fc690d5305a774beec2ba7c42",
+  "prompts": {},
+  "sessions": {
+    "s_04d649ec29b063": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9da77c6a-94fe-4e85-8c04-e5b90a7a4bbd",
+        "model": "unknown"
+      },
+      "human_author": "pengchenghui <pengchenghui@jtexpress.com>"
+    }
+  }
+}

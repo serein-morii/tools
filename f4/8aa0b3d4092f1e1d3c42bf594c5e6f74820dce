@@ -1,0 +1,19 @@
+src/pages/DtsTaskManagerPage.tsx
+  s_04d649ec29b063::t_ea1759d8047174 362,369,371,373-374
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "f48aa0b3d4092f1e1d3c42bf594c5e6f74820dce",
+  "prompts": {},
+  "sessions": {
+    "s_04d649ec29b063": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9da77c6a-94fe-4e85-8c04-e5b90a7a4bbd",
+        "model": "xopglm5"
+      },
+      "human_author": "pengchenghui <pengchenghui@jtexpress.com>"
+    }
+  }
+}

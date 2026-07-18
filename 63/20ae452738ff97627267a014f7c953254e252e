@@ -1,0 +1,27 @@
+src/pages/TaskReminderPage.tsx
+  s_04d649ec29b063::t_5d73993396b17d 142
+src/pages/AiCoveragePage.tsx
+  s_04d649ec29b063::t_85ebcddfa38dfb 872,876
+src/pages/DtsTaskManagerPage.tsx
+  s_04d649ec29b063::t_0111b4c5104d30 417,1516,1529-1600,1602-1642,2658,2672-2731,2733-2741
+src/pages/GitLabOverviewPage.tsx
+  s_04d649ec29b063::t_da7214d3ee7047 946
+src/pages/SonarPromptPage.tsx
+  s_04d649ec29b063::t_8ebd743ebd43cf 914
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "6320ae452738ff97627267a014f7c953254e252e",
+  "prompts": {},
+  "sessions": {
+    "s_04d649ec29b063": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9da77c6a-94fe-4e85-8c04-e5b90a7a4bbd",
+        "model": "minimax-m3"
+      },
+      "human_author": "pengchenghui <pengchenghui@jtexpress.com>"
+    }
+  }
+}

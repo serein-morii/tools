@@ -1,0 +1,23 @@
+src-tauri/Cargo.toml
+  s_e4d1e9beeba44a::t_4663fed1d0513e 3
+package.json
+  s_e4d1e9beeba44a::t_e967b6774a32bd 3
+src-tauri/tauri.conf.json
+  s_e4d1e9beeba44a::t_f59d5d124106a1 4
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "a28b361f81e13e369603e09ceb670af03520178d",
+  "prompts": {},
+  "sessions": {
+    "s_e4d1e9beeba44a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3bad9193-e60b-491a-8796-627d83b43414",
+        "model": "minimax-m3"
+      },
+      "human_author": "pengchenghui <pengchenghui@jtexpress.com>"
+    }
+  }
+}

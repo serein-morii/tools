@@ -1,0 +1,29 @@
+src/config/modules.ts
+  s_e4d1e9beeba44a::t_9d789975571c62 3
+src/pages/SettingsPage.tsx
+  s_e4d1e9beeba44a::t_825baa67a9d96e 9
+src/pages/DashboardPage.tsx
+  s_e4d1e9beeba44a::t_48e0ee67e2103d 12
+  s_e4d1e9beeba44a::t_881fd9f246903c 164
+  s_e4d1e9beeba44a::t_567773432198ec 260
+src-tauri/src/database/dao/backup.rs
+  s_e4d1e9beeba44a::t_a637ec12b9320b 301
+pnpm-workspace.yaml
+  s_e4d1e9beeba44a::t_94c16769a18014 4-5
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "b64aa7f655d83329c474d93f163635863d146a11",
+  "prompts": {},
+  "sessions": {
+    "s_e4d1e9beeba44a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3bad9193-e60b-491a-8796-627d83b43414",
+        "model": "minimax-m3"
+      },
+      "human_author": "pengchenghui <pengchenghui@jtexpress.com>"
+    }
+  }
+}

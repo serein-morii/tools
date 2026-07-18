@@ -1,0 +1,20 @@
+src/pages/SettingsPage.tsx
+  s_10b01522c7aa66::t_5c1c85abafab03 30-31
+  s_10b01522c7aa66::t_d7ae3466a3cc5e 313-399
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "88e9aa45688eb7a7c06d2a7d8f7841e529c86fc0",
+  "prompts": {},
+  "sessions": {
+    "s_10b01522c7aa66": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "17223fd4-466e-4ded-bf27-ae020f2af767",
+        "model": "astron-code-latest"
+      },
+      "human_author": "pengchenghui <pengchenghui@jtexpress.com>"
+    }
+  }
+}

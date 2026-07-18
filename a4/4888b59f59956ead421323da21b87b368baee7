@@ -1,0 +1,30 @@
+src/config/modules.ts
+  s_a4d226eec38498::t_098bd424c9bbcb 3
+  s_a4d226eec38498::t_8b9069b54967c7 83-100
+src/App.tsx
+  s_a4d226eec38498::t_8936e66349c812 27-28,117-118
+src/i18n/locales/en.json
+  s_a4d226eec38498::t_654dc750ce28cc 67-69
+src/i18n/locales/ja.json
+  s_a4d226eec38498::t_6abb851a9b046b 66-68
+src/i18n/locales/ko.json
+  s_a4d226eec38498::t_92b741ec6c2620 66-68
+src/i18n/locales/zh.json
+  s_a4d226eec38498::t_c3645bef1cc1b8 68-70
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "a44888b59f59956ead421323da21b87b368baee7",
+  "prompts": {},
+  "sessions": {
+    "s_a4d226eec38498": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7dfa4fc2-893d-481a-96be-d1d943c7d0b1",
+        "model": "glm-5.2"
+      },
+      "human_author": "pengchenghui <pengchenghui@jtexpress.com>"
+    }
+  }
+}

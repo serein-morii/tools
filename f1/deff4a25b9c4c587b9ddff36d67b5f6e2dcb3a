@@ -1,0 +1,31 @@
+src/components/layout/MainLayout.tsx
+  s_04d649ec29b063::t_fa5f2e716c3474 3
+  s_04d649ec29b063::t_9302b8982cabe9 6-7
+src/components/layout/ShortcutButtons.tsx
+  s_04d649ec29b063::t_2da661c9d65599 3
+  s_04d649ec29b063::t_2248ebddd4c590 4,7-12,14-27,29-39,42,58-59,77-82,109-113,124-130,142-146,148,152,156,158
+  s_04d649ec29b063::t_d851d9c15b835e 1-2,5-6,13,28,40-41,43-57,60-76,83-108,114-123,131-141,147,149-151,153-155,157,159-164
+src/pages/SettingsPage.tsx
+  s_04d649ec29b063::t_ba93a8ffef0443 9,20
+  s_04d649ec29b063::t_8184dff58e4356 326-345,779-803
+src-tauri/src/commands/dts.rs
+  s_04d649ec29b063::t_6948a7390d670f 418-420,423-449,451-461,465,467-468,470,486
+src/pages/DtsTaskManagerPage.tsx
+  s_04d649ec29b063::t_376eb71b150b3b 2176-2177,2696,2709-2710,2731-2732
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "f1deff4a25b9c4c587b9ddff36d67b5f6e2dcb3a",
+  "prompts": {},
+  "sessions": {
+    "s_04d649ec29b063": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9da77c6a-94fe-4e85-8c04-e5b90a7a4bbd",
+        "model": "minimax-m3"
+      },
+      "human_author": "pengchenghui <pengchenghui@jtexpress.com>"
+    }
+  }
+}

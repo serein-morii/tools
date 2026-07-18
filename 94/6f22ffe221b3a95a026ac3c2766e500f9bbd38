@@ -1,0 +1,28 @@
+src-tauri/src/services/testgen/git.rs
+  s_a4d226eec38498::t_a00402d37ea46b 118-122
+src-tauri/src/database/dao/activity.rs
+  s_a4d226eec38498::t_38667c1d632fd7 786-804
+  s_a4d226eec38498::t_1a3fdbdf349a7a 719-772
+src-tauri/src/services/testgen/projects.rs
+  s_a4d226eec38498::t_37d80ef595a854 1-135
+src-tauri/src/services/testgen/mod.rs
+  s_a4d226eec38498::t_eed46d1ee1a2fa 4
+src-tauri/src/database/schema.rs
+  s_a4d226eec38498::t_6300a9da1f6f71 206-224
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "946f22ffe221b3a95a026ac3c2766e500f9bbd38",
+  "prompts": {},
+  "sessions": {
+    "s_a4d226eec38498": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7dfa4fc2-893d-481a-96be-d1d943c7d0b1",
+        "model": "glm-5.2"
+      },
+      "human_author": "pengchenghui <pengchenghui@jtexpress.com>"
+    }
+  }
+}

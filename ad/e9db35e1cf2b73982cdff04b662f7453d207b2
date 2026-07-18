@@ -1,0 +1,20 @@
+src/pages/SonarPromptPage.tsx
+  s_10b01522c7aa66::t_9341bbaab7b0bf 135,165
+  s_10b01522c7aa66::t_64dddd754b7c44 126,128,131
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "ade9db35e1cf2b73982cdff04b662f7453d207b2",
+  "prompts": {},
+  "sessions": {
+    "s_10b01522c7aa66": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "17223fd4-466e-4ded-bf27-ae020f2af767",
+        "model": "astron-code-latest"
+      },
+      "human_author": "pengchenghui <pengchenghui@jtexpress.com>"
+    }
+  }
+}

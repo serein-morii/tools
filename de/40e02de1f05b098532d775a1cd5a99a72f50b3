@@ -1,0 +1,59 @@
+src/pages/GitLabOverviewPage.tsx
+  s_a4d226eec38498::t_263e309a38202c 941
+  s_a4d226eec38498::t_52b49113302c90 117,995
+src/pages/AesToolPage.tsx
+  s_a4d226eec38498::t_263e309a38202c 323,340,355
+  s_a4d226eec38498::t_52b49113302c90 525,541,557
+src/pages/AiCoveragePage.tsx
+  s_a4d226eec38498::t_263e309a38202c 848
+  s_a4d226eec38498::t_52b49113302c90 885,896,903,907,968,974,977
+src/pages/ChannelsPage.tsx
+  s_a4d226eec38498::t_52b49113302c90 62,69
+src/pages/TaskReminderPage.tsx
+  s_a4d226eec38498::t_52b49113302c90 153
+  s_a4d226eec38498::t_263e309a38202c 84,111,137,173
+src/pages/SonarPromptPage.tsx
+  s_a4d226eec38498::t_263e309a38202c 888,1552
+  s_a4d226eec38498::t_52b49113302c90 1025,1122,1545,1630,1634,1653,1708,1712
+src/pages/ActivityTrackerPage.tsx
+  s_a4d226eec38498::t_263e309a38202c 1240,1251,1263,1273,1279
+  s_a4d226eec38498::t_52b49113302c90 1028
+src/pages/DtsTaskManagerPage.tsx
+  s_a4d226eec38498::t_263e309a38202c 345
+  s_a4d226eec38498::t_52b49113302c90 1149,1208,2592,2651,3028,3031
+src/pages/DashboardPage.tsx
+  s_a4d226eec38498::t_263e309a38202c 123,142,191
+  s_a4d226eec38498::t_52b49113302c90 227,286,352,413,458,511
+src/pages/OrganizerPage.tsx
+  s_a4d226eec38498::t_263e309a38202c 391
+  s_a4d226eec38498::t_52b49113302c90 415,420,717
+src/pages/HistoryPage.tsx
+  s_a4d226eec38498::t_52b49113302c90 58
+src/pages/TemplatesPage.tsx
+  s_a4d226eec38498::t_52b49113302c90 93,100
+src/pages/GitLabHistoryPage.tsx
+  s_a4d226eec38498::t_52b49113302c90 450,730,802
+src/pages/TestGenPage.tsx
+  s_a4d226eec38498::t_4c2e4d3ab034ed 340-341
+src/pages/SettingsPage.tsx
+  s_a4d226eec38498::t_263e309a38202c 56,79,163,449
+  s_a4d226eec38498::t_52b49113302c90 176,694,697
+src/pages/FeaturesPage.tsx
+  s_a4d226eec38498::t_263e309a38202c 24
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "de40e02de1f05b098532d775a1cd5a99a72f50b3",
+  "prompts": {},
+  "sessions": {
+    "s_a4d226eec38498": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7dfa4fc2-893d-481a-96be-d1d943c7d0b1",
+        "model": "glm-5.2"
+      },
+      "human_author": "pengchenghui <pengchenghui@jtexpress.com>"
+    }
+  }
+}
