@@ -203,7 +203,7 @@ export function UnitBoardCard({
               </span>
             )}
             {canFetch && csrfToken && xAuthToken && (
-              <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => fetchData()}>
+              <Button variant="ghost" size="icon-xs" onClick={() => fetchData()}>
                 <RefreshCw className={`h-3 w-3 ${loading ? "animate-spin" : ""}`} />
               </Button>
             )}

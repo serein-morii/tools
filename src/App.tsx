@@ -7,6 +7,7 @@ import { WalkinAuthProvider } from "@/components/modules/gitlab/WalkinAuthManage
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useSettings, getSettingValue } from "@/lib/query/settingsQueries";
 import { SetupWizard, useNeedsSetup } from "@/components/SetupWizard";
+import { TestGenProvider } from "@/lib/TestGenContext";
 
 const DashboardPage = lazy(() => import("@/pages/DashboardPage").then((m) => ({ default: m.DashboardPage })));
 const FeaturesPage = lazy(() => import("@/pages/FeaturesPage").then((m) => ({ default: m.FeaturesPage })));
@@ -74,7 +75,9 @@ function App() {
     return (
       <ErrorBoundary>
         <WalkinAuthProvider>
+          <TestGenProvider>
           <SetupWizard onComplete={handleSetupComplete} />
+          </TestGenProvider>
         </WalkinAuthProvider>
       </ErrorBoundary>
     );
@@ -83,6 +86,7 @@ function App() {
   return (
     <ErrorBoundary>
       <WalkinAuthProvider>
+      <TestGenProvider>
       <Suspense
         fallback={
           <div className="flex h-screen items-center justify-center">
@@ -120,6 +124,7 @@ function App() {
           </Route>
         </Routes>
       </Suspense>
+      </TestGenProvider>
       </WalkinAuthProvider>
     </ErrorBoundary>
   );

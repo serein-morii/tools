@@ -2,7 +2,7 @@
 name = "tools"
 version = "0.2.3"
 description = "Tools - 桌面工具箱"
-authors = ["pengchenghui"]
+authors = ["Dev Tools"]
 license = "MIT"
 repository = ""
 edition = "2021"

@@ -52,19 +52,20 @@ export function HistoryPage() {
   return (
     <div className="min-h-full bg-background">
       {/* Header */}
-      <div className="border-b px-5 py-3">
+      <div className="page-header">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-7 items-center justify-center rounded-lg bg-primary/10">
+          <div className="flex items-center gap-3">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
               <Clock className="h-3.5 w-3.5 text-primary" />
             </div>
             <div>
               <h1 className="text-sm font-medium">提醒历史</h1>
+              <p className="text-xs text-muted-foreground mt-0.5">查看提醒发送记录</p>
             </div>
           </div>
         </div>
       </div>
-      <div className="mx-auto max-w-[1400px] space-y-3 px-3 py-3 animate-in fade-in duration-200">
+      <div className="section-spacing-compact animate-in fade-in duration-200">
       {/* Stats Grid */}
       <div className="grid grid-cols-4 gap-2 px-4 py-2 bg-muted/30 rounded-lg border mb-3">
         <StatCard
@@ -106,11 +107,12 @@ export function HistoryPage() {
       </div>
 
       {filteredItems.length === 0 ? (
-        <Card className="border-dashed">
-          <CardContent className="py-12 text-center text-sm text-muted-foreground">
-            {t("history.empty")}
-          </CardContent>
-        </Card>
+        <div className="flex flex-col items-center justify-center py-16">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-muted/50 mb-4">
+            <Clock className="h-7 w-7 text-muted-foreground/60" />
+          </div>
+          <p className="text-sm font-medium text-foreground">{t("history.empty")}</p>
+        </div>
       ) : (
         <div className="space-y-3">
           {filteredItems.map((item) => (
@@ -151,8 +153,8 @@ function StatCard({
     >
       <CardContent className="p-2">
         <div className="flex items-center gap-1 mb-0.5">
-          <Icon className={`h-3 w-3 ${color}`} />
-          <span className="text-[9px] text-muted-foreground">{title}</span>
+          <Icon className={`h-3.5 w-3.5 ${color}`} />
+          <span className="text-[10px] text-muted-foreground">{title}</span>
         </div>
         <span className={`text-sm font-bold ${color}`}>{value}</span>
       </CardContent>

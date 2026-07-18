@@ -118,28 +118,28 @@ export function ChannelCard({ channel, onEdit }: ChannelCardProps) {
             />
             <Button
               variant="ghost"
-              size="icon"
+              size="icon-sm"
               onClick={handleTest}
               disabled={testMutation.isPending}
               title={t("channel.testChannel")}
-              className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+              className="opacity-0 group-hover:opacity-100 transition-opacity"
             >
               <Zap className="h-3.5 w-3.5" />
             </Button>
             <Button
               variant="ghost"
-              size="icon"
+              size="icon-sm"
               onClick={() => onEdit(channel.id)}
-              className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+              className="opacity-0 group-hover:opacity-100 transition-opacity"
             >
               <Pencil className="h-3.5 w-3.5" />
             </Button>
             <Button
               variant="ghost"
-              size="icon"
+              size="icon-sm"
               onClick={handleDelete}
               className={cn(
-                "h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity",
+                "opacity-0 group-hover:opacity-100 transition-opacity",
                 isDeleting && "opacity-100 text-destructive hover:text-destructive"
               )}
             >

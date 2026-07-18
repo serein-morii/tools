@@ -4,13 +4,20 @@ use tauri::{AppHandle, Emitter};
 use tokio::io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader};
 use tokio::process::Command;
 
-/// Fixed args: print mode, stream-json, auto-approve edits, deny Bash.
-pub fn claude_args() -> Vec<&'static str> {
-    vec![
-        "-p", "--output-format", "stream-json", "--verbose",
-        "--permission-mode", "acceptEdits",
-        "--disallowedTools", "Bash",
-    ]
+/// Fixed args: stream-json, auto-approve edits, deny Bash.
+/// When `continue_session` is true, add --continue to resume the last conversation.
+pub fn claude_args(continue_session: bool) -> Vec<String> {
+    let mut args = vec![
+        "-p".to_string(),
+        "--output-format".to_string(), "stream-json".to_string(),
+        "--verbose".to_string(),
+        "--permission-mode".to_string(), "acceptEdits".to_string(),
+        "--disallowedTools".to_string(), "Bash".to_string(),
+    ];
+    if continue_session {
+        args.push("--continue".to_string());
+    }
+    args
 }
 
 /// Run `claude -p` in `cwd` with the prompt on stdin, streaming progress to the
@@ -21,8 +28,9 @@ pub async fn run_claude_streaming(
     cwd: &Path,
     app: &AppHandle,
     cancel: &std::sync::Arc<std::sync::atomic::AtomicBool>,
+    continue_session: bool,
 ) -> Result<String, String> {
-    let args = claude_args();
+    let args = claude_args(continue_session);
     let mut cmd = if cfg!(target_os = "windows") {
         let mut c = Command::new("cmd");
         c.arg("/C").arg(command);
@@ -118,9 +126,15 @@ mod tests {
 
     #[test]
     fn claude_args_auto_approve_edits_and_deny_bash() {
-        let a = claude_args();
+        let a = claude_args(false);
         assert!(a.windows(2).any(|w| w[0] == "--permission-mode" && w[1] == "acceptEdits"));
         assert!(a.windows(2).any(|w| w[0] == "--disallowedTools" && w[1] == "Bash"));
-        assert!(a.contains(&"-p"));
+        assert!(a.contains(&"-p".to_string()));
+    }
+
+    #[test]
+    fn claude_args_continue_mode() {
+        let a = claude_args(true);
+        assert!(a.contains(&"--continue".to_string()));
     }
 }

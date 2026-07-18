@@ -1,23 +1,20 @@
 import { useState, useEffect, useRef, type ReactNode } from "react";
 import { useLocation } from "react-router-dom";
 import { open } from "@tauri-apps/plugin-dialog";
-import { listen } from "@tauri-apps/api/event";
-import { FlaskConical, FolderOpen, Play, Minus, X, RefreshCw, Search, RotateCw } from "lucide-react";
+import { FlaskConical, FolderOpen, Play, Search, RotateCw } from "lucide-react";
 import { useSettings, useUpdateSetting, getSettingValue } from "../lib/query/settingsQueries";
 import {
   validateGitRepo,
   listGitBranches,
-  runTestGen,
   pushBranch,
   scanProjects,
   getTestgenRuns,
-  cancelTestGen,
   type RepoInfo,
   type BranchInfo,
-  type TestGenResult,
   type ProjectEntry,
   type TestgenRun,
 } from "../lib/api/testgen";
+import { useTestGen } from "../lib/TestGenContext";
 
 function ConfirmDialog({
   open, title, description, confirmText = "确定", cancelText = "取消", danger = false, onConfirm, onCancel,
@@ -39,9 +36,6 @@ function ConfirmDialog({
   );
 }
 
-type RunStatus = "idle" | "running" | "done" | "error";
-interface RunLog { time: number; stage: string; text: string }
-
 const PROTECTED_BRANCHES = ["main", "master", "develop", "dev", "release"];
 const formatNow = () => {
   const d = new Date(); const p = (n: number) => String(n).padStart(2, "0");
@@ -54,7 +48,10 @@ const formatTs = (ms: number) => {
 
 export default function TestGenPage() {
   const loc = useLocation();
-  const presetPrompt = (loc.state as { prompt?: string } | null)?.prompt ?? "";
+  const locState = loc.state as { prompt?: string; projectKey?: string; projectName?: string; branch?: string } | null;
+  const presetPrompt = locState?.prompt ?? "";
+  const fromProject = locState?.projectName || locState?.projectKey || null;
+  const fromBranch = locState?.branch || null;
   const [prompt, setPrompt] = useState(presetPrompt);
 
   const { data: settings } = useSettings();
@@ -71,7 +68,7 @@ export default function TestGenPage() {
   const [branches, setBranches] = useState<BranchInfo[]>([]);
   const [baseBranch, setBaseBranch] = useState("");
 
-  const [branchMode, setBranchMode] = useState<"new" | "direct">("new");
+  const [branchMode, setBranchMode] = useState<"new" | "direct">("direct");
   const [newBranchName, setNewBranchName] = useState("");
   const [commitMessage, setCommitMessage] = useState("");
   const [pushConfirmSkip, setPushConfirmSkip] = useState(false);
@@ -81,17 +78,12 @@ export default function TestGenPage() {
   const [mvnExtraArgs, setMvnExtraArgs] = useState("");
   const [claudeCommand, setClaudeCommand] = useState(() => getVal("testgen_claude_command", ""));
 
-  // Execution state
-  const [runOpen, setRunOpen] = useState(false);
-  const [runMinimized, setRunMinimized] = useState(false);
-  const [runStatus, setRunStatus] = useState<RunStatus>("idle");
-  const [runLogs, setRunLogs] = useState<RunLog[]>([]);
-  const [runThinking, setRunThinking] = useState<number | null>(null);
-  const [runText, setRunText] = useState("");
-  const [result, setResult] = useState<TestGenResult | null>(null);
-  const [pushConfirm, setPushConfirm] = useState(false);
+  // Execution state from global context
+  const tg = useTestGen();
+  const { runStatus, result, setPushConfirm } = tg;
+
+  // Local confirm dialogs
   const [execConfirm, setExecConfirm] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
 
   // History
   const [history, setHistory] = useState<TestgenRun[]>([]);
@@ -114,22 +106,12 @@ export default function TestGenPage() {
   const loadHistory = async () => { try { setHistory(await getTestgenRuns(30)); } catch (_) {} };
   useEffect(() => { loadHistory(); }, []);
   useEffect(() => { if (activeTab === "history") loadHistory(); }, [activeTab]);
+  useEffect(() => { loadHistory(); }, [tg.runId]); // reload after each run completes
 
   const pickProjectRoot = async () => {
     const p = await open({ directory: true, multiple: false });
     if (typeof p === "string" && p) { setProjectRoot(p); setSetting("testgen_project_root", p); }
   };
-
-  const appendLog = (stage: string, text: string) => setRunLogs((p) => [...p, { time: Date.now(), stage, text }]);
-  const [displayedText, setDisplayedText] = useState("");
-  useEffect(() => {
-    if (!runText) { setDisplayedText(""); return; }
-    setDisplayedText("");
-    let i = 0; const total = runText.length; const step = Math.max(2, Math.ceil(total / 240));
-    const id = setInterval(() => { i += step; if (i >= total) { setDisplayedText(runText); clearInterval(id); } else setDisplayedText(runText.slice(0, i)); }, 16);
-    return () => clearInterval(id);
-  }, [runText]);
-  useEffect(() => { if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight; }, [runLogs, displayedText, runThinking]);
 
   const branchWarn = branchMode === "direct" && PROTECTED_BRANCHES.includes(baseBranch);
   const canRun = !!prompt.trim() && !!dir && !!baseBranch && !!commitMessage.trim() && !!repoInfo?.is_repo && !!repoInfo?.clean;
@@ -147,9 +129,26 @@ export default function TestGenPage() {
     if (info.is_repo) {
       const bs = await listGitBranches(p.path);
       setBranches(bs);
-      setBaseBranch(bs.find((b) => b.current)?.name ?? bs[0]?.name ?? "");
+      // 优先匹配传入的分支，否则用当前分支
+      const targetBranch = fromBranch ? bs.find(b => b.name === fromBranch) : undefined;
+      setBaseBranch(targetBranch?.name ?? bs.find((b) => b.current)?.name ?? bs[0]?.name ?? "");
     }
   };
+
+  // 从 Sonar 跳转过来时，自动匹配项目并填充
+  const autoSelectedRef = useRef(false);
+  useEffect(() => {
+    if (autoSelectedRef.current || !fromProject || scannedProjects.length === 0) return;
+    const match = scannedProjects.find(p =>
+      p.name === fromProject ||
+      p.name.toLowerCase().includes(fromProject.toLowerCase()) ||
+      fromProject.toLowerCase().includes(p.name.toLowerCase())
+    );
+    if (match) {
+      autoSelectedRef.current = true;
+      selectProject(match);
+    }
+  }, [scannedProjects, fromProject]);
 
   const onManualDir = async () => {
     const p = await open({ directory: true, multiple: false });
@@ -165,54 +164,29 @@ export default function TestGenPage() {
     }
   };
 
-  const maybeAskPush = (res: TestGenResult) => {
-    if (res.commit_sha && !res.pushed && !res.error) setPushConfirm(true);
-  };
-
-  const startRun = async (retry: boolean, failureExcerpt?: string) => {
-    setRunLogs([]); setRunThinking(null); setRunText(""); setResult(null);
-    setRunStatus("running"); setRunOpen(true); setRunMinimized(false);
-    const up = await listen<{ stage: string; message: string }>("testgen-progress", (e) => appendLog(e.payload.stage, e.payload.message));
-    const us = await listen<{ kind: string; text?: string; tokens?: number }>("testgen-stream", (e) => {
-      if (e.payload.kind === "thinking") setRunThinking(e.payload.tokens ?? 0);
-      else if (e.payload.kind === "text") setRunText(e.payload.text ?? "");
-    });
-    try {
-      const res = await runTestGen({
-        dir, base_branch: baseBranch, branch_mode: branchMode,
-        new_branch_name: branchMode === "new" ? newBranchName || undefined : undefined,
-        commit_message: commitMessage, prompt,
-        push_confirm_skip: pushConfirmSkip,
-        mvn_local_repo: mvnLocalRepo || undefined, mvn_settings_xml: mvnSettingsXml || undefined,
-        claude_command: claudeCommand || undefined,
-        commit_only_if_pass: commitOnlyIfPass,
-        mvn_extra_args: mvnExtraArgs || undefined,
-        retry,
-        mvn_failure_excerpt: retry ? failureExcerpt : undefined,
-      });
-      setResult(res);
-      maybeAskPush(res);
-      if (res.error && !res.commit_sha) { setRunStatus("error"); appendLog("error", res.error); }
-      else if (res.error && res.commit_sha) { setRunStatus("error"); appendLog("error", `${res.error}（本地已提交 ${res.commit_sha}）`); }
-      else { setRunStatus("done"); appendLog("done", `完成：分支 ${res.branch}，提交 ${res.commit_sha ?? "-"}，${res.files_changed} 文件，测试${res.test_passed ? "通过" : "失败"}${res.pushed ? "，已推送" : ""}`); }
-    } catch (e) {
-      setRunStatus("error"); appendLog("error", String(e));
-    } finally { up(); us(); loadHistory(); }
-  };
+  const buildConfig = () => ({
+    dir, base_branch: baseBranch, branch_mode: branchMode,
+    new_branch_name: branchMode === "new" ? newBranchName || undefined : undefined,
+    commit_message: commitMessage, prompt,
+    push_confirm_skip: pushConfirmSkip,
+    mvn_local_repo: mvnLocalRepo || undefined, mvn_settings_xml: mvnSettingsXml || undefined,
+    claude_command: claudeCommand || undefined,
+    commit_only_if_pass: commitOnlyIfPass,
+    mvn_extra_args: mvnExtraArgs || undefined,
+  });
 
   const onExecuteClick = () => setExecConfirm(true);
-  const confirmExec = () => { setExecConfirm(false); startRun(false); };
-  const startRetry = () => { if (result) startRun(true, result.test_output_excerpt); };
+  const confirmExec = () => { setExecConfirm(false); tg.startRun(buildConfig() as any, false); };
+  const startRetry = () => { if (result) tg.startRun(buildConfig() as any, true, result.test_output_excerpt); };
 
   const confirmPush = async () => {
     setPushConfirm(false);
     if (!result) return;
-    appendLog("push", "确认推送...");
+    tg.appendLog("push", "确认推送...");
     try {
-      const out = await pushBranch(dir, result.branch);
-      setResult({ ...result, pushed: true, push_output: out });
-      appendLog("push", "已推送");
-    } catch (e) { appendLog("push", `推送失败: ${e}`); }
+      await pushBranch(dir, result.branch);
+      tg.appendLog("push", "已推送");
+    } catch (e) { tg.appendLog("push", `推送失败: ${e}`); }
   };
 
   const pickMvnDir = async () => {
@@ -230,15 +204,22 @@ export default function TestGenPage() {
   return (
     <div className="flex flex-col h-full">
       {/* Header + tabs */}
-      <div className="flex items-center justify-between px-5 py-2.5 border-b border-border">
-        <div className="flex items-center gap-2">
-          <FlaskConical className="w-4 h-4 text-primary" />
-          <h1 className="text-base font-semibold">单测执行</h1>
-        </div>
-        <div className="flex items-center gap-1 bg-secondary rounded-lg p-1">
-          {tabs.map((tab) => (
-            <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`px-3 py-1 rounded-md text-xs transition-colors ${activeTab === tab.id ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>{tab.label}</button>
-          ))}
+      <div className="page-header">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+              <FlaskConical className="h-4 w-4 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-base font-semibold">单测执行</h1>
+              <p className="text-xs text-muted-foreground mt-0.5">AI 生成单测并自动提交</p>
+            </div>
+          </div>
+          <div className="inline-flex gap-1 rounded-lg bg-muted p-0.5">
+            {tabs.map((tab) => (
+              <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`rounded-md px-3 py-1.5 text-xs font-medium transition-all duration-150 ${activeTab === tab.id ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>{tab.label}</button>
+            ))}
+          </div>
         </div>
       </div>
       {/* Content */}
@@ -368,42 +349,7 @@ export default function TestGenPage() {
       </div>
 
       <ConfirmDialog open={execConfirm} title="执行单测生成" description={`目录：${dir}\n分支：${baseBranch}${branchMode === "new" ? `（新建 ${newBranchName || "test/..."}）` : ""}${branchWarn ? `\n⚠ 受保护分支 ${baseBranch}` : ""}\n提交信息：${commitMessage}\n\n将调用 AI 写单测并跑 mvn test，确认继续？`} confirmText="开始" onCancel={() => setExecConfirm(false)} onConfirm={confirmExec} />
-      <ConfirmDialog open={pushConfirm} title="确认推送" description={`已提交到 ${result?.branch}，是否推送到远程？`} confirmText="推送" onCancel={() => setPushConfirm(false)} onConfirm={confirmPush} />
-
-      {runOpen && !runMinimized && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-background border border-border rounded-lg w-[620px] max-w-[92vw] h-[460px] max-h-[82vh] flex flex-col">
-            <div className="flex items-center justify-between px-4 py-2.5 border-b border-border">
-              <div className="flex items-center gap-2"><RefreshCw className={`w-3.5 h-3.5 ${runStatus === "running" ? "animate-spin" : ""} text-primary`} /><span className="text-sm font-medium">单测执行过程</span></div>
-              <div className="flex gap-1">
-                {runStatus === "running" && <button onClick={() => cancelTestGen()} title="取消执行" className="px-2 py-1 text-xs text-red-500 hover:text-red-600 rounded hover:bg-secondary">取消</button>}
-                <button onClick={() => setRunMinimized(true)} title="静默" className="p-1.5 rounded hover:bg-secondary"><Minus className="w-3.5 h-3.5" /></button>
-                {runStatus !== "running" && <button onClick={() => setRunOpen(false)} className="p-1.5 rounded hover:bg-secondary"><X className="w-3.5 h-3.5" /></button>}
-              </div>
-            </div>
-            <div ref={scrollRef} className="flex-1 overflow-auto px-4 py-2 space-y-1 text-xs">
-              {runLogs.map((l, i) => <div key={i} className="break-words"><span className="text-[10px] text-muted-foreground/70 mr-1">[{l.stage}]</span>{l.text}</div>)}
-              {runThinking !== null && !runText && <div className="text-amber-500">思考中... {runThinking} tokens</div>}
-              {displayedText && <div className="whitespace-pre-wrap break-words border-t border-border/40 pt-1">{displayedText}{displayedText.length < (runText?.length ?? 0) && <span className="animate-pulse">▍</span>}</div>}
-              {result && runStatus !== "running" && (
-                <div className="mt-2 pt-2 border-t border-border/40 text-xs space-y-0.5">
-                  <div><span className="text-muted-foreground">分支：</span>{result.branch}</div>
-                  {result.commit_sha && <div><span className="text-muted-foreground">提交：</span>{result.commit_sha}（{result.files_changed} 文件）</div>}
-                  <div><span className="text-muted-foreground">测试：</span>{result.test_passed ? "✓ 通过" : "✗ 失败"}</div>
-                  <div><span className="text-muted-foreground">推送：</span>{result.pushed ? "✓ 已推送" : result.commit_sha ? "未推送" : "-"}</div>
-                  {result.error && <div className="text-red-500">错误：{result.error}</div>}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-      {runMinimized && (
-        <button onClick={() => setRunMinimized(false)} className="fixed bottom-4 right-4 z-50 flex items-center gap-2 px-3 py-2 bg-primary text-primary-foreground rounded-full shadow-lg">
-          <RefreshCw className={`w-3.5 h-3.5 ${runStatus === "running" ? "animate-spin" : ""}`} />
-          <span className="text-xs">{runStatus === "running" ? "执行中..." : runStatus === "done" ? "完成（点击查看）" : "失败（点击查看）"}</span>
-        </button>
-      )}
+      <ConfirmDialog open={tg.pushConfirm} title="确认推送" description={`已提交到 ${result?.branch}，是否推送到远程？`} confirmText="推送" onCancel={() => setPushConfirm(false)} onConfirm={confirmPush} />
     </div>
   );
 }

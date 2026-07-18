@@ -16,11 +16,11 @@ export function TaskList({ tasks, onEdit, onCreate }: TaskListProps) {
   if (tasks.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16">
-        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted/50 mb-4">
-          <BellOff className="h-8 w-8 text-muted-foreground/60" />
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-muted/50 mb-4">
+          <BellOff className="h-7 w-7 text-muted-foreground/60" />
         </div>
-        <p className="text-base font-medium text-foreground mb-1">{t("task.emptyList")}</p>
-        <p className="text-sm text-muted-foreground mb-4">{t("task.emptyHint")}</p>
+        <p className="text-sm font-medium text-foreground mb-1">{t("task.emptyList")}</p>
+        <p className="text-xs text-muted-foreground mb-4">{t("task.emptyHint")}</p>
         {onCreate && (
           <Button onClick={onCreate} variant="outline" size="sm" className="gap-2">
             <Plus className="h-4 w-4" />

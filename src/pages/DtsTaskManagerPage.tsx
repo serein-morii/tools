@@ -342,7 +342,7 @@ export function DtsTaskManagerPage() {
               <Database className="h-4 w-4 text-primary" />
             </div>
             <div>
-              <h1 className="text-base font-semibold ">DTS 任务</h1>
+              <h1 className="text-base font-semibold">DTS 任务</h1>
               <p className="text-xs text-muted-foreground mt-0.5">
                 DTS 任务批量启停 · 全量回刷 · 多环境配置
               </p>
@@ -359,7 +359,7 @@ export function DtsTaskManagerPage() {
                 type="button"
                 onClick={() => setShowConfigDropdown(!showConfigDropdown)}
                 className={cn(
-                  "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all",
+                  "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all duration-150",
                   activeConfigName
                     ? "bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20"
                     : "bg-amber-500/10 text-amber-700 hover:bg-amber-500/20"
@@ -414,7 +414,7 @@ export function DtsTaskManagerPage() {
         </div>
       </div>
 
-      <div className="px-5 py-4 space-y-3 animate-in fade-in duration-200">
+      <div className="section-spacing animate-in fade-in duration-200">
         {tab === "tasks" && <TasksTab activeConfig={activeConfig} envOptions={envOptions} envMap={envMap} addLog={addLog} setResult={setResult} />}
         {tab === "flush" && <FlushTab activeConfig={activeConfig} setTab={setTab} envOptions={envOptions} envMap={envMap} addLog={addLog} setResult={setResult} />}
         {tab === "configs" && <ConfigsTab onConfigChange={loadActive} envOptions={envOptions} />}
@@ -437,7 +437,7 @@ export function DtsTaskManagerPage() {
                     {result.failed_count === 0 ? "执行成功" : result.success_count === 0 ? "执行失败" : "部分成功"}
                   </span>
                 </div>
-                <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => setResult(null)}>
+                <Button variant="ghost" size="icon-xs" onClick={() => setResult(null)}>
                   <X className="h-3.5 w-3.5" />
                 </Button>
               </div>
@@ -609,7 +609,7 @@ function TabButton({ active, onClick, icon: Icon, label }: { active: boolean; on
     <button
       onClick={onClick}
       className={cn(
-        "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-all duration-150",
+        "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all duration-150",
         active
           ? "bg-background text-foreground shadow-sm"
           : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
@@ -1222,7 +1222,7 @@ function TasksTab({
                 <Edit3 className="h-4 w-4 text-primary" />
                 <span className="text-sm font-semibold">批量改名</span>
               </div>
-              <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => setShowRename(false)}>
+              <Button variant="ghost" size="icon-xs" onClick={() => setShowRename(false)}>
                 <X className="h-3.5 w-3.5" />
               </Button>
             </div>
@@ -1289,7 +1289,7 @@ function TasksTab({
                 <Edit3 className="h-4 w-4 text-primary" />
                 <span className="text-sm font-semibold">改名</span>
               </div>
-              <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => setShowSingleRename(false)}>
+              <Button variant="ghost" size="icon-xs" onClick={() => setShowSingleRename(false)}>
                 <X className="h-3.5 w-3.5" />
               </Button>
             </div>
@@ -1333,7 +1333,7 @@ function TasksTab({
                 <RotateCcw className="h-4 w-4 text-amber-600" />
                 <span className="text-sm font-semibold">重置点位</span>
               </div>
-              <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => setShowResetOffset(false)}>
+              <Button variant="ghost" size="icon-xs" onClick={() => setShowResetOffset(false)}>
                 <X className="h-3.5 w-3.5" />
               </Button>
             </div>
@@ -1388,7 +1388,7 @@ function TasksTab({
                 <RotateCcw className="h-4 w-4 text-amber-600" />
                 <span className="text-sm font-semibold">批量重置点位</span>
               </div>
-              <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => setShowBatchResetOffset(false)}>
+              <Button variant="ghost" size="icon-xs" onClick={() => setShowBatchResetOffset(false)}>
                 <X className="h-3.5 w-3.5" />
               </Button>
             </div>
@@ -1451,7 +1451,7 @@ function TasksTab({
                 <FlaskConical className="h-4 w-4 text-primary" />
                 <span className="text-sm font-semibold">批量创建回刷</span>
               </div>
-              <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => setShowCreateFlushDialog(false)}>
+              <Button variant="ghost" size="icon-xs" onClick={() => setShowCreateFlushDialog(false)}>
                 <X className="h-3.5 w-3.5" />
               </Button>
             </div>
@@ -1591,16 +1591,16 @@ function TasksTab({
                     </div>
                     <div className="text-[11px] text-muted-foreground truncate" title={createTime}>{createTime}</div>
                     <div className="flex items-center justify-end gap-0.5">
-                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => { setDetailTask(task); setShowTaskDetail(true); }} title="查看详情">
+                      <Button variant="ghost" size="icon-xs" onClick={() => { setDetailTask(task); setShowTaskDetail(true); }} title="查看详情">
                         <Eye className="h-3 w-3" />
                       </Button>
                       {task.status !== "RUN" && (
-                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => opTask("start", task)} title="启动">
+                        <Button variant="ghost" size="icon-xs" onClick={() => opTask("start", task)} title="启动">
                           <Play className="h-3 w-3 text-emerald-600" />
                         </Button>
                       )}
                       {task.status === "RUN" && (
-                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => opTask("stop", task)} title="停止">
+                        <Button variant="ghost" size="icon-xs" onClick={() => opTask("stop", task)} title="停止">
                           <Square className="h-3 w-3 text-amber-600" />
                         </Button>
                       )}
@@ -1631,7 +1631,7 @@ function TasksTab({
                       >
                         <RotateCcw className="h-3 w-3 text-amber-600" />
                       </Button>
-                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => opTask("delete", task)} title="删除">
+                      <Button variant="ghost" size="icon-xs" onClick={() => opTask("delete", task)} title="删除">
                         <Trash2 className="h-3 w-3 text-rose-500" />
                       </Button>
                     </div>
@@ -1966,7 +1966,7 @@ function TaskDetailModal({ task, envMap, onClose }: { task: DtsTask; envMap: Rec
             <span className="text-sm font-semibold">任务详情</span>
             <span className="text-[10px] text-muted-foreground font-mono">#{task.id}</span>
           </div>
-          <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={onClose}>
+          <Button variant="ghost" size="icon-xs" onClick={onClose}>
             <X className="h-3.5 w-3.5" />
           </Button>
         </div>
@@ -2271,7 +2271,7 @@ function FlushDetailModal({ flush, onClose }: { flush: DtsFlush; onClose: () => 
             <span className="text-sm font-semibold">回刷详情</span>
             <span className="text-[10px] text-muted-foreground font-mono">#{flush.id}</span>
           </div>
-          <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={onClose}>
+          <Button variant="ghost" size="icon-xs" onClick={onClose}>
             <X className="h-3.5 w-3.5" />
           </Button>
         </div>
@@ -2722,15 +2722,15 @@ function FlushTab({
                     </div>
                     <div className="text-[11px] text-muted-foreground truncate" title={createTime}>{createTime}</div>
                     <div className="flex items-center justify-end gap-0.5">
-                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => { setDetailFlush(r); setShowFlushDetail(true); }} title="查看详情">
+                      <Button variant="ghost" size="icon-xs" onClick={() => { setDetailFlush(r); setShowFlushDetail(true); }} title="查看详情">
                         <Eye className="h-3 w-3" />
                       </Button>
                       {r.status !== "RUN" && (
-                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => flushOp("start", r)} title="启动">
+                        <Button variant="ghost" size="icon-xs" onClick={() => flushOp("start", r)} title="启动">
                           <Play className="h-3 w-3 text-emerald-600" />
                         </Button>
                       )}
-                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => flushOp("delete", r)} title="删除">
+                      <Button variant="ghost" size="icon-xs" onClick={() => flushOp("delete", r)} title="删除">
                         <Trash2 className="h-3 w-3 text-rose-500" />
                       </Button>
                     </div>
@@ -3025,10 +3025,10 @@ function ConfigsTab({ onConfigChange, envOptions }: { onConfigChange: () => void
                     激活
                   </Button>
                 )}
-                <Button variant="ghost" size="sm" className="h-8 w-7 p-0" onClick={() => startEdit(c)} title="编辑">
+                <Button variant="ghost" size="icon-sm" onClick={() => startEdit(c)} title="编辑">
                   <Edit3 className="h-3.5 w-3.5" />
                 </Button>
-                <Button variant="ghost" size="sm" className="h-8 w-7 p-0" onClick={() => remove(c.config_name)} title="删除">
+                <Button variant="ghost" size="icon-sm" onClick={() => remove(c.config_name)} title="删除">
                   <Trash2 className="h-3.5 w-3.5 text-rose-500" />
                 </Button>
               </div>
@@ -3208,7 +3208,7 @@ function ConfigEditorDialog({
             <Settings2 className="h-4 w-4 text-primary" />
             <span className="text-sm font-semibold">{isNew ? "新增配置" : "编辑配置"}</span>
           </div>
-          <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={onCancel}>
+          <Button variant="ghost" size="icon-xs" onClick={onCancel}>
             <X className="h-3.5 w-3.5" />
           </Button>
         </div>

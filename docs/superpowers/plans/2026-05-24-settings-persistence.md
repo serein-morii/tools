@@ -562,7 +562,7 @@ export function SettingsPage() {
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">作者</span>
-            <span>pengchenghui</span>
+            <span>Pedro</span>
           </div>
         </CardContent>
       </Card>

@@ -57,17 +57,17 @@ export function TemplateCard({ template, onEdit, onDelete }: TemplateCardProps) 
           <div className="flex items-center gap-0.5">
             <Button
               variant="ghost"
-              size="icon"
+              size="icon-sm"
               onClick={() => onEdit(template.id)}
-              className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+              className="opacity-0 group-hover:opacity-100 transition-opacity"
             >
               <Edit className="h-3.5 w-3.5" />
             </Button>
             <Button
               variant="ghost"
-              size="icon"
+              size="icon-sm"
               onClick={() => onDelete(template.id)}
-              className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive"
+              className="opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive"
             >
               <Trash2 className="h-3.5 w-3.5" />
             </Button>
