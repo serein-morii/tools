@@ -9,7 +9,6 @@ import { useSettings, getSettingValue } from "@/lib/query/settingsQueries";
 import { SetupWizard, useNeedsSetup } from "@/components/SetupWizard";
 import { TestGenProvider } from "@/lib/TestGenContext";
 import { AiTaskCenterProvider } from "@/lib/AiTaskCenter";
-import { TestGenProvider } from "@/lib/TestGenContext";
 
 const DashboardPage = lazy(() => import("@/pages/DashboardPage").then((m) => ({ default: m.DashboardPage })));
 const FeaturesPage = lazy(() => import("@/pages/FeaturesPage").then((m) => ({ default: m.FeaturesPage })));

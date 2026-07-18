@@ -6,7 +6,6 @@ import { AiSelector } from "@/components/modules/ai/AiSelector";
 import { useAiProvidersConfig, getProviderConfig, useDefaultProviderId } from "@/lib/query/aiQueries";
 import type { AiProviderConfig } from "@/lib/api/ai";
 import { useAiTaskCenter } from "../lib/AiTaskCenter";
-import { FlaskConical, FolderOpen, Play, Search, RotateCw } from "lucide-react";
 import { useSettings, useUpdateSetting, getSettingValue } from "../lib/query/settingsQueries";
 import {
   validateGitRepo,
@@ -102,9 +101,6 @@ export default function TestGenPage() {
   const atc = useAiTaskCenter();
 
   // Local confirm dialogs
-  // Execution state from global context
-  const tg = useTestGen();
-  const { runStatus, result, setPushConfirm } = tg;
 
   // Local confirm dialogs
   const [execConfirm, setExecConfirm] = useState(false);
@@ -199,16 +195,6 @@ export default function TestGenPage() {
     mvn_extra_args: mvnExtraArgs || undefined,
     ai_provider_json: JSON.stringify(aiProvider),
   });
-  const buildConfig = () => ({
-    dir, base_branch: baseBranch, branch_mode: branchMode,
-    new_branch_name: branchMode === "new" ? newBranchName || undefined : undefined,
-    commit_message: commitMessage, prompt,
-    push_confirm_skip: pushConfirmSkip,
-    mvn_local_repo: mvnLocalRepo || undefined, mvn_settings_xml: mvnSettingsXml || undefined,
-    claude_command: claudeCommand || undefined,
-    commit_only_if_pass: commitOnlyIfPass,
-    mvn_extra_args: mvnExtraArgs || undefined,
-  });
 
   const onExecuteClick = () => setExecConfirm(true);
   const confirmExec = () => {
@@ -222,8 +208,6 @@ export default function TestGenPage() {
     });
     tg.startRun({ ...buildConfig() as any, taskId }, false);
   };
-  const startRetry = () => { if (result) tg.startRun(buildConfig() as any, true, result.test_output_excerpt); };
-  const confirmExec = () => { setExecConfirm(false); tg.startRun(buildConfig() as any, false); };
   const startRetry = () => { if (result) tg.startRun(buildConfig() as any, true, result.test_output_excerpt); };
 
   const confirmPush = async () => {
